@@ -24,7 +24,7 @@ This repository is for learning network programming in Go.
   - [Ethernet frame](https://en.wikipedia.org/wiki/Ethernet_frame)
   - [Internet Protocol](https://en.wikipedia.org/wiki/Internet_Protocol)
   - [Network Layer](https://en.wikipedia.org/wiki/Network_layer)
-  - [TAN/TAP](https://en.wikipedia.org/wiki/TUN/TAP)
+  - [TUN/TAP](https://en.wikipedia.org/wiki/TUN/TAP)
   - [TCP congestion control](https://en.wikipedia.org/wiki/TCP_congestion_control)
   - [Transmission Control Protocol](https://en.wikipedia.org/wiki/Transmission_Control_Protocol)
   - [User Datagram Protocol](https://en.wikipedia.org/wiki/User_Datagram_Protocol)
