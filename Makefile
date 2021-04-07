@@ -13,8 +13,6 @@ TCP_SERVER_BIN = tcp_server
 STDERR = /tmp/.$(PROJECTNAME)-stderr.txt
 MAKEFLAGS += --silent
 
-#  Commands
-# --------------------------------------------------
 ## clean: Clean up build caches.
 clean: go-clean
 ## compile: Clean up caches, resolve dependencies, build the program.
@@ -24,8 +22,6 @@ compile:
 	@-$(MAKE) -s go-compile 2> $(STDERR)
 	@cat $(STDERR) | sed -e '1s/.*/\nError:\n/'  | sed 's/make\[.*/ /' | sed "/^/s/^/     /" 1>&2
 
-#  Go Commands
-# --------------------------------------------------
 go-build:
 	@echo "  >  Building binary..."
 	@mkdir -p $(GOBIN)
