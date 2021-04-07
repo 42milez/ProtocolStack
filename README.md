@@ -8,8 +8,8 @@ This repository is for learning network programming in Go.
   - [golangspec](https://medium.com/golangspec)
 - Books
   - [Hands-On High Performance with Go](https://www.packtpub.com/product/hands-on-high-performance-with-go/9781789805789)
-  - [Multiplayer Game Programming: Architecting Networked Games](https://www.oreilly.com/library/view/multiplayer-game-programming/9780134034355/)
   - [Mastering Go - Second Edition](https://www.packtpub.com/product/mastering-go-second-edition/9781838559335)
+  - [Multiplayer Game Programming: Architecting Networked Games](https://www.oreilly.com/library/view/multiplayer-game-programming/9780134034355/)
 - Go
   - [Effective Go](https://golang.org/doc/effective_go)
   - [The Go Programming Language Specification ](https://golang.org/ref/spec)
