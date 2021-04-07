@@ -3,6 +3,8 @@ This repository is for learning network programming in Go.
 
 ## References
 - Articles
+  - [Demystifying memory management in modern programming languages](https://deepu.tech/memory-management-in-programming/)
+- Blogs
   - [golangspec](https://medium.com/golangspec)
 - Books
   - [Hands-On High Performance with Go](https://www.packtpub.com/product/hands-on-high-performance-with-go/9781789805789)
@@ -15,6 +17,7 @@ This repository is for learning network programming in Go.
   - [A Good Makefile for Go](https://kodfabrik.com/journal/a-good-makefile-for-go)
   - [An Introduction to Makefiles](https://www.gnu.org/software/make/manual/html_node/Introduction.html)
 - Papers
+  - [Fifty Shades of Congestion Control: A Performance and Interactions Evaluation](https://arxiv.org/abs/1903.03852)
 - RFC
   - [791: Internet Protocol](https://tools.ietf.org/html/rfc791)
   - [793: Transmission Control Protocol](https://tools.ietf.org/html/rfc793)
