@@ -21,7 +21,11 @@ help: Makefile
 	@sed -n 's/^##//p' $< | column -t -s ':' |  sed -e 's/^/ /'
 	@echo
 
-## clean: Clean up build caches.
+## build: Build the program.
+.PHONY: build
+build: go-build
+
+## clean: Clean up caches.
 .PHONY: clean
 clean: go-clean
 
@@ -32,6 +36,10 @@ compile:
 	@-touch $(STDERR)
 	@-$(MAKE) -s go-compile 2> $(STDERR)
 	@cat $(STDERR) | sed -e '1s/.*/\nError:\n/'  | sed 's/make\[.*/ /' | sed "/^/s/^/     /" 1>&2
+
+## resolve: Resolve dependencies.
+.PHONY: resolve
+resolve: go-mod
 
 .PHONY: go-build
 go-build:
