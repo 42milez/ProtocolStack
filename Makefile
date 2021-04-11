@@ -4,14 +4,14 @@ PROJECTNAME = $(shell basename "$(PWD)")
 
 GOBIN = "$(PWD)/bin"
 
+STDERR = /tmp/.$(PROJECTNAME)-stderr.txt
+MAKEFLAGS += --silent
+
 TCP_CLIENT_FILES = src/tcp_client.go
 TCP_CLIENT_BIN = tcp_client
 
 TCP_SERVER_FILES = src/tcp_server.go
 TCP_SERVER_BIN = tcp_server
-
-STDERR = /tmp/.$(PROJECTNAME)-stderr.txt
-MAKEFLAGS += --silent
 
 .PHONY: help
 help: Makefile
