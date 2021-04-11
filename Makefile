@@ -23,7 +23,7 @@ help: Makefile
 
 #  Make Commands
 # --------------------------------------------------
-## build: Build the program.
+## build: Build project.
 .PHONY: build
 build: go-build
 
