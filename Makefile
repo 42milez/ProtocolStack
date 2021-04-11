@@ -21,6 +21,8 @@ help: Makefile
 	@sed -n 's/^##//p' $< | column -t -s ':' |  sed -e 's/^/ /'
 	@echo
 
+#  Make Commands
+# --------------------------------------------------
 ## build: Build the program.
 .PHONY: build
 build: go-build
@@ -41,6 +43,8 @@ compile:
 .PHONY: resolve
 resolve: go-mod
 
+#  Go Commands
+# --------------------------------------------------
 .PHONY: go-build
 go-build:
 	@echo "  >  Building binary..."
