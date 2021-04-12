@@ -12,6 +12,9 @@ This repository is for learning network programming in Go.
   - [Multiplayer Game Programming: Architecting Networked Games](https://www.oreilly.com/library/view/multiplayer-game-programming/9780134034355/)
 - Go
   - [Effective Go](https://golang.org/doc/effective_go)
+  - [Frequently Asked Questions (FAQ)](https://golang.org/doc/faq)
+    - [Should I define methods on values or pointers?](https://golang.org/doc/faq#methods_on_values_or_pointers)
+      - [Value vs Pointer Receivers](https://h12.io/article/value-vs-pointer-receivers)
   - [The Go Programming Language Specification ](https://golang.org/ref/spec)
 - Makefile
   - [A Good Makefile for Go](https://kodfabrik.com/journal/a-good-makefile-for-go)
