@@ -15,9 +15,5 @@ const (
 	V6
 )
 
-func to32(bytes...) uint32 {
-	binary.
-}
-
 // IpInputHandler handles incoming datagram.
 func IpInputHandler(data []uint8, dev device.Device) {}
