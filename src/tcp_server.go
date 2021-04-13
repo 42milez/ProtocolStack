@@ -17,10 +17,7 @@ func setup() error {
 		return err
 	}
 
-	// 1. Create a loopback device object.
-	// 2. Register the object.
-	// 3. Create an IF object.
-	// 4. Attach the IF object to the device object.
+	// Create a loopback device and its interface, then link them.
 	dev = ethernet.GenLoopbackDevice()
 	device.Register(dev)
 	iface = network.GenIF(ethernet.LoopbackIpAddr, ethernet.LoopbackNetmask)
@@ -28,10 +25,7 @@ func setup() error {
 		return err
 	}
 
-	// 1. Create a TAP device object.
-	// 2. Register the object.
-	// 3. Create an IF object.
-	// 4. Attach the IF to the device object.
+	// Create a TAP device and its interface, then link them.
 	if dev, err = ethernet.GenTapDevice("tap0", "00:00:5e:00:53:01"); err != nil {
 		return err
 	}
@@ -41,16 +35,13 @@ func setup() error {
 		return err
 	}
 
-	// IFオブジェクト生成
+	// Register the interface of the TAP device as the default gateway.
 	// ...
 
-	// TAPデバイスオブジェクトとIFオブジェクトの紐付け
+	// Open TAP device.
 	// ...
 
-	// TAP IFオブジェクトをデフォルトゲートウェイとして登録
-	// ...
-
-	// デバイスとサブスレッド（goroutine）を生成
+	// Create sub-thread for polling.
 	// ...
 
 	return nil

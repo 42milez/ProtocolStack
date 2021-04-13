@@ -2,7 +2,6 @@ package ethernet
 
 import (
 	"github.com/42milez/ProtocolStack/src/device"
-	"log"
 )
 
 func tapOpen(dev *device.Device) int {
@@ -44,8 +43,6 @@ func GenTapDevice(name string, mac MAC) (*device.Device, error) {
 	} else {
 		dev.Addr = addr
 	}
-
-	log.Println("TAP device generated.")
 
 	return dev, nil
 }

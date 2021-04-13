@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/42milez/ProtocolStack/src/device"
+	"log"
 )
 
 // An Iface is a single interface.
@@ -38,5 +39,6 @@ func AttachIF(iface *Iface, dev *device.Device) error {
 			return errors.New(fmt.Sprintf("%s is already exists", v.Family.String()))
 		}
 	}
+	log.Printf("interface attached: iface=%s, dev=%s", iface.Unicast.String(), iface.Dev.Name)
 	return nil
 }

@@ -14,6 +14,10 @@ type Route struct {
 
 var routes []*Route
 
+func init() {
+	routes = make([]*Route, 0)
+}
+
 func Register(network network.IP, netmask network.IP, nextHop network.IP, iface *network.Iface) {
 	route := &Route{
 		Network: network,

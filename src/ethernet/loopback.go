@@ -2,7 +2,6 @@ package ethernet
 
 import (
 	"github.com/42milez/ProtocolStack/src/device"
-	"log"
 	"math"
 )
 
@@ -29,8 +28,5 @@ func GenLoopbackDevice() *device.Device {
 			Poll:     nil,
 		},
 	}
-
-	log.Println("Loopback device generated.")
-
 	return dev
 }

@@ -93,5 +93,5 @@ func init() {
 func Register(dev *Device) {
 	dev.Name = "net" + strconv.Itoa(len(devices))
 	devices = append(devices, dev)
-	log.Printf("new device registered: dev=%s", dev.Name)
+	log.Printf("device registered: dev=%s", dev.Name)
 }
