@@ -2,6 +2,8 @@ package device
 
 import (
 	"github.com/42milez/ProtocolStack/src/network"
+	"log"
+	"strconv"
 )
 
 type DevType int
@@ -68,6 +70,7 @@ type Privilege struct {
 //};
 
 type Device struct {
+	Name string
 	Type DevType
 	MTU uint16
 	FLAG uint16
@@ -87,6 +90,8 @@ func init() {
 	devices = make([]*Device, 0)
 }
 
-func RegisterDevice(dev *Device) {
+func Register(dev *Device) {
+	dev.Name = "net" + strconv.Itoa(len(devices))
 	devices = append(devices, dev)
+	log.Printf("new device registered: dev=%s", dev.Name)
 }

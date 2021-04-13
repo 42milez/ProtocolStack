@@ -22,7 +22,7 @@ func setup() error {
 	// 3. Create an IF object.
 	// 4. Attach the IF object to the device object.
 	dev = ethernet.GenLoopbackDevice()
-	device.RegisterDevice(dev)
+	device.Register(dev)
 	iface = network.GenIF(ethernet.LoopbackIpAddr, ethernet.LoopbackNetmask)
 	if err = network.AttachIF(iface, dev); err != nil {
 		return err
@@ -35,7 +35,7 @@ func setup() error {
 	if dev, err = ethernet.GenTapDevice("tap0", "00:00:5e:00:53:01"); err != nil {
 		return err
 	}
-	device.RegisterDevice(dev)
+	device.Register(dev)
 	iface = network.GenIF("192.0.2.2", "255.255.255.0")
 	if err = network.AttachIF(iface, dev); err != nil {
 		return err

@@ -1,6 +1,8 @@
 package network
 
-import "strings"
+import (
+	"strings"
+)
 
 // IP address lengths (bytes).
 const (
@@ -10,6 +12,53 @@ const (
 
 // An IP is a single IP address.
 type IP []byte
+
+// isZeros checks if ip all zeros.
+func isZeros(ip IP) bool {
+	for i := 0; i < len(ip); i++ {
+		if ip[i] != 0 {
+			return false
+		}
+	}
+	return true
+}
+
+// String returns the string form of IP.
+func (ip IP) String() string {
+	if len(ip) == 0 {
+		return "<nil>"
+	}
+
+	const maxIPv4StringLen = len("255.255.255.255")
+	b := make(IP, maxIPv4StringLen)
+
+	n := ubtoa(b, 0, ip[0])
+	b[n] = '.'
+	n++
+
+	n += ubtoa(b, n, ip[1])
+	b[n] = '.'
+	n++
+
+	n += ubtoa(b, n, ip[2])
+	b[n] = '.'
+	n++
+
+	n += ubtoa(b, n, ip[3])
+
+	return string(b[:n])
+}
+
+// ToV4 converts IP to 4 bytes representation.
+func (ip IP) ToV4() IP {
+	if len(ip) == V4AddrLen {
+		return ip
+	}
+	if len(ip) == V6AddrLen && isZeros(ip) && ip[10] == 0xff && ip[11] == 0xff {
+		return ip[12:16]
+	}
+	return nil
+}
 
 // stoi converts string to integer and returns number, characters consumed, and success.
 func stoi(s string) (n int, c int, ok bool) {
@@ -24,17 +73,46 @@ func stoi(s string) (n int, c int, ok bool) {
 	return n, c, true
 }
 
+// ubtoa encodes the string form of the integer v to dst[start:] and
+// returns the number of bytes written to dst.
+func ubtoa(dst []byte, start int, v byte) int {
+	if v < 10 {
+		dst[start] = v + '0' // convert a decimal number into ASCII code
+		return 1
+	}
+	if v < 100 {
+		dst[start + 1] = v % 10 + '0'
+		dst[start] = v / 10 + '0'
+		return 2
+	}
+	dst[start + 2] = (v % 10) + '0'
+	dst[start + 1] = ((v / 10) % 10) + '0'
+	dst[start] = (v / 100) + '0'
+	return 3
+}
+
 // The prefix for the special addresses described in RFC5952.
-var v4InV6Prefix = []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff}
+//var v4InV6Prefix = []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff}
 
 // v4 creates IP from bytes.
+//func v4(a, b, c, d byte) IP {
+//	p := make(IP, V6AddrLen)
+//	copy(p, v4InV6Prefix)
+//	p[12] = a
+//	p[13] = b
+//	p[14] = c
+//	p[15] = d
+//	return p
+//}
+
+// TODO: use IPv4-mapped address above
+// v4 creates IP from bytes.
 func v4(a, b, c, d byte) IP {
-	p := make(IP, V6AddrLen)
-	copy(p, v4InV6Prefix)
-	p[12] = a
-	p[13] = b
-	p[14] = c
-	p[15] = d
+	p := make(IP, V4AddrLen)
+	p[0] = a
+	p[1] = b
+	p[2] = c
+	p[3] = d
 	return p
 }
 
@@ -69,31 +147,11 @@ func ParseIP(s string) IP {
 	if len(s) == 0 {
 		return nil
 	}
-
 	if strings.Contains(s, ".") {
 		return parseV4(s)
-	} else {
+	}
+	if strings.Contains(s, ":") {
 		return parseV6(s)
-	}
-}
-
-// isZeros checks if ip all zeros.
-func isZeros(ip IP) bool {
-	for i := 0; i < len(ip); i++ {
-		if ip[i] != 0 {
-			return false
-		}
-	}
-	return true
-}
-
-// ToV4 converts IP to 4 bytes representation.
-func (ip IP) ToV4() IP {
-	if len(ip) == V4AddrLen {
-		return ip
-	}
-	if len(ip) == V6AddrLen && isZeros(ip) && ip[10] == 0xff && ip[11] == 0xff {
-		return ip[12:16]
 	}
 	return nil
 }
