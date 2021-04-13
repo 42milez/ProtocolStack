@@ -1,6 +1,8 @@
 package device
 
 import (
+	"errors"
+	"fmt"
 	"github.com/42milez/ProtocolStack/src/network"
 	"log"
 	"strconv"
@@ -27,26 +29,26 @@ func (t DevType) String() string {
 	}
 }
 
-type DevFlag int
+type DevFlag uint16
 
 const (
-	DevFlagUp DevFlag = 0x0001
-	DevFlagLoopback = 0x0010
-	DevFlagBroadcast = 0x0020
-	DevFlagP2P = 0x0040
-	DevFlagNeedArp = 0x0100
+	DevFlagUp        DevFlag = 0x0001
+	DevFlagLoopback          = 0x0010
+	DevFlagBroadcast         = 0x0020
+	DevFlagP2P               = 0x0040
+	DevFlagNeedArp           = 0x0100
 )
 
 type Operation struct {
-	Open func (dev *Device) int
-	Close func (dev *Device) int
-	Transmit func (dev *Device) int
-	Poll func (dev *Device) int
+	Open     func(dev *Device) error
+	Close    func(dev *Device) error
+	Transmit func(dev *Device) error
+	Poll     func(dev *Device) error
 }
 
 type Privilege struct {
 	Name string
-	FD int
+	FD   int
 }
 
 // TODO: delete this comment later
@@ -70,18 +72,18 @@ type Privilege struct {
 //};
 
 type Device struct {
-	Name string
-	Type DevType
-	MTU uint16
-	FLAG uint16
+	Name      string
+	Type      DevType
+	MTU       uint16
+	FLAG      DevFlag
 	HeaderLen uint16
-	AddrLen uint16
-	Addr []byte
-	Peer []byte
+	AddrLen   uint16
+	Addr      []byte
+	Peer      []byte
 	Broadcast []byte
-	Op Operation
-	Priv Privilege
-	Ifaces []*network.Iface
+	Op        Operation
+	Priv      Privilege
+	Ifaces    []*network.Iface
 }
 
 var devices []*Device
@@ -94,4 +96,20 @@ func Register(dev *Device) {
 	dev.Name = "net" + strconv.Itoa(len(devices))
 	devices = append(devices, dev)
 	log.Printf("device registered: dev=%s", dev.Name)
+}
+
+func Open() error {
+	for _, v := range devices {
+		if v.Op.Open != nil {
+			if (v.FLAG & DevFlagUp) != 0 {
+				return errors.New(fmt.Sprintf("%s already opend", v.Name))
+			}
+			if err := v.Op.Open(v); err != nil {
+				return err
+			}
+			v.FLAG |= DevFlagUp
+			log.Printf("%s opened", v.Name)
+		}
+	}
+	return nil
 }

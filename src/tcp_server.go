@@ -42,7 +42,9 @@ func setup() error {
 	route.RegisterDefaultGateway(iface, network.ParseIP("192.0.2.1"))
 
 	// Open TAP device.
-	// ...
+	if err = device.Open(); err != nil {
+		return err
+	}
 
 	// Create sub-thread for polling.
 	// ...

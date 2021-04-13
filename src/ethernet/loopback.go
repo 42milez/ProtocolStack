@@ -9,8 +9,8 @@ const LoopbackMTU = math.MaxUint16
 const LoopbackIpAddr = "127.0.0.1"
 const LoopbackNetmask = "255.0.0.0"
 
-func loopbackTransmit(dev *device.Device) int {
-	return 0
+func loopbackTransmit(dev *device.Device) error {
+	return nil
 }
 
 // GenLoopbackDevice generates loopback device object.

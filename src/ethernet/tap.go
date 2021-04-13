@@ -4,20 +4,20 @@ import (
 	"github.com/42milez/ProtocolStack/src/device"
 )
 
-func tapOpen(dev *device.Device) int {
-	return 0
+func tapOpen(dev *device.Device) error {
+	return nil
 }
 
-func tapClose(dev *device.Device) int {
-	return 0
+func tapClose(dev *device.Device) error {
+	return nil
 }
 
-func tapTransmit(dev *device.Device) int {
-	return 0
+func tapTransmit(dev *device.Device) error {
+	return nil
 }
 
-func tapPoll(dev *device.Device) int {
-	return 0
+func tapPoll(dev *device.Device) error {
+	return nil
 }
 
 // GenTapDevice generates TAP device object.
