@@ -39,7 +39,7 @@ func setup() error {
 	route.Register(iface, network.V4Zero)
 
 	// Register the interface of the TAP device as the default gateway.
-	route.RegisterDefaultGateway(iface)
+	route.RegisterDefaultGateway(iface, network.ParseIP("192.0.2.1"))
 
 	// Open TAP device.
 	// ...
