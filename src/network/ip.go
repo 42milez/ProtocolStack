@@ -11,15 +11,15 @@ const IpHeaderSizeMax = 60
 type AddrFamily int
 
 const (
-	V4 AddrFamily = iota
-	V6
+	FamilyV4 AddrFamily = iota
+	FamilyV6
 )
 
 func (f AddrFamily) String() string {
 	switch f {
-	case V4:
+	case FamilyV4:
 		return "FAMILY_V4"
-	case V6:
+	case FamilyV6:
 		return "FAMILY_V6"
 	default:
 		return "UNKNOWN"

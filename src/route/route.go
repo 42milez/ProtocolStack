@@ -18,21 +18,38 @@ func init() {
 	routes = make([]*Route, 0)
 }
 
-func Register(network network.IP, netmask network.IP, nextHop network.IP, iface *network.Iface) {
+func Register(iface *network.Iface, nextHop network.IP) {
 	route := &Route{
-		Network: network,
-		Netmask: netmask,
+		Network: iface.Network,
+		Netmask: iface.Netmask,
 		NextHop: nextHop,
 		iface: iface,
 	}
 	routes = append(routes, route)
-
 	log.Printf(
-		"new route added: network=%s, netmask=%s, nextHop: %s, iface=%s, dev=%s",
-		network.String(),
-		netmask.String(),
-		nextHop.String(),
+		"route added: network=%s, netmask=%s, iface=%s, nextHop: %s, dev=%s",
+		route.Network.String(),
+		route.Netmask.String(),
 		iface.Unicast.String(),
+		nextHop.String(),
+		iface.Dev.Name,
+	)
+}
+
+func RegisterDefaultGateway(iface *network.Iface, nextHop network.IP) {
+	route := &Route{
+		Network: network.V4Zero,
+		Netmask: network.V4Zero,
+		NextHop: nextHop,
+		iface: iface,
+	}
+	routes = append(routes, route)
+	log.Printf(
+		"gateway added: network=%s, netmask=%s, iface=%s, nextHop: %s, dev=%s",
+		route.Network.String(),
+		route.Netmask.String(),
+		iface.Unicast.String(),
+		nextHop.String(),
 		iface.Dev.Name,
 	)
 }

@@ -5,6 +5,7 @@ import (
 	"github.com/42milez/ProtocolStack/src/ethernet"
 	"github.com/42milez/ProtocolStack/src/middleware"
 	"github.com/42milez/ProtocolStack/src/network"
+	"github.com/42milez/ProtocolStack/src/route"
 	"log"
 )
 
@@ -24,6 +25,7 @@ func setup() error {
 	if err = network.AttachIF(iface, dev); err != nil {
 		return err
 	}
+	route.Register(iface, network.V4Zero)
 
 	// Create a TAP device and its interface, then link them.
 	if dev, err = ethernet.GenTapDevice("tap0", "00:00:5e:00:53:01"); err != nil {
@@ -34,9 +36,10 @@ func setup() error {
 	if err = network.AttachIF(iface, dev); err != nil {
 		return err
 	}
+	route.Register(iface, network.V4Zero)
 
 	// Register the interface of the TAP device as the default gateway.
-	// ...
+	route.RegisterDefaultGateway(iface)
 
 	// Open TAP device.
 	// ...

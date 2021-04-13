@@ -10,6 +10,11 @@ const (
 	V6AddrLen = 16
 )
 
+var (
+	V4Broadcast = V4(255, 255, 255, 255)
+	V4Zero      = V4(0, 0, 0, 0)
+)
+
 // An IP is a single IP address.
 type IP []byte
 
@@ -106,8 +111,8 @@ func ubtoa(dst []byte, start int, v byte) int {
 //}
 
 // TODO: use IPv4-mapped address above
-// v4 creates IP from bytes.
-func v4(a, b, c, d byte) IP {
+// V4 creates IP from bytes.
+func V4(a, b, c, d byte) IP {
 	p := make(IP, V4AddrLen)
 	p[0] = a
 	p[1] = b
@@ -133,7 +138,7 @@ func parseV4(s string) IP {
 		s = s[c:]
 		p[i] = byte(n)
 	}
-	return v4(p[0], p[1], p[2], p[3])
+	return V4(p[0], p[1], p[2], p[3])
 }
 
 // parseV6 parses string as IPv6 address.
