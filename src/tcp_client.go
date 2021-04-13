@@ -1,9 +1,9 @@
 package main
 
 import (
-	"fmt"
+	"log"
 )
 
 func main() {
-	fmt.Println("Hello, TCP client!")
+	log.Printf("Hello, TCP client!")
 }
