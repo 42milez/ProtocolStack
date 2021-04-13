@@ -44,6 +44,7 @@ func AttachIF(iface *Iface, dev *device.Device) error {
 			return errors.New(fmt.Sprintf("%s is already exists", v.Family.String()))
 		}
 	}
+	dev.Ifaces = append(dev.Ifaces, iface)
 	log.Printf("interface attached: iface=%s, dev=%s", iface.Unicast.String(), iface.Dev.Name)
 	return nil
 }
