@@ -1,5 +1,9 @@
 package device
 
+import (
+	"github.com/42milez/ProtocolStack/src/network"
+)
+
 type DevType int
 
 const (
@@ -38,9 +42,9 @@ type Operation struct {
 	Poll func (dev *Device) int
 }
 
-type Privilege interface {
-	Name() string
-	FD() int
+type Privilege struct {
+	Name string
+	FD int
 }
 
 // TODO: delete this comment later
@@ -69,11 +73,12 @@ type Device struct {
 	FLAG uint16
 	HeaderLen uint16
 	AddrLen uint16
-	Addr []uint8
-	Peer []uint8
-	Broadcast []uint8
+	Addr []byte
+	Peer []byte
+	Broadcast []byte
 	Op Operation
 	Priv Privilege
+	Ifaces []*network.Iface
 }
 
 var devices []*Device

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/42milez/ProtocolStack/src/device"
-	"github.com/42milez/ProtocolStack/src/ipv4"
+	"github.com/42milez/ProtocolStack/src/network"
 	"syscall"
 )
 
@@ -31,7 +31,7 @@ type Handler func(data []uint8, dev device.Device)
 func register(protocolType ProtocolType, handler Handler) error {
 	for _, v := range protocols {
 		if v.Type == protocolType {
-			return errors.New(fmt.Sprintf("%s is already registered.", protocolType.String()))
+			return errors.New(fmt.Sprintf("%s is already registered", protocolType.String()))
 		}
 	}
 
@@ -59,7 +59,7 @@ func Setup() error {
 
 	// IP
 	// ...
-	if err := register(ProtocolTypeIp, ipv4.IpInputHandler); err != nil {
+	if err := register(ProtocolTypeIp, network.IpInputHandler); err != nil {
 		return err
 	}
 
