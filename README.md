@@ -43,4 +43,9 @@ This repository is for learning network programming in Go.
       - [Transmission Control Protocol](https://en.wikipedia.org/wiki/Transmission_Control_Protocol)
       - [User Datagram Protocol](https://en.wikipedia.org/wiki/User_Datagram_Protocol)
   - Programming
+    - [Continuation](https://en.wikipedia.org/wiki/Continuation)
+    - [Fair-share scheduling](https://en.wikipedia.org/wiki/Fair-share_scheduling)
+    - [Fork-join model](https://en.wikipedia.org/wiki/Fork%E2%80%93join_model)
+    - [Thread pool](https://en.wikipedia.org/wiki/Thread_pool)
     - [Threading models](https://en.wikipedia.org/wiki/Thread_(computing)#Threading_models)
+    - [Work stealing](https://en.wikipedia.org/wiki/Work_stealing)
