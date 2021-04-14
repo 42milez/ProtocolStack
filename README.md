@@ -15,7 +15,7 @@ This repository is for learning network programming in Go.
   - [Frequently Asked Questions (FAQ)](https://golang.org/doc/faq)
     - [Should I define methods on values or pointers?](https://golang.org/doc/faq#methods_on_values_or_pointers)
       - [Value vs Pointer Receivers](https://h12.io/article/value-vs-pointer-receivers)
-  - [The Go Programming Language Specification ](https://golang.org/ref/spec)
+  - [The Go Programming Language Specification](https://golang.org/ref/spec)
 - Makefile
   - [A Good Makefile for Go](https://kodfabrik.com/journal/a-good-makefile-for-go)
   - [An Introduction to Makefiles](https://www.gnu.org/software/make/manual/html_node/Introduction.html)
