@@ -44,6 +44,7 @@ This repository is for learning network programming in Go.
       - [User Datagram Protocol](https://en.wikipedia.org/wiki/User_Datagram_Protocol)
   - Programming
     - [Continuation](https://en.wikipedia.org/wiki/Continuation)
+    - [Critical section](https://en.wikipedia.org/wiki/Critical_section)
     - [Fair-share scheduling](https://en.wikipedia.org/wiki/Fair-share_scheduling)
     - [Fork-join model](https://en.wikipedia.org/wiki/Fork%E2%80%93join_model)
     - [Pipeline stall](https://en.wikipedia.org/wiki/Pipeline_stall)
