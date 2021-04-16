@@ -46,6 +46,8 @@ This repository is for learning network programming in Go.
     - [Continuation](https://en.wikipedia.org/wiki/Continuation)
     - [Fair-share scheduling](https://en.wikipedia.org/wiki/Fair-share_scheduling)
     - [Fork-join model](https://en.wikipedia.org/wiki/Fork%E2%80%93join_model)
+    - [Pipeline stall](https://en.wikipedia.org/wiki/Pipeline_stall)
+    - [Task (computing)](https://en.wikipedia.org/wiki/Task_(computing))
     - [Thread pool](https://en.wikipedia.org/wiki/Thread_pool)
     - [Threading models](https://en.wikipedia.org/wiki/Thread_(computing)#Threading_models)
     - [Work stealing](https://en.wikipedia.org/wiki/Work_stealing)
