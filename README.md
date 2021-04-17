@@ -49,6 +49,7 @@ This repository is for learning network programming in Go.
     - [Critical section](https://en.wikipedia.org/wiki/Critical_section)
     - [Fair-share scheduling](https://en.wikipedia.org/wiki/Fair-share_scheduling)
     - [Fork-join model](https://en.wikipedia.org/wiki/Fork%E2%80%93join_model)
+    - [Monitor (synchronization)](https://en.wikipedia.org/wiki/Monitor_(synchronization))
     - [Pipeline stall](https://en.wikipedia.org/wiki/Pipeline_stall)
     - [Task (computing)](https://en.wikipedia.org/wiki/Task_(computing))
     - [Thread pool](https://en.wikipedia.org/wiki/Thread_pool)
