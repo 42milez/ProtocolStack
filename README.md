@@ -46,11 +46,13 @@ This repository is for learning network programming in Go.
       - [User Datagram Protocol](https://en.wikipedia.org/wiki/User_Datagram_Protocol)
   - Programming
     - [Continuation](https://en.wikipedia.org/wiki/Continuation)
+    - [Cooperative multitasking](https://en.wikipedia.org/wiki/Cooperative_multitasking)
     - [Critical section](https://en.wikipedia.org/wiki/Critical_section)
     - [Fair-share scheduling](https://en.wikipedia.org/wiki/Fair-share_scheduling)
     - [Fork-join model](https://en.wikipedia.org/wiki/Fork%E2%80%93join_model)
     - [Monitor (synchronization)](https://en.wikipedia.org/wiki/Monitor_(synchronization))
     - [Pipeline stall](https://en.wikipedia.org/wiki/Pipeline_stall)
+    - [Preemption (computing)](https://en.wikipedia.org/wiki/Preemption_(computing))
     - [Task (computing)](https://en.wikipedia.org/wiki/Task_(computing))
     - [Thread pool](https://en.wikipedia.org/wiki/Thread_pool)
     - [Threading models](https://en.wikipedia.org/wiki/Thread_(computing)#Threading_models)
