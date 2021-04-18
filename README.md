@@ -3,13 +3,13 @@ This repository is for learning network programming in Go.
 
 ## References
 - Articles
-  - [Demystifying memory management in modern programming languages](https://deepu.tech/memory-management-in-programming/)
+  - [Demystifying memory management in modern programming languages](https://deepu.tech/memory-management-in-programming)
 - Blogs
   - [golangspec](https://medium.com/golangspec)
 - Books
   - [Hands-On High Performance with Go](https://www.packtpub.com/product/hands-on-high-performance-with-go/9781789805789)
   - [Mastering Go - Second Edition](https://www.packtpub.com/product/mastering-go-second-edition/9781838559335)
-  - [Multiplayer Game Programming: Architecting Networked Games](https://www.oreilly.com/library/view/multiplayer-game-programming/9780134034355/)
+  - [Multiplayer Game Programming: Architecting Networked Games](https://www.oreilly.com/library/view/multiplayer-game-programming/9780134034355)
 - Go
   - [Data Race Detector](https://golang.org/doc/articles/race_detector)
   - [Effective Go](https://golang.org/doc/effective_go)
@@ -57,3 +57,6 @@ This repository is for learning network programming in Go.
     - [Thread pool](https://en.wikipedia.org/wiki/Thread_pool)
     - [Threading models](https://en.wikipedia.org/wiki/Thread_(computing)#Threading_models)
     - [Work stealing](https://en.wikipedia.org/wiki/Work_stealing)
+
+## Notes
+- [Goroutine preemptive scheduling with new features of go 1.14](https://developpaper.com/goroutine-preemptive-scheduling-with-new-features-of-go-1-14)
