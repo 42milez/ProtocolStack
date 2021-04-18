@@ -59,4 +59,6 @@ This repository is for learning network programming in Go.
     - [Work stealing](https://en.wikipedia.org/wiki/Work_stealing)
 
 ## Notes
-- [Goroutine preemptive scheduling with new features of go 1.14](https://developpaper.com/goroutine-preemptive-scheduling-with-new-features-of-go-1-14)
+- Asynchronous Preemption
+  - [Go: Goroutine and Preemption](https://medium.com/a-journey-with-go/go-goroutine-and-preemption-d6bc2aa2f4b7)
+  - [Goroutine preemptive scheduling with new features of go 1.14](https://developpaper.com/goroutine-preemptive-scheduling-with-new-features-of-go-1-14)
