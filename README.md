@@ -6,6 +6,7 @@ This repository is for learning network programming in Go.
   - [Demystifying memory management in modern programming languages](https://deepu.tech/memory-management-in-programming)
 - Blogs
   - [golangspec](https://medium.com/golangspec)
+  - [Vincent Blanchon](https://medium.com/@blanchon.vincent)
 - Books
   - [Hands-On High Performance with Go](https://www.packtpub.com/product/hands-on-high-performance-with-go/9781789805789)
   - [Mastering Go - Second Edition](https://www.packtpub.com/product/mastering-go-second-edition/9781838559335)
