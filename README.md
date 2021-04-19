@@ -65,3 +65,8 @@ This repository is for learning network programming in Go.
     - [Goroutine preemptive scheduling with new features of go 1.14](https://developpaper.com/goroutine-preemptive-scheduling-with-new-features-of-go-1-14)
 - Programming
   - [History of programming languages](https://en.wikipedia.org/wiki/History_of_programming_languages)
+
+## Memos
+- Use the context types properly acording to the rubric.
+  - [context.Background()](https://github.com/golang/go/blob/a72622d028077643169dc48c90271a82021f0534/src/context/context.go#L208)
+  - [context.TODO()](https://github.com/golang/go/blob/a72622d028077643169dc48c90271a82021f0534/src/context/context.go#L216)
