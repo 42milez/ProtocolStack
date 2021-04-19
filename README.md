@@ -11,7 +11,6 @@ This repository is for learning network programming in Go.
   - [Mastering Go - Second Edition](https://www.packtpub.com/product/mastering-go-second-edition/9781838559335)
   - [Multiplayer Game Programming: Architecting Networked Games](https://www.oreilly.com/library/view/multiplayer-game-programming/9780134034355)
 - Go
-  - [Data Race Detector](https://golang.org/doc/articles/race_detector)
   - [Effective Go](https://golang.org/doc/effective_go)
   - [Frequently Asked Questions (FAQ)](https://golang.org/doc/faq)
     - [Should I define methods on values or pointers?](https://golang.org/doc/faq#methods_on_values_or_pointers)
@@ -59,6 +58,10 @@ This repository is for learning network programming in Go.
     - [Work stealing](https://en.wikipedia.org/wiki/Work_stealing)
 
 ## Notes
-- Asynchronous Preemption
-  - [Go: Goroutine and Preemption](https://medium.com/a-journey-with-go/go-goroutine-and-preemption-d6bc2aa2f4b7)
-  - [Goroutine preemptive scheduling with new features of go 1.14](https://developpaper.com/goroutine-preemptive-scheduling-with-new-features-of-go-1-14)
+- GO
+  - Asynchronous Preemption
+    - [Go: Goroutine and Preemption](https://medium.com/a-journey-with-go/go-goroutine-and-preemption-d6bc2aa2f4b7)
+    - [Goroutine preemptive scheduling with new features of go 1.14](https://developpaper.com/goroutine-preemptive-scheduling-with-new-features-of-go-1-14)
+  - [Data Race Detector](https://golang.org/doc/articles/race_detector)
+- Programming
+  - [History of programming languages](https://en.wikipedia.org/wiki/History_of_programming_languages)
