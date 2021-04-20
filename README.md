@@ -11,7 +11,7 @@ This repository is for learning network programming in Go.
   - [Hands-On High Performance with Go](https://www.packtpub.com/product/hands-on-high-performance-with-go/9781789805789)
   - [Mastering Go - Second Edition](https://www.packtpub.com/product/mastering-go-second-edition/9781838559335)
   - [Multiplayer Game Programming: Architecting Networked Games](https://www.oreilly.com/library/view/multiplayer-game-programming/9780134034355)
-  - [TCP/IP Illustrated, Volume 1: The Protocols](http://www.kohala.com/start/tcpipiv1.html)
+  - [TCP/IP Illustrated](https://en.wikipedia.org/wiki/TCP/IP_Illustrated)
 - Go
   - [Command vet](https://golang.org/cmd/vet/)
   - [Data Race Detector](https://golang.org/doc/articles/race_detector)
