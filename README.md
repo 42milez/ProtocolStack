@@ -12,6 +12,7 @@ This repository is for learning network programming in Go.
   - [Mastering Go - Second Edition](https://www.packtpub.com/product/mastering-go-second-edition/9781838559335)
   - [Multiplayer Game Programming: Architecting Networked Games](https://www.oreilly.com/library/view/multiplayer-game-programming/9780134034355)
 - Go
+  - [Command vet](https://golang.org/cmd/vet/)
   - [Data Race Detector](https://golang.org/doc/articles/race_detector)
   - [Effective Go](https://golang.org/doc/effective_go)
   - [Frequently Asked Questions (FAQ)](https://golang.org/doc/faq)
