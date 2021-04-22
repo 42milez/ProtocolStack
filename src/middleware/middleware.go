@@ -32,11 +32,11 @@ type Timer struct {
 type Handler func(data []uint8, dev device.Device)
 
 var devices []*device.Device
-var interfaces map[*device.Device]*network.Iface
+var interfaces []*Iface
 
 func init() {
 	devices = make([]*device.Device, 0)
-	interfaces = make(map[*device.Device]*network.Iface, 0)
+	interfaces = make([]*Iface, 0)
 }
 
 func register(protocolType ProtocolType, handler Handler) error {
@@ -108,14 +108,14 @@ func RegisterDevice(dev *device.Device) {
 	log.Printf("device registered: dev=%s\n", dev.Name)
 }
 
-func RegisterInterface(iface *network.Iface, dev *device.Device) error {
+func RegisterInterface(iface *Iface, dev *device.Device) error {
 	for _, v := range interfaces {
-		if v.Family == iface.Family {
+		if v.Dev == dev && v.Family == iface.Family {
 			return errors.New(fmt.Sprintf("%s is already exists", v.Family.String()))
 		}
 	}
-	interfaces[dev] = iface
+	interfaces = append(interfaces, iface)
 	iface.Dev = dev
-	log.Printf("interface attached: iface=%s, dev=%s", iface.Unicast.String(), iface.Dev.Name)
+	log.Printf("iface attached: iface=%s, dev=%s", iface.Unicast.String(), iface.Dev.Name)
 	return nil
 }

@@ -1,6 +1,7 @@
 package route
 
 import (
+	"github.com/42milez/ProtocolStack/src/middleware"
 	"github.com/42milez/ProtocolStack/src/network"
 	"log"
 )
@@ -9,7 +10,7 @@ type Route struct {
 	Network network.IP
 	Netmask network.IP
 	NextHop network.IP
-	iface *network.Iface
+	iface *middleware.Iface
 }
 
 var routes []*Route
@@ -18,7 +19,7 @@ func init() {
 	routes = make([]*Route, 0)
 }
 
-func Register(iface *network.Iface, nextHop network.IP) {
+func Register(iface *middleware.Iface, nextHop network.IP) {
 	route := &Route{
 		Network: iface.Network,
 		Netmask: iface.Netmask,
@@ -36,7 +37,7 @@ func Register(iface *network.Iface, nextHop network.IP) {
 	)
 }
 
-func RegisterDefaultGateway(iface *network.Iface, nextHop network.IP) {
+func RegisterDefaultGateway(iface *middleware.Iface, nextHop network.IP) {
 	route := &Route{
 		Network: network.V4Zero,
 		Netmask: network.V4Zero,
