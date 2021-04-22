@@ -47,7 +47,9 @@ func setup() error {
 	}
 
 	// Create sub-thread for polling.
-	// ...
+	if err = middleware.Start(); err != nil {
+		return err
+	}
 
 	return nil
 }

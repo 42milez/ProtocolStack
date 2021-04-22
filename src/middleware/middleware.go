@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"github.com/42milez/ProtocolStack/src/device"
 	"github.com/42milez/ProtocolStack/src/network"
+	"log"
 	"syscall"
+	"time"
 )
 
 var protocols []Protocol
@@ -68,6 +70,23 @@ func Setup() error {
 
 	// UDP
 	// ...
+
+	return nil
+}
+
+func Start() error {
+	var err error
+
+	if err = device.Open(); err != nil {
+		return err
+	}
+
+	go func() {
+		log.Println("running...")
+		time.Sleep(time.Second)
+	}()
+
+	log.Println("started.")
 
 	return nil
 }

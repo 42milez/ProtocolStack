@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/42milez/ProtocolStack/src/network"
+
+	//"github.com/42milez/ProtocolStack/src/network"
 	"log"
 	"strconv"
 )
@@ -95,10 +97,11 @@ func init() {
 func Register(dev *Device) {
 	dev.Name = "net" + strconv.Itoa(len(devices))
 	devices = append(devices, dev)
-	log.Printf("device registered: dev=%s", dev.Name)
+	log.Printf("device registered: dev=%s\n", dev.Name)
 }
 
 func Open() error {
+	log.Print("open all devices...")
 	for _, v := range devices {
 		if v.Op.Open != nil {
 			if (v.FLAG & DevFlagUp) != 0 {
@@ -111,5 +114,6 @@ func Open() error {
 			log.Printf("%s opened", v.Name)
 		}
 	}
+	log.Println("done.")
 	return nil
 }
