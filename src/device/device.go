@@ -3,11 +3,7 @@ package device
 import (
 	"errors"
 	"fmt"
-	"github.com/42milez/ProtocolStack/src/network"
-
-	//"github.com/42milez/ProtocolStack/src/network"
 	"log"
-	"strconv"
 )
 
 type DevType int
@@ -85,35 +81,18 @@ type Device struct {
 	Broadcast []byte
 	Op        Operation
 	Priv      Privilege
-	Ifaces    []*network.Iface
 }
 
-var devices []*Device
-
-func init() {
-	devices = make([]*Device, 0)
-}
-
-func Register(dev *Device) {
-	dev.Name = "net" + strconv.Itoa(len(devices))
-	devices = append(devices, dev)
-	log.Printf("device registered: dev=%s\n", dev.Name)
-}
-
-func Open() error {
-	log.Print("open all devices...")
-	for _, v := range devices {
-		if v.Op.Open != nil {
-			if (v.FLAG & DevFlagUp) != 0 {
-				return errors.New(fmt.Sprintf("%s already opend", v.Name))
-			}
-			if err := v.Op.Open(v); err != nil {
-				return err
-			}
-			v.FLAG |= DevFlagUp
-			log.Printf("%s opened", v.Name)
+func (dev *Device) Open() error {
+	if dev.Op.Open != nil {
+		if (dev.FLAG & DevFlagUp) != 0 {
+			return errors.New(fmt.Sprintf("%s already opend", dev.Name))
 		}
+		if err := dev.Op.Open(dev); err != nil {
+			return err
+		}
+		dev.FLAG |= DevFlagUp
+		log.Printf("%s opened", dev.Name)
 	}
-	log.Println("done.")
 	return nil
 }

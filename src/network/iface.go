@@ -2,10 +2,7 @@ package network
 
 import (
 	"encoding/binary"
-	"errors"
-	"fmt"
 	"github.com/42milez/ProtocolStack/src/device"
-	"log"
 )
 
 // An Iface is a single interface.
@@ -34,17 +31,4 @@ func GenIF(unicast string, netmask string) *Iface {
 	binary.BigEndian.PutUint32(iface.Network, unicastUint32 & netmaskUint32)
 
 	return iface
-}
-
-// AttachIF attaches an Iface to device.Device.
-func AttachIF(iface *Iface, dev *device.Device) error {
-	iface.Dev = dev
-	for _, v := range dev.Ifaces {
-		if v.Family == iface.Family {
-			return errors.New(fmt.Sprintf("%s is already exists", v.Family.String()))
-		}
-	}
-	dev.Ifaces = append(dev.Ifaces, iface)
-	log.Printf("interface attached: iface=%s, dev=%s", iface.Unicast.String(), iface.Dev.Name)
-	return nil
 }

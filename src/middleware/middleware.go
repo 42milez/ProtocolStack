@@ -6,6 +6,7 @@ import (
 	"github.com/42milez/ProtocolStack/src/device"
 	"github.com/42milez/ProtocolStack/src/network"
 	"log"
+	"strconv"
 	"syscall"
 	"time"
 )
@@ -29,6 +30,14 @@ type Timer struct {
 }
 
 type Handler func(data []uint8, dev device.Device)
+
+var devices []*device.Device
+var interfaces map[*device.Device]*network.Iface
+
+func init() {
+	devices = make([]*device.Device, 0)
+	interfaces = make(map[*device.Device]*network.Iface, 0)
+}
 
 func register(protocolType ProtocolType, handler Handler) error {
 	for _, v := range protocols {
@@ -77,8 +86,10 @@ func Setup() error {
 func Start() error {
 	var err error
 
-	if err = device.Open(); err != nil {
-		return err
+	for _, dev := range devices {
+		if err = dev.Open(); err != nil {
+			return err
+		}
 	}
 
 	go func() {
@@ -88,5 +99,23 @@ func Start() error {
 
 	log.Println("started.")
 
+	return nil
+}
+
+func RegisterDevice(dev *device.Device) {
+	dev.Name = "net" + strconv.Itoa(len(devices))
+	devices = append(devices, dev)
+	log.Printf("device registered: dev=%s\n", dev.Name)
+}
+
+func RegisterInterface(iface *network.Iface, dev *device.Device) error {
+	for _, v := range interfaces {
+		if v.Family == iface.Family {
+			return errors.New(fmt.Sprintf("%s is already exists", v.Family.String()))
+		}
+	}
+	interfaces[dev] = iface
+	iface.Dev = dev
+	log.Printf("interface attached: iface=%s, dev=%s", iface.Unicast.String(), iface.Dev.Name)
 	return nil
 }

@@ -20,9 +20,9 @@ func setup() error {
 
 	// Create a loopback device and its interface, then link them.
 	dev = ethernet.GenLoopbackDevice()
-	device.Register(dev)
+	middleware.RegisterDevice(dev)
 	iface = network.GenIF(ethernet.LoopbackIpAddr, ethernet.LoopbackNetmask)
-	if err = network.AttachIF(iface, dev); err != nil {
+	if err = middleware.RegisterInterface(iface, dev); err != nil {
 		return err
 	}
 	route.Register(iface, network.V4Zero)
@@ -31,20 +31,15 @@ func setup() error {
 	if dev, err = ethernet.GenTapDevice("tap0", "00:00:5e:00:53:01"); err != nil {
 		return err
 	}
-	device.Register(dev)
+	middleware.RegisterDevice(dev)
 	iface = network.GenIF("192.0.2.2", "255.255.255.0")
-	if err = network.AttachIF(iface, dev); err != nil {
+	if err = middleware.RegisterInterface(iface, dev); err != nil {
 		return err
 	}
 	route.Register(iface, network.V4Zero)
 
 	// Register the interface of the TAP device as the default gateway.
 	route.RegisterDefaultGateway(iface, network.ParseIP("192.0.2.1"))
-
-	// Open TAP device.
-	if err = device.Open(); err != nil {
-		return err
-	}
 
 	// Create sub-thread for polling.
 	if err = middleware.Start(); err != nil {
