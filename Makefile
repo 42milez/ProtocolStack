@@ -4,7 +4,7 @@ PROJECTNAME = $(shell basename "$(PWD)")
 
 GOBIN = "$(PWD)/bin"
 
-STDERR = /tmp/.$(PROJECTNAME)-stderr.txt
+STDERR = /tmp/$(PROJECTNAME)-stderr.txt
 MAKEFLAGS += --silent
 
 TCP_CLIENT_FILES = src/tcp_client.go
