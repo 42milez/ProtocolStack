@@ -23,9 +23,9 @@ func (mac MAC) Byte() ([]byte, error) {
 	t := strings.Split(string(mac), ":")
 	p := make([]byte, EthAddrLen)
 	for i := 0; i < EthAddrLen; i++ {
-		var n int
+		var n uint64
 		var err error
-		if n, err = strconv.Atoi(t[i]); err != nil {
+		if n, err = strconv.ParseUint(t[i], 16, 8); err != nil {
 			return nil, err
 		}
 		if n > 0xff {
