@@ -53,7 +53,7 @@ func register(protocolType ProtocolType, handler Handler) error {
 
 	protocols = append(protocols, p)
 
-	fmt.Printf("%s is registered.\n", protocolType.String())
+	log.Printf("%s is registered.\n", protocolType.String())
 
 	return nil
 }
