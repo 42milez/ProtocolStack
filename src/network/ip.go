@@ -8,13 +8,19 @@ import (
 const IpHeaderSizeMin = 20
 const IpHeaderSizeMax = 60
 
-// AddrFamily is IP address family.
-type AddrFamily int
-
 const (
 	FamilyV4 AddrFamily = iota
 	FamilyV6
 )
+
+// IP address lengths (bytes).
+const (
+	V4AddrLen = 4
+	V6AddrLen = 16
+)
+
+// AddrFamily is IP address family.
+type AddrFamily int
 
 func (f AddrFamily) String() string {
 	switch f {
@@ -27,22 +33,13 @@ func (f AddrFamily) String() string {
 	}
 }
 
-// IpInputHandler handles incoming datagram.
-func IpInputHandler(data []uint8, dev device.Device) {}
-
-// IP address lengths (bytes).
-const (
-	V4AddrLen = 4
-	V6AddrLen = 16
-)
+// An IP is a single IP address.
+type IP []byte
 
 var (
 	V4Broadcast = V4(255, 255, 255, 255)
 	V4Zero      = V4(0, 0, 0, 0)
 )
-
-// An IP is a single IP address.
-type IP []byte
 
 // isZeros checks if ip all zeros.
 func isZeros(ip IP) bool {
@@ -52,6 +49,77 @@ func isZeros(ip IP) bool {
 		}
 	}
 	return true
+}
+
+// parseV4 parses string as IPv4 address.
+func parseV4(s string) IP {
+	var p [V4AddrLen]byte
+	for i := 0; i < V4AddrLen; i++ {
+		if i > 0 {
+			if s[0] != '.' {
+				return nil
+			}
+			s = s[1:]
+		}
+		n, c, ok := stoi(s)
+		if !ok || n > 0xff {
+			return nil
+		}
+		s = s[c:]
+		p[i] = byte(n)
+	}
+	return V4(p[0], p[1], p[2], p[3])
+}
+
+// parseV6 parses string as IPv6 address.
+func parseV6(s string) IP {
+	// TODO: parse the string as IPv6 address
+	return nil
+}
+
+// stoi converts string to integer and returns number, characters consumed, and success.
+func stoi(s string) (n int, c int, ok bool) {
+	n = 0
+	c = 0
+	for c = 0; c < len(s) && '0' <= s[c] && s[c] <= '9'; c++ {
+		n = n * 10 + int(s[c] - '0')
+	}
+	if c == 0 {
+		return 0, 0, false
+	}
+	return n, c, true
+}
+
+// ubtoa encodes the string form of the integer v to dst[start:] and
+// returns the number of bytes written to dst.
+func ubtoa(dst []byte, start int, v byte) int {
+	if v < 10 {
+		dst[start] = v + '0' // convert a decimal number into ASCII code
+		return 1
+	}
+	if v < 100 {
+		dst[start + 1] = v % 10 + '0'
+		dst[start] = v / 10 + '0'
+		return 2
+	}
+	dst[start + 2] = (v % 10) + '0'
+	dst[start + 1] = ((v / 10) % 10) + '0'
+	dst[start] = (v / 100) + '0'
+	return 3
+}
+
+// ParseIP parses string as IPv4 or IPv6 address by detecting its format.
+func ParseIP(s string) IP {
+	if len(s) == 0 {
+		return nil
+	}
+	if strings.Contains(s, ".") {
+		return parseV4(s)
+	}
+	if strings.Contains(s, ":") {
+		return parseV6(s)
+	}
+	return nil
 }
 
 // String returns the string form of IP.
@@ -91,37 +159,6 @@ func (ip IP) ToV4() IP {
 	return nil
 }
 
-// stoi converts string to integer and returns number, characters consumed, and success.
-func stoi(s string) (n int, c int, ok bool) {
-	n = 0
-	c = 0
-	for c = 0; c < len(s) && '0' <= s[c] && s[c] <= '9'; c++ {
-		n = n * 10 + int(s[c] - '0')
-	}
-	if c == 0 {
-		return 0, 0, false
-	}
-	return n, c, true
-}
-
-// ubtoa encodes the string form of the integer v to dst[start:] and
-// returns the number of bytes written to dst.
-func ubtoa(dst []byte, start int, v byte) int {
-	if v < 10 {
-		dst[start] = v + '0' // convert a decimal number into ASCII code
-		return 1
-	}
-	if v < 100 {
-		dst[start + 1] = v % 10 + '0'
-		dst[start] = v / 10 + '0'
-		return 2
-	}
-	dst[start + 2] = (v % 10) + '0'
-	dst[start + 1] = ((v / 10) % 10) + '0'
-	dst[start] = (v / 100) + '0'
-	return 3
-}
-
 // The prefix for the special addresses described in RFC5952.
 //var v4InV6Prefix = []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff}
 
@@ -147,42 +184,5 @@ func V4(a, b, c, d byte) IP {
 	return p
 }
 
-// parseV4 parses string as IPv4 address.
-func parseV4(s string) IP {
-	var p [V4AddrLen]byte
-	for i := 0; i < V4AddrLen; i++ {
-		if i > 0 {
-			if s[0] != '.' {
-				return nil
-			}
-			s = s[1:]
-		}
-		n, c, ok := stoi(s)
-		if !ok || n > 0xff {
-			return nil
-		}
-		s = s[c:]
-		p[i] = byte(n)
-	}
-	return V4(p[0], p[1], p[2], p[3])
-}
-
-// parseV6 parses string as IPv6 address.
-func parseV6(s string) IP {
-	// TODO: parse the string as IPv6 address
-	return nil
-}
-
-// ParseIP parses string as IPv4 or IPv6 address by detecting its format.
-func ParseIP(s string) IP {
-	if len(s) == 0 {
-		return nil
-	}
-	if strings.Contains(s, ".") {
-		return parseV4(s)
-	}
-	if strings.Contains(s, ":") {
-		return parseV6(s)
-	}
-	return nil
-}
+// IpInputHandler handles incoming datagram.
+func IpInputHandler(data []uint8, dev device.Device) {}
