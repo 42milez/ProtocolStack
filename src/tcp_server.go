@@ -7,7 +7,10 @@ import (
 	"github.com/42milez/ProtocolStack/src/network"
 	"github.com/42milez/ProtocolStack/src/route"
 	"log"
+	"sync"
 )
+
+var wg sync.WaitGroup
 
 func setup() error {
 	var dev *device.Device
@@ -42,7 +45,7 @@ func setup() error {
 	route.RegisterDefaultGateway(iface, network.ParseIP("192.0.2.1"))
 
 	// Create sub-thread for polling.
-	if err = middleware.Start(); err != nil {
+	if err = middleware.Start(&wg); err != nil {
 		return err
 	}
 
@@ -52,8 +55,9 @@ func setup() error {
 func main() {
 	if err := setup(); err != nil {
 		log.Println(err.Error())
-		log.Fatal("Setup failed.")
+		log.Fatal("setup failed.")
 	}
-
-	log.Printf("Hello, TCP server!")
+	log.Println("Hello, TCP server!")
+	wg.Wait()
+	log.Println("server stopped.")
 }

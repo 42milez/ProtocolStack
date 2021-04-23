@@ -7,6 +7,7 @@ import (
 	"github.com/42milez/ProtocolStack/src/network"
 	"log"
 	"strconv"
+	"sync"
 	"syscall"
 	"time"
 )
@@ -83,7 +84,7 @@ func Setup() error {
 	return nil
 }
 
-func Start() error {
+func Start(wg *sync.WaitGroup) error {
 	var err error
 
 	for _, dev := range devices {
@@ -92,7 +93,9 @@ func Start() error {
 		}
 	}
 
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		log.Println("running...")
 		time.Sleep(time.Second)
 	}()
