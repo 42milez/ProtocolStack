@@ -1,9 +1,6 @@
 ## ProtocolStack
 This repository is for learning network programming in Go.
 
-## Instructions
-### 
-
 ## References
 - Articles
   - [Demystifying memory management in modern programming languages](https://deepu.tech/memory-management-in-programming)
