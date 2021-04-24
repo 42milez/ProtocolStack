@@ -1,0 +1,16 @@
+services:
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    stdin_open: true
+    tty: true
+    environment:
+      - GO111MODULE=on
+      - GOBIN=${HOME}/.bin
+      - GOMODCACHE=${HOME}/.cache/go_mod
+      - GOPATH=/usr/local/opt/go
+    volumes:
+      - ./src:/var/app/src
+      - ./go.mod:/var/app/go.mod
+      - ./Makefile:/var/app/Makefile

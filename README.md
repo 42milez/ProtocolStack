@@ -1,6 +1,9 @@
 ## ProtocolStack
 This repository is for learning network programming in Go.
 
+## Instructions
+### 
+
 ## References
 - Articles
   - [Demystifying memory management in modern programming languages](https://deepu.tech/memory-management-in-programming)
@@ -12,6 +15,12 @@ This repository is for learning network programming in Go.
   - [Mastering Go - Second Edition](https://www.packtpub.com/product/mastering-go-second-edition/9781838559335)
   - [Multiplayer Game Programming: Architecting Networked Games](https://www.oreilly.com/library/view/multiplayer-game-programming/9780134034355)
   - [TCP/IP Illustrated](https://en.wikipedia.org/wiki/TCP/IP_Illustrated)
+- Docs
+  - [DNF, the next-generation replacement for YUM](https://dnf.readthedocs.io/en/latest/index.html)
+  - Docker
+    - [Compose file](https://docs.docker.com/compose/compose-file/)
+    - [Dockerfile](https://docs.docker.com/engine/reference/builder/)
+    - [Overview of Docker Compose](https://docs.docker.com/compose/)
 - Go
   - [Command vet](https://golang.org/cmd/vet)
   - [Data Race Detector](https://golang.org/doc/articles/race_detector)
