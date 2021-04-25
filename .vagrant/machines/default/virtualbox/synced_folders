@@ -1,1 +1,0 @@
-{"rsync":{"/home/vagrant/app":{"type":"rsync","rsync_auto":true,"rsync__exclude":[".git/"],"guestpath":"/home/vagrant/app","hostpath":"/Users/k12n3ud0n/Workspace/ProtocolStack","disabled":false,"__vagrantfile":true,"exclude":[".git/"],"owner":"vagrant","group":"vagrant"}}}
