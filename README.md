@@ -20,7 +20,7 @@ Note: Mutagen synchronizes files between local system and virtual machine.
 You can perform these commands like bellow:
 
 ```shell
-> ./server.sh start # start the VM and create the Mutagen session.
+> ./server.sh start # start a VM and create a Mutagen session.
 > ./server.sh stop  # stop the VM and terminate the Mutagen session.
 ```
 
