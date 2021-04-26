@@ -1,2 +1,3 @@
 .vagrant/
 bin/
+mutagen.yml.lock

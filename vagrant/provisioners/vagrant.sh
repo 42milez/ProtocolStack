@@ -20,7 +20,7 @@ if ! type go > /dev/null 2>&1; then
     echo ""
     echo "# Go"
     echo "export GO111MODULE=on"
-    echo 'export GOBIN="/.bin"'
+    echo 'export GOBIN="${HOME}/.bin"'
     echo 'export GOMODCACHE="${HOME}/.cache/go_mod"'
     echo 'export GOPATH="${HOME}/.go"'
     echo 'PATH="${PATH}:${GOBIN}"'

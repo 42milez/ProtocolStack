@@ -2,16 +2,26 @@
 This repository is for learning network programming in Go.
 
 ## Instructions
-Uses guest OS as a server for remote debugging.
+### 1. Prepare dev server
+ProtocolStack needs TAP device for its capability. For the reason, this project uses a virtual machine (Linux) as dev server to debug the application. Software required is as follows: 
 
-### Start dev server
-```shell
-./server.sh start
-```
+- [Mutagen](https://github.com/mutagen-io/mutagen)
+- [Vagrant](https://www.vagrantup.com/)
+- [VirtualBox](https://www.virtualbox.org/)
 
-### Stop dev server
+Note: Mutagen synchronizes files between local system and virtual machine.
+
+### 2. Start / Stop dev server
+`server.sh` starts/stops dev server. The available commands are as follows:
+
+- `start` start dev server
+- `stop` stop dev server
+
+You can perform these commands like bellow:
+
 ```shell
-./server.sh stop
+> ./server.sh start # start the VM and create the Mutagen session.
+> ./server.sh stop  # stop the VM and terminate the Mutagen session.
 ```
 
 ## References
