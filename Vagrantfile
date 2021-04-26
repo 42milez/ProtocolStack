@@ -5,12 +5,12 @@ Vagrant.configure("2") do |config|
   config.vm.box = "generic/fedora33"
   config.vm.define "ps.vagrant" do |instance|
     instance.vm.provider :virtualbox do |vb|
-      vb.gui = false
       vb.cpus = 4
-      vb.memory = 8192
-      vb.name = "ps.vagrant"
       vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
       vb.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
+      vb.gui = false
+      vb.memory = 8192
+      vb.name = "ps.vagrant"
     end
   end
   config.vm.hostname = "ps.vagrant"
