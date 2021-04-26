@@ -5,6 +5,10 @@ set -eu
 readonly CMD=$1
 readonly VM_NAME=ps.vagrant
 
+terminate_mutagen_project() {
+  test -e mutagen.yml.lock && mutagen project terminate
+}
+
 start() {
   if vagrant status ${VM_NAME} | grep "running (virtualbox)" > /dev/null 2>&1; then
     echo "already started."
@@ -12,12 +16,12 @@ start() {
   fi
   vagrant up
 
-  test -e mutagen.yml.lock && mutagen project terminate
+  terminate_mutagen_project
   mutagen project start -f mutagen.yml
 }
 
 stop() {
-  test -e mutagen.yml.lock && mutagen project terminate
+  terminate_mutagen_project
 
   if vagrant status ${VM_NAME} | grep "poweroff (virtualbox)" > /dev/null 2>&1; then
     echo "already stopped."
