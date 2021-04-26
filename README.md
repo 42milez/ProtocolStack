@@ -1,6 +1,19 @@
 ## ProtocolStack
 This repository is for learning network programming in Go.
 
+## Instructions
+Uses guest OS as a server for remote debugging.
+
+### Start dev server
+```shell
+./server.sh start
+```
+
+### Stop dev server
+```shell
+./server.sh stop
+```
+
 ## References
 - Articles
   - [Demystifying memory management in modern programming languages](https://deepu.tech/memory-management-in-programming)
@@ -18,6 +31,8 @@ This repository is for learning network programming in Go.
     - [Compose file](https://docs.docker.com/compose/compose-file/)
     - [Dockerfile](https://docs.docker.com/engine/reference/builder/)
     - [Overview of Docker Compose](https://docs.docker.com/compose/)
+  - Mutagen
+    - [File synchronization](https://mutagen.io/documentation/synchronization)
   - Vagrant
     - [Vagrantfile](https://www.vagrantup.com/docs/vagrantfile)
 - Go
