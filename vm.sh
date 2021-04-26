@@ -6,7 +6,7 @@ readonly CMD=$1
 readonly VM_NAME=ps.vagrant
 
 start() {
-  echo "Virtual machine is starting up..."
+  echo "Starting up virtual machine..."
 
   if vagrant status ${VM_NAME} | grep "running (virtualbox)" > /dev/null 2>&1; then
     echo "Virtual machine is already running."
@@ -21,7 +21,7 @@ start() {
 }
 
 stop() {
-  echo "Virtual machine is shutting down..."
+  echo "Shutting down virtual machine..."
 
   test -e mutagen.yml.lock && mutagen project terminate
 
@@ -35,7 +35,7 @@ stop() {
 }
 
 restart() {
-  echo "Virtual machine is restarting..."
+  echo "Restarting virtual machine..."
 
   if ! vagrant status ${VM_NAME} | grep "running (virtualbox)" > /dev/null 2>&1; then
     echo "Virtual machine is not running."
