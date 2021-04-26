@@ -17,7 +17,7 @@ start() {
   test -e mutagen.yml.lock && mutagen project terminate
   mutagen project start -f mutagen.yml
 
-  echo "👍 Virtual machine has started!!"
+  echo "Virtual machine has started!! ✨"
 }
 
 stop() {
@@ -31,7 +31,7 @@ stop() {
   fi
   vagrant halt
 
-  echo "😪 Virtual machine has stopped."
+  echo "Virtual machine has stopped. 😪"
 }
 
 restart() {
@@ -45,7 +45,7 @@ restart() {
 
   mutagen project reset -f mutagen.yml
 
-  echo "👍 Virtual machine has restarted!!"
+  echo "Virtual machine has restarted!! 👍"
 }
 
 case $CMD in
