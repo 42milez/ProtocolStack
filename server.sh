@@ -12,16 +12,12 @@ start() {
   fi
   vagrant up
 
-  if [ -e mutagen.yml.lock ]; then
-    mutagen project terminate
-  fi
+  test -e mutagen.yml.lock && mutagen project terminate
   mutagen project start -f mutagen.yml
 }
 
 stop() {
-  if [ -e mutagen.yml.lock ]; then
-    mutagen project terminate
-  fi
+  test -e mutagen.yml.lock && mutagen project terminate
 
   if vagrant status ${VM_NAME} | grep "poweroff (virtualbox)" > /dev/null 2>&1; then
     echo "already stopped."
