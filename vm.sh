@@ -19,7 +19,7 @@ start() {
   test -e "${MUTAGEN_LOCK_FILE}" && mutagen project terminate
   mutagen project start -f "${MUTAGEN_FILE}"
 
-  echo "Virtual machine has started!! ✨"
+  echo "Virtual machine has started. ✨"
 }
 
 stop() {
@@ -47,7 +47,7 @@ restart() {
 
   mutagen project reset -f "${MUTAGEN_FILE}"
 
-  echo "Virtual machine has restarted!! 👍"
+  echo "Virtual machine has restarted. 👍"
 }
 
 case $CMD in

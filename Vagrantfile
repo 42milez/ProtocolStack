@@ -20,6 +20,7 @@ Vagrant.configure("2") do |config|
     end
   end
   config.vm.hostname = HOSTNAME
+  config.vm.network :forwarded_port, guest: 2345, host: 2345
   config.vm.network :private_network, ip: STATIC_IP
   config.vm.provision "shell", path: "./vagrant/provisioners/root.sh"
   config.vm.provision "shell", path: "./vagrant/provisioners/vagrant.sh", privileged: false

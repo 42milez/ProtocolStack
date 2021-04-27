@@ -6,6 +6,7 @@ sync:
         - ".idea/"
         - ".vagrant/"
         - ".gitignore"
+        - "bin/"
     mode: "two-way-resolved"
     permissions:
       defaultDirectoryMode: 0755

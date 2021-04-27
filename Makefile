@@ -49,8 +49,8 @@ resolve: go-mod
 go-build:
 	@echo "  >  Building binary..."
 	@mkdir -p $(GOBIN)
-	@go build -o $(GOBIN)/$(TCP_CLIENT_BIN) $(TCP_CLIENT_FILES)
-	@go build -o $(GOBIN)/$(TCP_SERVER_BIN) $(TCP_SERVER_FILES)
+	@go build -gcflags="all=-N -l" -o $(GOBIN)/$(TCP_CLIENT_BIN) $(TCP_CLIENT_FILES)
+	@go build -gcflags="all=-N -l" -o $(GOBIN)/$(TCP_SERVER_BIN) $(TCP_SERVER_FILES)
 
 .PHONY: go-clean
 go-clean:
