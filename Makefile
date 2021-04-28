@@ -43,6 +43,11 @@ compile:
 .PHONY: resolve
 resolve: go-mod
 
+## test: Run all tests.
+.PHONY: test
+test:
+	@go test -v ./src/network
+
 #  Go Commands
 # --------------------------------------------------
 .PHONY: go-build
