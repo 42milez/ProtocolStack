@@ -1,5 +1,8 @@
-FROM fedora:33
+FROM golang:1.16.3-alpine3.13
 
-ENV APPROOT /var/app
+RUN \
+    apk update && \
+    apk add --no-cache make && \
+    rm -rf '/var/cache/apk/*'
 
-WORKDIR $APPROOT
+WORKDIR /app

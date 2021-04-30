@@ -1,7 +1,13 @@
 services:
-  dev:
+  base: &base
     build:
       context: .
       dockerfile: Dockerfile
+    image: protocol-stack:latest
     stdin_open: true
     tty: true
+  test:
+    <<: *base
+    command: make test
+    volumes:
+      - .:/app
