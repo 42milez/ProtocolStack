@@ -6,7 +6,5 @@ git:
   submodules: false
 matrix:
   fast_finish: true
-before_script:
-  - make compile
 script:
   - make test
