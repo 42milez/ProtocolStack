@@ -1,10 +1,10 @@
 include .env
 
-PROJECTNAME = $(shell basename "$(PWD)")
+PROJECT_NAME = $(shell basename "$(PWD)")
 
 GOBIN = "$(PWD)/bin"
 
-STDERR = /tmp/$(PROJECTNAME)-stderr.txt
+STDERR = /tmp/$(PROJECT_NAME)-stderr.txt
 MAKEFLAGS += --silent
 
 TCP_CLIENT_FILES = src/tcp_client.go
@@ -16,7 +16,7 @@ TCP_SERVER_BIN = tcp_server
 .PHONY: help
 help: Makefile
 	@echo
-	@echo " Choose a command run in "$(PROJECTNAME)":"
+	@echo " Choose a command run in "$(PROJECT_NAME)":"
 	@echo
 	@sed -n 's/^##//p' $< | column -t -s ':' |  sed -e 's/^/ /'
 	@echo
@@ -42,6 +42,11 @@ compile:
 ## resolve: Resolve dependencies.
 .PHONY: resolve
 resolve: go-mod
+
+## test: Run all tests.
+.PHONY: test
+test:
+	@go test -v ./src/network
 
 #  Go Commands
 # --------------------------------------------------
