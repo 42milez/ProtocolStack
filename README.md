@@ -1,4 +1,5 @@
 ## ProtocolStack
+[![CI](https://github.com/42milez/ProtocolStack/actions/workflows/ci.yml/badge.svg)](https://github.com/42milez/ProtocolStack/actions/workflows/ci.yml)  
 This repository is for learning network programming in Go.
 
 ## Instructions
