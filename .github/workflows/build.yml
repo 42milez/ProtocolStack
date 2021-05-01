@@ -9,6 +9,7 @@ jobs:
       - name: Compile
         run: make compile
   test:
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - name: Check out
