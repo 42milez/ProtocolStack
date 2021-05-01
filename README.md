@@ -41,6 +41,8 @@ You can perform these commands like bellow:
     - [Compose file](https://docs.docker.com/compose/compose-file/)
     - [Dockerfile](https://docs.docker.com/engine/reference/builder/)
     - [Overview of Docker Compose](https://docs.docker.com/compose/)
+  - GitHub Actions
+    - [Reference](https://docs.github.com/en/actions/reference)
   - Mutagen
     - [File synchronization](https://mutagen.io/documentation/synchronization)
   - Vagrant
