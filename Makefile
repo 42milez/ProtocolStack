@@ -34,7 +34,7 @@ clean: go-clean
 ## compile: Clean up caches, resolve dependencies, build the program.
 .PHONY: compile
 compile:
-	@-rm $(STDERR)
+	@-rm -f $(STDERR)
 	@-touch $(STDERR)
 	@-$(MAKE) -s go-compile 2> $(STDERR)
 	@cat $(STDERR) | sed -e '1s/.*/\nError:\n/'  | sed 's/make\[.*/ /' | sed "/^/s/^/     /" 1>&2
