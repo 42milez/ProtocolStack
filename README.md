@@ -49,7 +49,9 @@ You can perform these commands like bellow:
   - Vagrant
     - [Vagrantfile](https://www.vagrantup.com/docs/vagrantfile)
 - Go
+  - [Command compile](https://golang.org/cmd/compile/)
   - [Command vet](https://golang.org/cmd/vet)
+  - [Compiler And Runtime Optimizations](https://github.com/golang/go/wiki/CompilerOptimizations)
   - [Data Race Detector](https://golang.org/doc/articles/race_detector)
   - [Effective Go](https://golang.org/doc/effective_go)
   - [Frequently Asked Questions (FAQ)](https://golang.org/doc/faq)

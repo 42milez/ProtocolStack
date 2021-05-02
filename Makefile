@@ -13,12 +13,19 @@ TCP_CLIENT_BIN = tcp_client
 TCP_SERVER_FILES = src/tcp_server.go
 TCP_SERVER_BIN = tcp_server
 
+ifeq ($(RELEASE), true)
+  BUILD_FLAGS = ""
+else
+  # https://golang.org/doc/gdb#Introduction
+  BUILD_FLAGS = '-gcflags=all="-N -l"'
+endif
+
 .PHONY: help
 help: Makefile
 	@echo
 	@echo " Choose a command run in "$(PROJECT_NAME)":"
 	@echo
-	@sed -n 's/^##//p' $< | column -t -s ':' |  sed -e 's/^/ /'
+	@sed -n "s/^##//p" $< | column -t -s ":" |  sed -e "s/^/ /"
 	@echo
 
 #  Make Commands
@@ -54,8 +61,8 @@ test:
 go-build:
 	@echo "  >  Building binary..."
 	@mkdir -p $(GOBIN)
-	@go build -gcflags="all=-N -l" -o $(GOBIN)/$(TCP_CLIENT_BIN) $(TCP_CLIENT_FILES)
-	@go build -gcflags="all=-N -l" -o $(GOBIN)/$(TCP_SERVER_BIN) $(TCP_SERVER_FILES)
+	@go build $(BUILD_FLAGS) -o $(GOBIN)/$(TCP_CLIENT_BIN) $(TCP_CLIENT_FILES)
+	@go build $(BUILD_FLAGS) -o $(GOBIN)/$(TCP_SERVER_BIN) $(TCP_SERVER_FILES)
 
 .PHONY: go-clean
 go-clean:
