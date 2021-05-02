@@ -13,10 +13,11 @@ TCP_CLIENT_BIN = tcp_client
 TCP_SERVER_FILES = src/tcp_server.go
 TCP_SERVER_BIN = tcp_server
 
+# https://golang.org/cmd/compile/#hdr-Command_Line
+# https://golang.org/doc/gdb#Introduction
 ifeq ($(RELEASE), true)
   BUILD_FLAGS = ""
 else
-  # https://golang.org/doc/gdb#Introduction
   BUILD_FLAGS = '-gcflags=all="-N -l"'
 endif
 
