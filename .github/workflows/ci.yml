@@ -32,15 +32,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
       - name: Upload coverage to Codecov
         run: bash <(curl -s https://codecov.io/bash)
-  on-success:
-    needs: [ build, test ]
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ ubuntu-latest ]
-    steps:
-      - uses: actions/checkout@v2
-      - name: Notify error to Slack
+      - name: Post error message to Slack on failure
         if: ${{ success() }}
         run: ./.github/send_error_to_slack.sh
         env:

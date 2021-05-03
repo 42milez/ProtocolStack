@@ -15,7 +15,9 @@ readonly DATA=$(cat <<EOF
           }
         }
       ],
+      "channel": "github",
       "color": "danger",
+      "username": "GitHub Support"
     }
   ]
 }
