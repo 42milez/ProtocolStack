@@ -39,9 +39,10 @@ jobs:
       matrix:
         os: [ ubuntu-latest ]
     steps:
+      - uses: actions/checkout@v2
       - name: Notify error to Slack
         if: ${{ success() }}
-        run: bash ./scripts/slack/post_message_on_failure_in_ci.sh
+        run: ./.github/send_error_to_slack.sh
         env:
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_REPOSITORY_NAME: ${{ github.repository }}
