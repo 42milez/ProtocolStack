@@ -41,7 +41,7 @@ jobs:
     steps:
       - name: Notify error to Slack
         if: ${{ success() }}
-        run: ./github/post_message_to_slack.sh
+        run: ./.github/post_message_to_slack.sh
         env:
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_REPOSITORY_NAME: ${{ github.repository }}
