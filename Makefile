@@ -30,26 +30,26 @@ help: Makefile
 
 #  Make Commands
 # --------------------------------------------------
-## build: Build project.
+## build: build project
 .PHONY: build
 build: go-build
 
-## clean: Clean up caches.
+## clean: clean up caches
 .PHONY: clean
 clean: go-clean
 
-## compile: Clean up caches, resolve dependencies, build the program.
+## compile: clean up caches, resolve dependencies, and build the program
 .PHONY: compile
 compile:
 	@-rm -f $(STDERR)
 	@-touch $(STDERR)
 	@-$(MAKE) -s go-compile 2> $(STDERR)
 
-## resolve: Resolve dependencies.
+## resolve: resolve dependencies
 .PHONY: resolve
 resolve: go-mod
 
-## test: Run all tests.
+## test: run all tests
 .PHONY: test
 test:
 	@go test -v ./src/network
