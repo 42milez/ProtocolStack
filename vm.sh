@@ -2,6 +2,11 @@
 
 set -eu
 
+if [ $# -eq 0 ]; then
+  ./vm.sh help
+  exit 1
+fi
+
 readonly CMD=$1
 readonly MUTAGEN_FILE=mutagen.yml
 readonly MUTAGEN_LOCK_FILE=mutagen.yml.lock
