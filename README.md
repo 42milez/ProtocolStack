@@ -58,6 +58,8 @@ You can perform these commands like bellow:
     - [Should I define methods on values or pointers?](https://golang.org/doc/faq#methods_on_values_or_pointers)
       - [Value vs Pointer Receivers](https://h12.io/article/value-vs-pointer-receivers)
   - [Package testing](https://golang.org/pkg/testing)
+  - Packages
+    - [github.com/google/go-cmp/cmp](https://pkg.go.dev/github.com/google/go-cmp/cmp)
   - [The Go Memory Model](https://golang.org/ref/mem)
   - [The Go Programming Language Specification](https://golang.org/ref/spec)
 - Makefile
