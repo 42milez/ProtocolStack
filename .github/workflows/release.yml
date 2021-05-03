@@ -18,8 +18,8 @@ jobs:
         run: make compile RELEASE=true
       - name: Archive
         run: |
-          tar -zcvf ./bin/tcp_client.tar.gz ./bin/tcp_client
-          tar -zcvf ./bin/tcp_server.tar.gz ./bin/tcp_server
+          tar -zcvf ./bin/tcp_client-linux64.tar.gz ./bin/tcp_client
+          tar -zcvf ./bin/tcp_server-linux64.tar.gz ./bin/tcp_server
       - name: Create release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
