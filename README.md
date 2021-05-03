@@ -60,6 +60,8 @@ You can perform these commands like bellow:
   - [Package testing](https://golang.org/pkg/testing)
   - [The Go Memory Model](https://golang.org/ref/mem)
   - [The Go Programming Language Specification](https://golang.org/ref/spec)
+  - Packages
+    - [github.com/google/go-cmp/cmp](https://pkg.go.dev/github.com/google/go-cmp/cmp)
 - Makefile
   - [A Good Makefile for Go](https://kodfabrik.com/journal/a-good-makefile-for-go)
   - [An Introduction to Makefiles](https://www.gnu.org/software/make/manual/html_node/Introduction.html)
