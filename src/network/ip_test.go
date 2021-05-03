@@ -18,14 +18,6 @@ func TestAddrFamily_String(t *testing.T) {
 	}
 }
 
-func TestParseIP(t *testing.T) {
-	want := IP{192, 168, 0, 1}
-	got := ParseIP("192.168.0.1")
-	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf("ParseIP(\"192.168.0.1\") = %v; want %v; diff %v", got, want, diff)
-	}
-}
-
 func TestIP_String(t *testing.T) {
 	want := "192.168.0.1"
 	ip := IP{192, 168, 0, 1}
@@ -46,6 +38,14 @@ func TestIP_ToV4(t *testing.T) {
 	got = ip.ToV4()
 	if diff := cmp.Diff(got, want); diff != "" {
 		t.Errorf("IP.ToV4() = %v; want %v; diff %v", got, want, diff)
+	}
+}
+
+func TestParseIP(t *testing.T) {
+	want := IP{192, 168, 0, 1}
+	got := ParseIP("192.168.0.1")
+	if diff := cmp.Diff(got, want); diff != "" {
+		t.Errorf("ParseIP(\"192.168.0.1\") = %v; want %v; diff %v", got, want, diff)
 	}
 }
 
