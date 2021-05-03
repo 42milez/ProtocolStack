@@ -11,7 +11,7 @@ readonly DATA=$(cat <<EOF
           "type": "section",
           "text": {
             "type": "mrkdwn",
-            "text": "${WORKFLOW_NAME} <https://github.com/${REPOSITORY_OWNER}/${REPOSITORY_NAME}/actions/runs/${WORKFLOW_RUN_ID}|#${WORKFLOW_RUN_NUMBER} (${WORKFLOW_RUN_ID})> of ${REPOSITORY_OWNER}/${REPOSITORY_NAME}@${REPOSITORY_REF} by ${ACTOR} failed."
+            "text": "${WORKFLOW_NAME} <https://github.com/${REPOSITORY}/actions/runs/${WORKFLOW_RUN_ID}|#${WORKFLOW_RUN_NUMBER} (${WORKFLOW_RUN_ID})> of ${REPOSITORY}@${REPOSITORY_HEAD_REF} by ${ACTOR} failed."
           }
         }
       ],

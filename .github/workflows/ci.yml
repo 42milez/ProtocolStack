@@ -45,9 +45,8 @@ jobs:
         run: ./.github/post_error_message_to_slack.sh
         env:
           ACTOR: ${{ github.actor }}
-          REPOSITORY_NAME: ${{ github.repository }}
-          REPOSITORY_OWNER: ${{ github.repository_owner }}
-          REPOSITORY_REF: ${{ github.ref }}
+          REPOSITORY: ${{ github.repository }}
+          REPOSITORY_HEAD_REF: ${{ github.head_ref }}
           WORKFLOW_NAME: ${{ github.workflow }}
           WORKFLOW_RUN_ID: ${{ github.run_id }}
           WORKFLOW_RUN_NUMBER: ${{ github.run_number }}
