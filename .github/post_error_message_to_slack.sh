@@ -13,7 +13,7 @@ else
 fi
 )
 readonly TEXT=$(cat <<EOF
-ERROR: ${GITHUB_WORKFLOW} <https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}|#${GITHUB_RUN_NUMBER}> of <https://github.com/${GITHUB_REPOSITORY}|${GITHUB_REPOSITORY}> (${LINK}) failed.\n
+Error: ${GITHUB_WORKFLOW} <https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}|#${GITHUB_RUN_NUMBER}> of <https://github.com/${GITHUB_REPOSITORY}|${GITHUB_REPOSITORY}> (${LINK}) failed.\n
 - ${GITHUB_HEAD_COMMIT_MESSAGE} (<https://github.com/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA}|${COMMIT_HASH}>) by ${GITHUB_ACTOR}
 EOF
 )
@@ -31,10 +31,12 @@ readonly DATA=$(cat <<EOF
           }
         }
       ],
-      "color": "danger"
+      "color": "#ff7171"
     },
   ],
+  "blocks": [],
   "channel": "github",
+  "text": "",
   "username": "GitHub Support"
 }
 EOF
