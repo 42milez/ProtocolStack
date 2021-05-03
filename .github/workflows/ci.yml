@@ -44,13 +44,13 @@ jobs:
         if: ${{ success() }}
         run: ./.github/post_error_message_to_slack.sh
         env:
-          GITHUB_ACTOR: ${{ github.actor }}
-          GITHUB_REPOSITORY_NAME: ${{ github.repository }}
-          GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
-          GITHUB_REPOSITORY_REF: ${{ github.ref }}
-          SLACK_BOT_USER_OAUTH_TOKEN: ${{ secrets.SLACK_BOT_USER_OAUTH_TOKEN }}
-          SLACK_CHANNEL: ${{ secrets.SLACK_CHANNEL }}
-          SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
+          ACTOR: ${{ github.actor }}
+          REPOSITORY_NAME: ${{ github.repository }}
+          REPOSITORY_OWNER: ${{ github.repository_owner }}
+          REPOSITORY_REF: ${{ github.ref }}
           WORKFLOW_NAME: ${{ github.workflow }}
           WORKFLOW_RUN_ID: ${{ github.run_id }}
           WORKFLOW_RUN_NUMBER: ${{ github.run_number }}
+          SLACK_BOT_USER_OAUTH_TOKEN: ${{ secrets.SLACK_BOT_USER_OAUTH_TOKEN }}
+          SLACK_CHANNEL: ${{ secrets.SLACK_CHANNEL }}
+          SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}
