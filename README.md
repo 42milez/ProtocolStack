@@ -59,6 +59,7 @@ You can perform these commands like bellow:
   - [Frequently Asked Questions (FAQ)](https://golang.org/doc/faq)
     - [Should I define methods on values or pointers?](https://golang.org/doc/faq#methods_on_values_or_pointers)
       - [Value vs Pointer Receivers](https://h12.io/article/value-vs-pointer-receivers)
+  - [Getting Started with Code Coverage for Golang](https://about.codecov.io/blog/getting-started-with-code-coverage-for-golang/)
   - [Package testing](https://golang.org/pkg/testing)
   - Packages
     - [github.com/google/go-cmp/cmp](https://pkg.go.dev/github.com/google/go-cmp/cmp)
