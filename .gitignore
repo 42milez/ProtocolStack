@@ -1,3 +1,4 @@
 .vagrant/
 bin/
+coverage.out
 mutagen.yml.lock

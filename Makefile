@@ -18,7 +18,7 @@ TCP_SERVER_BIN = tcp_server
 ifeq ($(RELEASE), true)
   BUILD_FLAGS = ""
 else
-  BUILD_FLAGS = -gcflags=all="-N -l"
+  BUILD_FLAGS = -race -gcflags=all="-N -l"
 endif
 
 .PHONY: help
@@ -52,7 +52,7 @@ resolve: go-mod
 ## test: run all tests
 .PHONY: test
 test:
-	@go test -v ./src/network
+	@go test -race -covermode=atomic -coverprofile=coverage.out -v ./src/network
 
 #  Go Commands
 # --------------------------------------------------
