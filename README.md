@@ -1,5 +1,5 @@
 ## ProtocolStack
-[![CI](https://github.com/42milez/ProtocolStack/actions/workflows/ci.yml/badge.svg)](https://github.com/42milez/ProtocolStack/actions/workflows/ci.yml)  
+[![CI](https://github.com/42milez/ProtocolStack/actions/workflows/ci.yml/badge.svg)](https://github.com/42milez/ProtocolStack/actions/workflows/ci.yml) [![codecov](https://codecov.io/gh/42milez/ProtocolStack/branch/main/graph/badge.svg?token=ALHDIWP6KH)](https://codecov.io/gh/42milez/ProtocolStack)  
 This repository is for learning network programming in Go.
 
 ## Instructions
@@ -12,17 +12,19 @@ ProtocolStack needs TAP device for its capability. For the reason, this project 
 
 Note: Mutagen synchronizes files between local system and virtual machine.
 
-### 2. Start / Stop virtual machine
-`vm.sh` starts/stops the virtual machine. The available commands are as follows:
+### 2. Control virtual machine
+`vm.sh` controls the virtual machine. The available commands are as follows:
 
-- `start` start virtual machine
-- `stop` stop virtual machine
+- `start` start the virtual machine
+- `stop` stop the virtual machine
+- `restart` restart the virtual machine
 
 You can perform these commands like bellow:
 
 ```shell
-> ./vm.sh start # start a VM and create a Mutagen session.
-> ./vm.sh stop  # stop the VM and terminate the Mutagen session.
+> ./vm.sh start   # Start a VM and create a Mutagen session.
+> ./vm.sh stop    # Stop the VM and terminate the Mutagen session.
+> ./vm.sh restart # Restart the VM and recreate the Mutagen session.
 ```
 
 ## References
@@ -57,6 +59,7 @@ You can perform these commands like bellow:
   - [Frequently Asked Questions (FAQ)](https://golang.org/doc/faq)
     - [Should I define methods on values or pointers?](https://golang.org/doc/faq#methods_on_values_or_pointers)
       - [Value vs Pointer Receivers](https://h12.io/article/value-vs-pointer-receivers)
+  - [Getting Started with Code Coverage for Golang](https://about.codecov.io/blog/getting-started-with-code-coverage-for-golang/)
   - [Package testing](https://golang.org/pkg/testing)
   - Packages
     - [github.com/google/go-cmp/cmp](https://pkg.go.dev/github.com/google/go-cmp/cmp)
