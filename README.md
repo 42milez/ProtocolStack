@@ -15,9 +15,9 @@ Note: Mutagen synchronizes files between local system and virtual machine.
 ### 2. Control virtual machine
 `vm.sh` controls the virtual machine. The available commands are as follows:
 
-- `start` start virtual machine
-- `stop` stop virtual machine
-- `restart` restart virtual machine
+- `start` start the virtual machine
+- `stop` stop the virtual machine
+- `restart` restart the virtual machine
 
 You can perform these commands like bellow:
 
