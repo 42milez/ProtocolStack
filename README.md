@@ -12,17 +12,19 @@ ProtocolStack needs TAP device for its capability. For the reason, this project 
 
 Note: Mutagen synchronizes files between local system and virtual machine.
 
-### 2. Start / Stop virtual machine
-`vm.sh` starts/stops the virtual machine. The available commands are as follows:
+### 2. Control virtual machine
+`vm.sh` controls the virtual machine. The available commands are as follows:
 
 - `start` start virtual machine
 - `stop` stop virtual machine
+- `restart` restart virtual machine
 
 You can perform these commands like bellow:
 
 ```shell
-> ./vm.sh start # start a VM and create a Mutagen session.
-> ./vm.sh stop  # stop the VM and terminate the Mutagen session.
+> ./vm.sh start   # Start a VM and create a Mutagen session.
+> ./vm.sh stop    # Stop the VM and terminate the Mutagen session.
+> ./vm.sh restart # Restart the VM and recreate the Mutagen session.
 ```
 
 ## References
