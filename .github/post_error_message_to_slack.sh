@@ -6,10 +6,10 @@ readonly COMMIT_HASH=$(echo "${GITHUB_SHA}" | cut -c 1-7)
 readonly LINK=$(
 if [[ "${GITHUB_REPOSITORY_REF}" =~ ^"refs/heads/" ]]; then
   readonly BRANCH=$(echo "${GITHUB_REPOSITORY_REF}" | cut -c 12-)
-  echo "<https://github.com/${GITHUB_REPOSITORY}/tree/${BRANCH}|${BRANCH}>"
+  echo "branch: <https://github.com/${GITHUB_REPOSITORY}/tree/${BRANCH}|${BRANCH}>"
 else
   readonly TAG=$(echo "${GITHUB_REPOSITORY_REF}" | cut -c 11-)
-  echo "<https://github.com/${GITHUB_REPOSITORY}/releases/tag/${TAG}|${TAG}>"
+  echo "tag: <https://github.com/${GITHUB_REPOSITORY}/releases/tag/${TAG}|${TAG}>"
 fi
 )
 readonly TEXT=$(cat <<EOF
