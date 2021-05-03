@@ -2,6 +2,12 @@
 
 set -eu
 
+readonly TEXT=$(cat <<EOF
+${GITHUB_WORKFLOW} <https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}|#${GITHUB_RUN_NUMBER}> of <https://github.com/${GITHUB_REPOSITORY}|${GITHUB_REPOSITORY}> (${GITHUB_REPOSITORY_REF}) failed.\n
+- ${GITHUB_HEAD_COMMIT_MESSAGE} (<https://github.com/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA}|$(echo "${GITHUB_SHA}" | cut -c 7 )>) by ${GITHUB_ACTOR}
+EOF
+)
+
 readonly DATA=$(cat <<EOF
 {
   "attachments": [
@@ -11,11 +17,11 @@ readonly DATA=$(cat <<EOF
           "type": "section",
           "text": {
             "type": "mrkdwn",
-            "text": "${WORKFLOW_NAME} <https://github.com/${REPOSITORY}/actions/runs/${WORKFLOW_RUN_ID}|#${WORKFLOW_RUN_NUMBER}> of ${REPOSITORY} (${REPOSITORY_REF}) by ${ACTOR} failed."
+            "text": "${TEXT}"
           }
         }
       ],
-    }
+    },
     "color": "danger"
   ],
   "channel": "github",
