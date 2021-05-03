@@ -34,10 +34,7 @@ jobs:
         run: bash <(curl -s https://codecov.io/bash)
   notify:
     needs: [ build, test ]
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ ubuntu-latest ]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Post error message to Slack on failure
