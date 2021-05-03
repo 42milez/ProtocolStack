@@ -15,7 +15,7 @@ jobs:
         with:
           go-version: "1.16"
       - name: Compile
-        run: make compile
+        run: make compile RELEASE=true
       - name: Archive
         run: |
           tar -zcvf ./bin/tcp_client.tar.gz ./bin/tcp_client
