@@ -18,13 +18,12 @@ TCP_SERVER_BIN = tcp_server
 ifeq ($(RELEASE), true)
   BUILD_FLAGS = ""
 else
-  BUILD_FLAGS = '-gcflags=all="-N -l"'
+  BUILD_FLAGS = -gcflags=all="-N -l"
 endif
 
 .PHONY: help
 help: Makefile
-	@echo
-	@echo " Choose a command run in "$(PROJECT_NAME)":"
+	@echo "Choose a command run in "$(PROJECT_NAME)":"
 	@echo
 	@sed -n "s/^##//p" $< | column -t -s ":" |  sed -e "s/^/ /"
 	@echo
@@ -45,7 +44,6 @@ compile:
 	@-rm -f $(STDERR)
 	@-touch $(STDERR)
 	@-$(MAKE) -s go-compile 2> $(STDERR)
-	@cat $(STDERR) | sed -e '1s/.*/\nError:\n/'  | sed 's/make\[.*/ /' | sed "/^/s/^/     /" 1>&2
 
 ## resolve: Resolve dependencies.
 .PHONY: resolve
@@ -60,14 +58,14 @@ test:
 # --------------------------------------------------
 .PHONY: go-build
 go-build:
-	@echo "  >  Building binary..."
+	@echo "Building binary..."
 	@mkdir -p $(GOBIN)
 	@go build $(BUILD_FLAGS) -o $(GOBIN)/$(TCP_CLIENT_BIN) $(TCP_CLIENT_FILES)
 	@go build $(BUILD_FLAGS) -o $(GOBIN)/$(TCP_SERVER_BIN) $(TCP_SERVER_FILES)
 
 .PHONY: go-clean
 go-clean:
-	@echo "  >  Cleaning build cache"
+	@echo "Cleaning build cache..."
 	@go clean
 
 .PHONY: go-compile
@@ -75,5 +73,5 @@ go-compile: go-clean go-mod go-build
 
 .PHONY: go-mod
 go-mod:
-	@echo "  >  Checking if there is any missing dependencies..."
+	@echo "Checking if there is any missing dependencies..."
 	@go mod tidy

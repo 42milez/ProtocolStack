@@ -19,6 +19,11 @@ const (
 	V6AddrLen = 16
 )
 
+var (
+	V4Broadcast = V4(255, 255, 255, 255)
+	V4Zero      = V4(0, 0, 0, 0)
+)
+
 // AddrFamily is IP address family.
 type AddrFamily int
 
@@ -36,10 +41,84 @@ func (f AddrFamily) String() string {
 // An IP is a single IP address.
 type IP []byte
 
-var (
-	V4Broadcast = V4(255, 255, 255, 255)
-	V4Zero      = V4(0, 0, 0, 0)
-)
+// String returns the string form of IP.
+func (ip IP) String() string {
+	if len(ip) == 0 {
+		return "<nil>"
+	}
+
+	const maxIPv4StringLen = len("255.255.255.255")
+	b := make(IP, maxIPv4StringLen)
+
+	n := ubtoa(b, 0, ip[0])
+	b[n] = '.'
+	n++
+
+	n += ubtoa(b, n, ip[1])
+	b[n] = '.'
+	n++
+
+	n += ubtoa(b, n, ip[2])
+	b[n] = '.'
+	n++
+
+	n += ubtoa(b, n, ip[3])
+
+	return string(b[:n])
+}
+
+// ToV4 converts IP to 4 bytes representation.
+func (ip IP) ToV4() IP {
+	if len(ip) == V4AddrLen {
+		return ip
+	}
+	if len(ip) == V6AddrLen && isZeros(ip[0:10]) && ip[10] == 0xff && ip[11] == 0xff {
+		return ip[12:16]
+	}
+	return nil
+}
+
+// IpInputHandler handles incoming datagram.
+func IpInputHandler(data []uint8, dev device.Device) {}
+
+// ParseIP parses string as IPv4 or IPv6 address by detecting its format.
+func ParseIP(s string) IP {
+	if len(s) == 0 {
+		return nil
+	}
+	if strings.Contains(s, ".") {
+		return parseV4(s)
+	}
+	if strings.Contains(s, ":") {
+		return parseV6(s)
+	}
+	return nil
+}
+
+// The prefix for the special addresses described in RFC5952.
+//var v4InV6Prefix = []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff}
+
+// v4 creates IP from bytes.
+//func v4(a, b, c, d byte) IP {
+//	p := make(IP, V6AddrLen)
+//	copy(p, v4InV6Prefix)
+//	p[12] = a
+//	p[13] = b
+//	p[14] = c
+//	p[15] = d
+//	return p
+//}
+
+// TODO: use IPv4-mapped address above
+// V4 creates IP from bytes.
+func V4(a, b, c, d byte) IP {
+	p := make(IP, V4AddrLen)
+	p[0] = a
+	p[1] = b
+	p[2] = c
+	p[3] = d
+	return p
+}
 
 // isZeros checks if ip all zeros.
 func isZeros(ip IP) bool {
@@ -107,82 +186,3 @@ func ubtoa(dst []byte, start int, v byte) int {
 	dst[start] = (v / 100) + '0'
 	return 3
 }
-
-// ParseIP parses string as IPv4 or IPv6 address by detecting its format.
-func ParseIP(s string) IP {
-	if len(s) == 0 {
-		return nil
-	}
-	if strings.Contains(s, ".") {
-		return parseV4(s)
-	}
-	if strings.Contains(s, ":") {
-		return parseV6(s)
-	}
-	return nil
-}
-
-// String returns the string form of IP.
-func (ip IP) String() string {
-	if len(ip) == 0 {
-		return "<nil>"
-	}
-
-	const maxIPv4StringLen = len("255.255.255.255")
-	b := make(IP, maxIPv4StringLen)
-
-	n := ubtoa(b, 0, ip[0])
-	b[n] = '.'
-	n++
-
-	n += ubtoa(b, n, ip[1])
-	b[n] = '.'
-	n++
-
-	n += ubtoa(b, n, ip[2])
-	b[n] = '.'
-	n++
-
-	n += ubtoa(b, n, ip[3])
-
-	return string(b[:n])
-}
-
-// ToV4 converts IP to 4 bytes representation.
-func (ip IP) ToV4() IP {
-	if len(ip) == V4AddrLen {
-		return ip
-	}
-	if len(ip) == V6AddrLen && isZeros(ip) && ip[10] == 0xff && ip[11] == 0xff {
-		return ip[12:16]
-	}
-	return nil
-}
-
-// The prefix for the special addresses described in RFC5952.
-//var v4InV6Prefix = []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff}
-
-// v4 creates IP from bytes.
-//func v4(a, b, c, d byte) IP {
-//	p := make(IP, V6AddrLen)
-//	copy(p, v4InV6Prefix)
-//	p[12] = a
-//	p[13] = b
-//	p[14] = c
-//	p[15] = d
-//	return p
-//}
-
-// TODO: use IPv4-mapped address above
-// V4 creates IP from bytes.
-func V4(a, b, c, d byte) IP {
-	p := make(IP, V4AddrLen)
-	p[0] = a
-	p[1] = b
-	p[2] = c
-	p[3] = d
-	return p
-}
-
-// IpInputHandler handles incoming datagram.
-func IpInputHandler(data []uint8, dev device.Device) {}
