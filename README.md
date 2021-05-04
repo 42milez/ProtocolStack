@@ -103,6 +103,8 @@ You can perform these commands like bellow:
     - [Thread pool](https://en.wikipedia.org/wiki/Thread_pool)
     - [Threading models](https://en.wikipedia.org/wiki/Thread_(computing)#Threading_models)
     - [Work stealing](https://en.wikipedia.org/wiki/Work_stealing)
+  - Others
+    - [Process substitution](https://en.wikipedia.org/wiki/Process_substitution)
 
 ## Notes
 - GO

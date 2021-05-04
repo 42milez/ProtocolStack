@@ -2,18 +2,17 @@
 
 set -eu
 
-readonly COLOR=$(
-case ${NEEDS_PREVIOUS_JOB_RESULT} in
-  "success") echo "#74c7b8";;
-  "failure") echo "#ef4f4f";;
-  "cancelled") echo "#f4d160";;
-  "skipped") echo "#dddddd";;
-  *) {
-    echo "Unknown job status."
-    exit 1
-  }
+read -r COLOR STATUS_MESSAGE < <(
+case "${NEEDS_PREVIOUS_JOB_RESULT}" in
+  "success") echo "#74c7b8" "passed";;
+  "failure") echo "#ef4f4f" "failed";;
+  "cancelled") echo "#f4d160" "was cancelled";;
+  "skipped") echo "#dddddd" "was skipped";;
+  *) exit 1
 esac
 )
+readonly COLOR
+readonly STATUS_MESSAGE
 
 readonly COMMIT_HASH=$(echo "${GITHUB_SHA}" | cut -c 1-7)
 
@@ -25,19 +24,6 @@ else
   readonly TAG=$(echo "${GITHUB_REPOSITORY_REF}" | cut -c 11-)
   echo "tag: <https://github.com/${GITHUB_REPOSITORY}/releases/tag/${TAG}|${TAG}>"
 fi
-)
-
-readonly STATUS_MESSAGE=$(
-case ${NEEDS_PREVIOUS_JOB_RESULT} in
-  "success") echo "passed";;
-  "failure") echo "failed";;
-  "cancelled") echo "was cancelled";;
-  "skipped") echo "was skipped";;
-  *) {
-    echo "Unknown job status."
-    exit 1
-  }
-esac
 )
 
 readonly TEXT=$(cat <<EOF

@@ -58,14 +58,14 @@ test:
 # --------------------------------------------------
 .PHONY: go-build
 go-build:
-	@echo "Building binary..."
+	@echo "🍔 Building binary..."
 	@mkdir -p $(GOBIN)
 	@go build $(BUILD_FLAGS) -o $(GOBIN)/$(TCP_CLIENT_BIN) $(TCP_CLIENT_FILES)
 	@go build $(BUILD_FLAGS) -o $(GOBIN)/$(TCP_SERVER_BIN) $(TCP_SERVER_FILES)
 
 .PHONY: go-clean
 go-clean:
-	@echo "Cleaning build cache..."
+	@echo "✨ Cleaning build cache..."
 	@go clean
 
 .PHONY: go-compile
@@ -73,5 +73,5 @@ go-compile: go-clean go-mod go-build
 
 .PHONY: go-mod
 go-mod:
-	@echo "Checking if there is any missing dependencies..."
+	@echo "🌏 Checking if there is any missing dependencies..."
 	@go mod tidy
