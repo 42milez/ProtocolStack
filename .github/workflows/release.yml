@@ -35,7 +35,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Post error message to Slack on failure
-        if: ${{ success() }}
+        if: ${{ failure() }}
         run: ./.github/post_error_message_to_slack.sh
         env:
           GITHUB_ACTOR: ${{ github.actor }}
