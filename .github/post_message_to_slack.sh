@@ -2,7 +2,10 @@
 
 set -eu
 
+readonly COLOR=$(if "${IS_SUCCESS}"; then echo "#8fd9a8"; else echo "#ff7171"; fi)
+
 readonly COMMIT_HASH=$(echo "${GITHUB_SHA}" | cut -c 1-7)
+
 readonly LINK=$(
 if [[ "${GITHUB_REPOSITORY_REF}" =~ ^"refs/heads/" ]]; then
   readonly BRANCH=$(echo "${GITHUB_REPOSITORY_REF}" | cut -c 12-)
@@ -12,9 +15,12 @@ else
   echo "tag: <https://github.com/${GITHUB_REPOSITORY}/releases/tag/${TAG}|${TAG}>"
 fi
 )
+
+readonly STATUS_MESSAGE=$(if "${IS_SUCCESS}"; then echo "passed"; else echo "failed"; fi)
+
 readonly TEXT=$(cat <<EOF
-[WF] ${GITHUB_WORKFLOW} (<https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}|#${GITHUB_RUN_NUMBER}>) of <https://github.com/${GITHUB_REPOSITORY}|${GITHUB_REPOSITORY}> (${LINK}) failed.\n
-- ${GITHUB_HEAD_COMMIT_MESSAGE} (<https://github.com/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA}|${COMMIT_HASH}>) by ${GITHUB_ACTOR}
+Workflow: ${GITHUB_WORKFLOW} (<https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}|#${GITHUB_RUN_NUMBER}>) of <https://github.com/${GITHUB_REPOSITORY}|${GITHUB_REPOSITORY}> (${LINK}) ${STATUS_MESSAGE}.\n
+- ${GITHUB_HEAD_COMMIT_MESSAGE} (<https://github.com/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA}|${COMMIT_HASH}>) by <https://github.com/${GITHUB_REPOSITORY}/pulse|${GITHUB_ACTOR}>
 EOF
 )
 
@@ -31,13 +37,13 @@ readonly DATA=$(cat <<EOF
           }
         }
       ],
-      "color": "#ff7171"
+      "color": "${COLOR}"
     },
   ],
   "blocks": [],
-  "channel": "github",
+  "channel": "${SLACK_CHANNEL}",
   "text": "",
-  "username": "GitHub Support"
+  "username": "${SLACK_USERNAME}"
 }
 EOF
 )
