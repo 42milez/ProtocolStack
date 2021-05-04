@@ -25,8 +25,8 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            ./bin/tcp_client.tar.gz
-            ./bin/tcp_server.tar.gz
+            ./bin/tcp_client-linux64.tar.gz
+            ./bin/tcp_server-linux64.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   notify:
