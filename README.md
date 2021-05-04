@@ -48,6 +48,11 @@ You can perform these commands like bellow:
     - [Reference](https://docs.github.com/en/actions/reference)
   - Mutagen
     - [File synchronization](https://mutagen.io/documentation/synchronization)
+  - Slack
+    - Builder
+      - [Block Kit](https://app.slack.com/block-kit-builder/T82HLGL84#%7B%22blocks%22:%5B%5D%7D)
+      - [Message](https://api.slack.com/docs/messages/builder?msg=%7B%22text%22%3A%22I%20am%20a%20test%20message%22%2C%22attachments%22%3A%5B%7B%22text%22%3A%22And%20here%E2%80%99s%20an%20attachment!%22%7D%5D%7D)
+    - [Reference guides for app features](https://api.slack.com/reference)
   - Vagrant
     - [Vagrantfile](https://www.vagrantup.com/docs/vagrantfile)
 - Go
