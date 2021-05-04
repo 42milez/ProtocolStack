@@ -67,8 +67,7 @@ You can perform these commands like bellow:
   - [The Go Programming Language Specification](https://golang.org/ref/spec)
 - Makefile
   - [A Good Makefile for Go](https://kodfabrik.com/journal/a-good-makefile-for-go)
-  - [An Introduction to Makefiles](https://www.gnu.org/software/make/manual/html_node/Introduction.html)
-  - [Using Makefile(s) for Go](https://danishpraka.sh/2019/12/07/using-makefiles-for-go.html)
+  - [GNU Make Manual](https://www.gnu.org/software/make/manual/)
 - Papers
   - [Fifty Shades of Congestion Control: A Performance and Interactions Evaluation](https://arxiv.org/abs/1903.03852)
 - RFC

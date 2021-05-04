@@ -1,24 +1,24 @@
 include .env
 
-PROJECT_NAME = $(shell basename "$(PWD)")
+PROJECT_NAME := $(shell basename "$(PWD)")
 
-GOBIN = "$(PWD)/bin"
+GOBIN := ./bin
 
-STDERR = /tmp/$(PROJECT_NAME)-stderr.txt
+STDERR := /tmp/$(PROJECT_NAME)-stderr.txt
 MAKEFLAGS += --silent
 
-TCP_CLIENT_FILES = src/tcp_client.go
-TCP_CLIENT_BIN = tcp_client
+TCP_CLIENT_FILES := src/tcp_client.go
+TCP_CLIENT_BIN := tcp_client
 
-TCP_SERVER_FILES = src/tcp_server.go
-TCP_SERVER_BIN = tcp_server
+TCP_SERVER_FILES := src/tcp_server.go
+TCP_SERVER_BIN := tcp_server
 
 # https://golang.org/cmd/compile/#hdr-Command_Line
 # https://golang.org/doc/gdb#Introduction
 ifeq ($(RELEASE), true)
-  BUILD_FLAGS = ""
+  BUILD_FLAGS :=
 else
-  BUILD_FLAGS = -race -gcflags=all="-N -l"
+  BUILD_FLAGS := -gcflags=all="-N -l"
 endif
 
 .PHONY: help
