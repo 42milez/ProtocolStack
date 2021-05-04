@@ -45,7 +45,7 @@ jobs:
           GITHUB_RUN_NUMBER: ${{ github.run_number }}
           GITHUB_SHA: ${{ github.sha }}
           GITHUB_WORKFLOW: ${{ github.workflow }}
-          IS_SUCCESS: ${{ success() }}
+          NEEDS_PREVIOUS_JOB_RESULT: ${{ needs.release.result }}
           SLACK_BOT_USER_OAUTH_TOKEN: ${{ secrets.SLACK_BOT_USER_OAUTH_TOKEN }}
           SLACK_CHANNEL: ${{ secrets.SLACK_CHANNEL }}
           SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}

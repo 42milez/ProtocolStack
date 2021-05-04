@@ -2,7 +2,7 @@
 
 set -eu
 
-readonly COLOR=$(if "${IS_SUCCESS}"; then echo "#8fd9a8"; else echo "#ff7171"; fi)
+readonly COLOR=$(if "${NEEDS_PREVIOUS_JOB_RESULT}"; then echo "#8fd9a8"; else echo "#ff7171"; fi)
 
 readonly COMMIT_HASH=$(echo "${GITHUB_SHA}" | cut -c 1-7)
 
@@ -16,7 +16,7 @@ else
 fi
 )
 
-readonly STATUS_MESSAGE=$(if "${IS_SUCCESS}"; then echo "passed"; else echo "failed"; fi)
+readonly STATUS_MESSAGE=$(if "${NEEDS_PREVIOUS_JOB_RESULT}"; then echo "passed"; else echo "failed"; fi)
 
 readonly TEXT=$(cat <<EOF
 Workflow: ${GITHUB_WORKFLOW} (<https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}|#${GITHUB_RUN_NUMBER}>) of <https://github.com/${GITHUB_REPOSITORY}|${GITHUB_REPOSITORY}> (${LINK}) ${STATUS_MESSAGE}.\n
