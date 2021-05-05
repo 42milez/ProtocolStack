@@ -26,9 +26,15 @@ else
 fi
 )
 
-readonly TEXT=$(cat <<EOF
-Workflow: ${GITHUB_WORKFLOW} (<https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}|#${GITHUB_RUN_NUMBER}>) of <https://github.com/${GITHUB_REPOSITORY}|${GITHUB_REPOSITORY}> (${LINK}) ${STATUS_MESSAGE}.\n
-- ${GITHUB_HEAD_COMMIT_MESSAGE} (<https://github.com/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA}|${COMMIT_HASH}>) by <https://github.com/${GITHUB_REPOSITORY}/pulse|${GITHUB_ACTOR}>
+# Message Format:
+#   Workflow: WORKFLOW_NAME (WORKFLOW_RUN_NUMBER_WITH_LINK) of REPOSITORY_NAME (BRANCH_OR_TAG_NAME_WITH_LINK) WORKFLOW_STATUS_MESSAGE.
+#   - COMMIT_MESSAGE_SUBJECT_OF_HEAD_REF (COMMIT_HASH_WITH_LINK) by COMMIT_AUTHOR_WITH_LINK
+readonly TEXT=$(
+A=${GITHUB_WORKFLOW} B=${GITHUB_REPOSITORY}          C=${GITHUB_RUN_ID} D=${GITHUB_RUN_NUMBER} E=${LINK}
+F=${STATUS_MESSAGE}  G=${GITHUB_HEAD_COMMIT_MESSAGE} H=${GITHUB_SHA}    I=${COMMIT_HASH}       J=${GITHUB_ACTOR}
+cat <<EOF
+Workflow: ${A} (<https://github.com/${B}/actions/runs/${C}|#${D}>) of <https://github.com/${B}|${B}> (${E}) ${F}.
+- ${G} (<https://github.com/${B}/commit/${H}|${I}>) by <https://github.com/${B}/pulse|${J}>
 EOF
 )
 
