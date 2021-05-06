@@ -45,7 +45,7 @@ type Operation struct {
 }
 
 type Privilege struct {
-	Name string
+	Name [16]byte
 	FD   int
 }
 
