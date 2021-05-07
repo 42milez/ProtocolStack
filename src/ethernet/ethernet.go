@@ -1,7 +1,7 @@
 package ethernet
 
 import (
-	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -29,7 +29,7 @@ func (mac MAC) Byte() ([]byte, error) {
 			return nil, err
 		}
 		if n > 0xff {
-			return nil, errors.New("invalid MAC address")
+			return nil, fmt.Errorf("invalid MAC address")
 		}
 		p[i] = byte(n)
 	}

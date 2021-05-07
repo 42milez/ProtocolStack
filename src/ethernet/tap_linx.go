@@ -1,7 +1,6 @@
 package ethernet
 
 import (
-	"errors"
 	"fmt"
 	"github.com/42milez/ProtocolStack/src/device"
 	"syscall"
@@ -47,7 +46,7 @@ func tapOpen(dev *device.Device) error {
 		uintptr(unsafe.Pointer(&ifrFlags)))
 	if errno != 0 {
 		_ = syscall.Close(fd)
-		return errors.New(fmt.Sprintf("ioctl error: %d", errno))
+		return fmt.Errorf("ioctl error: %d", errno)
 	}
 
 	soc, err := syscall.Socket(syscall.AF_INET, syscall.SOCK_DGRAM, 0)
@@ -64,7 +63,7 @@ func tapOpen(dev *device.Device) error {
 		uintptr(unsafe.Pointer(&ifrSockAddr)))
 	if errno != 0 {
 		_ = syscall.Close(soc)
-		return errors.New(fmt.Sprintf("ioctl error: %d", errno))
+		return fmt.Errorf("ioctl error: %d", errno)
 	}
 	copy(dev.Addr[:], ifrSockAddr.Addr.Data[:])
 	_ = syscall.Close(soc)
@@ -87,7 +86,7 @@ func tapPoll(dev *device.Device) error {
 // GenTapDevice generates TAP device object.
 func GenTapDevice(name string, mac MAC) (*device.Device, error) {
 	if len(name) > 16 {
-		return nil, errors.New("device name must be less than or equal to 16 characters")
+		return nil, fmt.Errorf("device name must be less than or equal to 16 characters")
 	}
 
 	dev := &device.Device{
