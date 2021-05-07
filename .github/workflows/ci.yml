@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-go@v2
         with:
-          go-version: ${{ go-version }}
+          go-version: ${{ matrix.go-version }}
       - name: Compile
         run: make compile
   test:
@@ -38,7 +38,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-go@v2
         with:
-          go-version: ${{ go-version }}
+          go-version: ${{ matrix.go-version }}
       - name: Run all tests
         run: make test
       - uses: codecov/codecov-action@v1
