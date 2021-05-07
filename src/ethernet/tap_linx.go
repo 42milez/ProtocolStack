@@ -8,13 +8,14 @@ import (
 	"unsafe"
 )
 
-const iffTap = 0x0002
-const iffNoPi = 0x1000
-const tunSetIff = 0x400454ca
+// error numbers @ errno-base.h
+// https://github.com/torvalds/linux/blob/master/include/uapi/asm-generic/errno-base.h
 
-const afInet = 0x2
-const siocgifhwaddr = 0x8927
-const sockDgram = 0x2
+// struct ifreq @ if.h
+// https://github.com/torvalds/linux/blob/e48661230cc35b3d0f4367eddfc19f86463ab917/include/uapi/linux/if.h#L225
+
+// struct sockaddr @ socket.h
+// https://github.com/torvalds/linux/blob/master/include/uapi/linux/socket.h
 
 type IfreqFlags struct {
 	Name [syscall.IFNAMSIZ]byte
@@ -38,21 +39,29 @@ func tapOpen(dev *device.Device) error {
 
 	ifrFlags := IfreqFlags{}
 	ifrFlags.Name = dev.Priv.Name
-	ifrFlags.Flags = iffTap | iffNoPi
-	_, _, errno := syscall.Syscall(syscall.SYS_IOCTL, uintptr(fd), uintptr(tunSetIff), uintptr(unsafe.Pointer(&ifrFlags)))
+	ifrFlags.Flags = syscall.IFF_TAP | syscall.IFF_NO_PI
+	_, _, errno := syscall.Syscall(
+		syscall.SYS_IOCTL,
+		uintptr(fd),
+		uintptr(syscall.TUNSETIFF),
+		uintptr(unsafe.Pointer(&ifrFlags)))
 	if errno != 0 {
 		_ = syscall.Close(fd)
 		return errors.New(fmt.Sprintf("ioctl error: %d", errno))
 	}
 
-	soc, err := syscall.Socket(afInet, sockDgram, 0)
+	soc, err := syscall.Socket(syscall.AF_INET, syscall.SOCK_DGRAM, 0)
 	if err != nil {
 		return err
 	}
 	ifrSockAddr := IfreqSockAddr{}
-	copy(ifrSockAddr.Name[:], dev.Name)
+	ifrSockAddr.Name = dev.Priv.Name
 	ifrSockAddr.Addr.Family = syscall.AF_INET
-	_, _, errno = syscall.Syscall(syscall.SYS_IOCTL, uintptr(soc), uintptr(siocgifhwaddr), uintptr(unsafe.Pointer(&ifrSockAddr)))
+	_, _, errno = syscall.Syscall(
+		syscall.SYS_IOCTL,
+		uintptr(soc),
+		uintptr(syscall.SIOCGIFHWADDR),
+		uintptr(unsafe.Pointer(&ifrSockAddr)))
 	if errno != 0 {
 		_ = syscall.Close(soc)
 		return errors.New(fmt.Sprintf("ioctl error: %d", errno))
