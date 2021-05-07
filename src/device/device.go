@@ -1,7 +1,6 @@
 package device
 
 import (
-	"errors"
 	"fmt"
 	"log"
 )
@@ -29,13 +28,11 @@ func (t DevType) String() string {
 
 type DevFlag uint16
 
-const (
-	DevFlagUp        DevFlag = 0x0001
-	DevFlagLoopback          = 0x0010
-	DevFlagBroadcast         = 0x0020
-	DevFlagP2P               = 0x0040
-	DevFlagNeedArp           = 0x0100
-)
+const DevFlagUp DevFlag = 0x0001
+const DevFlagLoopback DevFlag = 0x0010
+const DevFlagBroadcast DevFlag = 0x0020
+const DevFlagP2P DevFlag = 0x0040
+const DevFlagNeedArp DevFlag = 0x0100
 
 type Operation struct {
 	Open     func(dev *Device) error
@@ -86,7 +83,7 @@ type Device struct {
 func (dev *Device) Open() error {
 	if dev.Op.Open != nil {
 		if (dev.FLAG & DevFlagUp) != 0 {
-			return errors.New(fmt.Sprintf("%s already opend", dev.Name))
+			return fmt.Errorf("%s already opend", dev.Name)
 		}
 		if err := dev.Op.Open(dev); err != nil {
 			return err

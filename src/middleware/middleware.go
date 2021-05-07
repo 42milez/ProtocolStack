@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"errors"
 	"fmt"
 	"github.com/42milez/ProtocolStack/src/device"
 	"github.com/42milez/ProtocolStack/src/network"
@@ -9,7 +8,6 @@ import (
 	"strconv"
 	"sync"
 	"syscall"
-	"time"
 )
 
 var protocols []Protocol
@@ -43,7 +41,7 @@ func init() {
 func register(protocolType ProtocolType, handler Handler) error {
 	for _, v := range protocols {
 		if v.Type == protocolType {
-			return errors.New(fmt.Sprintf("%s is already registered", protocolType.String()))
+			return fmt.Errorf("%s is already registered", protocolType.String())
 		}
 	}
 
@@ -96,8 +94,15 @@ func Start(wg *sync.WaitGroup) error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		log.Println("running...")
-		time.Sleep(time.Second)
+		for _, dev := range devices {
+			if dev.FLAG & device.DevFlagUp == 0 {
+				continue
+			}
+			//if err := dev.Op.Poll(dev); err != nil {
+			//	// TODO: notify error to channel
+			//	// ...
+			//}
+		}
 	}()
 
 	log.Println("started.")
@@ -114,7 +119,7 @@ func RegisterDevice(dev *device.Device) {
 func RegisterInterface(iface *Iface, dev *device.Device) error {
 	for _, v := range interfaces {
 		if v.Dev == dev && v.Family == iface.Family {
-			return errors.New(fmt.Sprintf("%s is already exists", v.Family.String()))
+			return fmt.Errorf("%s is already exists", v.Family.String())
 		}
 	}
 	interfaces = append(interfaces, iface)

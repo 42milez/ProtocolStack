@@ -159,7 +159,6 @@ func parseV6(s string) IP {
 // stoi converts string to integer and returns number, characters consumed, and success.
 func stoi(s string) (n int, c int, ok bool) {
 	n = 0
-	c = 0
 	for c = 0; c < len(s) && '0' <= s[c] && s[c] <= '9'; c++ {
 		n = n * 10 + int(s[c] - '0')
 	}
