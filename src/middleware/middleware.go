@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"sync"
 	"syscall"
-	"time"
 )
 
 var protocols []Protocol
@@ -95,8 +94,15 @@ func Start(wg *sync.WaitGroup) error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		log.Println("running...")
-		time.Sleep(time.Second)
+		for _, dev := range devices {
+			if dev.FLAG & device.DevFlagUp == 0 {
+				continue
+			}
+			if err := dev.Op.Poll(dev); err != nil {
+				// TODO: notify error to channel
+				// ...
+			}
+		}
 	}()
 
 	log.Println("started.")
