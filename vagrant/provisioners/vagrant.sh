@@ -16,6 +16,7 @@ fi
 # --------------------------------------------------
 if ! type go > /dev/null 2>&1; then
   brew install go
+  # shellcheck disable=SC2016
   {
     echo ""
     echo "# Go"
@@ -27,6 +28,7 @@ if ! type go > /dev/null 2>&1; then
     echo "export PATH"
     echo ""
   } >> "${BASHRC}"
+  # shellcheck disable=SC1090
   . "${BASHRC}"
 fi
 
@@ -35,9 +37,3 @@ fi
 if ! type dlv > /dev/null 2>&1; then
   go install github.com/go-delve/delve/cmd/dlv@latest
 fi
-
-#  TAP
-# --------------------------------------------------
-sudo ip tuntap add mode tap name tap0
-sudo ip addr add 192.0.2.1/24 dev tap0
-sudo ip link set tap0 up
