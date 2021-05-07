@@ -1,5 +1,10 @@
 #!/bin/bash
 
+dnf -y update
+dnf -y group install "Development Tools"
+
+systemctl disable firewalld
+
 readonly BRIDGE_NAME=br0
 readonly ETH_NAME=eth0
 readonly TAP_NAME=tap0
@@ -15,5 +20,3 @@ nmcli con mod "bridge-${BRIDGE_NAME}" ipv4.method manual ipv4.address "${BRIDGE_
 
 nmcli con add type bridge-slave ifname ${ETH_NAME} master "bridge-${BRIDGE_NAME}"
 nmcli con add type bridge-slave ifname ${TAP_NAME} master "bridge-${BRIDGE_NAME}"
-
-systemctl disable firewalld
