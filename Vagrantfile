@@ -16,8 +16,6 @@ Vagrant.configure("2") do |config|
       vb.customize ["modifyvm", :id, "--natdnshostresolver2", "on"]
       vb.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
       vb.customize ["modifyvm", :id, "--natdnsproxy2", "on"]
-      vb.customize ["modifyvm", :id, "--nicpromisc1", "allow-all"]
-      vb.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
       vb.gui = false
       vb.memory = MEM
       vb.name = HOSTNAME
