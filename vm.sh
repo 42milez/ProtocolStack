@@ -27,7 +27,7 @@ start() {
   vagrant up
 
   if ! "${IS_INITIALIZED}"; then
-    echo "Reloading virtual machine..."
+    echo "Restarting virtual machine..."
     vagrant reload
   fi
 
