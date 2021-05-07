@@ -7,9 +7,6 @@ GOBIN := ./bin
 STDERR := /tmp/$(PROJECT_NAME)-stderr.txt
 MAKEFLAGS += --silent
 
-TCP_CLIENT_FILES := src/tcp_client.go
-TCP_CLIENT_BIN := tcp_client
-
 TCP_SERVER_FILES := src/tcp_server.go
 TCP_SERVER_BIN := tcp_server
 
@@ -45,6 +42,11 @@ compile:
 	@-touch $(STDERR)
 	@-$(MAKE) -s go-compile 2> $(STDERR)
 
+## lint: run linter (golangci-lint)
+.PHONY: lint
+lint:
+	@golangci-lint run
+
 ## resolve: resolve dependencies
 .PHONY: resolve
 resolve: go-mod
@@ -60,7 +62,6 @@ test:
 go-build:
 	@echo "🍔 Building binary..."
 	@mkdir -p $(GOBIN)
-	@go build $(BUILD_FLAGS) -o $(GOBIN)/$(TCP_CLIENT_BIN) $(TCP_CLIENT_FILES)
 	@go build $(BUILD_FLAGS) -o $(GOBIN)/$(TCP_SERVER_BIN) $(TCP_SERVER_FILES)
 
 .PHONY: go-clean

@@ -21,6 +21,7 @@ jobs:
         with:
           version: latest
   build:
+    needs: analyze
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
