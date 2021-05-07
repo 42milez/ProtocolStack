@@ -2,10 +2,15 @@
 
 set -eu
 
+readonly WORK_DIR=$(cd "$(dirname "$0")" >/dev/null 2>&1 || exit ; pwd -P)
+
 if [ $# -eq 0 ]; then
-  ./vm.sh help
+  "${WORK_DIR}/vm.sh" help
   exit 1
 fi
+
+readonly HOSTNAME=$(vagrant status | awk 'NR==3,NR==3 {print $1}')
+readonly IS_INITIALIZED=$(if [ -e "${WORK_DIR}/.vagrant/machines/${HOSTNAME}/virtualbox/id" ]; then echo true; else echo false; fi)
 
 readonly CMD=$1
 readonly MUTAGEN_FILE=mutagen.yml
@@ -20,6 +25,11 @@ start() {
     exit 1
   fi
   vagrant up
+
+  if ! "${IS_INITIALIZED}"; then
+    echo "Reloading virtual machine..."
+    vagrant reload
+  fi
 
   test -e "${MUTAGEN_LOCK_FILE}" && mutagen project terminate
   mutagen project start -f "${MUTAGEN_FILE}"
