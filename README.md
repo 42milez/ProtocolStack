@@ -4,7 +4,7 @@ This repository is for learning network programming in Go.
 
 ## Requirements
 - OS: Linux
-- Go: 1.14 or higher
+- Go: 1.16.x
 
 ## Instructions
 ### 1. Prepare virtual machine
