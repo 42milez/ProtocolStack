@@ -2,8 +2,10 @@
 
 set -eu
 
+readonly WORK_DIR=$(dirname "${0}")
+
 if [ $# -eq 0 ]; then
-  ./debug.sh help
+  "${WORK_DIR}/debug.sh" help
   exit 1
 fi
 
