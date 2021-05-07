@@ -44,8 +44,7 @@ compile:
 
 ## lint: run linter (golangci-lint)
 .PHONY: lint
-lint:
-	@golangci-lint run
+lint: go-lint
 
 ## resolve: resolve dependencies
 .PHONY: resolve
@@ -71,6 +70,10 @@ go-clean:
 
 .PHONY: go-compile
 go-compile: go-clean go-mod go-build
+
+.PHONY: go-lint
+go-lint:
+	@golangci-lint run
 
 .PHONY: go-mod
 go-mod:
