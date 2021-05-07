@@ -2,6 +2,10 @@
 [![CI](https://github.com/42milez/ProtocolStack/actions/workflows/ci.yml/badge.svg)](https://github.com/42milez/ProtocolStack/actions/workflows/ci.yml) [![codecov](https://codecov.io/gh/42milez/ProtocolStack/branch/main/graph/badge.svg?token=ALHDIWP6KH)](https://codecov.io/gh/42milez/ProtocolStack)  
 This repository is for learning network programming in Go.
 
+# Requirements
+- OS: Linux
+- Go: 1.16
+
 ## Instructions
 ### 1. Prepare virtual machine
 ProtocolStack needs TAP device for its capability. For the reason, this project uses a virtual machine (Linux) to debug the application. Software required is as follows: 
