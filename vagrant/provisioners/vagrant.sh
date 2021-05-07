@@ -16,6 +16,7 @@ fi
 # --------------------------------------------------
 if ! type go > /dev/null 2>&1; then
   brew install go
+  # shellcheck disable=SC2016
   {
     echo ""
     echo "# Go"
@@ -27,6 +28,7 @@ if ! type go > /dev/null 2>&1; then
     echo "export PATH"
     echo ""
   } >> "${BASHRC}"
+  # shellcheck disable=SC1090
   . "${BASHRC}"
 fi
 
