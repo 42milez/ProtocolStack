@@ -26,6 +26,7 @@ case $CMD in
     echo ""
     echo "  client   run the TCP client on remote host, and begin a debug session"
     echo "  server   run the TCP server on remote host, and begin a debug session"
+    echo ""
   };;
   *) {
     echo "Command not supported."
