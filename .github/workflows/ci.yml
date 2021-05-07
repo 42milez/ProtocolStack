@@ -6,15 +6,25 @@ on:
     tags-ignore:
       - "*"
 jobs:
+  analyze:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        go-version: [ 1.16.x ]
+        os: [ ubuntu-latest ]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go-version }}
+      - uses: golangci/golangci-lint-action@v2
+        with:
+          version: latest
   build:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        go-version: [
-            1.16.x,
-            1.15.x,
-            1.14.x
-        ]
+        go-version: [ 1.16.x ]
         os: [ ubuntu-latest ]
     steps:
       - uses: actions/checkout@v2
@@ -28,11 +38,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        go-version: [
-            1.16.x,
-            1.15.x,
-            1.14.x
-        ]
+        go-version: [ 1.16.x ]
         os: [ ubuntu-latest ]
     steps:
       - uses: actions/checkout@v2
