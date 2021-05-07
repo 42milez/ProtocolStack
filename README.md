@@ -46,6 +46,8 @@ You can perform these commands like bellow:
   - fedora
     - [DNF, the next-generation replacement for YUM](https://dnf.readthedocs.io/en/latest/index.html)
     - [Understanding and administering systemd](https://docs.fedoraproject.org/en-US/quick-docs/understanding-and-administering-systemd/)
+  - Codecov
+    - [Codecov Delta](https://docs.codecov.io/docs/codecov-delta)
   - Docker
     - [Compose file](https://docs.docker.com/compose/compose-file/)
     - [Dockerfile](https://docs.docker.com/engine/reference/builder/)
