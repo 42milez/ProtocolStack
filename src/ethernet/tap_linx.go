@@ -80,6 +80,10 @@ func tapTransmit(dev *device.Device) error {
 }
 
 func tapPoll(dev *device.Device) error {
+	//var event syscall.EpollEvent
+	//var events [MaxEpollEvents]syscall.EpollEvent
+	//
+	//epfd, e := syscall.EpollCreate1(0)
 	return nil
 }
 
