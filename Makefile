@@ -40,7 +40,7 @@ clean: go-clean
 compile:
 	@-rm -f $(STDERR)
 	@-touch $(STDERR)
-	@-$(MAKE) -s go-compile 2> $(STDERR)
+	@$(MAKE) -s go-compile 2> $(STDERR)
 
 ## lint: run linter (golangci-lint)
 .PHONY: lint

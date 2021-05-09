@@ -98,10 +98,9 @@ func Start(wg *sync.WaitGroup) error {
 			if dev.FLAG & device.DevFlagUp == 0 {
 				continue
 			}
-			//if err := dev.Op.Poll(dev); err != nil {
-			//	// TODO: notify error to channel
-			//	// ...
-			//}
+			if errPoll := dev.Op.Poll(dev); errPoll != nil {
+				log.Printf("errPoll: %v\n", errPoll)
+			}
 		}
 	}()
 

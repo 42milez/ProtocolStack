@@ -1,13 +1,17 @@
 package main
 
 import (
+	"fmt"
 	"github.com/42milez/ProtocolStack/src/device"
 	"github.com/42milez/ProtocolStack/src/ethernet"
 	"github.com/42milez/ProtocolStack/src/middleware"
 	"github.com/42milez/ProtocolStack/src/network"
 	"github.com/42milez/ProtocolStack/src/route"
 	"log"
+	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 )
 
 var wg sync.WaitGroup
@@ -58,6 +62,18 @@ func main() {
 		log.Fatal("setup failed.")
 	}
 	log.Println("Hello, TCP server!")
+
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		sig := <-sig
+		fmt.Printf("signal received: %s\n", sig)
+	}()
+
 	wg.Wait()
+
 	log.Println("server stopped.")
 }
