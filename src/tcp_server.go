@@ -14,7 +14,6 @@ import (
 	"syscall"
 )
 
-var isTerminated bool
 var wg sync.WaitGroup
 
 func setup() error {
