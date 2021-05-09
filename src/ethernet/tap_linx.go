@@ -7,6 +7,8 @@ import (
 	"unsafe"
 )
 
+const MaxEpollEvents = 32
+
 // error numbers @ errno-base.h
 // https://github.com/torvalds/linux/blob/master/include/uapi/asm-generic/errno-base.h
 
@@ -80,10 +82,30 @@ func tapTransmit(dev *device.Device) error {
 }
 
 func tapPoll(dev *device.Device) error {
-	//var event syscall.EpollEvent
-	//var events [MaxEpollEvents]syscall.EpollEvent
-	//
-	//epfd, e := syscall.EpollCreate1(0)
+	var event syscall.EpollEvent
+	var events [MaxEpollEvents]syscall.EpollEvent
+
+	epfd, errEpollCreate1 := syscall.EpollCreate1(0)
+	if errEpollCreate1 != nil {
+		return errEpollCreate1
+	}
+
+	event.Events = syscall.EPOLLIN
+	event.Fd = int32(dev.Priv.FD)
+	if errEpollCtl := syscall.EpollCtl(epfd, syscall.EPOLL_CTL_ADD, dev.Priv.FD, &event); errEpollCtl != nil {
+		return errEpollCtl
+	}
+
+	nEvents, errEpollWait := syscall.EpollWait(epfd, events[:], -1)
+	if errEpollWait != nil {
+		return errEpollWait
+	}
+
+	// TODO: send nevents to channel
+	// ...
+
+	fmt.Printf("nEvents: %d\n", nEvents)
+
 	return nil
 }
 
