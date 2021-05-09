@@ -12,9 +12,14 @@ import (
 	"os/signal"
 	"sync"
 	"syscall"
+	"time"
 )
 
 var wg sync.WaitGroup
+
+var mainCh chan bool
+var netCh chan bool
+var sigCh chan os.Signal
 
 func setup() error {
 	var dev *device.Device
@@ -49,11 +54,29 @@ func setup() error {
 	route.RegisterDefaultGateway(iface, network.ParseIP("192.0.2.1"))
 
 	// Create sub-thread for polling.
-	if err = middleware.Start(&wg); err != nil {
+	if err = middleware.Start(netCh, &wg); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func init() {
+	mainCh = make(chan bool)
+	netCh = make(chan bool)
+	sigCh = make(chan os.Signal)
+	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+}
+
+func handleSignal(sigCh <-chan os.Signal, wg *sync.WaitGroup) {
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		sig := <-sigCh
+		fmt.Printf("signal received: %s\n", sig)
+		mainCh <- true
+		netCh <- true
+	}()
 }
 
 func main() {
@@ -63,14 +86,21 @@ func main() {
 	}
 	log.Println("Hello, TCP server!")
 
-	sig := make(chan os.Signal, 1)
-	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+	handleSignal(sigCh, &wg)
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		sig := <-sig
-		fmt.Printf("signal received: %s\n", sig)
+		for {
+			select {
+			case <-mainCh:
+				log.Println("main: shutting down...")
+				return
+			default:
+				log.Println("main: running...")
+				time.Sleep(time.Second)
+			}
+		}
 	}()
 
 	wg.Wait()
