@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"sync"
 	"syscall"
+	"time"
 )
 
 var protocols []Protocol
@@ -82,7 +83,7 @@ func Setup() error {
 	return nil
 }
 
-func Start(wg *sync.WaitGroup) error {
+func Start(netCh <-chan bool, wg *sync.WaitGroup) error {
 	var err error
 
 	for _, dev := range devices {
@@ -94,12 +95,22 @@ func Start(wg *sync.WaitGroup) error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		for _, dev := range devices {
-			if dev.FLAG & device.DevFlagUp == 0 {
-				continue
-			}
-			if errPoll := dev.Op.Poll(dev); errPoll != nil {
-				log.Printf("errPoll: %v\n", errPoll)
+		for {
+			select {
+			case <-netCh:
+				log.Println("net: shutting down...")
+				return
+			default:
+				log.Println("net: running...")
+				time.Sleep(time.Second)
+				for _, dev := range devices {
+					if dev.FLAG & device.DevFlagUp == 0 {
+						continue
+					}
+					if errPoll := dev.Op.Poll(dev); errPoll != nil {
+						log.Printf("errPoll: %v\n", errPoll)
+					}
+				}
 			}
 		}
 	}()
