@@ -42,7 +42,7 @@ compile:
 	@-touch $(STDERR)
 	@$(MAKE) -s go-compile 2> $(STDERR)
 
-## lint: run linter (golangci-lint)
+## lint: run linters (golangci-lint)
 .PHONY: lint
 lint: go-lint
 

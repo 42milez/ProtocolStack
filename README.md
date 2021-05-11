@@ -25,7 +25,7 @@ Note: Mutagen synchronizes files between local system and virtual machine.
 - `stop` stop the virtual machine
 - `restart` restart the virtual machine
 
-You can perform the commands as below:
+You can perform the commands below:
 
 ```shell
 > ./vm.sh start   # Start a VM and create a Mutagen session.
@@ -51,7 +51,7 @@ Note: `make` supports the commands below:
 - `build` build project
 - `clean` clean up caches
 - `compile` clean up caches, resolve dependencies, and build the program
-- `lint` run linter (golangci-lint)
+- `lint` run linters (golangci-lint)
 - `resolve` resolve dependencies
 - `test` run all tests
 
