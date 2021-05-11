@@ -33,7 +33,9 @@ start() {
     vagrant reload
   fi
 
-  test ! -e "${SHARED_DIR}" && mkdir -p "${SHARED_DIR}"
+  test ! -e "${SHARED_DIR}" && \
+   mkdir -p "${SHARED_DIR}" && \
+   echo "This file was automatically generated. You can delete it anytime." > "${SHARED_DIR}/hello.txt"
 
   test -e "${MUTAGEN_LOCK_FILE}" && mutagen project terminate
   mutagen project start -f "${MUTAGEN_FILE}"
