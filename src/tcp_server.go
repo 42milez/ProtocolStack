@@ -17,8 +17,8 @@ import (
 
 var wg sync.WaitGroup
 
-var mainCh chan bool
-var netCh chan bool
+var mainSigCh chan os.Signal
+var netSigCh chan os.Signal
 var sigCh chan os.Signal
 
 func setup() error {
@@ -54,7 +54,7 @@ func setup() error {
 	route.RegisterDefaultGateway(iface, network.ParseIP("192.0.2.1"))
 
 	// Create sub-thread for polling.
-	if err = middleware.Start(netCh, &wg); err != nil {
+	if err = middleware.Start(netSigCh, &wg); err != nil {
 		return err
 	}
 
@@ -62,8 +62,8 @@ func setup() error {
 }
 
 func init() {
-	mainCh = make(chan bool)
-	netCh = make(chan bool)
+	mainSigCh = make(chan os.Signal)
+	netSigCh = make(chan os.Signal)
 	sigCh = make(chan os.Signal)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 }
@@ -74,8 +74,8 @@ func handleSignal(sigCh <-chan os.Signal, wg *sync.WaitGroup) {
 		defer wg.Done()
 		sig := <-sigCh
 		fmt.Printf("signal received: %s\n", sig)
-		mainCh <- true
-		netCh <- true
+		mainSigCh <- syscall.SIGUSR1
+		netSigCh <- syscall.SIGUSR1
 	}()
 }
 
@@ -93,7 +93,7 @@ func main() {
 		defer wg.Done()
 		for {
 			select {
-			case <-mainCh:
+			case <-mainSigCh:
 				log.Println("main: shutting down...")
 				return
 			default:

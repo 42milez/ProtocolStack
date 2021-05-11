@@ -2,8 +2,12 @@ package ethernet
 
 import (
 	"fmt"
+	"github.com/42milez/ProtocolStack/src/device"
+	"log"
 	"strconv"
 	"strings"
+	"syscall"
+	"unsafe"
 )
 
 const EthAddrLen = 6
@@ -34,4 +38,13 @@ func (mac MAC) Byte() ([]byte, error) {
 		p[i] = byte(n)
 	}
 	return p, nil
+}
+
+func ReadFrame(dev *device.Device) error {
+	var buf [EthFrameSizeMax]byte
+	r1, r2, errno := syscall.Syscall(syscall.SYS_READ, uintptr(dev.Priv.FD), uintptr(unsafe.Pointer(&buf)), uintptr(EthFrameSizeMax))
+	log.Printf("r1: %v\n", r1)
+	log.Printf("r2: %v\n", r2)
+	log.Printf("errno: %v\n", errno)
+	return nil
 }
