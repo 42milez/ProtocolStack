@@ -7,8 +7,10 @@ This repository is for learning network programming in Go.
 - Go: 1.14.x or higher
 
 ## Instructions
+ProtocolStack needs a TAP device for its capability. For the reason, this project uses a virtual machine (Linux) to run the application. Also, you can perform debugging remotely with the VM if you use GoLand.
+
 ### 1. Prepare virtual machine
-ProtocolStack needs TAP device for its capability. For the reason, this project uses a virtual machine (Linux) to debug the application. Software required is as follows: 
+Software required is as follows: 
 
 - [Mutagen](https://github.com/mutagen-io/mutagen)
 - [Vagrant](https://www.vagrantup.com/)
@@ -23,13 +25,35 @@ Note: Mutagen synchronizes files between local system and virtual machine.
 - `stop` stop the virtual machine
 - `restart` restart the virtual machine
 
-You can perform these commands like bellow:
+You can perform the commands as below:
 
 ```shell
 > ./vm.sh start   # Start a VM and create a Mutagen session.
 > ./vm.sh stop    # Stop the VM and terminate the Mutagen session.
 > ./vm.sh restart # Restart the VM and recreate the Mutagen session.
 ```
+
+### 3. Remote debugging with GoLand
+Please see the [instruction](https://www.jetbrains.com/go/) for more detail.
+
+Related information:
+- [What Are Run Targets & How To Run Code Anywhere](https://blog.jetbrains.com/go/2021/04/29/what-are-run-targets-and-how-to-run-code-anywhere/)
+- [How to use Docker to compile and run Go code from GoLand](https://blog.jetbrains.com/go/2021/04/30/how-to-use-docker-to-compile-go-from-goland/)
+- [Compile and run Go code using WSL 2 and GoLand](https://blog.jetbrains.com/go/2021/05/05/compile-and-run-go-code-using-wsl-2-and-goland/)
+
+### 4. Compile
+It is able to compile the application with `make` as below:
+```shell
+> make compile
+```
+
+Note: `make` supports the commands below:
+- `build` build project
+- `clean` clean up caches
+- `compile` clean up caches, resolve dependencies, and build the program
+- `lint` run linter (golangci-lint)
+- `resolve` resolve dependencies
+- `test` run all tests
 
 ## References
 - Articles

@@ -61,7 +61,7 @@ test:
 go-build:
 	@echo "🍔 Building binary..."
 	@mkdir -p $(GOBIN)
-	@go build $(BUILD_FLAGS) -o $(GOBIN)/$(TCP_SERVER_BIN) $(TCP_SERVER_FILES)
+	@GOOS=linux GOARCH=amd64 go build $(BUILD_FLAGS) -o $(GOBIN)/$(TCP_SERVER_BIN) $(TCP_SERVER_FILES)
 
 .PHONY: go-clean
 go-clean:

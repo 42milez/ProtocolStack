@@ -17,6 +17,8 @@ readonly MUTAGEN_FILE=mutagen.yml
 readonly MUTAGEN_LOCK_FILE=mutagen.yml.lock
 readonly VM_NAME=ps.vagrant
 
+readonly SHARED_DIR=./shared
+
 start() {
   echo "Starting up virtual machine..."
 
@@ -30,6 +32,8 @@ start() {
     echo "Restarting virtual machine..."
     vagrant reload
   fi
+
+  test ! -e "${SHARED_DIR}" && mkdir -p "${SHARED_DIR}"
 
   test -e "${MUTAGEN_LOCK_FILE}" && mutagen project terminate
   mutagen project start -f "${MUTAGEN_FILE}"
