@@ -15,4 +15,4 @@ sync:
       mode: "portable"
   app:
     alpha: "."
-    beta: "ps.vagrant:/home/vagrant/app/"
+    beta: "ps.vagrant:/home/vagrant/shared/"
