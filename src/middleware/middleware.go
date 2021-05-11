@@ -5,10 +5,10 @@ import (
 	"github.com/42milez/ProtocolStack/src/device"
 	"github.com/42milez/ProtocolStack/src/network"
 	"log"
+	"os"
 	"strconv"
 	"sync"
 	"syscall"
-	"time"
 )
 
 var protocols []Protocol
@@ -83,7 +83,7 @@ func Setup() error {
 	return nil
 }
 
-func Start(netCh <-chan bool, wg *sync.WaitGroup) error {
+func Start(netSigCh <-chan os.Signal, wg *sync.WaitGroup) error {
 	var err error
 
 	for _, dev := range devices {
@@ -95,27 +95,33 @@ func Start(netCh <-chan bool, wg *sync.WaitGroup) error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+		var terminate = false
 		for {
 			select {
-			case <-netCh:
-				log.Println("net: shutting down...")
-				return
+			case <-netSigCh:
+				log.Println("net: terminating...")
+				terminate = true
 			default:
 				log.Println("net: running...")
-				time.Sleep(time.Second)
-				for _, dev := range devices {
-					if dev.FLAG & device.DevFlagUp == 0 {
-						continue
-					}
-					if errPoll := dev.Op.Poll(dev); errPoll != nil {
-						log.Printf("errPoll: %v\n", errPoll)
-					}
+			}
+			for _, dev := range devices {
+				if dev.FLAG & device.DevFlagUp == 0 {
+					continue
 				}
+				if err := dev.Op.Poll(dev, terminate); err != nil {
+					log.Printf("error: %v\n", err)
+					// TODO: notify error to main goroutine
+					// ...
+					return
+				}
+			}
+			if terminate {
+				return
 			}
 		}
 	}()
 
-	log.Println("started.")
+	log.Println("net: started.")
 
 	return nil
 }

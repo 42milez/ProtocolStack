@@ -3,11 +3,15 @@ package ethernet
 import (
 	"fmt"
 	"github.com/42milez/ProtocolStack/src/device"
+	"log"
 	"syscall"
 	"unsafe"
 )
 
+const EpollTimeout = 1000
 const MaxEpollEvents = 32
+
+var epfd int
 
 // error numbers @ errno-base.h
 // https://github.com/torvalds/linux/blob/master/include/uapi/asm-generic/errno-base.h
@@ -36,8 +40,14 @@ func tapOpen(dev *device.Device) error {
 	if err != nil {
 		return err
 	}
+
+	//if err = syscall.SetNonblock(fd, true); err != nil {
+	//	return err
+	//}
+
 	dev.Priv.FD = fd
 
+	// --------------------------------------------------
 	ifrFlags := IfreqFlags{}
 	ifrFlags.Name = dev.Priv.Name
 	ifrFlags.Flags = syscall.IFF_TAP | syscall.IFF_NO_PI
@@ -51,6 +61,7 @@ func tapOpen(dev *device.Device) error {
 		return fmt.Errorf("ioctl error: %d", errno)
 	}
 
+	// --------------------------------------------------
 	soc, err := syscall.Socket(syscall.AF_INET, syscall.SOCK_DGRAM, 0)
 	if err != nil {
 		return err
@@ -70,6 +81,19 @@ func tapOpen(dev *device.Device) error {
 	copy(dev.Addr[:], ifrSockAddr.Addr.Data[:])
 	_ = syscall.Close(soc)
 
+	// --------------------------------------------------
+	var event syscall.EpollEvent
+	var errEpollCreate1 error
+	epfd, errEpollCreate1 = syscall.EpollCreate1(0)
+	if errEpollCreate1 != nil {
+		return errEpollCreate1
+	}
+	event.Events = syscall.EPOLLIN
+	event.Fd = int32(dev.Priv.FD)
+	if errEpollCtl := syscall.EpollCtl(epfd, syscall.EPOLL_CTL_ADD, dev.Priv.FD, &event); errEpollCtl != nil {
+		return errEpollCtl
+	}
+
 	return nil
 }
 
@@ -81,30 +105,29 @@ func tapTransmit(dev *device.Device) error {
 	return nil
 }
 
-func tapPoll(dev *device.Device) error {
-	//var event syscall.EpollEvent
-	//var events [MaxEpollEvents]syscall.EpollEvent
-	//
-	//epfd, errEpollCreate1 := syscall.EpollCreate1(0)
-	//if errEpollCreate1 != nil {
-	//	return errEpollCreate1
-	//}
-	//
-	//event.Events = syscall.EPOLLIN
-	//event.Fd = int32(dev.Priv.FD)
-	//if errEpollCtl := syscall.EpollCtl(epfd, syscall.EPOLL_CTL_ADD, dev.Priv.FD, &event); errEpollCtl != nil {
-	//	return errEpollCtl
-	//}
-	//
-	//nEvents, errEpollWait := syscall.EpollWait(epfd, events[:], -1)
-	//if errEpollWait != nil {
-	//	return errEpollWait
-	//}
-	//
-	//// TODO: send nevents to channel
-	//// ...
-	//
-	//fmt.Printf("nEvents: %d\n", nEvents)
+func tapPoll(dev *device.Device, isTerminated bool) error {
+	if isTerminated {
+		_ = syscall.Close(epfd)
+		return nil
+	}
+
+	var events [MaxEpollEvents]syscall.EpollEvent
+	nEvents, err := syscall.EpollWait(epfd, events[:], EpollTimeout)
+	if err != nil {
+		_ = syscall.Close(epfd)
+		return err
+	}
+
+	// TODO: send events to channel
+	// ...
+
+	// TODO: for development (remove later)
+	if nEvents > 0 {
+		fmt.Printf("nEvents: %d\n", nEvents)
+		_ = ReadFrame(dev)
+	} else {
+		log.Printf("net: no event occurred.")
+	}
 
 	return nil
 }

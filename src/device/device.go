@@ -38,7 +38,7 @@ type Operation struct {
 	Open     func(dev *Device) error
 	Close    func(dev *Device) error
 	Transmit func(dev *Device) error
-	Poll     func(dev *Device) error
+	Poll     func(dev *Device, terminate bool) error
 }
 
 type Privilege struct {
