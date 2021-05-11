@@ -25,7 +25,7 @@ Note: Mutagen synchronizes files between local system and virtual machine.
 - `stop` stop the virtual machine
 - `restart` restart the virtual machine
 
-You can perform the commands as below:
+You can perform the commands below:
 
 ```shell
 > ./vm.sh start   # Start a VM and create a Mutagen session.
@@ -34,7 +34,7 @@ You can perform the commands as below:
 ```
 
 ### 3. Remote debugging with GoLand
-Please see the [instruction](https://www.jetbrains.com/go/) for more detail.
+See the [instruction](https://github.com/42milez/ProtocolStack/wiki/Remote-Debugging-with-GoLand) for more detail.
 
 Related information:
 - [What Are Run Targets & How To Run Code Anywhere](https://blog.jetbrains.com/go/2021/04/29/what-are-run-targets-and-how-to-run-code-anywhere/)
@@ -51,7 +51,7 @@ Note: `make` supports the commands below:
 - `build` build project
 - `clean` clean up caches
 - `compile` clean up caches, resolve dependencies, and build the program
-- `lint` run linter (golangci-lint)
+- `lint` run linters (golangci-lint)
 - `resolve` resolve dependencies
 - `test` run all tests
 
