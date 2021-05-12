@@ -43,7 +43,8 @@ func init() {
 func register(protocolType ProtocolType, handler Handler) error {
 	for _, v := range protocols {
 		if v.Type == protocolType {
-			return fmt.Errorf("%s is already registered", protocolType.String())
+			fmt.Printf("protocol is already registered: %v", protocolType.String())
+			return e.CantRegister
 		}
 	}
 
@@ -54,7 +55,7 @@ func register(protocolType ProtocolType, handler Handler) error {
 
 	protocols = append(protocols, p)
 
-	log.Printf("%s is registered.\n", protocolType.String())
+	log.Printf("registered a protocol: %v\n", protocolType.String())
 
 	return nil
 }
@@ -84,10 +85,10 @@ func Setup() error {
 	return nil
 }
 
-func Start(netSigCh <-chan os.Signal, wg *sync.WaitGroup) e.Error {
+func Start(netSigCh <-chan os.Signal, wg *sync.WaitGroup) error {
 	for _, dev := range devices {
 		if err := dev.Open(); err != e.OK {
-			return err
+			return e.Fatal
 		}
 	}
 
@@ -98,10 +99,10 @@ func Start(netSigCh <-chan os.Signal, wg *sync.WaitGroup) e.Error {
 		for {
 			select {
 			case <-netSigCh:
-				log.Println("net: terminating...")
+				log.Println("terminating receiver...")
 				terminate = true
 			default:
-				log.Println("net: running...")
+				log.Println("receiver is running...")
 			}
 			for _, dev := range devices {
 				if dev.FLAG & device.DevFlagUp == 0 {
@@ -128,17 +129,23 @@ func Start(netSigCh <-chan os.Signal, wg *sync.WaitGroup) e.Error {
 func RegisterDevice(dev *device.Device) {
 	dev.Name = "net" + strconv.Itoa(len(devices))
 	devices = append(devices, dev)
-	log.Printf("device registered: dev=%s\n", dev.Name)
+	log.Printf("registered a device: %v\n", dev.Name)
 }
 
 func RegisterInterface(iface *Iface, dev *device.Device) error {
 	for _, v := range interfaces {
 		if v.Dev == dev && v.Family == iface.Family {
-			return fmt.Errorf("%s is already exists", v.Family.String())
+			fmt.Printf("interface is already registered: %v\n", v.Family.String())
+			return e.CantRegister
 		}
 	}
+
 	interfaces = append(interfaces, iface)
 	iface.Dev = dev
-	log.Printf("iface attached: iface=%s, dev=%s", iface.Unicast.String(), iface.Dev.Name)
-	return nil
+
+	log.Println("attached an interface")
+	log.Printf("\tIP Address:  %v", iface.Unicast.String())
+	log.Printf("\tDevice Name: %v", iface.Dev.Name)
+
+	return e.OK
 }

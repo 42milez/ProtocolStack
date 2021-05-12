@@ -84,7 +84,6 @@ func main() {
 		log.Println(err.Error())
 		log.Fatal("setup failed.")
 	}
-	log.Println("Hello, TCP server!")
 
 	handleSignal(sigCh, &wg)
 
@@ -94,16 +93,18 @@ func main() {
 		for {
 			select {
 			case <-mainSigCh:
-				log.Println("main: shutting down...")
+				log.Println("shutting down server...")
 				return
 			default:
-				log.Println("main: running...")
+				log.Println("server is running...")
 				time.Sleep(time.Second)
 			}
 		}
 	}()
 
+	log.Println("Hello, TCP server!")
+
 	wg.Wait()
 
-	log.Println("server stopped.")
+	log.Println("server was stopped.")
 }
