@@ -69,7 +69,7 @@ go-clean:
 	@go clean
 
 .PHONY: go-compile
-go-compile: go-clean go-mod go-build
+go-compile: go-clean go-mod go-vet go-build
 
 .PHONY: go-lint
 go-lint:
@@ -79,3 +79,8 @@ go-lint:
 go-mod:
 	@echo "🌏 Checking if there is any missing dependencies..."
 	@go mod tidy
+
+.PHONY: go-vet
+go-vet:
+	@echo "🔍 Vetting source code..."
+	@go vet $(dir $(abspath $(firstword $(MAKEFILE_LIST))))src
