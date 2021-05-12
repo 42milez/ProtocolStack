@@ -86,13 +86,13 @@ func (dev *Device) Open() e.Error {
 			return e.AlreadyOpened
 		}
 		if err := dev.Op.Open(dev); err != nil {
-			log.Printf("can't open device")
+			log.Printf("can't open a device")
 			log.Printf("\tName: %v (%v)\n", dev.Name, dev.Priv.Name)
 			log.Printf("\tType: %v\n", dev.Type)
 			return e.CantOpen
 		}
 		dev.FLAG |= DevFlagUp
-		log.Printf("%s was opened\n", dev.Name)
+		log.Printf("opened a device: %v\n", dev.Name)
 	}
 	return e.OK
 }

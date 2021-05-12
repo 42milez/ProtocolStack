@@ -120,7 +120,7 @@ func Start(netSigCh <-chan os.Signal, wg *sync.WaitGroup) e.Error {
 		}
 	}()
 
-	log.Println("net thread was started")
+	log.Println("ready for processing incoming data")
 
 	return e.OK
 }
