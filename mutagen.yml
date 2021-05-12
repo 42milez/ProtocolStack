@@ -14,5 +14,5 @@ sync:
     watch:
       mode: "portable"
   app:
-    alpha: "./shared/"
-    beta: "ps.vagrant:/home/vagrant/shared/"
+    alpha: "."
+    beta: "ps.vagrant:/home/vagrant/app"
