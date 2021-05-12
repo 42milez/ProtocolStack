@@ -154,6 +154,8 @@ Note: `make` supports the commands below:
     - [Go: Context and Cancellation by Propagation](https://medium.com/a-journey-with-go/go-context-and-cancellation-by-propagation-7a808bbc889c)
 - Programming
   - [History of programming languages](https://en.wikipedia.org/wiki/History_of_programming_languages)
+- Stack Oerflow
+  - [C++ : how to close a tcp socket (server) when receiving SIGKILL](https://stackoverflow.com/questions/21329861/c-how-to-close-a-tcp-socket-server-when-receiving-sigkill)
 
 ## Memos
 - Use the context types properly acording to the rubric.
