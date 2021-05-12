@@ -3,6 +3,7 @@ package ethernet
 import (
 	"fmt"
 	"github.com/42milez/ProtocolStack/src/device"
+	"github.com/42milez/ProtocolStack/src/e"
 	"log"
 	"strconv"
 	"strings"
@@ -87,19 +88,24 @@ func ReadFrame(dev *device.Device) error {
 		uintptr(dev.Priv.FD),
 		uintptr(unsafe.Pointer(&buf)),
 		uintptr(EthFrameSizeMax))
-	log.Printf("flen: %v\n", flen)
-	log.Printf("errno: %v\n", errno)
+	if errno != 0 {
+		fmt.Printf("SYS_READ failed: %v\n", errno)
+		return e.CantRead
+	}
 
 	hdr := (*EthHeader)(unsafe.Pointer(&buf))
 	if ! hdr.EqualDstAddr(dev.Addr) {
 		if ! hdr.EqualDstAddr(EthAddrBroadcast) {
-			return nil
+			return e.NoDataToRead
 		}
 	}
+
 	log.Println("received an ethernet frame")
+	log.Printf("\tlength: %v\n", flen)
+
 	EtherDump(hdr)
 
-	return nil
+	return e.OK
 }
 
 const bigEndian = 4321

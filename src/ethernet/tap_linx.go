@@ -3,8 +3,8 @@ package ethernet
 import (
 	"fmt"
 	"github.com/42milez/ProtocolStack/src/device"
+	"github.com/42milez/ProtocolStack/src/e"
 	"log"
-	"runtime/debug"
 	"syscall"
 	"unsafe"
 )
@@ -46,8 +46,8 @@ func tapOpen(dev *device.Device) error {
 
 	fd, err = syscall.Open(vnd, syscall.O_RDWR, 0666)
 	if err != nil {
-		debug.PrintStack()
-		return err
+		log.Printf("can't open virtual networking device: %v\n", vnd)
+		return e.CantOpen
 	}
 
 	// --------------------------------------------------
@@ -61,14 +61,16 @@ func tapOpen(dev *device.Device) error {
 		uintptr(syscall.TUNSETIFF),
 		uintptr(unsafe.Pointer(&ifrFlags)))
 	if errno != 0 {
+		log.Printf("SYS_IOCTL (%v) failed: %v\n", "TUNSETIFF", errno)
 		_ = syscall.Close(fd)
-		return fmt.Errorf("ioctl error: %d", errno)
+		return e.CantOpen
 	}
 
 	// --------------------------------------------------
 	soc, err = syscall.Socket(syscall.AF_INET, syscall.SOCK_DGRAM, 0)
 	if err != nil {
-		return err
+		log.Printf("can't open socket: %v\n", err)
+		return e.CantOpen
 	}
 
 	ifrSockAddr := IfreqSockAddr{}
@@ -81,8 +83,9 @@ func tapOpen(dev *device.Device) error {
 		uintptr(syscall.SIOCGIFHWADDR),
 		uintptr(unsafe.Pointer(&ifrSockAddr)))
 	if errno != 0 {
+		log.Printf("SYS_IOCTL (%v) failed: %v\n", "SIOCGIFHWADDR", errno)
 		_ = syscall.Close(soc)
-		return fmt.Errorf("ioctl error: %d", errno)
+		return e.CantOpen
 	}
 
 	copy(dev.Addr[:], ifrSockAddr.Addr.Data[:])
@@ -93,7 +96,8 @@ func tapOpen(dev *device.Device) error {
 
 	epfd, err = syscall.EpollCreate1(0)
 	if err != nil {
-		return err
+		log.Printf("can't open an epoll file descriptor: %v\n", err)
+		return e.CantOpen
 	}
 
 	event.Events = syscall.EPOLLIN
@@ -101,12 +105,13 @@ func tapOpen(dev *device.Device) error {
 
 	err = syscall.EpollCtl(epfd, syscall.EPOLL_CTL_ADD, fd, &event)
 	if err != nil {
-		return err
+		log.Printf("can't add an entry to the interest list of the epoll file descriptor: %v\n", err)
+		return e.CantOpen
 	}
 
 	dev.Priv.FD = fd
 
-	return nil
+	return e.OK
 }
 
 func tapClose(dev *device.Device) error {
