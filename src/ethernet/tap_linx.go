@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/42milez/ProtocolStack/src/device"
 	"log"
+	"runtime/debug"
 	"syscall"
 	"unsafe"
 )
@@ -35,19 +36,26 @@ type IfreqSockAddr struct {
 	}
 }
 
+const vnd = "/dev/net/tun"
+
 func tapOpen(dev *device.Device) error {
-	fd, err := syscall.Open("/dev/net/tun", syscall.O_RDWR, 0666)
+	var err error
+	var errno syscall.Errno
+	var fd int
+	var soc int
+
+	fd, err = syscall.Open(vnd, syscall.O_RDWR, 0666)
 	if err != nil {
+		debug.PrintStack()
 		return err
 	}
-
-	dev.Priv.FD = fd
 
 	// --------------------------------------------------
 	ifrFlags := IfreqFlags{}
 	ifrFlags.Name = dev.Priv.Name
 	ifrFlags.Flags = syscall.IFF_TAP | syscall.IFF_NO_PI
-	_, _, errno := syscall.Syscall(
+
+	_, _, errno = syscall.Syscall(
 		syscall.SYS_IOCTL,
 		uintptr(fd),
 		uintptr(syscall.TUNSETIFF),
@@ -58,13 +66,15 @@ func tapOpen(dev *device.Device) error {
 	}
 
 	// --------------------------------------------------
-	soc, err := syscall.Socket(syscall.AF_INET, syscall.SOCK_DGRAM, 0)
+	soc, err = syscall.Socket(syscall.AF_INET, syscall.SOCK_DGRAM, 0)
 	if err != nil {
 		return err
 	}
+
 	ifrSockAddr := IfreqSockAddr{}
 	ifrSockAddr.Name = dev.Priv.Name
 	ifrSockAddr.Addr.Family = syscall.AF_INET
+
 	_, _, errno = syscall.Syscall(
 		syscall.SYS_IOCTL,
 		uintptr(soc),
@@ -74,27 +84,33 @@ func tapOpen(dev *device.Device) error {
 		_ = syscall.Close(soc)
 		return fmt.Errorf("ioctl error: %d", errno)
 	}
+
 	copy(dev.Addr[:], ifrSockAddr.Addr.Data[:])
 	_ = syscall.Close(soc)
 
 	// --------------------------------------------------
 	var event syscall.EpollEvent
-	var errEpollCreate1 error
-	epfd, errEpollCreate1 = syscall.EpollCreate1(0)
-	if errEpollCreate1 != nil {
-		return errEpollCreate1
+
+	epfd, err = syscall.EpollCreate1(0)
+	if err != nil {
+		return err
 	}
+
 	event.Events = syscall.EPOLLIN
-	event.Fd = int32(dev.Priv.FD)
-	if errEpollCtl := syscall.EpollCtl(epfd, syscall.EPOLL_CTL_ADD, dev.Priv.FD, &event); errEpollCtl != nil {
-		return errEpollCtl
+	event.Fd = int32(fd)
+
+	err = syscall.EpollCtl(epfd, syscall.EPOLL_CTL_ADD, fd, &event)
+	if err != nil {
+		return err
 	}
+
+	dev.Priv.FD = fd
 
 	return nil
 }
 
 func tapClose(dev *device.Device) error {
-	return nil
+	return syscall.Close(epfd)
 }
 
 func tapTransmit(dev *device.Device) error {
@@ -119,10 +135,12 @@ func tapPoll(dev *device.Device, isTerminated bool) error {
 
 	// TODO: for development (remove later)
 	if nEvents > 0 {
-		fmt.Printf("nEvents: %d\n", nEvents)
+		log.Println("events occurred")
+		log.Printf("\tEvents: %v\n", nEvents)
+		log.Printf("\tDevice: %v (%v)\n", dev.Name, dev.Priv.Name)
 		_ = ReadFrame(dev)
 	} else {
-		log.Printf("net: no event occurred.")
+		log.Printf("no event occurred")
 	}
 
 	return nil

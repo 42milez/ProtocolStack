@@ -3,6 +3,7 @@ package middleware
 import (
 	"fmt"
 	"github.com/42milez/ProtocolStack/src/device"
+	"github.com/42milez/ProtocolStack/src/e"
 	"github.com/42milez/ProtocolStack/src/network"
 	"log"
 	"os"
@@ -83,11 +84,9 @@ func Setup() error {
 	return nil
 }
 
-func Start(netSigCh <-chan os.Signal, wg *sync.WaitGroup) error {
-	var err error
-
+func Start(netSigCh <-chan os.Signal, wg *sync.WaitGroup) e.Error {
 	for _, dev := range devices {
-		if err = dev.Open(); err != nil {
+		if err := dev.Open(); err != e.OK {
 			return err
 		}
 	}
@@ -121,9 +120,9 @@ func Start(netSigCh <-chan os.Signal, wg *sync.WaitGroup) error {
 		}
 	}()
 
-	log.Println("net: started.")
+	log.Println("net thread was started")
 
-	return nil
+	return e.OK
 }
 
 func RegisterDevice(dev *device.Device) {
