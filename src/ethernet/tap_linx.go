@@ -41,10 +41,6 @@ func tapOpen(dev *device.Device) error {
 		return err
 	}
 
-	//if err = syscall.SetNonblock(fd, true); err != nil {
-	//	return err
-	//}
-
 	dev.Priv.FD = fd
 
 	// --------------------------------------------------
