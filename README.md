@@ -88,21 +88,24 @@ Note: `make` supports the commands below:
   - Vagrant
     - [Vagrantfile](https://www.vagrantup.com/docs/vagrantfile)
 - Go
-  - [Command compile](https://golang.org/cmd/compile/)
-  - [Command vet](https://golang.org/cmd/vet)
-  - [Compiler And Runtime Optimizations](https://github.com/golang/go/wiki/CompilerOptimizations)
-  - [Data Race Detector](https://golang.org/doc/articles/race_detector)
-  - [Effective Go](https://golang.org/doc/effective_go)
-  - [Frequently Asked Questions (FAQ)](https://golang.org/doc/faq)
-    - [Should I define methods on values or pointers?](https://golang.org/doc/faq#methods_on_values_or_pointers)
-      - [Value vs Pointer Receivers](https://h12.io/article/value-vs-pointer-receivers)
-  - [Getting Started with Code Coverage for Golang](https://about.codecov.io/blog/getting-started-with-code-coverage-for-golang/)
-  - [Go by Example](https://gobyexample.com/)
-  - [Package testing](https://golang.org/pkg/testing)
+  - Articles
+    - [A Closer Look at Golang From an Architect’s Perspective](https://thenewstack.io/a-closer-look-at-golang-from-an-architects-perspective)
+    - [Effective Go](https://golang.org/doc/effective_go)
+    - [Go by Example](https://gobyexample.com/)
+  - Docs
+      - [Command compile](https://golang.org/cmd/compile/)
+      - [Command vet](https://golang.org/cmd/vet)
+      - [Compiler And Runtime Optimizations](https://github.com/golang/go/wiki/CompilerOptimizations)
+      - [Data Race Detector](https://golang.org/doc/articles/race_detector)
+      - [Frequently Asked Questions (FAQ)](https://golang.org/doc/faq)
+        - [Should I define methods on values or pointers?](https://golang.org/doc/faq#methods_on_values_or_pointers)
+          - [Value vs Pointer Receivers](https://h12.io/article/value-vs-pointer-receivers)
+      - [Getting Started with Code Coverage for Golang](https://about.codecov.io/blog/getting-started-with-code-coverage-for-golang/)
+      - [Package testing](https://golang.org/pkg/testing)
+      - [The Go Memory Model](https://golang.org/ref/mem)
+      - [The Go Programming Language Specification](https://golang.org/ref/spec)
   - Packages
     - [github.com/google/go-cmp/cmp](https://pkg.go.dev/github.com/google/go-cmp/cmp)
-  - [The Go Memory Model](https://golang.org/ref/mem)
-  - [The Go Programming Language Specification](https://golang.org/ref/spec)
 - Makefile
   - [A Good Makefile for Go](https://kodfabrik.com/journal/a-good-makefile-for-go)
   - [GNU Make Manual](https://www.gnu.org/software/make/manual/)
@@ -154,6 +157,8 @@ Note: `make` supports the commands below:
     - [Go: Context and Cancellation by Propagation](https://medium.com/a-journey-with-go/go-context-and-cancellation-by-propagation-7a808bbc889c)
 - Programming
   - [History of programming languages](https://en.wikipedia.org/wiki/History_of_programming_languages)
+- Question and answer site
+  - [C++ : how to close a tcp socket (server) when receiving SIGKILL](https://stackoverflow.com/questions/21329861/c-how-to-close-a-tcp-socket-server-when-receiving-sigkill)
 
 ## Memos
 - Use the context types properly acording to the rubric.

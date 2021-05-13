@@ -1,7 +1,7 @@
 package device
 
 import (
-	"fmt"
+	"github.com/42milez/ProtocolStack/src/e"
 	"log"
 )
 
@@ -80,16 +80,19 @@ type Device struct {
 	Priv      Privilege
 }
 
-func (dev *Device) Open() error {
+func (dev *Device) Open() e.Error {
 	if dev.Op.Open != nil {
 		if (dev.FLAG & DevFlagUp) != 0 {
-			return fmt.Errorf("%s already opend", dev.Name)
+			return e.AlreadyOpened
 		}
 		if err := dev.Op.Open(dev); err != nil {
-			return err
+			log.Printf("can't open a device")
+			log.Printf("\tName: %v (%v)\n", dev.Name, dev.Priv.Name)
+			log.Printf("\tType: %v\n", dev.Type)
+			return e.CantOpen
 		}
 		dev.FLAG |= DevFlagUp
-		log.Printf("%s opened", dev.Name)
+		log.Printf("opened a device: %v\n", dev.Name)
 	}
-	return nil
+	return e.OK
 }

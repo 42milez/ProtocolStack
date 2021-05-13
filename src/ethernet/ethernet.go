@@ -3,6 +3,7 @@ package ethernet
 import (
 	"fmt"
 	"github.com/42milez/ProtocolStack/src/device"
+	"github.com/42milez/ProtocolStack/src/e"
 	"log"
 	"strconv"
 	"strings"
@@ -11,15 +12,20 @@ import (
 )
 
 const EthAddrLen = 6
-
 const EthHeaderSize = 14
 const EthFrameSizeMin = 60
 const EthFrameSizeMax = 1514
 const EthPayloadSizeMin = EthFrameSizeMin - EthHeaderSize
 const EthPayloadSizeMax = EthFrameSizeMax - EthHeaderSize
 
+const EthTypeArp = 0x0806
+const EthTypeIpv4 = 0x0800
+const EthTypeIpv6 = 0x86dd
+
 var EthAddrAny = []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 var EthAddrBroadcast = []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff}
+
+var endian int
 
 type MAC string
 
@@ -40,11 +46,93 @@ func (mac MAC) Byte() ([]byte, error) {
 	return p, nil
 }
 
+type EthHeader struct {
+	Dst [EthAddrLen]byte
+	Src [EthAddrLen]byte
+	Type uint16
+}
+
+func (h EthHeader) EqualDstAddr(v []byte) bool {
+	return h.Dst[0] != v[0] &&
+		h.Dst[1] != v[1] &&
+		h.Dst[2] != v[2] &&
+		h.Dst[3] != v[3] &&
+		h.Dst[4] != v[4] &&
+		h.Dst[5] != v[5]
+}
+
+func (h EthHeader) TypeAsString() string {
+	switch ntoh16(h.Type) {
+	case EthTypeArp:
+		return "ARP"
+	case EthTypeIpv4:
+		return "IPv4"
+	case EthTypeIpv6:
+		return "IPv6"
+	default:
+		return "Unknown Type"
+	}
+}
+
+func EtherDump(hdr *EthHeader) {
+	log.Printf("\tMAC(Dst):   %d:%d:%d:%d:%d:%d", hdr.Dst[0], hdr.Dst[1], hdr.Dst[2], hdr.Dst[3], hdr.Dst[4], hdr.Dst[5])
+	log.Printf("\tMAC(Src):   %d:%d:%d:%d:%d:%d", hdr.Src[0], hdr.Src[1], hdr.Src[2], hdr.Src[3], hdr.Src[4], hdr.Src[5])
+	log.Printf("\tEther Type: 0x%04x (%s)", ntoh16(hdr.Type), hdr.TypeAsString())
+}
+
 func ReadFrame(dev *device.Device) error {
 	var buf [EthFrameSizeMax]byte
-	r1, r2, errno := syscall.Syscall(syscall.SYS_READ, uintptr(dev.Priv.FD), uintptr(unsafe.Pointer(&buf)), uintptr(EthFrameSizeMax))
-	log.Printf("r1: %v\n", r1)
-	log.Printf("r2: %v\n", r2)
-	log.Printf("errno: %v\n", errno)
-	return nil
+
+	flen, _, errno := syscall.Syscall(
+		syscall.SYS_READ,
+		uintptr(dev.Priv.FD),
+		uintptr(unsafe.Pointer(&buf)),
+		uintptr(EthFrameSizeMax))
+	if errno != 0 {
+		fmt.Printf("SYS_READ failed: %v\n", errno)
+		return e.CantRead
+	}
+
+	hdr := (*EthHeader)(unsafe.Pointer(&buf))
+	if ! hdr.EqualDstAddr(dev.Addr) {
+		if ! hdr.EqualDstAddr(EthAddrBroadcast) {
+			return e.NoDataToRead
+		}
+	}
+
+	log.Println("received an ethernet frame")
+	log.Printf("\tlength: %v\n", flen)
+
+	EtherDump(hdr)
+
+	return e.OK
+}
+
+const bigEndian = 4321
+const littleEndian = 1234
+
+func byteOrder() int {
+	x := 0x0100
+	p := unsafe.Pointer(&x)
+	if 0x01 == *(*byte)(p) {
+		return bigEndian
+	} else {
+		return littleEndian
+	}
+}
+
+func ntoh16(n uint16) uint16 {
+	if endian == littleEndian {
+		return swap16(n)
+	} else {
+		return n
+	}
+}
+
+func swap16(v uint16) uint16 {
+	return (v << 8) | (v >> 8)
+}
+
+func init() {
+	endian = byteOrder()
 }

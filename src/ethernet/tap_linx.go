@@ -3,6 +3,7 @@ package ethernet
 import (
 	"fmt"
 	"github.com/42milez/ProtocolStack/src/device"
+	"github.com/42milez/ProtocolStack/src/e"
 	"log"
 	"syscall"
 	"unsafe"
@@ -35,70 +36,86 @@ type IfreqSockAddr struct {
 	}
 }
 
+const vnd = "/dev/net/tun"
+
 func tapOpen(dev *device.Device) error {
-	fd, err := syscall.Open("/dev/net/tun", syscall.O_RDWR, 0666)
+	var err error
+	var errno syscall.Errno
+	var fd int
+	var soc int
+
+	fd, err = syscall.Open(vnd, syscall.O_RDWR, 0666)
 	if err != nil {
-		return err
+		log.Printf("can't open virtual networking device: %v\n", vnd)
+		return e.CantOpen
 	}
-
-	//if err = syscall.SetNonblock(fd, true); err != nil {
-	//	return err
-	//}
-
-	dev.Priv.FD = fd
 
 	// --------------------------------------------------
 	ifrFlags := IfreqFlags{}
 	ifrFlags.Name = dev.Priv.Name
 	ifrFlags.Flags = syscall.IFF_TAP | syscall.IFF_NO_PI
-	_, _, errno := syscall.Syscall(
+
+	_, _, errno = syscall.Syscall(
 		syscall.SYS_IOCTL,
 		uintptr(fd),
 		uintptr(syscall.TUNSETIFF),
 		uintptr(unsafe.Pointer(&ifrFlags)))
 	if errno != 0 {
+		log.Printf("SYS_IOCTL (%v) failed: %v\n", "TUNSETIFF", errno)
 		_ = syscall.Close(fd)
-		return fmt.Errorf("ioctl error: %d", errno)
+		return e.CantOpen
 	}
 
 	// --------------------------------------------------
-	soc, err := syscall.Socket(syscall.AF_INET, syscall.SOCK_DGRAM, 0)
+	soc, err = syscall.Socket(syscall.AF_INET, syscall.SOCK_DGRAM, 0)
 	if err != nil {
-		return err
+		log.Printf("can't open socket: %v\n", err)
+		return e.CantOpen
 	}
+
 	ifrSockAddr := IfreqSockAddr{}
 	ifrSockAddr.Name = dev.Priv.Name
 	ifrSockAddr.Addr.Family = syscall.AF_INET
+
 	_, _, errno = syscall.Syscall(
 		syscall.SYS_IOCTL,
 		uintptr(soc),
 		uintptr(syscall.SIOCGIFHWADDR),
 		uintptr(unsafe.Pointer(&ifrSockAddr)))
 	if errno != 0 {
+		log.Printf("SYS_IOCTL (%v) failed: %v\n", "SIOCGIFHWADDR", errno)
 		_ = syscall.Close(soc)
-		return fmt.Errorf("ioctl error: %d", errno)
+		return e.CantOpen
 	}
+
 	copy(dev.Addr[:], ifrSockAddr.Addr.Data[:])
 	_ = syscall.Close(soc)
 
 	// --------------------------------------------------
 	var event syscall.EpollEvent
-	var errEpollCreate1 error
-	epfd, errEpollCreate1 = syscall.EpollCreate1(0)
-	if errEpollCreate1 != nil {
-		return errEpollCreate1
-	}
-	event.Events = syscall.EPOLLIN
-	event.Fd = int32(dev.Priv.FD)
-	if errEpollCtl := syscall.EpollCtl(epfd, syscall.EPOLL_CTL_ADD, dev.Priv.FD, &event); errEpollCtl != nil {
-		return errEpollCtl
+
+	epfd, err = syscall.EpollCreate1(0)
+	if err != nil {
+		log.Printf("can't open an epoll file descriptor: %v\n", err)
+		return e.CantOpen
 	}
 
-	return nil
+	event.Events = syscall.EPOLLIN
+	event.Fd = int32(fd)
+
+	err = syscall.EpollCtl(epfd, syscall.EPOLL_CTL_ADD, fd, &event)
+	if err != nil {
+		log.Printf("can't add an entry to the interest list of the epoll file descriptor: %v\n", err)
+		return e.CantOpen
+	}
+
+	dev.Priv.FD = fd
+
+	return e.OK
 }
 
 func tapClose(dev *device.Device) error {
-	return nil
+	return syscall.Close(epfd)
 }
 
 func tapTransmit(dev *device.Device) error {
@@ -123,10 +140,12 @@ func tapPoll(dev *device.Device, isTerminated bool) error {
 
 	// TODO: for development (remove later)
 	if nEvents > 0 {
-		fmt.Printf("nEvents: %d\n", nEvents)
+		log.Println("events occurred")
+		log.Printf("\tEvents: %v\n", nEvents)
+		log.Printf("\tDevice: %v (%v)\n", dev.Name, dev.Priv.Name)
 		_ = ReadFrame(dev)
 	} else {
-		log.Printf("net: no event occurred.")
+		log.Printf("no event occurred")
 	}
 
 	return nil
