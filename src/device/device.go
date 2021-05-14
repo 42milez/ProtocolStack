@@ -83,6 +83,8 @@ type Device struct {
 func (dev *Device) Open() e.Error {
 	if dev.Op.Open != nil {
 		if (dev.FLAG & DevFlagUp) != 0 {
+			log.Println("device is already opened")
+			log.Printf("\tname: %v (%v)\n", dev.Name, dev.Priv.Name)
 			return e.AlreadyOpened
 		}
 		if err := dev.Op.Open(dev); err != nil {
@@ -92,7 +94,8 @@ func (dev *Device) Open() e.Error {
 			return e.CantOpen
 		}
 		dev.FLAG |= DevFlagUp
-		log.Printf("successfully opened a device: %v\n", dev.Name)
+		log.Println("successfully opened a device")
+		log.Printf("\tname: %v (%v)\n", dev.Name, dev.Priv.Name)
 	}
 	return e.OK
 }
