@@ -97,7 +97,7 @@ func main() {
 				return
 			default:
 				log.Println("server is running...")
-				time.Sleep(time.Second)
+				time.Sleep(time.Second * 3)
 			}
 		}
 	}()
