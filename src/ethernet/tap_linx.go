@@ -24,14 +24,14 @@ var epfd int
 // https://github.com/torvalds/linux/blob/master/include/uapi/linux/socket.h
 
 type IfreqFlags struct {
-	Name [syscall.IFNAMSIZ]byte
+	Name  [syscall.IFNAMSIZ]byte
 	Flags uint16
 }
 
 type IfreqSockAddr struct {
 	Name [syscall.IFNAMSIZ]byte
 	Addr struct {
-		Data [14]byte
+		Data   [14]byte
 		Family uint16
 	}
 }

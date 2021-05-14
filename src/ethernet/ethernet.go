@@ -47,8 +47,8 @@ func (mac MAC) Byte() ([]byte, error) {
 }
 
 type EthHeader struct {
-	Dst [EthAddrLen]byte
-	Src [EthAddrLen]byte
+	Dst  [EthAddrLen]byte
+	Src  [EthAddrLen]byte
 	Type uint16
 }
 
@@ -94,8 +94,8 @@ func ReadFrame(dev *device.Device) error {
 	}
 
 	hdr := (*EthHeader)(unsafe.Pointer(&buf))
-	if ! hdr.EqualDstAddr(dev.Addr) {
-		if ! hdr.EqualDstAddr(EthAddrBroadcast) {
+	if !hdr.EqualDstAddr(dev.Addr) {
+		if !hdr.EqualDstAddr(EthAddrBroadcast) {
 			return e.NoDataToRead
 		}
 	}

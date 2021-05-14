@@ -10,7 +10,7 @@ type Route struct {
 	Network network.IP
 	Netmask network.IP
 	NextHop network.IP
-	iface *middleware.Iface
+	iface   *middleware.Iface
 }
 
 var routes []*Route
@@ -24,7 +24,7 @@ func Register(iface *middleware.Iface, nextHop network.IP) {
 		Network: iface.Network,
 		Netmask: iface.Netmask,
 		NextHop: nextHop,
-		iface: iface,
+		iface:   iface,
 	}
 	routes = append(routes, route)
 	log.Printf(
@@ -42,7 +42,7 @@ func RegisterDefaultGateway(iface *middleware.Iface, nextHop network.IP) {
 		Network: network.V4Zero,
 		Netmask: network.V4Zero,
 		NextHop: nextHop,
-		iface: iface,
+		iface:   iface,
 	}
 	routes = append(routes, route)
 	log.Printf(

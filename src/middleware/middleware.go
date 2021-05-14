@@ -24,10 +24,10 @@ var protocols []Protocol
 //};
 
 type Timer struct {
-	Name string
+	Name     string
 	Interval syscall.Timeval
-	Last syscall.Timeval
-	Handler Handler
+	Last     syscall.Timeval
+	Handler  Handler
 }
 
 type Handler func(data []uint8, dev device.Device)
@@ -49,7 +49,7 @@ func register(protocolType ProtocolType, handler Handler) error {
 	}
 
 	p := Protocol{
-		Type: protocolType,
+		Type:    protocolType,
 		Handler: handler,
 	}
 
@@ -105,7 +105,7 @@ func Start(netSigCh <-chan os.Signal, wg *sync.WaitGroup) error {
 				log.Println("receiver is running...")
 			}
 			for _, dev := range devices {
-				if dev.FLAG & device.DevFlagUp == 0 {
+				if dev.FLAG&device.DevFlagUp == 0 {
 					continue
 				}
 				if err := dev.Op.Poll(dev, terminate); err != nil {

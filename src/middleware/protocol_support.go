@@ -40,7 +40,7 @@ func (t ProtocolType) String() string {
 //};
 
 type Protocol struct {
-	Type ProtocolType
-	Mutex *sync.Mutex
+	Type    ProtocolType
+	Mutex   *sync.Mutex
 	Handler Handler
 }

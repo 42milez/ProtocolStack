@@ -2,7 +2,7 @@ package error
 
 type Error int
 
-const(
+const (
 	OK Error = iota
 	AlreadyOpened
 	CantOpen

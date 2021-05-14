@@ -160,7 +160,7 @@ func parseV6(s string) IP {
 func stoi(s string) (n int, c int, ok bool) {
 	n = 0
 	for c = 0; c < len(s) && '0' <= s[c] && s[c] <= '9'; c++ {
-		n = n * 10 + int(s[c] - '0')
+		n = n*10 + int(s[c]-'0')
 	}
 	if c == 0 {
 		return 0, 0, false
@@ -176,12 +176,12 @@ func ubtoa(dst []byte, start int, v byte) int {
 		return 1
 	}
 	if v < 100 {
-		dst[start + 1] = v % 10 + '0'
-		dst[start] = v / 10 + '0'
+		dst[start+1] = v%10 + '0'
+		dst[start] = v/10 + '0'
 		return 2
 	}
-	dst[start + 2] = (v % 10) + '0'
-	dst[start + 1] = ((v / 10) % 10) + '0'
+	dst[start+2] = (v % 10) + '0'
+	dst[start+1] = ((v / 10) % 10) + '0'
 	dst[start] = (v / 100) + '0'
 	return 3
 }
