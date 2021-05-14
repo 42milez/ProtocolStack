@@ -102,9 +102,7 @@ func main() {
 		}
 	}()
 
-	log.Println("Hello, TCP server!")
-
 	wg.Wait()
 
-	log.Println("server was stopped.")
+	log.Println("server stopped.")
 }
