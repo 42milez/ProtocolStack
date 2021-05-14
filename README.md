@@ -132,7 +132,8 @@ Note: `make` supports the commands below:
       - [TCP congestion control](https://en.wikipedia.org/wiki/TCP_congestion_control)
       - [Transmission Control Protocol](https://en.wikipedia.org/wiki/Transmission_Control_Protocol)
       - [User Datagram Protocol](https://en.wikipedia.org/wiki/User_Datagram_Protocol)
-  - Programming
+  - Others
+    - [Communicating sequential processes](https://en.wikipedia.org/wiki/Communicating_sequential_processes)
     - [Continuation](https://en.wikipedia.org/wiki/Continuation)
     - [Cooperative multitasking](https://en.wikipedia.org/wiki/Cooperative_multitasking)
     - [Critical section](https://en.wikipedia.org/wiki/Critical_section)
@@ -141,12 +142,11 @@ Note: `make` supports the commands below:
     - [Monitor (synchronization)](https://en.wikipedia.org/wiki/Monitor_(synchronization))
     - [Pipeline stall](https://en.wikipedia.org/wiki/Pipeline_stall)
     - [Preemption (computing)](https://en.wikipedia.org/wiki/Preemption_(computing))
+    - [Process substitution](https://en.wikipedia.org/wiki/Process_substitution)
     - [Task (computing)](https://en.wikipedia.org/wiki/Task_(computing))
     - [Thread pool](https://en.wikipedia.org/wiki/Thread_pool)
     - [Threading models](https://en.wikipedia.org/wiki/Thread_(computing)#Threading_models)
     - [Work stealing](https://en.wikipedia.org/wiki/Work_stealing)
-  - Others
-    - [Process substitution](https://en.wikipedia.org/wiki/Process_substitution)
 
 ## Notes
 - GO
