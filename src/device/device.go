@@ -87,8 +87,8 @@ func (dev *Device) Open() e.Error {
 		}
 		if err := dev.Op.Open(dev); err != nil {
 			log.Printf("can't open a device")
-			log.Printf("\tName: %v (%v)\n", dev.Name, dev.Priv.Name)
-			log.Printf("\tType: %v\n", dev.Type)
+			log.Printf("\tname: %v (%v)\n", dev.Name, dev.Priv.Name)
+			log.Printf("\ttype: %v\n", dev.Type)
 			return e.CantOpen
 		}
 		dev.FLAG |= DevFlagUp

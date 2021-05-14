@@ -141,8 +141,8 @@ func tapPoll(dev *device.Device, isTerminated bool) error {
 	// TODO: for development (remove later)
 	if nEvents > 0 {
 		log.Println("events occurred")
-		log.Printf("\tEvents: %v\n", nEvents)
-		log.Printf("\tDevice: %v (%v)\n", dev.Name, dev.Priv.Name)
+		log.Printf("\tevents: %v\n", nEvents)
+		log.Printf("\tdevice: %v (%v)\n", dev.Name, dev.Priv.Name)
 		_ = ReadFrame(dev)
 	} else {
 		log.Printf("no event occurred")

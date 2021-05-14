@@ -27,14 +27,12 @@ func Register(iface *middleware.Iface, nextHop network.IP) {
 		iface:   iface,
 	}
 	routes = append(routes, route)
-	log.Printf(
-		"route added: network=%s, netmask=%s, iface=%s, nextHop: %s, dev=%s",
-		route.Network.String(),
-		route.Netmask.String(),
-		iface.Unicast.String(),
-		nextHop.String(),
-		iface.Dev.Name,
-	)
+	log.Println("registered a route")
+	log.Printf("\tnetwork:  %v", route.Network.String())
+	log.Printf("\tnetmask:  %v", route.Netmask.String())
+	log.Printf("\tunicast:  %v", iface.Unicast.String())
+	log.Printf("\tnext hop: %v", nextHop.String())
+	log.Printf("\tdevice:   %v (%v)", iface.Dev.Name, iface.Dev.Priv.Name)
 }
 
 func RegisterDefaultGateway(iface *middleware.Iface, nextHop network.IP) {

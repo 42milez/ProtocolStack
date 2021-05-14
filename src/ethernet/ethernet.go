@@ -75,9 +75,9 @@ func (h EthHeader) TypeAsString() string {
 }
 
 func EtherDump(hdr *EthHeader) {
-	log.Printf("\tMAC(Dst):   %d:%d:%d:%d:%d:%d", hdr.Dst[0], hdr.Dst[1], hdr.Dst[2], hdr.Dst[3], hdr.Dst[4], hdr.Dst[5])
-	log.Printf("\tMAC(Src):   %d:%d:%d:%d:%d:%d", hdr.Src[0], hdr.Src[1], hdr.Src[2], hdr.Src[3], hdr.Src[4], hdr.Src[5])
-	log.Printf("\tEther Type: 0x%04x (%s)", ntoh16(hdr.Type), hdr.TypeAsString())
+	log.Printf("\tmac (dst):   %d:%d:%d:%d:%d:%d", hdr.Dst[0], hdr.Dst[1], hdr.Dst[2], hdr.Dst[3], hdr.Dst[4], hdr.Dst[5])
+	log.Printf("\tmac (src):   %d:%d:%d:%d:%d:%d", hdr.Src[0], hdr.Src[1], hdr.Src[2], hdr.Src[3], hdr.Src[4], hdr.Src[5])
+	log.Printf("\tethertype: 0x%04x (%s)", ntoh16(hdr.Type), hdr.TypeAsString())
 }
 
 func ReadFrame(dev *device.Device) error {
@@ -110,9 +110,9 @@ func ReadFrame(dev *device.Device) error {
 	log.Printf("\tlength: %v\n", flen)
 	EtherDump(hdr)
 
-	log.Printf("\tDevice:       %v (%v)", dev.Name, dev.Priv.Name)
-	log.Printf("\tEtherType:    %v (0x%04x)", hdr.TypeAsString(), ntoh16(hdr.Type))
-	log.Printf("\tFrame Length: %v", flen)
+	log.Printf("\tdevice:       %v (%v)", dev.Name, dev.Priv.Name)
+	log.Printf("\tethertype:    %v (0x%04x)", hdr.TypeAsString(), ntoh16(hdr.Type))
+	log.Printf("\tframe length: %v", flen)
 
 	return e.OK
 }
