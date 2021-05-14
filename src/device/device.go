@@ -2,7 +2,7 @@ package device
 
 import (
 	e "github.com/42milez/ProtocolStack/src/error"
-	"log"
+	l "github.com/42milez/ProtocolStack/src/logger"
 )
 
 type DevType int
@@ -83,19 +83,19 @@ type Device struct {
 func (dev *Device) Open() e.Error {
 	if dev.Op.Open != nil {
 		if (dev.FLAG & DevFlagUp) != 0 {
-			log.Println("device is already opened")
-			log.Printf("\tname: %v (%v)\n", dev.Name, dev.Priv.Name)
+			l.W("device is already opened")
+			l.W("\tname: %v (%v) ", dev.Name, dev.Priv.Name)
 			return e.Error{Code: e.AlreadyOpened}
 		}
 		if err := dev.Op.Open(dev); err.Code != e.OK {
-			log.Printf("can't open a device")
-			log.Printf("\tname: %v (%v)\n", dev.Name, dev.Priv.Name)
-			log.Printf("\ttype: %v\n", dev.Type)
+			l.E("can't open a device")
+			l.E("\tname: %v (%v) ", dev.Name, dev.Priv.Name)
+			l.E("\ttype: %v ", dev.Type)
 			return e.Error{Code: e.CantOpen}
 		}
 		dev.FLAG |= DevFlagUp
-		log.Println("successfully opened a device")
-		log.Printf("\tname: %v (%v)\n", dev.Name, dev.Priv.Name)
+		l.I("device opened")
+		l.I("\tname: %v (%v) ", dev.Name, dev.Priv.Name)
 	}
 	return e.Error{Code: e.OK}
 }

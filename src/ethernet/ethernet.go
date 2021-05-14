@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/42milez/ProtocolStack/src/device"
 	e "github.com/42milez/ProtocolStack/src/error"
-	"log"
+	l "github.com/42milez/ProtocolStack/src/logger"
 	"strconv"
 	"strings"
 	"syscall"
@@ -75,9 +75,9 @@ func (h EthHeader) TypeAsString() string {
 }
 
 func EtherDump(hdr *EthHeader) {
-	log.Printf("\tmac (dst):   %d:%d:%d:%d:%d:%d", hdr.Dst[0], hdr.Dst[1], hdr.Dst[2], hdr.Dst[3], hdr.Dst[4], hdr.Dst[5])
-	log.Printf("\tmac (src):   %d:%d:%d:%d:%d:%d", hdr.Src[0], hdr.Src[1], hdr.Src[2], hdr.Src[3], hdr.Src[4], hdr.Src[5])
-	log.Printf("\tethertype: 0x%04x (%s)", ntoh16(hdr.Type), hdr.TypeAsString())
+	l.I("\tmac (dst):   %d:%d:%d:%d:%d:%d", hdr.Dst[0], hdr.Dst[1], hdr.Dst[2], hdr.Dst[3], hdr.Dst[4], hdr.Dst[5])
+	l.I("\tmac (src):   %d:%d:%d:%d:%d:%d", hdr.Src[0], hdr.Src[1], hdr.Src[2], hdr.Src[3], hdr.Src[4], hdr.Src[5])
+	l.I("\tethertype: 0x%04x (%s)", ntoh16(hdr.Type), hdr.TypeAsString())
 }
 
 func ReadFrame(dev *device.Device) e.Error {
@@ -90,12 +90,12 @@ func ReadFrame(dev *device.Device) e.Error {
 		uintptr(EthFrameSizeMax))
 
 	if errno != 0 {
-		log.Printf("SYS_READ failed: %v\n", errno)
+		l.E("SYS_READ failed: %v ", errno)
 		return e.Error{Code: e.CantRead}
 	}
 
 	if flen < EthHeaderSize*8 {
-		log.Println("the length of ethernet header is too short")
+		l.E("the length of ethernet header is too short")
 		return e.Error{Code: e.InvalidHeader}
 	}
 
@@ -106,13 +106,13 @@ func ReadFrame(dev *device.Device) e.Error {
 		}
 	}
 
-	log.Println("received an ethernet frame")
-	log.Printf("\tlength: %v\n", flen)
+	l.I("received an ethernet frame")
+	l.I("\tlength: %v ", flen)
 	EtherDump(hdr)
 
-	log.Printf("\tdevice:       %v (%v)\n", dev.Name, dev.Priv.Name)
-	log.Printf("\tethertype:    %v (0x%04x)\n", hdr.TypeAsString(), ntoh16(hdr.Type))
-	log.Printf("\tframe length: %v\n", flen)
+	l.I("\tdevice:       %v (%v) ", dev.Name, dev.Priv.Name)
+	l.I("\tethertype:    %v (0x%04x) ", hdr.TypeAsString(), ntoh16(hdr.Type))
+	l.I("\tframe length: %v ", flen)
 
 	return e.Error{Code: e.OK}
 }

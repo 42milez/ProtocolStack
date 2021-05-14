@@ -3,7 +3,7 @@ package ethernet
 import (
 	"github.com/42milez/ProtocolStack/src/device"
 	e "github.com/42milez/ProtocolStack/src/error"
-	"log"
+	l "github.com/42milez/ProtocolStack/src/logger"
 	"syscall"
 	"unsafe"
 )
@@ -45,7 +45,7 @@ func tapOpen(dev *device.Device) e.Error {
 
 	fd, err = syscall.Open(vnd, syscall.O_RDWR, 0666)
 	if err != nil {
-		log.Printf("can't open virtual networking device: %v\n", vnd)
+		l.E("can't open virtual networking device: %v ", vnd)
 		return e.Error{Code: e.CantOpen}
 	}
 
@@ -60,7 +60,7 @@ func tapOpen(dev *device.Device) e.Error {
 		uintptr(syscall.TUNSETIFF),
 		uintptr(unsafe.Pointer(&ifrFlags)))
 	if errno != 0 {
-		log.Printf("SYS_IOCTL (%v) failed: %v\n", "TUNSETIFF", errno)
+		l.E("SYS_IOCTL (%v) failed: %v ", "TUNSETIFF", errno)
 		_ = syscall.Close(fd)
 		return e.Error{Code: e.CantOpen}
 	}
@@ -68,7 +68,7 @@ func tapOpen(dev *device.Device) e.Error {
 	// --------------------------------------------------
 	soc, err = syscall.Socket(syscall.AF_INET, syscall.SOCK_DGRAM, 0)
 	if err != nil {
-		log.Printf("can't open socket: %v\n", err)
+		l.E("can't open socket: %v ", err)
 		return e.Error{Code: e.CantOpen}
 	}
 
@@ -82,7 +82,7 @@ func tapOpen(dev *device.Device) e.Error {
 		uintptr(syscall.SIOCGIFHWADDR),
 		uintptr(unsafe.Pointer(&ifrSockAddr)))
 	if errno != 0 {
-		log.Printf("SYS_IOCTL (%v) failed: %v\n", "SIOCGIFHWADDR", errno)
+		l.E("SYS_IOCTL (%v) failed: %v ", "SIOCGIFHWADDR", errno)
 		_ = syscall.Close(soc)
 		return e.Error{Code: e.CantOpen}
 	}
@@ -95,7 +95,7 @@ func tapOpen(dev *device.Device) e.Error {
 
 	epfd, err = syscall.EpollCreate1(0)
 	if err != nil {
-		log.Printf("can't open an epoll file descriptor: %v\n", err)
+		l.E("can't open an epoll file descriptor: %v ", err)
 		return e.Error{Code: e.CantOpen}
 	}
 
@@ -104,7 +104,7 @@ func tapOpen(dev *device.Device) e.Error {
 
 	err = syscall.EpollCtl(epfd, syscall.EPOLL_CTL_ADD, fd, &event)
 	if err != nil {
-		log.Printf("can't add an entry to the interest list of the epoll file descriptor: %v\n", err)
+		l.E("can't add an entry to the interest list of the epoll file descriptor: %v ", err)
 		return e.Error{Code: e.CantOpen}
 	}
 
@@ -140,12 +140,12 @@ func tapPoll(dev *device.Device, isTerminated bool) e.Error {
 
 	// TODO: for development (remove later)
 	if nEvents > 0 {
-		log.Println("events occurred")
-		log.Printf("\tevents: %v\n", nEvents)
-		log.Printf("\tdevice: %v (%v)\n", dev.Name, dev.Priv.Name)
+		l.I("events occurred")
+		l.I("\tevents: %v ", nEvents)
+		l.I("\tdevice: %v (%v) ", dev.Name, dev.Priv.Name)
 		_ = ReadFrame(dev)
 	} else {
-		log.Printf("no event occurred")
+		l.I("no event occurred")
 	}
 
 	return e.Error{Code: e.OK}

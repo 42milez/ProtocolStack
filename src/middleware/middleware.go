@@ -3,8 +3,8 @@ package middleware
 import (
 	"github.com/42milez/ProtocolStack/src/device"
 	e "github.com/42milez/ProtocolStack/src/error"
+	l "github.com/42milez/ProtocolStack/src/logger"
 	"github.com/42milez/ProtocolStack/src/network"
-	"log"
 	"os"
 	"strconv"
 	"sync"
@@ -42,8 +42,8 @@ func init() {
 func register(protocolType ProtocolType, handler Handler) e.Error {
 	for _, v := range protocols {
 		if v.Type == protocolType {
-			log.Println("protocol is already registered")
-			log.Printf("\ttype: %v\n", protocolType.String())
+			l.W("protocol is already registered")
+			l.W("\ttype: %v ", protocolType.String())
 			return e.Error{Code: e.CantRegister}
 		}
 	}
@@ -55,8 +55,8 @@ func register(protocolType ProtocolType, handler Handler) e.Error {
 
 	protocols = append(protocols, p)
 
-	log.Println("registered a protocol")
-	log.Printf("\ttype: %v\n", protocolType.String())
+	l.I("protocol registered")
+	l.I("\ttype: %v ", protocolType.String())
 
 	return e.Error{Code: e.OK}
 }
@@ -100,17 +100,17 @@ func Start(netSigCh <-chan os.Signal, wg *sync.WaitGroup) e.Error {
 		for {
 			select {
 			case <-netSigCh:
-				log.Println("terminating receiver...")
+				l.I("terminating worker...")
 				terminate = true
 			default:
-				log.Println("receiver is running...")
+				l.I("worker is running...")
 			}
 			for _, dev := range devices {
 				if dev.FLAG&device.DevFlagUp == 0 {
 					continue
 				}
 				if err := dev.Op.Poll(dev, terminate); err.Code != e.OK {
-					log.Printf("error: %v\n", err)
+					l.E("error: %v ", err)
 					// TODO: notify error to main goroutine
 					// ...
 					return
@@ -128,14 +128,14 @@ func Start(netSigCh <-chan os.Signal, wg *sync.WaitGroup) e.Error {
 func RegisterDevice(dev *device.Device) {
 	dev.Name = "net" + strconv.Itoa(len(devices))
 	devices = append(devices, dev)
-	log.Println("registered a device")
-	log.Printf("\tname: %v (%v)\n", dev.Name, dev.Priv.Name)
+	l.I("device registered")
+	l.I("\tname: %v (%v) ", dev.Name, dev.Priv.Name)
 }
 
 func RegisterInterface(iface *Iface, dev *device.Device) e.Error {
 	for _, v := range interfaces {
 		if v.Dev == dev && v.Family == iface.Family {
-			log.Printf("interface is already registered: %v\n", v.Family.String())
+			l.W("interface is already registered: %v ", v.Family.String())
 			return e.Error{Code: e.CantRegister}
 		}
 	}
@@ -143,9 +143,9 @@ func RegisterInterface(iface *Iface, dev *device.Device) e.Error {
 	interfaces = append(interfaces, iface)
 	iface.Dev = dev
 
-	log.Println("attached an interface")
-	log.Printf("\tip:     %v\n", iface.Unicast.String())
-	log.Printf("\tdevice: %v (%v)\n", iface.Dev.Name, iface.Dev.Priv.Name)
+	l.I("interface attached")
+	l.I("\tip:     %v ", iface.Unicast.String())
+	l.I("\tdevice: %v (%v) ", iface.Dev.Name, iface.Dev.Priv.Name)
 
 	return e.Error{Code: e.OK}
 }

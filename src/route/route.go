@@ -1,9 +1,9 @@
 package route
 
 import (
+	l "github.com/42milez/ProtocolStack/src/logger"
 	"github.com/42milez/ProtocolStack/src/middleware"
 	"github.com/42milez/ProtocolStack/src/network"
-	"log"
 )
 
 type Route struct {
@@ -27,12 +27,12 @@ func Register(iface *middleware.Iface, nextHop network.IP) {
 		iface:   iface,
 	}
 	routes = append(routes, route)
-	log.Println("registered a route")
-	log.Printf("\tnetwork:  %v\n", route.Network.String())
-	log.Printf("\tnetmask:  %v\n", route.Netmask.String())
-	log.Printf("\tunicast:  %v\n", iface.Unicast.String())
-	log.Printf("\tnext hop: %v\n", nextHop.String())
-	log.Printf("\tdevice:   %v (%v)\n", iface.Dev.Name, iface.Dev.Priv.Name)
+	l.I("route registered")
+	l.I("\tnetwork:  %v ", route.Network.String())
+	l.I("\tnetmask:  %v ", route.Netmask.String())
+	l.I("\tunicast:  %v ", iface.Unicast.String())
+	l.I("\tnext hop: %v ", nextHop.String())
+	l.I("\tdevice:   %v (%v) ", iface.Dev.Name, iface.Dev.Priv.Name)
 }
 
 func RegisterDefaultGateway(iface *middleware.Iface, nextHop network.IP) {
@@ -43,10 +43,10 @@ func RegisterDefaultGateway(iface *middleware.Iface, nextHop network.IP) {
 		iface:   iface,
 	}
 	routes = append(routes, route)
-	log.Println("registered a default gateway")
-	log.Printf("\tnetwork:  %v\n", route.Network.String())
-	log.Printf("\tnetmask:  %v\n", route.Netmask.String())
-	log.Printf("\tunicast:  %v\n", iface.Unicast.String())
-	log.Printf("\tnext hop: %v\n", nextHop.String())
-	log.Printf("\tdevice:   %v (%v)\n", iface.Dev.Name, iface.Dev.Priv.Name)
+	l.I("default gateway registered")
+	l.I("\tnetwork:  %v ", route.Network.String())
+	l.I("\tnetmask:  %v ", route.Netmask.String())
+	l.I("\tunicast:  %v ", iface.Unicast.String())
+	l.I("\tnext hop: %v ", nextHop.String())
+	l.I("\tdevice:   %v (%v) ", iface.Dev.Name, iface.Dev.Priv.Name)
 }

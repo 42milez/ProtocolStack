@@ -4,10 +4,10 @@ import (
 	"github.com/42milez/ProtocolStack/src/device"
 	e "github.com/42milez/ProtocolStack/src/error"
 	"github.com/42milez/ProtocolStack/src/ethernet"
+	l "github.com/42milez/ProtocolStack/src/logger"
 	"github.com/42milez/ProtocolStack/src/middleware"
 	"github.com/42milez/ProtocolStack/src/network"
 	"github.com/42milez/ProtocolStack/src/route"
-	"log"
 	"os"
 	"os/signal"
 	"sync"
@@ -26,17 +26,17 @@ func setup() e.Error {
 	var iface *middleware.Iface
 	var err e.Error
 
-	log.Println("--------------------------------------------------")
-	log.Println(" PROTOCOL INITIALIZATION")
-	log.Println("--------------------------------------------------")
+	l.I("--------------------------------------------------")
+	l.I(" INITIALIZE PROTOCOLS                             ")
+	l.I("--------------------------------------------------")
 	if err = middleware.Setup(); err.Code != e.OK {
 		return e.Error{Code: e.Failed}
 	}
 
 	// Create a loopback device and its iface, then link them.
-	log.Println("--------------------------------------------------")
-	log.Println(" DEVICE INITIALIZATION")
-	log.Println("--------------------------------------------------")
+	l.I("--------------------------------------------------")
+	l.I(" INITIALIZE DEVICES                               ")
+	l.I("--------------------------------------------------")
 	dev = ethernet.GenLoopbackDevice()
 	middleware.RegisterDevice(dev)
 	iface = middleware.GenIF(ethernet.LoopbackIpAddr, ethernet.LoopbackNetmask)
@@ -60,9 +60,9 @@ func setup() e.Error {
 	route.RegisterDefaultGateway(iface, network.ParseIP("192.0.2.1"))
 
 	// Create sub-thread for polling.
-	log.Println("--------------------------------------------------")
-	log.Println(" START WORKERS")
-	log.Println("--------------------------------------------------")
+	l.I("--------------------------------------------------")
+	l.I(" START WORKERS                                    ")
+	l.I("--------------------------------------------------")
 	if err = middleware.Start(netSigCh, &wg); err.Code != e.OK {
 		return e.Error{Code: e.Failed}
 	}
@@ -82,7 +82,7 @@ func handleSignal(sigCh <-chan os.Signal, wg *sync.WaitGroup) {
 	go func() {
 		defer wg.Done()
 		sig := <-sigCh
-		log.Printf("signal received: %s\n", sig)
+		l.I("signal received: %s ", sig)
 		mainSigCh <- syscall.SIGUSR1
 		netSigCh <- syscall.SIGUSR1
 	}()
@@ -90,14 +90,16 @@ func handleSignal(sigCh <-chan os.Signal, wg *sync.WaitGroup) {
 
 func main() {
 	if err := setup(); err.Code != e.OK {
-		log.Fatal("setup failed.")
+		l.F("setup failed.")
 	}
 
 	handleSignal(sigCh, &wg)
 
-	log.Println("--------------------------------------------------")
-	log.Println(" SERVER STARTED")
-	log.Println("--------------------------------------------------")
+	l.I("                                                  ")
+	l.I("//////////////////////////////////////////////////")
+	l.I("           S E R V E R    S T A R T E D           ")
+	l.I("//////////////////////////////////////////////////")
+	l.I("                                                  ")
 
 	wg.Add(1)
 	go func() {
@@ -105,10 +107,10 @@ func main() {
 		for {
 			select {
 			case <-mainSigCh:
-				log.Println("shutting down server...")
+				l.I("shutting down server...")
 				return
 			default:
-				log.Println("server is running...")
+				l.I("server is running...")
 				time.Sleep(time.Second * 3)
 			}
 		}
@@ -116,5 +118,5 @@ func main() {
 
 	wg.Wait()
 
-	log.Println("server stopped.")
+	l.I("server stopped.")
 }
