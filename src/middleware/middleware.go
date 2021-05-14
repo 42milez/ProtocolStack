@@ -132,7 +132,7 @@ func RegisterDevice(dev *device.Device) {
 	dev.Name = "net" + strconv.Itoa(len(devices))
 	devices = append(devices, dev)
 	log.Println("registered a device")
-	log.Printf("\tname: %v\n", dev.Name)
+	log.Printf("\tname: %v (%v)\n", dev.Name, dev.Priv.Name)
 }
 
 func RegisterInterface(iface *Iface, dev *device.Device) error {
