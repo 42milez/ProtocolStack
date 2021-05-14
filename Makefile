@@ -42,6 +42,10 @@ compile:
 	@-touch $(STDERR)
 	@$(MAKE) -s go-compile 2> $(STDERR)
 
+## fmt: run formatter
+.PHONY: fmt
+fmt: go-fmt
+
 ## lint: run linters (golangci-lint)
 .PHONY: lint
 lint: go-lint
@@ -71,6 +75,10 @@ go-clean:
 .PHONY: go-compile
 go-compile: go-clean go-mod go-vet go-build
 
+.PHONY: go-fmt
+go-fmt:
+	@go fmt $(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/...
+
 .PHONY: go-lint
 go-lint:
 	@golangci-lint run
@@ -83,4 +91,4 @@ go-mod:
 .PHONY: go-vet
 go-vet:
 	@echo "🔍 Vetting source code..."
-	@go vet $(dir $(abspath $(firstword $(MAKEFILE_LIST))))src
+	@go vet $(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/...
