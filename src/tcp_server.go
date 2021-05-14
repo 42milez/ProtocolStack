@@ -1,13 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"github.com/42milez/ProtocolStack/src/device"
+	e "github.com/42milez/ProtocolStack/src/error"
 	"github.com/42milez/ProtocolStack/src/ethernet"
+	l "github.com/42milez/ProtocolStack/src/logger"
 	"github.com/42milez/ProtocolStack/src/middleware"
 	"github.com/42milez/ProtocolStack/src/network"
 	"github.com/42milez/ProtocolStack/src/route"
-	"log"
 	"os"
 	"os/signal"
 	"sync"
@@ -21,32 +21,38 @@ var mainSigCh chan os.Signal
 var netSigCh chan os.Signal
 var sigCh chan os.Signal
 
-func setup() error {
+func setup() e.Error {
 	var dev *device.Device
 	var iface *middleware.Iface
-	var err error
+	var err e.Error
 
-	if err = middleware.Setup(); err != nil {
-		return err
+	l.I("--------------------------------------------------")
+	l.I(" INITIALIZE PROTOCOLS                             ")
+	l.I("--------------------------------------------------")
+	if err = middleware.Setup(); err.Code != e.OK {
+		return e.Error{Code: e.Failed}
 	}
 
 	// Create a loopback device and its iface, then link them.
+	l.I("--------------------------------------------------")
+	l.I(" INITIALIZE DEVICES                               ")
+	l.I("--------------------------------------------------")
 	dev = ethernet.GenLoopbackDevice()
 	middleware.RegisterDevice(dev)
 	iface = middleware.GenIF(ethernet.LoopbackIpAddr, ethernet.LoopbackNetmask)
-	if err = middleware.RegisterInterface(iface, dev); err != nil {
-		return err
+	if err = middleware.RegisterInterface(iface, dev); err.Code != e.OK {
+		return e.Error{Code: e.Failed}
 	}
 	route.Register(iface, network.V4Zero)
 
 	// Create a TAP device and its iface, then link them.
-	if dev, err = ethernet.GenTapDevice("tap0", "00:00:5e:00:53:01"); err != nil {
-		return err
+	if dev, err = ethernet.GenTapDevice("tap0", "00:00:5e:00:53:01"); err.Code != e.OK {
+		return e.Error{Code: e.Failed}
 	}
 	middleware.RegisterDevice(dev)
 	iface = middleware.GenIF("192.0.2.2", "255.255.255.0")
-	if err = middleware.RegisterInterface(iface, dev); err != nil {
-		return err
+	if err = middleware.RegisterInterface(iface, dev); err.Code != e.OK {
+		return e.Error{Code: e.Failed}
 	}
 	route.Register(iface, network.V4Zero)
 
@@ -54,11 +60,14 @@ func setup() error {
 	route.RegisterDefaultGateway(iface, network.ParseIP("192.0.2.1"))
 
 	// Create sub-thread for polling.
-	if err = middleware.Start(netSigCh, &wg); err != nil {
-		return err
+	l.I("--------------------------------------------------")
+	l.I(" START WORKERS                                    ")
+	l.I("--------------------------------------------------")
+	if err = middleware.Start(netSigCh, &wg); err.Code != e.OK {
+		return e.Error{Code: e.Failed}
 	}
 
-	return nil
+	return e.Error{Code: e.OK}
 }
 
 func init() {
@@ -73,19 +82,24 @@ func handleSignal(sigCh <-chan os.Signal, wg *sync.WaitGroup) {
 	go func() {
 		defer wg.Done()
 		sig := <-sigCh
-		fmt.Printf("signal received: %s\n", sig)
+		l.I("signal received: %s ", sig)
 		mainSigCh <- syscall.SIGUSR1
 		netSigCh <- syscall.SIGUSR1
 	}()
 }
 
 func main() {
-	if err := setup(); err != nil {
-		log.Println(err.Error())
-		log.Fatal("setup failed.")
+	if err := setup(); err.Code != e.OK {
+		l.F("setup failed.")
 	}
 
 	handleSignal(sigCh, &wg)
+
+	l.I("                                                  ")
+	l.I("//////////////////////////////////////////////////")
+	l.I("           S E R V E R    S T A R T E D           ")
+	l.I("//////////////////////////////////////////////////")
+	l.I("                                                  ")
 
 	wg.Add(1)
 	go func() {
@@ -93,18 +107,16 @@ func main() {
 		for {
 			select {
 			case <-mainSigCh:
-				log.Println("shutting down server...")
+				l.I("shutting down server...")
 				return
 			default:
-				log.Println("server is running...")
-				time.Sleep(time.Second)
+				l.I("server is running...")
+				time.Sleep(time.Second * 3)
 			}
 		}
 	}()
 
-	log.Println("Hello, TCP server!")
-
 	wg.Wait()
 
-	log.Println("server was stopped.")
+	l.I("server stopped.")
 }

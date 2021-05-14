@@ -90,17 +90,18 @@ Note: `make` supports the commands below:
 - Go
   - Articles
     - [A Closer Look at Golang From an Architect’s Perspective](https://thenewstack.io/a-closer-look-at-golang-from-an-architects-perspective)
-    - [Effective Go](https://golang.org/doc/effective_go)
-    - [Go by Example](https://gobyexample.com/)
+    - [Go at Google: Language Design in the Service of Software Engineering](https://talks.golang.org/2012/splash.article)
   - Docs
       - [Command compile](https://golang.org/cmd/compile/)
       - [Command vet](https://golang.org/cmd/vet)
       - [Compiler And Runtime Optimizations](https://github.com/golang/go/wiki/CompilerOptimizations)
       - [Data Race Detector](https://golang.org/doc/articles/race_detector)
+      - [Effective Go](https://golang.org/doc/effective_go)
       - [Frequently Asked Questions (FAQ)](https://golang.org/doc/faq)
         - [Should I define methods on values or pointers?](https://golang.org/doc/faq#methods_on_values_or_pointers)
           - [Value vs Pointer Receivers](https://h12.io/article/value-vs-pointer-receivers)
       - [Getting Started with Code Coverage for Golang](https://about.codecov.io/blog/getting-started-with-code-coverage-for-golang/)
+      - [Go by Example](https://gobyexample.com/)
       - [Package testing](https://golang.org/pkg/testing)
       - [The Go Memory Model](https://golang.org/ref/mem)
       - [The Go Programming Language Specification](https://golang.org/ref/spec)
@@ -132,21 +133,30 @@ Note: `make` supports the commands below:
       - [TCP congestion control](https://en.wikipedia.org/wiki/TCP_congestion_control)
       - [Transmission Control Protocol](https://en.wikipedia.org/wiki/Transmission_Control_Protocol)
       - [User Datagram Protocol](https://en.wikipedia.org/wiki/User_Datagram_Protocol)
-  - Programming
+  - Memory
+    - [Memory barrier](https://en.wikipedia.org/wiki/Memory_barrier)
+    - [Memory management](https://en.wikipedia.org/wiki/Memory_management)
+    - [Memory model (programming)](https://en.wikipedia.org/wiki/Memory_model_(programming))
+    - [Memory safety](https://en.wikipedia.org/wiki/Memory_safety)
+    - [Region-based memory management](https://en.wikipedia.org/wiki/Region-based_memory_management)
+  - Others
+    - [Communicating sequential processes](https://en.wikipedia.org/wiki/Communicating_sequential_processes)
     - [Continuation](https://en.wikipedia.org/wiki/Continuation)
     - [Cooperative multitasking](https://en.wikipedia.org/wiki/Cooperative_multitasking)
     - [Critical section](https://en.wikipedia.org/wiki/Critical_section)
     - [Fair-share scheduling](https://en.wikipedia.org/wiki/Fair-share_scheduling)
     - [Fork-join model](https://en.wikipedia.org/wiki/Fork%E2%80%93join_model)
+    - [Generic programming](https://en.wikipedia.org/wiki/Generic_programming)
     - [Monitor (synchronization)](https://en.wikipedia.org/wiki/Monitor_(synchronization))
     - [Pipeline stall](https://en.wikipedia.org/wiki/Pipeline_stall)
     - [Preemption (computing)](https://en.wikipedia.org/wiki/Preemption_(computing))
+    - [Process substitution](https://en.wikipedia.org/wiki/Process_substitution)
+    - [Reflective programming](https://en.wikipedia.org/wiki/Reflective_programming)
     - [Task (computing)](https://en.wikipedia.org/wiki/Task_(computing))
+    - [Template metaprogramming](https://en.wikipedia.org/wiki/Template_metaprogramming)
     - [Thread pool](https://en.wikipedia.org/wiki/Thread_pool)
     - [Threading models](https://en.wikipedia.org/wiki/Thread_(computing)#Threading_models)
     - [Work stealing](https://en.wikipedia.org/wiki/Work_stealing)
-  - Others
-    - [Process substitution](https://en.wikipedia.org/wiki/Process_substitution)
 
 ## Notes
 - GO

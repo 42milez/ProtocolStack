@@ -1,11 +1,10 @@
 package middleware
 
 import (
-	"fmt"
 	"github.com/42milez/ProtocolStack/src/device"
-	"github.com/42milez/ProtocolStack/src/e"
+	e "github.com/42milez/ProtocolStack/src/error"
+	l "github.com/42milez/ProtocolStack/src/logger"
 	"github.com/42milez/ProtocolStack/src/network"
-	"log"
 	"os"
 	"strconv"
 	"sync"
@@ -24,10 +23,10 @@ var protocols []Protocol
 //};
 
 type Timer struct {
-	Name string
+	Name     string
 	Interval syscall.Timeval
-	Last syscall.Timeval
-	Handler Handler
+	Last     syscall.Timeval
+	Handler  Handler
 }
 
 type Handler func(data []uint8, dev device.Device)
@@ -40,30 +39,32 @@ func init() {
 	interfaces = make([]*Iface, 0)
 }
 
-func register(protocolType ProtocolType, handler Handler) error {
+func register(protocolType ProtocolType, handler Handler) e.Error {
 	for _, v := range protocols {
 		if v.Type == protocolType {
-			fmt.Printf("protocol is already registered: %v", protocolType.String())
-			return e.CantRegister
+			l.W("protocol is already registered")
+			l.W("\ttype: %v ", protocolType.String())
+			return e.Error{Code: e.CantRegister}
 		}
 	}
 
 	p := Protocol{
-		Type: protocolType,
+		Type:    protocolType,
 		Handler: handler,
 	}
 
 	protocols = append(protocols, p)
 
-	log.Printf("registered a protocol: %v\n", protocolType.String())
+	l.I("protocol registered")
+	l.I("\ttype: %v ", protocolType.String())
 
-	return nil
+	return e.Error{Code: e.OK}
 }
 
 // TODO: delete this comment later
 //int net_init(void)
 
-func Setup() error {
+func Setup() e.Error {
 	// ARP
 	// ...
 
@@ -72,8 +73,8 @@ func Setup() error {
 
 	// IP
 	// ...
-	if err := register(ProtocolTypeIp, network.IpInputHandler); err != nil {
-		return err
+	if err := register(ProtocolTypeIp, network.IpInputHandler); err.Code != e.OK {
+		return e.Error{Code: e.Failed}
 	}
 
 	// TCP
@@ -82,13 +83,13 @@ func Setup() error {
 	// UDP
 	// ...
 
-	return nil
+	return e.Error{Code: e.OK}
 }
 
-func Start(netSigCh <-chan os.Signal, wg *sync.WaitGroup) error {
+func Start(netSigCh <-chan os.Signal, wg *sync.WaitGroup) e.Error {
 	for _, dev := range devices {
-		if err := dev.Open(); err != e.OK {
-			return e.Fatal
+		if err := dev.Open(); err.Code != e.OK {
+			return e.Error{Code: e.Failed}
 		}
 	}
 
@@ -99,17 +100,17 @@ func Start(netSigCh <-chan os.Signal, wg *sync.WaitGroup) error {
 		for {
 			select {
 			case <-netSigCh:
-				log.Println("terminating receiver...")
+				l.I("terminating worker...")
 				terminate = true
 			default:
-				log.Println("receiver is running...")
+				l.I("worker is running...")
 			}
 			for _, dev := range devices {
-				if dev.FLAG & device.DevFlagUp == 0 {
+				if dev.FLAG&device.DevFlagUp == 0 {
 					continue
 				}
-				if err := dev.Op.Poll(dev, terminate); err != nil {
-					log.Printf("error: %v\n", err)
+				if err := dev.Op.Poll(dev, terminate); err.Code != e.OK {
+					l.E("error: %v ", err)
 					// TODO: notify error to main goroutine
 					// ...
 					return
@@ -121,31 +122,30 @@ func Start(netSigCh <-chan os.Signal, wg *sync.WaitGroup) error {
 		}
 	}()
 
-	log.Println("ready for processing incoming data")
-
-	return e.OK
+	return e.Error{Code: e.OK}
 }
 
 func RegisterDevice(dev *device.Device) {
 	dev.Name = "net" + strconv.Itoa(len(devices))
 	devices = append(devices, dev)
-	log.Printf("registered a device: %v\n", dev.Name)
+	l.I("device registered")
+	l.I("\tname: %v (%v) ", dev.Name, dev.Priv.Name)
 }
 
-func RegisterInterface(iface *Iface, dev *device.Device) error {
+func RegisterInterface(iface *Iface, dev *device.Device) e.Error {
 	for _, v := range interfaces {
 		if v.Dev == dev && v.Family == iface.Family {
-			fmt.Printf("interface is already registered: %v\n", v.Family.String())
-			return e.CantRegister
+			l.W("interface is already registered: %v ", v.Family.String())
+			return e.Error{Code: e.CantRegister}
 		}
 	}
 
 	interfaces = append(interfaces, iface)
 	iface.Dev = dev
 
-	log.Println("attached an interface")
-	log.Printf("\tIP Address:  %v", iface.Unicast.String())
-	log.Printf("\tDevice Name: %v", iface.Dev.Name)
+	l.I("interface attached")
+	l.I("\tip:     %v ", iface.Unicast.String())
+	l.I("\tdevice: %v (%v) ", iface.Dev.Name, iface.Dev.Priv.Name)
 
-	return e.OK
+	return e.Error{Code: e.OK}
 }

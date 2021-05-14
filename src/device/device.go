@@ -1,8 +1,8 @@
 package device
 
 import (
-	"github.com/42milez/ProtocolStack/src/e"
-	"log"
+	e "github.com/42milez/ProtocolStack/src/error"
+	l "github.com/42milez/ProtocolStack/src/logger"
 )
 
 type DevType int
@@ -35,10 +35,10 @@ const DevFlagP2P DevFlag = 0x0040
 const DevFlagNeedArp DevFlag = 0x0100
 
 type Operation struct {
-	Open     func(dev *Device) error
-	Close    func(dev *Device) error
-	Transmit func(dev *Device) error
-	Poll     func(dev *Device, terminate bool) error
+	Open     func(dev *Device) e.Error
+	Close    func(dev *Device) e.Error
+	Transmit func(dev *Device) e.Error
+	Poll     func(dev *Device, terminate bool) e.Error
 }
 
 type Privilege struct {
@@ -83,16 +83,19 @@ type Device struct {
 func (dev *Device) Open() e.Error {
 	if dev.Op.Open != nil {
 		if (dev.FLAG & DevFlagUp) != 0 {
-			return e.AlreadyOpened
+			l.W("device is already opened")
+			l.W("\tname: %v (%v) ", dev.Name, dev.Priv.Name)
+			return e.Error{Code: e.AlreadyOpened}
 		}
-		if err := dev.Op.Open(dev); err != nil {
-			log.Printf("can't open a device")
-			log.Printf("\tName: %v (%v)\n", dev.Name, dev.Priv.Name)
-			log.Printf("\tType: %v\n", dev.Type)
-			return e.CantOpen
+		if err := dev.Op.Open(dev); err.Code != e.OK {
+			l.E("can't open a device")
+			l.E("\tname: %v (%v) ", dev.Name, dev.Priv.Name)
+			l.E("\ttype: %v ", dev.Type)
+			return e.Error{Code: e.CantOpen}
 		}
 		dev.FLAG |= DevFlagUp
-		log.Printf("opened a device: %v\n", dev.Name)
+		l.I("device opened")
+		l.I("\tname: %v (%v) ", dev.Name, dev.Priv.Name)
 	}
-	return e.OK
+	return e.Error{Code: e.OK}
 }

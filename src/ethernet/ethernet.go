@@ -3,8 +3,8 @@ package ethernet
 import (
 	"fmt"
 	"github.com/42milez/ProtocolStack/src/device"
-	"github.com/42milez/ProtocolStack/src/e"
-	"log"
+	e "github.com/42milez/ProtocolStack/src/error"
+	l "github.com/42milez/ProtocolStack/src/logger"
 	"strconv"
 	"strings"
 	"syscall"
@@ -47,8 +47,8 @@ func (mac MAC) Byte() ([]byte, error) {
 }
 
 type EthHeader struct {
-	Dst [EthAddrLen]byte
-	Src [EthAddrLen]byte
+	Dst  [EthAddrLen]byte
+	Src  [EthAddrLen]byte
 	Type uint16
 }
 
@@ -75,12 +75,12 @@ func (h EthHeader) TypeAsString() string {
 }
 
 func EtherDump(hdr *EthHeader) {
-	log.Printf("\tMAC(Dst):   %d:%d:%d:%d:%d:%d", hdr.Dst[0], hdr.Dst[1], hdr.Dst[2], hdr.Dst[3], hdr.Dst[4], hdr.Dst[5])
-	log.Printf("\tMAC(Src):   %d:%d:%d:%d:%d:%d", hdr.Src[0], hdr.Src[1], hdr.Src[2], hdr.Src[3], hdr.Src[4], hdr.Src[5])
-	log.Printf("\tEther Type: 0x%04x (%s)", ntoh16(hdr.Type), hdr.TypeAsString())
+	l.I("\tmac (dst):   %d:%d:%d:%d:%d:%d", hdr.Dst[0], hdr.Dst[1], hdr.Dst[2], hdr.Dst[3], hdr.Dst[4], hdr.Dst[5])
+	l.I("\tmac (src):   %d:%d:%d:%d:%d:%d", hdr.Src[0], hdr.Src[1], hdr.Src[2], hdr.Src[3], hdr.Src[4], hdr.Src[5])
+	l.I("\tethertype: 0x%04x (%s)", ntoh16(hdr.Type), hdr.TypeAsString())
 }
 
-func ReadFrame(dev *device.Device) error {
+func ReadFrame(dev *device.Device) e.Error {
 	var buf [EthFrameSizeMax]byte
 
 	flen, _, errno := syscall.Syscall(
@@ -88,24 +88,33 @@ func ReadFrame(dev *device.Device) error {
 		uintptr(dev.Priv.FD),
 		uintptr(unsafe.Pointer(&buf)),
 		uintptr(EthFrameSizeMax))
+
 	if errno != 0 {
-		fmt.Printf("SYS_READ failed: %v\n", errno)
-		return e.CantRead
+		l.E("SYS_READ failed: %v ", errno)
+		return e.Error{Code: e.CantRead}
+	}
+
+	if flen < EthHeaderSize*8 {
+		l.E("the length of ethernet header is too short")
+		return e.Error{Code: e.InvalidHeader}
 	}
 
 	hdr := (*EthHeader)(unsafe.Pointer(&buf))
-	if ! hdr.EqualDstAddr(dev.Addr) {
-		if ! hdr.EqualDstAddr(EthAddrBroadcast) {
-			return e.NoDataToRead
+	if !hdr.EqualDstAddr(dev.Addr) {
+		if !hdr.EqualDstAddr(EthAddrBroadcast) {
+			return e.Error{Code: e.NoDataToRead}
 		}
 	}
 
-	log.Println("received an ethernet frame")
-	log.Printf("\tlength: %v\n", flen)
-
+	l.I("received an ethernet frame")
+	l.I("\tlength: %v ", flen)
 	EtherDump(hdr)
 
-	return e.OK
+	l.I("\tdevice:       %v (%v) ", dev.Name, dev.Priv.Name)
+	l.I("\tethertype:    %v (0x%04x) ", hdr.TypeAsString(), ntoh16(hdr.Type))
+	l.I("\tframe length: %v ", flen)
+
+	return e.Error{Code: e.OK}
 }
 
 const bigEndian = 4321
