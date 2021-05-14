@@ -108,8 +108,11 @@ func ReadFrame(dev *device.Device) error {
 
 	log.Println("received an ethernet frame")
 	log.Printf("\tlength: %v\n", flen)
-
 	EtherDump(hdr)
+
+	log.Printf("\tDevice:       %v (%v)", dev.Priv.Name, dev.Name)
+	log.Printf("\tEtherType:    %v (0x%04x)", hdr.TypeAsString(), ntoh16(hdr.Type))
+	log.Printf("\tFrame Length: %v", flen)
 
 	return e.OK
 }

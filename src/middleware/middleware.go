@@ -144,8 +144,8 @@ func RegisterInterface(iface *Iface, dev *device.Device) error {
 	iface.Dev = dev
 
 	log.Println("attached an interface")
-	log.Printf("\tIP Address:  %v", iface.Unicast.String())
-	log.Printf("\tDevice Name: %v", iface.Dev.Name)
+	log.Printf("\tIP:     %v", iface.Unicast.String())
+	log.Printf("\tDevice: %v", iface.Dev.Name)
 
 	return e.OK
 }
