@@ -82,7 +82,7 @@ go-fmt:
 
 .PHONY: go-lint
 go-lint:
-	@echo -e "🥝 run linters...\n"
+	@echo -e "🥝 running linters...\n"
 	@golangci-lint run
 
 .PHONY: go-mod
