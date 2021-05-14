@@ -80,7 +80,7 @@ func EtherDump(hdr *EthHeader) {
 	log.Printf("\tethertype: 0x%04x (%s)", ntoh16(hdr.Type), hdr.TypeAsString())
 }
 
-func ReadFrame(dev *device.Device) error {
+func ReadFrame(dev *device.Device) e.Error {
 	var buf [EthFrameSizeMax]byte
 
 	flen, _, errno := syscall.Syscall(
@@ -90,19 +90,19 @@ func ReadFrame(dev *device.Device) error {
 		uintptr(EthFrameSizeMax))
 
 	if errno != 0 {
-		fmt.Printf("SYS_READ failed: %v\n", errno)
-		return e.CantRead
+		log.Printf("SYS_READ failed: %v\n", errno)
+		return e.Error{Code: e.CantRead}
 	}
 
 	if flen < EthHeaderSize*8 {
-		fmt.Println("the length of ethernet header is too short")
-		return e.InvalidHeader
+		log.Println("the length of ethernet header is too short")
+		return e.Error{Code: e.InvalidHeader}
 	}
 
 	hdr := (*EthHeader)(unsafe.Pointer(&buf))
 	if !hdr.EqualDstAddr(dev.Addr) {
 		if !hdr.EqualDstAddr(EthAddrBroadcast) {
-			return e.NoDataToRead
+			return e.Error{Code: e.NoDataToRead}
 		}
 	}
 
@@ -114,7 +114,7 @@ func ReadFrame(dev *device.Device) error {
 	log.Printf("\tethertype:    %v (0x%04x)\n", hdr.TypeAsString(), ntoh16(hdr.Type))
 	log.Printf("\tframe length: %v\n", flen)
 
-	return e.OK
+	return e.Error{Code: e.OK}
 }
 
 const bigEndian = 4321

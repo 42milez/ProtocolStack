@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"fmt"
 	"github.com/42milez/ProtocolStack/src/device"
 	e "github.com/42milez/ProtocolStack/src/error"
 	"github.com/42milez/ProtocolStack/src/network"
@@ -40,12 +39,12 @@ func init() {
 	interfaces = make([]*Iface, 0)
 }
 
-func register(protocolType ProtocolType, handler Handler) error {
+func register(protocolType ProtocolType, handler Handler) e.Error {
 	for _, v := range protocols {
 		if v.Type == protocolType {
 			log.Println("protocol is already registered")
 			log.Printf("\ttype: %v\n", protocolType.String())
-			return e.CantRegister
+			return e.Error{Code: e.CantRegister}
 		}
 	}
 
@@ -59,13 +58,13 @@ func register(protocolType ProtocolType, handler Handler) error {
 	log.Println("registered a protocol")
 	log.Printf("\ttype: %v\n", protocolType.String())
 
-	return nil
+	return e.Error{Code: e.OK}
 }
 
 // TODO: delete this comment later
 //int net_init(void)
 
-func Setup() error {
+func Setup() e.Error {
 	// ARP
 	// ...
 
@@ -74,8 +73,8 @@ func Setup() error {
 
 	// IP
 	// ...
-	if err := register(ProtocolTypeIp, network.IpInputHandler); err != nil {
-		return err
+	if err := register(ProtocolTypeIp, network.IpInputHandler); err.Code != e.OK {
+		return e.Error{Code: e.Failed}
 	}
 
 	// TCP
@@ -84,13 +83,13 @@ func Setup() error {
 	// UDP
 	// ...
 
-	return nil
+	return e.Error{Code: e.OK}
 }
 
-func Start(netSigCh <-chan os.Signal, wg *sync.WaitGroup) error {
+func Start(netSigCh <-chan os.Signal, wg *sync.WaitGroup) e.Error {
 	for _, dev := range devices {
-		if err := dev.Open(); err != e.OK {
-			return e.Fatal
+		if err := dev.Open(); err.Code != e.OK {
+			return e.Error{Code: e.Failed}
 		}
 	}
 
@@ -110,7 +109,7 @@ func Start(netSigCh <-chan os.Signal, wg *sync.WaitGroup) error {
 				if dev.FLAG&device.DevFlagUp == 0 {
 					continue
 				}
-				if err := dev.Op.Poll(dev, terminate); err != nil {
+				if err := dev.Op.Poll(dev, terminate); err.Code != e.OK {
 					log.Printf("error: %v\n", err)
 					// TODO: notify error to main goroutine
 					// ...
@@ -123,9 +122,7 @@ func Start(netSigCh <-chan os.Signal, wg *sync.WaitGroup) error {
 		}
 	}()
 
-	log.Println("ready for processing incoming data")
-
-	return e.OK
+	return e.Error{Code: e.OK}
 }
 
 func RegisterDevice(dev *device.Device) {
@@ -135,11 +132,11 @@ func RegisterDevice(dev *device.Device) {
 	log.Printf("\tname: %v (%v)\n", dev.Name, dev.Priv.Name)
 }
 
-func RegisterInterface(iface *Iface, dev *device.Device) error {
+func RegisterInterface(iface *Iface, dev *device.Device) e.Error {
 	for _, v := range interfaces {
 		if v.Dev == dev && v.Family == iface.Family {
-			fmt.Printf("interface is already registered: %v\n", v.Family.String())
-			return e.CantRegister
+			log.Printf("interface is already registered: %v\n", v.Family.String())
+			return e.Error{Code: e.CantRegister}
 		}
 	}
 
@@ -150,5 +147,5 @@ func RegisterInterface(iface *Iface, dev *device.Device) error {
 	log.Printf("\tip:     %v\n", iface.Unicast.String())
 	log.Printf("\tdevice: %v (%v)\n", iface.Dev.Name, iface.Dev.Priv.Name)
 
-	return e.OK
+	return e.Error{Code: e.OK}
 }

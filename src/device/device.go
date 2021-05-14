@@ -35,10 +35,10 @@ const DevFlagP2P DevFlag = 0x0040
 const DevFlagNeedArp DevFlag = 0x0100
 
 type Operation struct {
-	Open     func(dev *Device) error
-	Close    func(dev *Device) error
-	Transmit func(dev *Device) error
-	Poll     func(dev *Device, terminate bool) error
+	Open     func(dev *Device) e.Error
+	Close    func(dev *Device) e.Error
+	Transmit func(dev *Device) e.Error
+	Poll     func(dev *Device, terminate bool) e.Error
 }
 
 type Privilege struct {
@@ -85,17 +85,17 @@ func (dev *Device) Open() e.Error {
 		if (dev.FLAG & DevFlagUp) != 0 {
 			log.Println("device is already opened")
 			log.Printf("\tname: %v (%v)\n", dev.Name, dev.Priv.Name)
-			return e.AlreadyOpened
+			return e.Error{Code: e.AlreadyOpened}
 		}
-		if err := dev.Op.Open(dev); err != nil {
+		if err := dev.Op.Open(dev); err.Code != e.OK {
 			log.Printf("can't open a device")
 			log.Printf("\tname: %v (%v)\n", dev.Name, dev.Priv.Name)
 			log.Printf("\ttype: %v\n", dev.Type)
-			return e.CantOpen
+			return e.Error{Code: e.CantOpen}
 		}
 		dev.FLAG |= DevFlagUp
 		log.Println("successfully opened a device")
 		log.Printf("\tname: %v (%v)\n", dev.Name, dev.Priv.Name)
 	}
-	return e.OK
+	return e.Error{Code: e.OK}
 }
