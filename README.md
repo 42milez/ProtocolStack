@@ -133,6 +133,12 @@ Note: `make` supports the commands below:
       - [TCP congestion control](https://en.wikipedia.org/wiki/TCP_congestion_control)
       - [Transmission Control Protocol](https://en.wikipedia.org/wiki/Transmission_Control_Protocol)
       - [User Datagram Protocol](https://en.wikipedia.org/wiki/User_Datagram_Protocol)
+  - Memory
+    - [Memory barrier](https://en.wikipedia.org/wiki/Memory_barrier)
+    - [Memory management](https://en.wikipedia.org/wiki/Memory_management)
+    - [Memory model (programming)](https://en.wikipedia.org/wiki/Memory_model_(programming))
+    - [Memory safety](https://en.wikipedia.org/wiki/Memory_safety)
+    - [Region-based memory management](https://en.wikipedia.org/wiki/Region-based_memory_management)
   - Others
     - [Communicating sequential processes](https://en.wikipedia.org/wiki/Communicating_sequential_processes)
     - [Continuation](https://en.wikipedia.org/wiki/Continuation)
@@ -140,9 +146,6 @@ Note: `make` supports the commands below:
     - [Critical section](https://en.wikipedia.org/wiki/Critical_section)
     - [Fair-share scheduling](https://en.wikipedia.org/wiki/Fair-share_scheduling)
     - [Fork-join model](https://en.wikipedia.org/wiki/Fork%E2%80%93join_model)
-    - [Memory barrier](https://en.wikipedia.org/wiki/Memory_barrier)
-    - [Memory model (programming)](https://en.wikipedia.org/wiki/Memory_model_(programming))
-    - [Memory safety](https://en.wikipedia.org/wiki/Memory_safety)
     - [Monitor (synchronization)](https://en.wikipedia.org/wiki/Monitor_(synchronization))
     - [Pipeline stall](https://en.wikipedia.org/wiki/Pipeline_stall)
     - [Preemption (computing)](https://en.wikipedia.org/wiki/Preemption_(computing))
