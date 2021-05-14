@@ -139,6 +139,7 @@ Note: `make` supports the commands below:
     - [Critical section](https://en.wikipedia.org/wiki/Critical_section)
     - [Fair-share scheduling](https://en.wikipedia.org/wiki/Fair-share_scheduling)
     - [Fork-join model](https://en.wikipedia.org/wiki/Fork%E2%80%93join_model)
+    - [Memory barrier](https://en.wikipedia.org/wiki/Memory_barrier)
     - [Monitor (synchronization)](https://en.wikipedia.org/wiki/Monitor_(synchronization))
     - [Pipeline stall](https://en.wikipedia.org/wiki/Pipeline_stall)
     - [Preemption (computing)](https://en.wikipedia.org/wiki/Preemption_(computing))
