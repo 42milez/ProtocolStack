@@ -63,13 +63,13 @@ test:
 # --------------------------------------------------
 .PHONY: go-build
 go-build:
-	@echo "🍔 Building binary..."
+	@echo -e "🍔 building binary...\n"
 	@mkdir -p $(GOBIN)
 	@go build $(BUILD_FLAGS) -o $(GOBIN)/$(TCP_SERVER_BIN) $(TCP_SERVER_FILES)
 
 .PHONY: go-clean
 go-clean:
-	@echo "✨ Cleaning build cache..."
+	@echo -e "✨ cleaning up build caches...\n"
 	@go clean
 
 .PHONY: go-compile
@@ -77,18 +77,20 @@ go-compile: go-clean go-mod go-vet go-build
 
 .PHONY: go-fmt
 go-fmt:
+	@echo -e "🍄 reformatting code...\n"
 	@go fmt $(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/...
 
 .PHONY: go-lint
 go-lint:
+	@echo -e "🥝 run linters...\n"
 	@golangci-lint run
 
 .PHONY: go-mod
 go-mod:
-	@echo "🌏 Checking if there is any missing dependencies..."
+	@echo -e "🌏 checking if there is any missing dependencies...\n"
 	@go mod tidy
 
 .PHONY: go-vet
 go-vet:
-	@echo "🔍 Vetting source code..."
+	@echo -e "🍭 vetting source code...\n"
 	@go vet $(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/...
