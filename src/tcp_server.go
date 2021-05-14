@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/42milez/ProtocolStack/src/device"
+	e "github.com/42milez/ProtocolStack/src/error"
 	"github.com/42milez/ProtocolStack/src/ethernet"
 	"github.com/42milez/ProtocolStack/src/middleware"
 	"github.com/42milez/ProtocolStack/src/network"
@@ -80,8 +81,7 @@ func handleSignal(sigCh <-chan os.Signal, wg *sync.WaitGroup) {
 }
 
 func main() {
-	if err := setup(); err != nil {
-		log.Println(err.Error())
+	if err := setup(); err != e.OK {
 		log.Fatal("setup failed.")
 	}
 
