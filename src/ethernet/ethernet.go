@@ -110,9 +110,9 @@ func ReadFrame(dev *device.Device) error {
 	log.Printf("\tlength: %v\n", flen)
 	EtherDump(hdr)
 
-	log.Printf("\tdevice:       %v (%v)", dev.Name, dev.Priv.Name)
-	log.Printf("\tethertype:    %v (0x%04x)", hdr.TypeAsString(), ntoh16(hdr.Type))
-	log.Printf("\tframe length: %v", flen)
+	log.Printf("\tdevice:       %v (%v)\n", dev.Name, dev.Priv.Name)
+	log.Printf("\tethertype:    %v (0x%04x)\n", hdr.TypeAsString(), ntoh16(hdr.Type))
+	log.Printf("\tframe length: %v\n", flen)
 
 	return e.OK
 }

@@ -43,7 +43,8 @@ func init() {
 func register(protocolType ProtocolType, handler Handler) error {
 	for _, v := range protocols {
 		if v.Type == protocolType {
-			fmt.Printf("protocol is already registered: %v", protocolType.String())
+			log.Println("protocol is already registered")
+			log.Printf("\ttype: %v\n", protocolType.String())
 			return e.CantRegister
 		}
 	}
@@ -55,7 +56,8 @@ func register(protocolType ProtocolType, handler Handler) error {
 
 	protocols = append(protocols, p)
 
-	log.Printf("registered a protocol: %v\n", protocolType.String())
+	log.Println("registered a protocol")
+	log.Printf("\ttype: %v\n", protocolType.String())
 
 	return nil
 }
@@ -129,7 +131,8 @@ func Start(netSigCh <-chan os.Signal, wg *sync.WaitGroup) error {
 func RegisterDevice(dev *device.Device) {
 	dev.Name = "net" + strconv.Itoa(len(devices))
 	devices = append(devices, dev)
-	log.Printf("registered a device: %v\n", dev.Name)
+	log.Println("registered a device")
+	log.Printf("\tname: %v\n", dev.Name)
 }
 
 func RegisterInterface(iface *Iface, dev *device.Device) error {
@@ -144,8 +147,8 @@ func RegisterInterface(iface *Iface, dev *device.Device) error {
 	iface.Dev = dev
 
 	log.Println("attached an interface")
-	log.Printf("\tdevice: %v (%v)", iface.Dev.Name, iface.Dev.Priv.Name)
-	log.Printf("\tip:     %v", iface.Unicast.String())
+	log.Printf("\tip:     %v\n", iface.Unicast.String())
+	log.Printf("\tdevice: %v (%v)\n", iface.Dev.Name, iface.Dev.Priv.Name)
 
 	return e.OK
 }
