@@ -36,9 +36,9 @@ func E(s string, v ...interface{}) {
 
 func F(s string, v ...interface{}) {
 	if len(v) == 0 {
-		f.Println(s)
+		f.Fatalln(s)
 	} else {
-		f.Printf(s+"\n", v...)
+		f.Fatalf(s+"\n", v...)
 	}
 }
 
