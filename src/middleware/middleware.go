@@ -3,7 +3,7 @@ package middleware
 import (
 	"fmt"
 	"github.com/42milez/ProtocolStack/src/device"
-	"github.com/42milez/ProtocolStack/src/e"
+	e "github.com/42milez/ProtocolStack/src/error"
 	"github.com/42milez/ProtocolStack/src/network"
 	"log"
 	"os"

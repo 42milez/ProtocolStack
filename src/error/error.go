@@ -1,4 +1,4 @@
-package e
+package error
 
 type Error int
 

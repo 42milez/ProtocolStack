@@ -1,7 +1,7 @@
 package device
 
 import (
-	"github.com/42milez/ProtocolStack/src/e"
+	e "github.com/42milez/ProtocolStack/src/error"
 	"log"
 )
 
