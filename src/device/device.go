@@ -92,7 +92,7 @@ func (dev *Device) Open() e.Error {
 			return e.CantOpen
 		}
 		dev.FLAG |= DevFlagUp
-		log.Printf("opened a device: %v\n", dev.Name)
+		log.Printf("successfully opened a device: %v\n", dev.Name)
 	}
 	return e.OK
 }

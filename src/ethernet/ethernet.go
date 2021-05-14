@@ -94,7 +94,7 @@ func ReadFrame(dev *device.Device) error {
 		return e.CantRead
 	}
 
-	if flen < EthHeaderSize * 8 {
+	if flen < EthHeaderSize*8 {
 		fmt.Println("the length of ethernet header is too short")
 		return e.InvalidHeader
 	}
@@ -110,7 +110,7 @@ func ReadFrame(dev *device.Device) error {
 	log.Printf("\tlength: %v\n", flen)
 	EtherDump(hdr)
 
-	log.Printf("\tDevice:       %v (%v)", dev.Priv.Name, dev.Name)
+	log.Printf("\tDevice:       %v (%v)", dev.Name, dev.Priv.Name)
 	log.Printf("\tEtherType:    %v (0x%04x)", hdr.TypeAsString(), ntoh16(hdr.Type))
 	log.Printf("\tFrame Length: %v", flen)
 
