@@ -142,6 +142,7 @@ Note: `make` supports the commands below:
     - [Fork-join model](https://en.wikipedia.org/wiki/Fork%E2%80%93join_model)
     - [Memory barrier](https://en.wikipedia.org/wiki/Memory_barrier)
     - [Memory model (programming)](https://en.wikipedia.org/wiki/Memory_model_(programming))
+    - [Memory safety](https://en.wikipedia.org/wiki/Memory_safety)
     - [Monitor (synchronization)](https://en.wikipedia.org/wiki/Monitor_(synchronization))
     - [Pipeline stall](https://en.wikipedia.org/wiki/Pipeline_stall)
     - [Preemption (computing)](https://en.wikipedia.org/wiki/Preemption_(computing))
