@@ -88,9 +88,15 @@ func ReadFrame(dev *device.Device) error {
 		uintptr(dev.Priv.FD),
 		uintptr(unsafe.Pointer(&buf)),
 		uintptr(EthFrameSizeMax))
+
 	if errno != 0 {
 		fmt.Printf("SYS_READ failed: %v\n", errno)
 		return e.CantRead
+	}
+
+	if flen < EthHeaderSize * 8 {
+		fmt.Println("the length of ethernet header is too short")
+		return e.InvalidHeader
 	}
 
 	hdr := (*EthHeader)(unsafe.Pointer(&buf))

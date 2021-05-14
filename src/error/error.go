@@ -9,6 +9,7 @@ const (
 	CantRead
 	CantRegister
 	Fatal
+	InvalidHeader
 	IoctlFailed
 	NoDataToRead
 )
