@@ -35,7 +35,7 @@ build: go-build
 .PHONY: clean
 clean: go-clean
 
-## compile: clean up caches, resolve dependencies, and build the program
+## compile: clean up caches, resolve dependencies, and build the application
 .PHONY: compile
 compile:
 	@-rm -f $(STDERR)
