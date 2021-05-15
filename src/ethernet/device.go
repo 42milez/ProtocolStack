@@ -1,8 +1,10 @@
-package device
+package ethernet
 
 import (
 	e "github.com/42milez/ProtocolStack/src/error"
 	l "github.com/42milez/ProtocolStack/src/logger"
+	"strconv"
+	"strings"
 )
 
 type DevType int
@@ -66,13 +68,29 @@ type Privilege struct {
 //	void *priv;
 //};
 
+type MAC string
+
+func (m MAC) Byte() []byte {
+	t := strings.Split(string(m), ":")
+	p := make([]byte, EthAddrLen)
+	for i := 0; i < EthAddrLen; i++ {
+		var n uint64
+		var err error
+		if n, err = strconv.ParseUint(t[i], 16, 8); err != nil {
+			return nil
+		}
+		p[i] = byte(n)
+	}
+	return p
+}
+
 type Device struct {
 	Type      DevType
 	Name      string
-	Addr      []byte
+	Addr      MAC
 	AddrLen   uint16
-	Broadcast []byte
-	Peer      []byte
+	Broadcast MAC
+	Peer      MAC
 	FLAG      DevFlag
 	HeaderLen uint16
 	MTU       uint16

@@ -11,6 +11,7 @@ const (
 	CantRegister
 	Failed
 	Interrupted
+	InvalidData
 	InvalidHeader
 	IoctlFailed
 	NoDataToRead

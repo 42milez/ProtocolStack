@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/42milez/ProtocolStack/src/device"
 	e "github.com/42milez/ProtocolStack/src/error"
 	"github.com/42milez/ProtocolStack/src/ethernet"
 	l "github.com/42milez/ProtocolStack/src/logger"
@@ -22,7 +21,7 @@ var netSigCh chan os.Signal
 var sigCh chan os.Signal
 
 func setup() e.Error {
-	var dev *device.Device
+	var dev *ethernet.Device
 	var iface *middleware.Iface
 	var err e.Error
 

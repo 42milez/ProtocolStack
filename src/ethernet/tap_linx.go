@@ -1,7 +1,6 @@
 package ethernet
 
 import (
-	"github.com/42milez/ProtocolStack/src/device"
 	e "github.com/42milez/ProtocolStack/src/error"
 	l "github.com/42milez/ProtocolStack/src/logger"
 	"syscall"
@@ -37,7 +36,7 @@ type IfreqSockAddr struct {
 
 const vnd = "/dev/net/tun"
 
-func tapOpen(dev *device.Device) e.Error {
+func tapOpen(dev *Device) e.Error {
 	var err error
 	var errno syscall.Errno
 	var fd int
@@ -87,7 +86,7 @@ func tapOpen(dev *device.Device) e.Error {
 		return e.Error{Code: e.CantOpen}
 	}
 
-	copy(dev.Addr[:], ifrSockAddr.Addr.Data[:])
+	dev.Addr = MAC(ifrSockAddr.Addr.Data[:])
 	_ = syscall.Close(soc)
 
 	// --------------------------------------------------
@@ -113,16 +112,16 @@ func tapOpen(dev *device.Device) e.Error {
 	return e.Error{Code: e.OK}
 }
 
-func tapClose(dev *device.Device) e.Error {
+func tapClose(dev *Device) e.Error {
 	_ = syscall.Close(epfd)
 	return e.Error{Code: e.OK}
 }
 
-func tapTransmit(dev *device.Device) e.Error {
+func tapTransmit(dev *Device) e.Error {
 	return e.Error{Code: e.OK}
 }
 
-func tapPoll(dev *device.Device, isTerminated bool) e.Error {
+func tapPoll(dev *Device, isTerminated bool) e.Error {
 	if isTerminated {
 		_ = syscall.Close(epfd)
 		return e.Error{Code: e.OK}
@@ -152,33 +151,28 @@ func tapPoll(dev *device.Device, isTerminated bool) e.Error {
 }
 
 // GenTapDevice generates TAP device object.
-func GenTapDevice(name string, mac MAC) (*device.Device, e.Error) {
+func GenTapDevice(name string, mac MAC) (*Device, e.Error) {
 	if len(name) > 16 {
 		return nil, e.Error{Code: e.CantCreate, Msg: "device name must be less than or equal to 16 characters"}
 	}
 
-	dev := &device.Device{
-		Type:      device.DevTypeEthernet,
+	dev := &Device{
+		Type:      DevTypeEthernet,
 		MTU:       EthPayloadSizeMax,
-		FLAG:      device.DevFlagBroadcast | device.DevFlagNeedArp,
+		FLAG:      DevFlagBroadcast | DevFlagNeedArp,
 		HeaderLen: EthHeaderSize,
+		Addr:      mac,
 		AddrLen:   EthAddrLen,
 		Broadcast: EthAddrBroadcast,
-		Op: device.Operation{
+		Op: Operation{
 			Open:     tapOpen,
 			Close:    tapClose,
 			Transmit: tapTransmit,
 			Poll:     tapPoll,
 		},
-		Priv: device.Privilege{FD: -1},
+		Priv: Privilege{FD: -1},
 	}
 	copy(dev.Priv.Name[:], name)
-
-	if addr, err := mac.Byte(); err != nil {
-		return nil, e.Error{Code: e.Failed, Msg: err.Error()}
-	} else {
-		dev.Addr = addr
-	}
 
 	return dev, e.Error{Code: e.OK}
 }

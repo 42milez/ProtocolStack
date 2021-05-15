@@ -1,8 +1,8 @@
 package middleware
 
 import (
-	"github.com/42milez/ProtocolStack/src/device"
 	e "github.com/42milez/ProtocolStack/src/error"
+	"github.com/42milez/ProtocolStack/src/ethernet"
 	l "github.com/42milez/ProtocolStack/src/logger"
 	"github.com/42milez/ProtocolStack/src/network"
 	"os"
@@ -29,13 +29,13 @@ type Timer struct {
 	Handler  Handler
 }
 
-type Handler func(data []uint8, dev device.Device)
+type Handler func(data []uint8, dev ethernet.Device)
 
-var devices []*device.Device
+var devices []*ethernet.Device
 var interfaces []*Iface
 
 func init() {
-	devices = make([]*device.Device, 0)
+	devices = make([]*ethernet.Device, 0)
 	interfaces = make([]*Iface, 0)
 }
 
@@ -106,7 +106,7 @@ func Start(netSigCh <-chan os.Signal, wg *sync.WaitGroup) e.Error {
 				l.I("worker is running...")
 			}
 			for _, dev := range devices {
-				if dev.FLAG&device.DevFlagUp == 0 {
+				if dev.FLAG&ethernet.DevFlagUp == 0 {
 					continue
 				}
 				if err := dev.Op.Poll(dev, terminate); err.Code != e.OK {
@@ -125,14 +125,14 @@ func Start(netSigCh <-chan os.Signal, wg *sync.WaitGroup) e.Error {
 	return e.Error{Code: e.OK}
 }
 
-func RegisterDevice(dev *device.Device) {
+func RegisterDevice(dev *ethernet.Device) {
 	dev.Name = "net" + strconv.Itoa(len(devices))
 	devices = append(devices, dev)
 	l.I("device registered")
 	l.I("\tname: %v (%v) ", dev.Name, dev.Priv.Name)
 }
 
-func RegisterInterface(iface *Iface, dev *device.Device) e.Error {
+func RegisterInterface(iface *Iface, dev *ethernet.Device) e.Error {
 	for _, v := range interfaces {
 		if v.Dev == dev && v.Family == iface.Family {
 			l.W("interface is already registered: %v ", v.Family.String())
