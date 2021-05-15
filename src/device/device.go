@@ -67,15 +67,15 @@ type Privilege struct {
 //};
 
 type Device struct {
-	Name      string
 	Type      DevType
-	MTU       uint16
+	Name      string
+	Addr      []byte
+	AddrLen   uint16
+	Broadcast []byte
+	Peer      []byte
 	FLAG      DevFlag
 	HeaderLen uint16
-	AddrLen   uint16
-	Addr      []byte
-	Peer      []byte
-	Broadcast []byte
+	MTU       uint16
 	Op        Operation
 	Priv      Privilege
 }
