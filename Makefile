@@ -1,6 +1,6 @@
 include .env
 
-PROJECT_NAME := $(shell basename "$(PWD)")
+PROJECT_NAME := ProtocolStack
 
 GOBIN := ./bin
 
@@ -40,7 +40,8 @@ clean: go-clean
 compile:
 	@-rm -f $(STDERR)
 	@-touch $(STDERR)
-	@$(MAKE) -s go-compile 2> $(STDERR)
+	@-$(MAKE) -s go-compile 2> $(STDERR)
+	@cat $(STDERR) | sed -e '1s/^/Error:\n/' | sed '/^make\[.*\]/d' | sed "s/^/  /g" | sed -r "s/(.*)/\x1b[38;5;9m\1\x1b[0m/g"
 
 ## fmt: run formatter
 .PHONY: fmt
@@ -63,7 +64,7 @@ test:
 # --------------------------------------------------
 .PHONY: go-build
 go-build:
-	@echo "> building binary..."
+	@echo "> Building binary..."
 	@mkdir -p $(GOBIN)
 	@go build $(BUILD_FLAGS) -o $(GOBIN)/$(TCP_SERVER_BIN) $(TCP_SERVER_FILES)
 
