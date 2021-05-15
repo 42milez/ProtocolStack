@@ -50,8 +50,8 @@ func tapOpen(dev *Device) e.Error {
 
 	// --------------------------------------------------
 	ifrFlags := IfreqFlags{}
-	ifrFlags.Name = dev.Priv.Name
 	ifrFlags.Flags = syscall.IFF_TAP | syscall.IFF_NO_PI
+	copy(ifrFlags.Name[:], dev.Priv.Name)
 
 	_, _, errno = syscall.Syscall(
 		syscall.SYS_IOCTL,
@@ -72,8 +72,8 @@ func tapOpen(dev *Device) e.Error {
 	}
 
 	ifrSockAddr := IfreqSockAddr{}
-	ifrSockAddr.Name = dev.Priv.Name
 	ifrSockAddr.Addr.Family = syscall.AF_INET
+	copy(ifrSockAddr.Name[:], dev.Priv.Name)
 
 	_, _, errno = syscall.Syscall(
 		syscall.SYS_IOCTL,
@@ -170,9 +170,8 @@ func GenTapDevice(name string, mac MAC) (*Device, e.Error) {
 			Transmit: tapTransmit,
 			Poll:     tapPoll,
 		},
-		Priv: Privilege{FD: -1},
+		Priv: Privilege{FD: -1, Name: name},
 	}
-	copy(dev.Priv.Name[:], name)
 
 	return dev, e.Error{Code: e.OK}
 }
