@@ -10,19 +10,19 @@ import (
 type DevType int
 
 const (
-	DevTypeNull DevType = iota
+	DevTypeEthernet DevType = iota
 	DevTypeLoopback
-	DevTypeEthernet
+	DevTypeNull
 )
 
 func (t DevType) String() string {
 	switch t {
-	case DevTypeNull:
-		return "DEVICE_TYPE_NULL"
-	case DevTypeLoopback:
-		return "DEVICE_TYPE_LOOPBACK"
 	case DevTypeEthernet:
 		return "DEVICE_TYPE_ETHERNET"
+	case DevTypeLoopback:
+		return "DEVICE_TYPE_LOOPBACK"
+	case DevTypeNull:
+		return "DEVICE_TYPE_NULL"
 	default:
 		return "UNKNOWN"
 	}
