@@ -43,7 +43,8 @@ func tapOpen(dev *Device) e.Error {
 	var fd int
 	var soc int
 
-	fd, err = syscall.Open(vnd, syscall.O_RDWR, 0666)
+	openSC := s.OpenSyscall{Path: vnd, Mode: syscall.O_RDWR, Perm: 0666}
+	fd, err = openSC.Exec()
 	if err != nil {
 		l.E("can't open virtual networking device: %v ", vnd)
 		return e.Error{Code: e.CantOpen}
@@ -64,7 +65,8 @@ func tapOpen(dev *Device) e.Error {
 	}
 
 	// --------------------------------------------------
-	soc, err = syscall.Socket(syscall.AF_INET, syscall.SOCK_DGRAM, 0)
+	socketSC := s.SocketSyscall{Domain: syscall.AF_INET, Typ: syscall.SOCK_DGRAM, Proto: 0}
+	soc, err = socketSC.Exec()
 	if err != nil {
 		l.E("can't open socket: %v ", err)
 		return e.Error{Code: e.CantOpen}
@@ -131,7 +133,8 @@ func tapPoll(dev *Device, isTerminated bool) e.Error {
 	}
 
 	var events [MaxEpollEvents]syscall.EpollEvent
-	nEvents, err := syscall.EpollWait(epfd, events[:], EpollTimeout)
+	epollWaitSC := s.EpollWaitSyscall{EPFD: epfd, Events: events[:], MSEC: EpollTimeout}
+	nEvents, err := epollWaitSC.Exec()
 	if err != nil {
 		closeSC := s.CloseSyscall{FD: epfd}
 		_ = closeSC.Exec()
