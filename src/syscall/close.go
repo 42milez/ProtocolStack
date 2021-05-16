@@ -2,7 +2,7 @@ package syscall
 
 import goSyscall "syscall"
 
-type ICloseSyscall interface {
+type CloseSyscallIF interface {
 	Exec() error
 }
 

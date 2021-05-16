@@ -54,11 +54,8 @@ func tapOpen(dev *Device) e.Error {
 	ifrFlags.Flags = syscall.IFF_TAP | syscall.IFF_NO_PI
 	copy(ifrFlags.Name[:], dev.Priv.Name)
 
-	_, _, errno = syscall.Syscall(
-		syscall.SYS_IOCTL,
-		uintptr(fd),
-		uintptr(syscall.TUNSETIFF),
-		uintptr(unsafe.Pointer(&ifrFlags)))
+	ioctlSC := s.IoctlSyscall{A1: uintptr(fd), A2: uintptr(syscall.TUNSETIFF), A3: uintptr(unsafe.Pointer(&ifrFlags))}
+	_, _, errno = ioctlSC.Exec()
 	if errno != 0 {
 		l.E("SYS_IOCTL (%v) failed: %v ", "TUNSETIFF", errno)
 		closeSC := s.CloseSyscall{FD: fd}
@@ -77,11 +74,8 @@ func tapOpen(dev *Device) e.Error {
 	ifrSockAddr.Addr.Family = syscall.AF_INET
 	copy(ifrSockAddr.Name[:], dev.Priv.Name)
 
-	_, _, errno = syscall.Syscall(
-		syscall.SYS_IOCTL,
-		uintptr(soc),
-		uintptr(syscall.SIOCGIFHWADDR),
-		uintptr(unsafe.Pointer(&ifrSockAddr)))
+	ioctlSC = s.IoctlSyscall{A1: uintptr(soc), A2: uintptr(syscall.SIOCGIFHWADDR), A3: uintptr(unsafe.Pointer(&ifrSockAddr))}
+	_, _, errno = ioctlSC.Exec()
 	if errno != 0 {
 		l.E("SYS_IOCTL (%v) failed: %v ", "SIOCGIFHWADDR", errno)
 		closeSC := s.CloseSyscall{FD: soc}
@@ -97,7 +91,8 @@ func tapOpen(dev *Device) e.Error {
 	// --------------------------------------------------
 	var event syscall.EpollEvent
 
-	epfd, err = syscall.EpollCreate1(0)
+	epollCreate1SC := s.EpollCreate1Syscall{}
+	epfd, err = epollCreate1SC.Exec()
 	if err != nil {
 		l.E("can't open an epoll file descriptor: %v ", err)
 		return e.Error{Code: e.CantOpen}
@@ -106,7 +101,8 @@ func tapOpen(dev *Device) e.Error {
 	event.Events = syscall.EPOLLIN
 	event.Fd = int32(fd)
 
-	err = syscall.EpollCtl(epfd, syscall.EPOLL_CTL_ADD, fd, &event)
+	epollCtlSC := s.EpollCtlSyscall{EPFD: epfd, OP: syscall.EPOLL_CTL_ADD, FD: fd, Event: &event}
+	err = epollCtlSC.Exec()
 	if err != nil {
 		l.E("can't add an entry to the interest list of the epoll file descriptor: %v ", err)
 		return e.Error{Code: e.CantOpen}
