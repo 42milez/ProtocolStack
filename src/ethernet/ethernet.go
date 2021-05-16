@@ -2,7 +2,7 @@ package ethernet
 
 import (
 	e "github.com/42milez/ProtocolStack/src/error"
-	l "github.com/42milez/ProtocolStack/src/logger"
+	l "github.com/42milez/ProtocolStack/src/log"
 	"syscall"
 	"unsafe"
 )

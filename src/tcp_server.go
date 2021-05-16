@@ -3,7 +3,7 @@ package main
 import (
 	e "github.com/42milez/ProtocolStack/src/error"
 	"github.com/42milez/ProtocolStack/src/ethernet"
-	l "github.com/42milez/ProtocolStack/src/logger"
+	l "github.com/42milez/ProtocolStack/src/log"
 	"github.com/42milez/ProtocolStack/src/middleware"
 	"github.com/42milez/ProtocolStack/src/network"
 	"github.com/42milez/ProtocolStack/src/route"

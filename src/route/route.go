@@ -1,7 +1,7 @@
 package route
 
 import (
-	l "github.com/42milez/ProtocolStack/src/logger"
+	l "github.com/42milez/ProtocolStack/src/log"
 	"github.com/42milez/ProtocolStack/src/middleware"
 	"github.com/42milez/ProtocolStack/src/network"
 )
