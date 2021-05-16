@@ -3,6 +3,7 @@ package ethernet
 import (
 	e "github.com/42milez/ProtocolStack/src/error"
 	l "github.com/42milez/ProtocolStack/src/log"
+	s "github.com/42milez/ProtocolStack/src/syscall"
 	"syscall"
 	"unsafe"
 )
@@ -60,7 +61,8 @@ func tapOpen(dev *Device) e.Error {
 		uintptr(unsafe.Pointer(&ifrFlags)))
 	if errno != 0 {
 		l.E("SYS_IOCTL (%v) failed: %v ", "TUNSETIFF", errno)
-		_ = syscall.Close(fd)
+		closeSC := s.CloseSyscall{FD: fd}
+		_ = closeSC.Exec()
 		return e.Error{Code: e.CantOpen}
 	}
 
@@ -82,12 +84,15 @@ func tapOpen(dev *Device) e.Error {
 		uintptr(unsafe.Pointer(&ifrSockAddr)))
 	if errno != 0 {
 		l.E("SYS_IOCTL (%v) failed: %v ", "SIOCGIFHWADDR", errno)
-		_ = syscall.Close(soc)
+		closeSC := s.CloseSyscall{FD: soc}
+		_ = closeSC.Exec()
 		return e.Error{Code: e.CantOpen}
 	}
 
 	dev.Addr = MAC(ifrSockAddr.Addr.Data[:])
-	_ = syscall.Close(soc)
+
+	closeSC := s.CloseSyscall{FD: soc}
+	_ = closeSC.Exec()
 
 	// --------------------------------------------------
 	var event syscall.EpollEvent
@@ -113,7 +118,8 @@ func tapOpen(dev *Device) e.Error {
 }
 
 func tapClose(dev *Device) e.Error {
-	_ = syscall.Close(epfd)
+	closeSC := s.CloseSyscall{FD: epfd}
+	_ = closeSC.Exec()
 	return e.Error{Code: e.OK}
 }
 
@@ -123,14 +129,16 @@ func tapTransmit(dev *Device) e.Error {
 
 func tapPoll(dev *Device, isTerminated bool) e.Error {
 	if isTerminated {
-		_ = syscall.Close(epfd)
+		closeSC := s.CloseSyscall{FD: epfd}
+		_ = closeSC.Exec()
 		return e.Error{Code: e.OK}
 	}
 
 	var events [MaxEpollEvents]syscall.EpollEvent
 	nEvents, err := syscall.EpollWait(epfd, events[:], EpollTimeout)
 	if err != nil {
-		_ = syscall.Close(epfd)
+		closeSC := s.CloseSyscall{FD: epfd}
+		_ = closeSC.Exec()
 		return e.Error{Code: e.Interrupted}
 	}
 
