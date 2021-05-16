@@ -1,10 +1,9 @@
 package main
 
 import (
-	"github.com/42milez/ProtocolStack/src/device"
 	e "github.com/42milez/ProtocolStack/src/error"
 	"github.com/42milez/ProtocolStack/src/ethernet"
-	l "github.com/42milez/ProtocolStack/src/logger"
+	l "github.com/42milez/ProtocolStack/src/log"
 	"github.com/42milez/ProtocolStack/src/middleware"
 	"github.com/42milez/ProtocolStack/src/network"
 	"github.com/42milez/ProtocolStack/src/route"
@@ -22,7 +21,7 @@ var netSigCh chan os.Signal
 var sigCh chan os.Signal
 
 func setup() e.Error {
-	var dev *device.Device
+	var dev *ethernet.Device
 	var iface *middleware.Iface
 	var err e.Error
 

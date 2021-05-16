@@ -1,13 +1,13 @@
 package middleware
 
 import (
-	"github.com/42milez/ProtocolStack/src/device"
+	"github.com/42milez/ProtocolStack/src/ethernet"
 	"github.com/42milez/ProtocolStack/src/network"
 )
 
 // An Iface is a single iface.
 type Iface struct {
-	Dev       *device.Device
+	Dev       *ethernet.Device
 	Family    network.AddrFamily
 	Unicast   network.IP
 	Netmask   network.IP

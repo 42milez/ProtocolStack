@@ -1,26 +1,28 @@
-package device
+package ethernet
 
 import (
 	e "github.com/42milez/ProtocolStack/src/error"
-	l "github.com/42milez/ProtocolStack/src/logger"
+	l "github.com/42milez/ProtocolStack/src/log"
+	"strconv"
+	"strings"
 )
 
 type DevType int
 
 const (
-	DevTypeNull DevType = iota
+	DevTypeEthernet DevType = iota
 	DevTypeLoopback
-	DevTypeEthernet
+	DevTypeNull
 )
 
 func (t DevType) String() string {
 	switch t {
-	case DevTypeNull:
-		return "DEVICE_TYPE_NULL"
-	case DevTypeLoopback:
-		return "DEVICE_TYPE_LOOPBACK"
 	case DevTypeEthernet:
 		return "DEVICE_TYPE_ETHERNET"
+	case DevTypeLoopback:
+		return "DEVICE_TYPE_LOOPBACK"
+	case DevTypeNull:
+		return "DEVICE_TYPE_NULL"
 	default:
 		return "UNKNOWN"
 	}
@@ -42,7 +44,7 @@ type Operation struct {
 }
 
 type Privilege struct {
-	Name [16]byte
+	Name string
 	FD   int
 }
 
@@ -66,16 +68,32 @@ type Privilege struct {
 //	void *priv;
 //};
 
+type MAC string
+
+func (m MAC) Byte() []byte {
+	t := strings.Split(string(m), ":")
+	p := make([]byte, EthAddrLen)
+	for i := 0; i < EthAddrLen; i++ {
+		var n uint64
+		var err error
+		if n, err = strconv.ParseUint(t[i], 16, 8); err != nil {
+			return nil
+		}
+		p[i] = byte(n)
+	}
+	return p
+}
+
 type Device struct {
-	Name      string
 	Type      DevType
-	MTU       uint16
+	Name      string
+	Addr      MAC
+	AddrLen   uint16
+	Broadcast MAC
+	Peer      MAC
 	FLAG      DevFlag
 	HeaderLen uint16
-	AddrLen   uint16
-	Addr      []byte
-	Peer      []byte
-	Broadcast []byte
+	MTU       uint16
 	Op        Operation
 	Priv      Privilege
 }
