@@ -1,8 +1,11 @@
 package log
 
 import (
+	"bytes"
+	"io"
 	goLog "log"
 	"os"
+	"strings"
 )
 
 func I(s string, v ...interface{}) {
@@ -35,6 +38,53 @@ func F(s string, v ...interface{}) {
 	} else {
 		f.Fatalf(s+"\n", v...)
 	}
+}
+
+func CaptureLogOutput(f func()) string {
+	reader, writer, err := os.Pipe()
+	if err != nil {
+		panic(err)
+	}
+
+	defer func() {
+		ResetOutput()
+	}()
+
+	SetOutput(writer)
+
+	out := make(chan string)
+
+	go func() {
+		var buf bytes.Buffer
+		_, _ = io.Copy(&buf, reader)
+		out<- buf.String()
+	}()
+
+	f()
+
+	_ = writer.Close()
+
+	ret := <-out
+	ret = strings.Replace(ret, "\t", "", -1)
+	ret = strings.Replace(ret, "\n", "", -1)
+
+	_ = reader.Close()
+
+	return ret
+}
+
+func ResetOutput() {
+	i.SetOutput(os.Stdout)
+	w.SetOutput(os.Stdout)
+	e.SetOutput(os.Stderr)
+	f.SetOutput(os.Stderr)
+}
+
+func SetOutput(writer io.Writer) {
+	i.SetOutput(writer)
+	w.SetOutput(writer)
+	e.SetOutput(writer)
+	f.SetOutput(writer)
 }
 
 var i *goLog.Logger
