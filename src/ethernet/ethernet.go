@@ -4,7 +4,7 @@ import (
 	"fmt"
 	e "github.com/42milez/ProtocolStack/src/error"
 	l "github.com/42milez/ProtocolStack/src/log"
-	"github.com/42milez/ProtocolStack/src/syscall/linux"
+	"github.com/42milez/ProtocolStack/src/sys"
 	"unsafe"
 )
 
@@ -68,12 +68,10 @@ func EthDump(hdr *EthHeader) {
 	l.I("\teth_type:  0x%04x (%s)", hdr.Type.String(), hdr.Type.String())
 }
 
-func ReadFrame(dev *Device) e.Error {
+func ReadFrame(dev *Device, sc *sys.Syscall) e.Error {
 	var buf [EthFrameSizeMax]byte
 
-	readSC := linux.ReadSyscall{A1: uintptr(dev.Priv.FD), A2: uintptr(unsafe.Pointer(&buf)), A3: uintptr(EthFrameSizeMax)}
-	flen, _, errno := readSC.Exec()
-
+	flen, _, errno := sc.Read(uintptr(dev.Priv.FD), uintptr(unsafe.Pointer(&buf)), uintptr(EthFrameSizeMax))
 	if errno != 0 {
 		l.E("SYS_READ failed: %v ", errno)
 		return e.Error{Code: e.CantRead}

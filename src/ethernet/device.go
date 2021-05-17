@@ -3,6 +3,7 @@ package ethernet
 import (
 	e "github.com/42milez/ProtocolStack/src/error"
 	l "github.com/42milez/ProtocolStack/src/log"
+	s "github.com/42milez/ProtocolStack/src/sys"
 	"strconv"
 	"strings"
 )
@@ -37,10 +38,10 @@ const DevFlagP2P DevFlag = 0x0040
 const DevFlagNeedArp DevFlag = 0x0100
 
 type Operation struct {
-	Open     func(dev *Device) e.Error
-	Close    func(dev *Device) e.Error
-	Transmit func(dev *Device) e.Error
-	Poll     func(dev *Device, terminate bool) e.Error
+	Open     func(dev *Device, sc *s.Syscall) e.Error
+	Close    func(dev *Device, sc *s.Syscall) e.Error
+	Transmit func(dev *Device, sc *s.Syscall) e.Error
+	Poll     func(dev *Device, sc *s.Syscall, terminate bool) e.Error
 }
 
 type Privilege struct {
@@ -105,7 +106,7 @@ func (dev *Device) Open() e.Error {
 			l.W("\tname: %v (%v) ", dev.Name, dev.Priv.Name)
 			return e.Error{Code: e.AlreadyOpened}
 		}
-		if err := dev.Op.Open(dev); err.Code != e.OK {
+		if err := dev.Op.Open(dev, &s.Syscall{}); err.Code != e.OK {
 			l.E("can't open a device")
 			l.E("\tname: %v (%v) ", dev.Name, dev.Priv.Name)
 			l.E("\ttype: %v ", dev.Type)

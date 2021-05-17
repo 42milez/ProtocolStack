@@ -3,7 +3,7 @@ package ethernet
 import (
 	e "github.com/42milez/ProtocolStack/src/error"
 	l "github.com/42milez/ProtocolStack/src/log"
-	"github.com/42milez/ProtocolStack/src/syscall/linux"
+	s "github.com/42milez/ProtocolStack/src/sys"
 	"syscall"
 	"unsafe"
 )
@@ -37,14 +37,13 @@ type IfreqSockAddr struct {
 
 const vnd = "/dev/net/tun"
 
-func tapOpen(dev *Device) e.Error {
+func tapOpen(dev *Device, sc *s.Syscall) e.Error {
 	var err error
 	var errno syscall.Errno
 	var fd int
 	var soc int
 
-	openSC := linux.OpenSyscall{Path: vnd, Mode: syscall.O_RDWR, Perm: 0666}
-	fd, err = openSC.Exec()
+	fd, err = sc.Open(vnd, syscall.O_RDWR, 0666)
 	if err != nil {
 		l.E("can't open virtual networking device: %v ", vnd)
 		return e.Error{Code: e.CantOpen}
@@ -55,18 +54,15 @@ func tapOpen(dev *Device) e.Error {
 	ifrFlags.Flags = syscall.IFF_TAP | syscall.IFF_NO_PI
 	copy(ifrFlags.Name[:], dev.Priv.Name)
 
-	ioctlSC := linux.IoctlSyscall{A1: uintptr(fd), A2: uintptr(syscall.TUNSETIFF), A3: uintptr(unsafe.Pointer(&ifrFlags))}
-	_, _, errno = ioctlSC.Exec()
+	_, _, errno = sc.Ioctl(uintptr(fd), uintptr(syscall.TUNSETIFF), uintptr(unsafe.Pointer(&ifrFlags)))
 	if errno != 0 {
 		l.E("SYS_IOCTL (%v) failed: %v ", "TUNSETIFF", errno)
-		closeSC := linux.CloseSyscall{FD: fd}
-		_ = closeSC.Exec()
+		_ = sc.Close(fd)
 		return e.Error{Code: e.CantOpen}
 	}
 
 	// --------------------------------------------------
-	socketSC := linux.SocketSyscall{Domain: syscall.AF_INET, Typ: syscall.SOCK_DGRAM, Proto: 0}
-	soc, err = socketSC.Exec()
+	soc, err = sc.Socket(syscall.AF_INET, syscall.SOCK_DGRAM, 0)
 	if err != nil {
 		l.E("can't open socket: %v ", err)
 		return e.Error{Code: e.CantOpen}
@@ -76,25 +72,21 @@ func tapOpen(dev *Device) e.Error {
 	ifrSockAddr.Addr.Family = syscall.AF_INET
 	copy(ifrSockAddr.Name[:], dev.Priv.Name)
 
-	ioctlSC = linux.IoctlSyscall{A1: uintptr(soc), A2: uintptr(syscall.SIOCGIFHWADDR), A3: uintptr(unsafe.Pointer(&ifrSockAddr))}
-	_, _, errno = ioctlSC.Exec()
+	_, _, errno = sc.Ioctl(uintptr(soc), uintptr(syscall.SIOCGIFHWADDR), uintptr(unsafe.Pointer(&ifrSockAddr)))
 	if errno != 0 {
 		l.E("SYS_IOCTL (%v) failed: %v ", "SIOCGIFHWADDR", errno)
-		closeSC := linux.CloseSyscall{FD: soc}
-		_ = closeSC.Exec()
+		_ = sc.Close(soc)
 		return e.Error{Code: e.CantOpen}
 	}
 
 	dev.Addr = MAC(ifrSockAddr.Addr.Data[:])
 
-	closeSC := linux.CloseSyscall{FD: soc}
-	_ = closeSC.Exec()
+	_ = sc.Close(soc)
 
 	// --------------------------------------------------
 	var event syscall.EpollEvent
 
-	epollCreate1SC := linux.EpollCreate1Syscall{}
-	epfd, err = epollCreate1SC.Exec()
+	epfd, err = sc.EpollCreate1(0)
 	if err != nil {
 		l.E("can't open an epoll file descriptor: %v ", err)
 		return e.Error{Code: e.CantOpen}
@@ -103,8 +95,7 @@ func tapOpen(dev *Device) e.Error {
 	event.Events = syscall.EPOLLIN
 	event.Fd = int32(fd)
 
-	epollCtlSC := linux.EpollCtlSyscall{EPFD: epfd, OP: syscall.EPOLL_CTL_ADD, FD: fd, Event: &event}
-	err = epollCtlSC.Exec()
+	err = sc.EpollCtl(epfd, syscall.EPOLL_CTL_ADD, fd, &event)
 	if err != nil {
 		l.E("can't add an entry to the interest list of the epoll file descriptor: %v ", err)
 		return e.Error{Code: e.CantOpen}
@@ -115,29 +106,25 @@ func tapOpen(dev *Device) e.Error {
 	return e.Error{Code: e.OK}
 }
 
-func tapClose(dev *Device) e.Error {
-	closeSC := linux.CloseSyscall{FD: epfd}
-	_ = closeSC.Exec()
+func tapClose(dev *Device, sc *s.Syscall) e.Error {
+	_ = sc.Close(epfd)
 	return e.Error{Code: e.OK}
 }
 
-func tapTransmit(dev *Device) e.Error {
+func tapTransmit(dev *Device, sc *s.Syscall) e.Error {
 	return e.Error{Code: e.OK}
 }
 
-func tapPoll(dev *Device, isTerminated bool) e.Error {
+func tapPoll(dev *Device, sc *s.Syscall, isTerminated bool) e.Error {
 	if isTerminated {
-		closeSC := linux.CloseSyscall{FD: epfd}
-		_ = closeSC.Exec()
+		_ = sc.Close(epfd)
 		return e.Error{Code: e.OK}
 	}
 
 	var events [MaxEpollEvents]syscall.EpollEvent
-	epollWaitSC := linux.EpollWaitSyscall{EPFD: epfd, Events: events[:], MSEC: EpollTimeout}
-	nEvents, err := epollWaitSC.Exec()
+	nEvents, err := sc.EpollWait(epfd, events[:], EpollTimeout)
 	if err != nil {
-		closeSC := linux.CloseSyscall{FD: epfd}
-		_ = closeSC.Exec()
+		_ = sc.Close(epfd)
 		return e.Error{Code: e.Interrupted}
 	}
 
@@ -149,7 +136,7 @@ func tapPoll(dev *Device, isTerminated bool) e.Error {
 		l.I("events occurred")
 		l.I("\tevents: %v ", nEvents)
 		l.I("\tdevice: %v (%v) ", dev.Name, dev.Priv.Name)
-		_ = ReadFrame(dev)
+		_ = ReadFrame(dev, sc)
 	} else {
 		l.I("no event occurred")
 	}
