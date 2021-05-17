@@ -62,7 +62,7 @@ type EthHeader struct {
 	Type EthType
 }
 
-func EtherDump(hdr *EthHeader) {
+func EthDump(hdr *EthHeader) {
 	l.I("\tmac (dst): %d:%d:%d:%d:%d:%d", hdr.Dst[0], hdr.Dst[1], hdr.Dst[2], hdr.Dst[3], hdr.Dst[4], hdr.Dst[5])
 	l.I("\tmac (src): %d:%d:%d:%d:%d:%d", hdr.Src[0], hdr.Src[1], hdr.Src[2], hdr.Src[3], hdr.Src[4], hdr.Src[5])
 	l.I("\teth_type:  0x%04x (%s)", hdr.Type.String(), hdr.Type.String())
@@ -96,7 +96,7 @@ func ReadFrame(dev *Device) e.Error {
 
 	l.I("received an ethernet frame")
 	l.I("\tlength: %v ", flen)
-	EtherDump(hdr)
+	EthDump(hdr)
 
 	l.I("\tdevice:       %v (%v) ", dev.Name, dev.Priv.Name)
 	l.I("\teth_type:     %v (0x%04x) ", hdr.Type.String(), hdr.Type)
