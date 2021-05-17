@@ -2,7 +2,7 @@ package syscall
 
 import goSyscall "syscall"
 
-type EpollWaitSyscallIF interface {
+type EpollWaitSyscallInterface interface {
 	Exec() (int, error)
 }
 

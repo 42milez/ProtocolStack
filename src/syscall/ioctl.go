@@ -4,7 +4,7 @@ import (
 	goSyscall "syscall"
 )
 
-type IoctlSyscallIF interface {
+type IoctlSyscallInterface interface {
 	Exec() (uintptr, uintptr, goSyscall.Errno)
 }
 

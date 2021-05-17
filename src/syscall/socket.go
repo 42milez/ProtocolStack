@@ -2,7 +2,7 @@ package syscall
 
 import goSyscall "syscall"
 
-type SocketSyscallIF interface {
+type SocketSyscallInterface interface {
 	Exec() (int, error)
 }
 

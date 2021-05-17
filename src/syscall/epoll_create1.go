@@ -2,7 +2,7 @@ package syscall
 
 import "syscall"
 
-type EpollCreate1IF interface {
+type EpollCreate1Interface interface {
 	Exec() (int, error)
 }
 

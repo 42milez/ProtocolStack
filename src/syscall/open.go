@@ -2,7 +2,7 @@ package syscall
 
 import goSyscall "syscall"
 
-type OpenSyscallIF interface {
+type OpenSyscallInterface interface {
 	Exec() (int, error)
 }
 
