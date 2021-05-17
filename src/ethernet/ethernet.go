@@ -26,8 +26,15 @@ var endian int
 
 type EthAddr [EthAddrLen]byte
 
-func (v EthAddr) Equal(vv []byte) bool {
-	return v[0] != vv[0] && v[1] != vv[1] && v[2] != vv[2] && v[3] != vv[3] && v[4] != vv[4] && v[5] != vv[5]
+func (v EthAddr) Equal(vv EthAddr) bool {
+	return v == vv
+}
+
+func (v EthAddr) EqualByte(vv []byte) bool {
+	if len(v) != len(vv) {
+		return false
+	}
+	return v[0] == vv[0] && v[1] == vv[1] && v[2] == vv[2] && v[3] == vv[3] && v[4] == vv[4] && v[5] == vv[5]
 }
 
 func (v EthAddr) String() string {
@@ -81,8 +88,8 @@ func ReadFrame(dev *Device) e.Error {
 	}
 
 	hdr := (*EthHeader)(unsafe.Pointer(&buf))
-	if !hdr.Dst.Equal(dev.Addr.Byte()) {
-		if !hdr.Dst.Equal(EthAddrBroadcast.Byte()) {
+	if !hdr.Dst.EqualByte(dev.Addr.Byte()) {
+		if !hdr.Dst.EqualByte(EthAddrBroadcast.Byte()) {
 			return e.Error{Code: e.NoDataToRead}
 		}
 	}
