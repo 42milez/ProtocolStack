@@ -5,7 +5,6 @@ import (
 	"io"
 	goLog "log"
 	"os"
-	"strings"
 )
 
 func I(s string, v ...interface{}) {
@@ -47,10 +46,10 @@ func CaptureLogOutput(f func()) string {
 	}
 
 	defer func() {
-		ResetOutput()
+		resetOutput()
 	}()
 
-	SetOutput(writer)
+	setOutput(writer)
 
 	out := make(chan string)
 
@@ -65,22 +64,20 @@ func CaptureLogOutput(f func()) string {
 	_ = writer.Close()
 
 	ret := <-out
-	ret = strings.Replace(ret, "\t", "", -1)
-	ret = strings.Replace(ret, "\n", "", -1)
 
 	_ = reader.Close()
 
 	return ret
 }
 
-func ResetOutput() {
+func resetOutput() {
 	i.SetOutput(os.Stdout)
 	w.SetOutput(os.Stdout)
 	e.SetOutput(os.Stderr)
 	f.SetOutput(os.Stderr)
 }
 
-func SetOutput(writer io.Writer) {
+func setOutput(writer io.Writer) {
 	i.SetOutput(writer)
 	w.SetOutput(writer)
 	e.SetOutput(writer)
