@@ -56,7 +56,7 @@ func CaptureLogOutput(f func()) string {
 	go func() {
 		var buf bytes.Buffer
 		_, _ = io.Copy(&buf, reader)
-		out<- buf.String()
+		out <- buf.String()
 	}()
 
 	f()

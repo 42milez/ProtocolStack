@@ -8,8 +8,8 @@ type SocketSyscallInterface interface {
 
 type SocketSyscall struct {
 	Domain int
-	Typ int
-	Proto int
+	Typ    int
+	Proto  int
 }
 
 func (p *SocketSyscall) Exec() (int, error) {

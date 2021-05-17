@@ -60,12 +60,12 @@ func TestEthDump(t *testing.T) {
 		regexpDatetime,
 		ethType.String(),
 		ethType.String()))
-	got := log.CaptureLogOutput(func () {
+	got := log.CaptureLogOutput(func() {
 		hdr := EthHeader{Dst: macDst, Src: macSrc, Type: ethType}
 		EthDump(&hdr)
 	})
 	got = format(got)
-	if ! want.MatchString(got) {
+	if !want.MatchString(got) {
 		t.Errorf("EthDump() = %v; want %v", got, want)
 	}
 }
@@ -98,4 +98,8 @@ func TestEthType_String(t *testing.T) {
 	if got != want {
 		t.Errorf("EthType.String() = %v; want %v", got, want)
 	}
+}
+
+func TestReadFrame(t *testing.T) {
+
 }

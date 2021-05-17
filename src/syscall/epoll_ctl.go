@@ -7,9 +7,9 @@ type EpollCtlSyscallInterface interface {
 }
 
 type EpollCtlSyscall struct {
-	EPFD int
-	OP int
-	FD int
+	EPFD  int
+	OP    int
+	FD    int
 	Event *goSyscall.EpollEvent
 }
 

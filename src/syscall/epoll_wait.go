@@ -7,9 +7,9 @@ type EpollWaitSyscallInterface interface {
 }
 
 type EpollWaitSyscall struct {
-	EPFD int
+	EPFD   int
 	Events []goSyscall.EpollEvent
-	MSEC int
+	MSEC   int
 }
 
 func (p *EpollWaitSyscall) Exec() (int, error) {
