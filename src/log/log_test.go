@@ -6,9 +6,17 @@ import (
 )
 
 func TestI(t *testing.T) {
-	want, _ := regexp.Compile("^\u001B\\[1;34m\\[INFO]\u001B\\[0m [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} hello$")
+	want, _ := regexp.Compile("^\u001B\\[1;34m\\[INFO]\u001B\\[0m [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} info$")
 	got := CaptureLogOutput(func () {
-		I("hello")
+		I("info")
+	})
+	if ! want.MatchString(got) {
+		t.Errorf("EtherDump() = %v; want %v", got, want.String())
+	}
+
+	want, _ = regexp.Compile("^\u001B\\[1;34m\\[INFO]\u001B\\[0m [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} info log$")
+	got = CaptureLogOutput(func () {
+		I("info %v", "log")
 	})
 	if ! want.MatchString(got) {
 		t.Errorf("EtherDump() = %v; want %v", got, want.String())
@@ -16,9 +24,17 @@ func TestI(t *testing.T) {
 }
 
 func TestW(t *testing.T) {
-	want, _ := regexp.Compile("^\u001B\\[1;33m\\[WARN]\u001B\\[0m [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} hello$")
+	want, _ := regexp.Compile("^\u001B\\[1;33m\\[WARN]\u001B\\[0m [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} warning$")
 	got := CaptureLogOutput(func () {
-		W("hello")
+		W("warning")
+	})
+	if ! want.MatchString(got) {
+		t.Errorf("EtherDump() = %v; want %v", got, want.String())
+	}
+
+	want, _ = regexp.Compile("^\u001B\\[1;33m\\[WARN]\u001B\\[0m [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} warning log$")
+	got = CaptureLogOutput(func () {
+		W("warning %v", "log")
 	})
 	if ! want.MatchString(got) {
 		t.Errorf("EtherDump() = %v; want %v", got, want.String())
@@ -26,9 +42,17 @@ func TestW(t *testing.T) {
 }
 
 func TestE(t *testing.T) {
-	want, _ := regexp.Compile("^\u001B\\[1;31m\\[ERROR]\u001B\\[0m [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} hello$")
+	want, _ := regexp.Compile("^\u001B\\[1;31m\\[ERROR]\u001B\\[0m [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} error$")
 	got := CaptureLogOutput(func () {
-		E("hello")
+		E("error")
+	})
+	if ! want.MatchString(got) {
+		t.Errorf("EtherDump() = %v; want %v", got, want.String())
+	}
+
+	want, _ = regexp.Compile("^\u001B\\[1;31m\\[ERROR]\u001B\\[0m [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} error log$")
+	got = CaptureLogOutput(func () {
+		E("error %v", "log")
 	})
 	if ! want.MatchString(got) {
 		t.Errorf("EtherDump() = %v; want %v", got, want.String())
@@ -36,11 +60,5 @@ func TestE(t *testing.T) {
 }
 
 func TestF(t *testing.T) {
-	want, _ := regexp.Compile("^\u001B\\[1;31m\\[FATAL]\u001B\\[0m [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} hello$")
-	got := CaptureLogOutput(func () {
-		F("hello")
-	})
-	if ! want.MatchString(got) {
-		t.Errorf("EtherDump() = %v; want %v", got, want.String())
-	}
+	// cannot test because log.Fatal*() calls os.Exit(1)
 }
