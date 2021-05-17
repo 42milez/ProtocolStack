@@ -1,7 +1,7 @@
 package log
 
 import (
-	glog "log"
+	goLog "log"
 	"os"
 )
 
@@ -37,14 +37,14 @@ func F(s string, v ...interface{}) {
 	}
 }
 
-var i *glog.Logger
-var w *glog.Logger
-var e *glog.Logger
-var f *glog.Logger
+var i *goLog.Logger
+var w *goLog.Logger
+var e *goLog.Logger
+var f *goLog.Logger
 
 func init() {
-	i = glog.New(os.Stdout, "\u001B[1;34m[INFO]\u001B[0m ", glog.LstdFlags)
-	w = glog.New(os.Stdout, "\u001B[1;33m[WARN]\u001B[0m ", glog.LstdFlags)
-	e = glog.New(os.Stderr, "\u001B[1;31m[ERROR]\u001B[0m ", glog.LstdFlags)
-	f = glog.New(os.Stderr, "\u001B[1;31m[FATAL]\u001B[0m ", glog.LstdFlags)
+	i = goLog.New(os.Stdout, "\u001B[1;34m[INFO]\u001B[0m ", goLog.LstdFlags)
+	w = goLog.New(os.Stdout, "\u001B[1;33m[WARN]\u001B[0m ", goLog.LstdFlags)
+	e = goLog.New(os.Stderr, "\u001B[1;31m[ERROR]\u001B[0m ", goLog.LstdFlags)
+	f = goLog.New(os.Stderr, "\u001B[1;31m[FATAL]\u001B[0m ", goLog.LstdFlags)
 }
