@@ -1,4 +1,4 @@
-package syscall
+package linux
 
 import goSyscall "syscall"
 

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	e "github.com/42milez/ProtocolStack/src/error"
 	l "github.com/42milez/ProtocolStack/src/log"
-	"github.com/42milez/ProtocolStack/src/syscall"
+	"github.com/42milez/ProtocolStack/src/syscall/linux"
 	"unsafe"
 )
 
@@ -71,7 +71,7 @@ func EthDump(hdr *EthHeader) {
 func ReadFrame(dev *Device) e.Error {
 	var buf [EthFrameSizeMax]byte
 
-	readSC := syscall.ReadSyscall{A1: uintptr(dev.Priv.FD), A2: uintptr(unsafe.Pointer(&buf)), A3: uintptr(EthFrameSizeMax)}
+	readSC := linux.ReadSyscall{A1: uintptr(dev.Priv.FD), A2: uintptr(unsafe.Pointer(&buf)), A3: uintptr(EthFrameSizeMax)}
 	flen, _, errno := readSC.Exec()
 
 	if errno != 0 {
