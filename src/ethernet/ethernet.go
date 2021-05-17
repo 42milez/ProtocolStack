@@ -92,12 +92,9 @@ func ReadFrame(dev *Device) e.Error {
 	}
 
 	l.I("received an ethernet frame")
-	l.I("\tlength: %v ", flen)
+	l.I("\tdevice:    %v (%v) ", dev.Name, dev.Priv.Name)
+	l.I("\tlength:    %v ", flen)
 	EthDump(hdr)
-
-	l.I("\tdevice:       %v (%v) ", dev.Name, dev.Priv.Name)
-	l.I("\teth_type:     %v (0x%04x) ", hdr.Type.String(), hdr.Type)
-	l.I("\tframe length: %v ", flen)
 
 	return e.Error{Code: e.OK}
 }
