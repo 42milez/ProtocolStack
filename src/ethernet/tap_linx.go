@@ -79,7 +79,7 @@ func tapOpen(dev *Device, sc s.ISyscall) e.Error {
 		return e.Error{Code: e.CantOpen}
 	}
 
-	dev.Addr = MAC(ifrSockAddr.Addr.Data[:])
+	copy(dev.Addr[:], ifrSockAddr.Addr.Data[:])
 
 	_ = sc.Close(soc)
 
@@ -145,7 +145,7 @@ func tapPoll(dev *Device, sc s.ISyscall, isTerminated bool) e.Error {
 }
 
 // GenTapDevice generates TAP device object.
-func GenTapDevice(name string, mac MAC) (*Device, e.Error) {
+func GenTapDevice(name string, addr EthAddr) (*Device, e.Error) {
 	if len(name) > 16 {
 		return nil, e.Error{Code: e.CantCreate, Msg: "device name must be less than or equal to 16 characters"}
 	}
@@ -155,7 +155,7 @@ func GenTapDevice(name string, mac MAC) (*Device, e.Error) {
 		MTU:       EthPayloadSizeMax,
 		FLAG:      DevFlagBroadcast | DevFlagNeedArp,
 		HeaderLen: EthHeaderSize,
-		Addr:      mac,
+		Addr:      addr,
 		AddrLen:   EthAddrLen,
 		Broadcast: EthAddrBroadcast,
 		Op: Operation{

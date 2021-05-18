@@ -23,8 +23,8 @@ const EthTypeArp = 0x0806
 const EthTypeIpv4 = 0x0800
 const EthTypeIpv6 = 0x86dd
 
-var EthAddrAny = MAC("00:00:00:00:00:00")
-var EthAddrBroadcast = MAC("FF:FF:FF:FF:FF:FF")
+var EthAddrAny = EthAddr{0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
+var EthAddrBroadcast = EthAddr{0xff, 0xff, 0xff, 0xff, 0xff, 0xff}
 
 var endian int
 
@@ -32,13 +32,6 @@ type EthAddr [EthAddrLen]byte
 
 func (v EthAddr) Equal(vv EthAddr) bool {
 	return v == vv
-}
-
-func (v EthAddr) EqualByte(vv []byte) bool {
-	if len(v) != len(vv) {
-		return false
-	}
-	return v[0] == vv[0] && v[1] == vv[1] && v[2] == vv[2] && v[3] == vv[3] && v[4] == vv[4] && v[5] == vv[5]
 }
 
 func (v EthAddr) String() string {
@@ -93,8 +86,8 @@ func ReadFrame(dev *Device, sc s.ISyscall) e.Error {
 	t := new(bytes.Buffer)
 	_ = binary.Read(t, binary.LittleEndian, *hdr)
 	log.Printf("hdr: %v\n", t)
-	if !hdr.Dst.EqualByte(dev.Addr.Byte()) {
-		if !hdr.Dst.EqualByte(EthAddrBroadcast.Byte()) {
+	if !hdr.Dst.Equal(dev.Addr) {
+		if !hdr.Dst.Equal(EthAddrBroadcast) {
 			return e.Error{Code: e.NoDataToRead}
 		}
 	}
