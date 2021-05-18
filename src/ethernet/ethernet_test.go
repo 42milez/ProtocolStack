@@ -6,7 +6,7 @@ import (
 	"fmt"
 	psError "github.com/42milez/ProtocolStack/src/error"
 	psLog "github.com/42milez/ProtocolStack/src/log"
-	mock_syscall "github.com/42milez/ProtocolStack/src/mock/syscall"
+	mockSyscall "github.com/42milez/ProtocolStack/src/mock/syscall"
 	"github.com/golang/mock/gomock"
 	"regexp"
 	"strings"
@@ -101,7 +101,7 @@ func TestReadFrame1(t *testing.T) {
 	// --------------------------------------------------
 	r1 := EthHeaderSize*8
 	r2 := 0
-	m := mock_syscall.NewMockISyscall(ctrl)
+	m := mockSyscall.NewMockISyscall(ctrl)
 	m.EXPECT().
 		Read(gomock.Any(), gomock.Any(), gomock.Any()).
 		Do(func(_ int, buf unsafe.Pointer, _ int) {
@@ -156,7 +156,7 @@ func TestReadFrame2(t *testing.T) {
 
 	dev := &Device{Addr: EthAddr{11, 12, 13, 14, 15, 16}}
 	hdrLen := EthHeaderSize*8
-	m := mock_syscall.NewMockISyscall(ctrl)
+	m := mockSyscall.NewMockISyscall(ctrl)
 	m.EXPECT().Read(gomock.Any(), gomock.Any(), gomock.Any()).Return(uintptr(hdrLen), uintptr(0), syscall.EINTR)
 
 	got := ReadFrame(dev, m)
@@ -174,7 +174,7 @@ func TestReadFrame3(t *testing.T) {
 
 	dev := &Device{Addr: EthAddr{11, 12, 13, 14, 15, 16}}
 	hdrLen := 0
-	m := mock_syscall.NewMockISyscall(ctrl)
+	m := mockSyscall.NewMockISyscall(ctrl)
 	m.EXPECT().Read(gomock.Any(), gomock.Any(), gomock.Any()).Return(uintptr(hdrLen), uintptr(0), syscall.Errno(0))
 
 	got := ReadFrame(dev, m)
@@ -192,7 +192,7 @@ func TestReadFrame4(t *testing.T) {
 
 	dev := &Device{Addr: EthAddr{33, 44, 55, 66, 77, 88}}
 	hdrLen := EthHeaderSize*8
-	m := mock_syscall.NewMockISyscall(ctrl)
+	m := mockSyscall.NewMockISyscall(ctrl)
 	m.EXPECT().Read(gomock.Any(), gomock.Any(), gomock.Any()).Return(uintptr(hdrLen), uintptr(0), syscall.Errno(0))
 
 	got := ReadFrame(dev, m)

@@ -23,6 +23,6 @@ type Error struct {
 	Msg  string
 }
 
-func (e Error) Error() string {
-	return fmt.Sprintf("%v (code: %v)", e.Msg, e.Code)
+func (p *Error) Error() string {
+	return fmt.Sprintf("%v (code: %v)", p.Msg, p.Code)
 }

@@ -1,4 +1,4 @@
-package psBinary
+package binary
 
 import "unsafe"
 

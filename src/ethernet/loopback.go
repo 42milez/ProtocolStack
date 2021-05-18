@@ -1,7 +1,7 @@
 package ethernet
 
 import (
-	e "github.com/42milez/ProtocolStack/src/error"
+	psErr "github.com/42milez/ProtocolStack/src/error"
 	s "github.com/42milez/ProtocolStack/src/syscall"
 	"math"
 )
@@ -10,8 +10,8 @@ const LoopbackMTU = math.MaxUint16
 const LoopbackIpAddr = "127.0.0.1"
 const LoopbackNetmask = "255.0.0.0"
 
-func loopbackTransmit(dev *Device, sc s.ISyscall) e.Error {
-	return e.Error{Code: e.OK}
+func loopbackTransmit(dev *Device, sc s.ISyscall) psErr.Error {
+	return psErr.Error{Code: psErr.OK}
 }
 
 // GenLoopbackDevice generates loopback device object.
