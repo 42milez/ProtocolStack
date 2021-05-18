@@ -1,16 +1,21 @@
-package sys
+// +build amd64,linux
 
-import "syscall"
+package syscall
 
-type SyscallInterface interface {
+import (
+	"syscall"
+	"unsafe"
+)
+
+type ISyscall interface {
 	Close(fd int) error
-	EpollCreate1() (int, error)
-	EpollCtl() error
-	EpollWait() (int, error)
-	Ioctl() (uintptr, uintptr, syscall.Errno)
-	Open() (int, error)
-	Read() (uintptr, uintptr, syscall.Errno)
-	Socket() (int, error)
+	EpollCreate1(flag int) (int, error)
+	EpollCtl(epfd int, op int, fd int, event *syscall.EpollEvent) error
+	EpollWait(epfd int, events []syscall.EpollEvent, msec int) (int, error)
+	Ioctl(a1, a2, a3 uintptr) (uintptr, uintptr, syscall.Errno)
+	Open(path string, mode int, perm uint32) (int, error)
+	Read(fd int, buf unsafe.Pointer, size int) (uintptr, uintptr, syscall.Errno)
+	Socket(domain, typ, proto int) (int, error)
 }
 
 type Syscall struct{}
@@ -39,8 +44,8 @@ func (Syscall) Open(path string, mode int, perm uint32) (int, error) {
 	return syscall.Open(path, mode, perm)
 }
 
-func (Syscall) Read(a1, a2, a3 uintptr) (uintptr, uintptr, syscall.Errno) {
-	return syscall.Syscall(syscall.SYS_READ, a1, a2, a3)
+func (Syscall) Read(fd int, buf unsafe.Pointer, size int) (uintptr, uintptr, syscall.Errno) {
+	return syscall.Syscall(syscall.SYS_READ, uintptr(fd), uintptr(buf), uintptr(size))
 }
 
 func (Syscall) Socket(domain, typ, proto int) (int, error) {

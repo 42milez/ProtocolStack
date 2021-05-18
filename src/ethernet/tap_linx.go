@@ -3,7 +3,7 @@ package ethernet
 import (
 	e "github.com/42milez/ProtocolStack/src/error"
 	l "github.com/42milez/ProtocolStack/src/log"
-	s "github.com/42milez/ProtocolStack/src/sys"
+	s "github.com/42milez/ProtocolStack/src/syscall"
 	"syscall"
 	"unsafe"
 )
@@ -37,7 +37,7 @@ type IfreqSockAddr struct {
 
 const vnd = "/dev/net/tun"
 
-func tapOpen(dev *Device, sc *s.Syscall) e.Error {
+func tapOpen(dev *Device, sc s.ISyscall) e.Error {
 	var err error
 	var errno syscall.Errno
 	var fd int
@@ -106,16 +106,16 @@ func tapOpen(dev *Device, sc *s.Syscall) e.Error {
 	return e.Error{Code: e.OK}
 }
 
-func tapClose(dev *Device, sc *s.Syscall) e.Error {
+func tapClose(dev *Device, sc s.ISyscall) e.Error {
 	_ = sc.Close(epfd)
 	return e.Error{Code: e.OK}
 }
 
-func tapTransmit(dev *Device, sc *s.Syscall) e.Error {
+func tapTransmit(dev *Device, sc s.ISyscall) e.Error {
 	return e.Error{Code: e.OK}
 }
 
-func tapPoll(dev *Device, sc *s.Syscall, isTerminated bool) e.Error {
+func tapPoll(dev *Device, sc s.ISyscall, isTerminated bool) e.Error {
 	if isTerminated {
 		_ = sc.Close(epfd)
 		return e.Error{Code: e.OK}

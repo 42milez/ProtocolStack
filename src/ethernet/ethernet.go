@@ -1,10 +1,14 @@
 package ethernet
 
 import (
+	"bytes"
+	"encoding/binary"
 	"fmt"
 	e "github.com/42milez/ProtocolStack/src/error"
 	l "github.com/42milez/ProtocolStack/src/log"
-	"github.com/42milez/ProtocolStack/src/sys"
+	"github.com/42milez/ProtocolStack/src/psBinary"
+	s "github.com/42milez/ProtocolStack/src/syscall"
+	"log"
 	"unsafe"
 )
 
@@ -68,10 +72,11 @@ func EthDump(hdr *EthHeader) {
 	l.I("\teth_type:  0x%04x (%s)", hdr.Type.String(), hdr.Type.String())
 }
 
-func ReadFrame(dev *Device, sc *sys.Syscall) e.Error {
-	var buf [EthFrameSizeMax]byte
+func ReadFrame(dev *Device, sc s.ISyscall) e.Error {
+	// TODO: make buf static variable to reuse
+	buf :=  make([]byte, EthFrameSizeMax)
 
-	flen, _, errno := sc.Read(uintptr(dev.Priv.FD), uintptr(unsafe.Pointer(&buf)), uintptr(EthFrameSizeMax))
+	flen, _, errno := sc.Read(dev.Priv.FD, unsafe.Pointer(&buf), EthFrameSizeMax)
 	if errno != 0 {
 		l.E("SYS_READ failed: %v ", errno)
 		return e.Error{Code: e.CantRead}
@@ -79,10 +84,15 @@ func ReadFrame(dev *Device, sc *sys.Syscall) e.Error {
 
 	if flen < EthHeaderSize*8 {
 		l.E("the length of ethernet header is too short")
+		l.E("\tflen: %v ", errno)
 		return e.Error{Code: e.InvalidHeader}
 	}
 
+	log.Printf("buf: %v\n", buf)
 	hdr := (*EthHeader)(unsafe.Pointer(&buf))
+	t := new(bytes.Buffer)
+	_ = binary.Read(t, binary.LittleEndian, *hdr)
+	log.Printf("hdr: %v\n", t)
 	if !hdr.Dst.EqualByte(dev.Addr.Byte()) {
 		if !hdr.Dst.EqualByte(EthAddrBroadcast.Byte()) {
 			return e.Error{Code: e.NoDataToRead}
@@ -97,21 +107,8 @@ func ReadFrame(dev *Device, sc *sys.Syscall) e.Error {
 	return e.Error{Code: e.OK}
 }
 
-const bigEndian = 4321
-const littleEndian = 1234
-
-func byteOrder() int {
-	x := 0x0100
-	p := unsafe.Pointer(&x)
-	if 0x01 == *(*byte)(p) {
-		return bigEndian
-	} else {
-		return littleEndian
-	}
-}
-
 func ntoh16(n uint16) uint16 {
-	if endian == littleEndian {
+	if endian == psBinary.LittleEndian {
 		return swap16(n)
 	} else {
 		return n
@@ -123,5 +120,5 @@ func swap16(v uint16) uint16 {
 }
 
 func init() {
-	endian = byteOrder()
+	endian = psBinary.ByteOrder()
 }

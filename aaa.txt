@@ -1,0 +1,46 @@
+fatal error: checkptr: converted pointer straddles multiple allocations
+
+goroutine 35 [running]:
+runtime.throw(0x6c8174, 0x3a)
+	/home/linuxbrew/.linuxbrew/Cellar/go/1.16.3_1/libexec/src/runtime/panic.go:1117 +0x72 fp=0xc0000b3678 sp=0xc0000b3648 pc=0x46a7d2
+runtime.checkptrAlignment(0xc0001b4018, 0x67f540, 0x1)
+	/home/linuxbrew/.linuxbrew/Cellar/go/1.16.3_1/libexec/src/runtime/checkptr.go:20 +0xc9 fp=0xc0000b36a8 sp=0xc0000b3678 pc=0x439549
+github.com/42milez/ProtocolStack/src/ethernet.TestReadFrame.func1(0x0, 0xc0001b4018, 0x5ea)
+	/home/vagrant/app/src/ethernet/ethernet_test.go:126 +0x116 fp=0xc0000b3730 sp=0xc0000b36a8 pc=0x665c96
+runtime.call32(0xc000180210, 0x6c9050, 0xc0001b4030, 0x1800000018)
+	/home/linuxbrew/.linuxbrew/Cellar/go/1.16.3_1/libexec/src/runtime/asm_amd64.s:551 +0x3e fp=0xc0000b3760 sp=0xc0000b3730 pc=0x4a15de
+reflect.Value.call(0x685b40, 0x6c9050, 0x13, 0x6bd422, 0x4, 0xc0001ba000, 0x3, 0x3, 0x0, 0x0, ...)
+	/home/linuxbrew/.linuxbrew/Cellar/go/1.16.3_1/libexec/src/reflect/value.go:476 +0x99c fp=0xc0000b3998 sp=0xc0000b3760 pc=0x53075c
+reflect.Value.Call(0x685b40, 0x6c9050, 0x13, 0xc0001ba000, 0x3, 0x3, 0x6927a0, 0x3000600030203, 0x3)
+	/home/linuxbrew/.linuxbrew/Cellar/go/1.16.3_1/libexec/src/reflect/value.go:337 +0xd9 fp=0xc0000b3a30 sp=0xc0000b3998 pc=0x52fa99
+github.com/golang/mock/gomock.(*Call).Do.func1(0xc000180180, 0x3, 0x3, 0xc0001801e0, 0x3, 0x3)
+	/home/vagrant/.cache/go_mod/github.com/golang/mock@v1.5.0/gomock/call.go:155 +0x4ee fp=0xc0000b3b28 sp=0xc0000b3a30 pc=0x65ca4e
+github.com/golang/mock/gomock.(*Controller).Call(0xc000180090, 0x6a5100, 0xc0001900b0, 0x6bd46a, 0x4, 0xc000180180, 0x3, 0x3, 0x2, 0xc00018c600, ...)
+	/home/vagrant/.cache/go_mod/github.com/golang/mock@v1.5.0/gomock/controller.go:251 +0x153 fp=0xc0000b3bc0 sp=0xc0000b3b28 pc=0x65a9f3
+github.com/42milez/ProtocolStack/src/mock/syscall.(*MockISyscall).Read(0xc0001900b0, 0x0, 0xc0001b4018, 0x5ea, 0x6927a0, 0x30, 0x7fcf46bc1108)
+	/home/vagrant/app/src/mock/syscall/linux.go:130 +0x208 fp=0xc0000b3c70 sp=0xc0000b3bc0 pc=0x6610c8
+github.com/42milez/ProtocolStack/src/ethernet.ReadFrame(0xc0000b3e30, 0x705c18, 0xc0001900b0, 0x3, 0xc0001940b0, 0x690620)
+	/home/vagrant/app/src/ethernet/ethernet.go:75 +0x14c fp=0xc0000b3d38 sp=0xc0000b3c70 pc=0x66348c
+github.com/42milez/ProtocolStack/src/ethernet.TestReadFrame(0xc0001aa180)
+	/home/vagrant/app/src/ethernet/ethernet_test.go:130 +0x3dd fp=0xc0000b3ed0 sp=0xc0000b3d38 pc=0x66591d
+testing.tRunner(0xc0001aa180, 0x6c9058)
+	/home/linuxbrew/.linuxbrew/Cellar/go/1.16.3_1/libexec/src/testing/testing.go:1193 +0x203 fp=0xc0000b3fd0 sp=0xc0000b3ed0 pc=0x583f63
+runtime.goexit()
+	/home/linuxbrew/.linuxbrew/Cellar/go/1.16.3_1/libexec/src/runtime/asm_amd64.s:1371 +0x1 fp=0xc0000b3fd8 sp=0xc0000b3fd0 pc=0x4a2fa1
+created by testing.(*T).Run
+	/home/linuxbrew/.linuxbrew/Cellar/go/1.16.3_1/libexec/src/testing/testing.go:1238 +0x5d8
+
+goroutine 1 [chan receive]:
+testing.(*T).Run(0xc000082780, 0x6bf15b, 0xd, 0x6c9058, 0x1)
+	/home/linuxbrew/.linuxbrew/Cellar/go/1.16.3_1/libexec/src/testing/testing.go:1239 +0x610
+testing.runTests.func1(0xc000082780)
+	/home/linuxbrew/.linuxbrew/Cellar/go/1.16.3_1/libexec/src/testing/testing.go:1511 +0xa7
+testing.tRunner(0xc000082780, 0xc00010bc78)
+	/home/linuxbrew/.linuxbrew/Cellar/go/1.16.3_1/libexec/src/testing/testing.go:1193 +0x203
+testing.runTests(0xc0000c0018, 0x822960, 0x7, 0x7, 0xc020f3018eca4e1a, 0x8bb33d4804, 0x8267c0, 0xc00010bd38)
+	/home/linuxbrew/.linuxbrew/Cellar/go/1.16.3_1/libexec/src/testing/testing.go:1509 +0x613
+testing.(*M).Run(0xc000132000, 0x0)
+	/home/linuxbrew/.linuxbrew/Cellar/go/1.16.3_1/libexec/src/testing/testing.go:1417 +0x3b4
+main.main()
+	_testmain.go:109 +0x357
+FAIL	github.com/42milez/ProtocolStack/src/ethernet	0.022s

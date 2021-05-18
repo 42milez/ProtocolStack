@@ -5,7 +5,7 @@ import (
 	"github.com/42milez/ProtocolStack/src/ethernet"
 	l "github.com/42milez/ProtocolStack/src/log"
 	"github.com/42milez/ProtocolStack/src/network"
-	s "github.com/42milez/ProtocolStack/src/sys"
+	s "github.com/42milez/ProtocolStack/src/syscall"
 	"os"
 	"strconv"
 	"sync"

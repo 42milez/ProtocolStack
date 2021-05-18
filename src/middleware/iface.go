@@ -25,12 +25,12 @@ func GenIF(unicast string, netmask string) *Iface {
 		Network:   make(network.IP, 0),
 	}
 
-	//unicastUint32 := binary.BigEndian.Uint32(iface.Unicast)
-	//netmaskUint32 := binary.BigEndian.Uint32(iface.Netmask)
+	//unicastUint32 := psBinary.BigEndian.Uint32(iface.Unicast)
+	//netmaskUint32 := psBinary.BigEndian.Uint32(iface.Netmask)
 	//broadcastUint32 := (unicastUint32 & netmaskUint32) | ^netmaskUint32
 
-	//binary.BigEndian.PutUint32(iface.Broadcast, broadcastUint32)
-	//binary.BigEndian.PutUint32(iface.Network, unicastUint32 & netmaskUint32)
+	//psBinary.BigEndian.PutUint32(iface.Broadcast, broadcastUint32)
+	//psBinary.BigEndian.PutUint32(iface.Network, unicastUint32 & netmaskUint32)
 
 	return iface
 }

@@ -1,11 +1,18 @@
 package ethernet
 
 import (
+	"bytes"
+	"encoding/binary"
 	"fmt"
-	"github.com/42milez/ProtocolStack/src/log"
+	e "github.com/42milez/ProtocolStack/src/error"
+	l "github.com/42milez/ProtocolStack/src/log"
+	mock_syscall "github.com/42milez/ProtocolStack/src/mock/syscall"
+	"github.com/golang/mock/gomock"
 	"regexp"
 	"strings"
+	"syscall"
 	"testing"
+	"unsafe"
 )
 
 func format(s string) string {
@@ -60,7 +67,7 @@ func TestEthDump(t *testing.T) {
 		regexpDatetime,
 		ethType.String(),
 		ethType.String()))
-	got := log.CaptureLogOutput(func() {
+	got := l.CaptureLogOutput(func() {
 		hdr := EthHeader{Dst: macDst, Src: macSrc, Type: ethType}
 		EthDump(&hdr)
 	})
@@ -101,5 +108,28 @@ func TestEthType_String(t *testing.T) {
 }
 
 func TestReadFrame(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
 
+	m := mock_syscall.NewMockISyscall(ctrl)
+	m.EXPECT().
+		Read(gomock.Any(), gomock.Any(), gomock.Any()).
+		Do(func(_ int, buf unsafe.Pointer, _ int) {
+			hdr := EthHeader{
+				Dst:  EthAddr{11, 12, 13, 14, 15, 16},
+				Src:  EthAddr{21, 22, 23, 24, 25, 26},
+				Type: EthType(0x0008),
+			}
+			b := new(bytes.Buffer)
+			_ = binary.Write(b, binary.BigEndian, hdr)
+			copy((*(*[]byte)(buf))[:], b.Bytes())
+		}).
+		Return(uintptr(112), uintptr(0), syscall.Errno(0))
+
+	dev := &Device{Addr: MAC("11:22:33:44:55:66")}
+
+	got := ReadFrame(dev, m)
+	if got.Code != e.OK {
+		t.Errorf("ReadFrame() = %v; want %v", got.Code, e.OK)
+	}
 }

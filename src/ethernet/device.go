@@ -3,7 +3,7 @@ package ethernet
 import (
 	e "github.com/42milez/ProtocolStack/src/error"
 	l "github.com/42milez/ProtocolStack/src/log"
-	s "github.com/42milez/ProtocolStack/src/sys"
+	s "github.com/42milez/ProtocolStack/src/syscall"
 	"strconv"
 	"strings"
 )
@@ -38,10 +38,10 @@ const DevFlagP2P DevFlag = 0x0040
 const DevFlagNeedArp DevFlag = 0x0100
 
 type Operation struct {
-	Open     func(dev *Device, sc *s.Syscall) e.Error
-	Close    func(dev *Device, sc *s.Syscall) e.Error
-	Transmit func(dev *Device, sc *s.Syscall) e.Error
-	Poll     func(dev *Device, sc *s.Syscall, terminate bool) e.Error
+	Open     func(dev *Device, sc s.ISyscall) e.Error
+	Close    func(dev *Device, sc s.ISyscall) e.Error
+	Transmit func(dev *Device, sc s.ISyscall) e.Error
+	Poll     func(dev *Device, sc s.ISyscall, terminate bool) e.Error
 }
 
 type Privilege struct {
