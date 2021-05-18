@@ -3,17 +3,18 @@ package error
 import "fmt"
 
 const (
-	OK int = iota	// 0
+	OK int = iota
 	AlreadyOpened
+	CantConvert
 	CantCreate
 	CantOpen
 	CantRead
-	CantRegister	// 5
+	CantRegister
 	Failed
 	Interrupted
 	InvalidData
 	InvalidHeader
-	IoctlFailed		// 10
+	IoctlFailed
 	NoDataToRead
 )
 

@@ -3,6 +3,7 @@ package log
 import (
 	"bytes"
 	"io"
+	"io/ioutil"
 	goLog "log"
 	"os"
 )
@@ -68,6 +69,14 @@ func CaptureLogOutput(f func()) string {
 	_ = reader.Close()
 
 	return ret
+}
+
+func DisableOutput() {
+	setOutput(ioutil.Discard)
+}
+
+func EnableOutput() {
+	resetOutput()
 }
 
 func resetOutput() {

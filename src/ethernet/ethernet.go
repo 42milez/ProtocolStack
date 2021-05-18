@@ -8,7 +8,6 @@ import (
 	l "github.com/42milez/ProtocolStack/src/log"
 	"github.com/42milez/ProtocolStack/src/psBinary"
 	s "github.com/42milez/ProtocolStack/src/syscall"
-	"log"
 	"unsafe"
 )
 
@@ -67,9 +66,9 @@ func EthDump(hdr *EthHeader) {
 
 func ReadFrame(dev *Device, sc s.ISyscall) e.Error {
 	// TODO: make buf static variable to reuse
-	buf :=  make([]byte, EthFrameSizeMax)
+	buf1 :=  make([]byte, EthFrameSizeMax)
 
-	flen, _, errno := sc.Read(dev.Priv.FD, unsafe.Pointer(&buf), EthFrameSizeMax)
+	flen, _, errno := sc.Read(dev.Priv.FD, unsafe.Pointer(&buf1), EthFrameSizeMax)
 	if errno != 0 {
 		l.E("SYS_READ failed: %v ", errno)
 		return e.Error{Code: e.CantRead}
@@ -81,11 +80,12 @@ func ReadFrame(dev *Device, sc s.ISyscall) e.Error {
 		return e.Error{Code: e.InvalidHeader}
 	}
 
-	log.Printf("buf: %v\n", buf)
-	hdr := (*EthHeader)(unsafe.Pointer(&buf))
-	t := new(bytes.Buffer)
-	_ = binary.Read(t, binary.LittleEndian, *hdr)
-	log.Printf("hdr: %v\n", t)
+	hdr := EthHeader{}
+	buf2 := bytes.NewBuffer(buf1)
+	if err := binary.Read(buf2, binary.BigEndian, &hdr); err != nil {
+		return e.Error{Code: e.CantConvert, Msg: err.Error()}
+	}
+
 	if !hdr.Dst.Equal(dev.Addr) {
 		if !hdr.Dst.Equal(EthAddrBroadcast) {
 			return e.Error{Code: e.NoDataToRead}
@@ -95,7 +95,7 @@ func ReadFrame(dev *Device, sc s.ISyscall) e.Error {
 	l.I("received an ethernet frame")
 	l.I("\tdevice:    %v (%v) ", dev.Name, dev.Priv.Name)
 	l.I("\tlength:    %v ", flen)
-	EthDump(hdr)
+	EthDump(&hdr)
 
 	return e.Error{Code: e.OK}
 }

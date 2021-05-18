@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	e "github.com/42milez/ProtocolStack/src/error"
-	l "github.com/42milez/ProtocolStack/src/log"
+	psLog "github.com/42milez/ProtocolStack/src/log"
 	mock_syscall "github.com/42milez/ProtocolStack/src/mock/syscall"
 	"github.com/golang/mock/gomock"
 	"regexp"
@@ -51,7 +51,7 @@ func TestEthDump(t *testing.T) {
 		regexpDatetime,
 		ethType.String(),
 		ethType.String()))
-	got := l.CaptureLogOutput(func() {
+	got := psLog.CaptureLogOutput(func() {
 		hdr := EthHeader{Dst: macDst, Src: macSrc, Type: ethType}
 		EthDump(&hdr)
 	})
@@ -92,6 +92,9 @@ func TestEthType_String(t *testing.T) {
 }
 
 func TestReadFrame(t *testing.T) {
+	psLog.DisableOutput()
+	defer psLog.EnableOutput()
+
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -102,7 +105,7 @@ func TestReadFrame(t *testing.T) {
 			hdr := EthHeader{
 				Dst:  EthAddr{11, 12, 13, 14, 15, 16},
 				Src:  EthAddr{21, 22, 23, 24, 25, 26},
-				Type: EthType(0x0008),
+				Type: EthType(0x0008), // big endian
 			}
 			b := new(bytes.Buffer)
 			_ = binary.Write(b, binary.BigEndian, hdr)
@@ -110,7 +113,7 @@ func TestReadFrame(t *testing.T) {
 		}).
 		Return(uintptr(112), uintptr(0), syscall.Errno(0))
 
-	dev := &Device{Addr: EthAddr{11, 22, 33, 44, 55, 66}}
+	dev := &Device{Addr: EthAddr{11, 12, 13, 14, 15, 16}}
 
 	got := ReadFrame(dev, m)
 	if got.Code != e.OK {
