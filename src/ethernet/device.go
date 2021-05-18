@@ -49,26 +49,6 @@ type Privilege struct {
 	FD   int
 }
 
-// TODO: delete this comment later
-//struct net_device {
-//	struct net_device *next;
-//	struct net_iface *ifaces; /* NOTE: if you want to add/delete the entries after net_run(), you need to protect ifaces with a mutex. */
-//	unsigned int index;
-//	char name[IFNAMSIZ];
-//	uint16_t type;
-//	uint16_t mtu;
-//	uint16_t flags;
-//	uint16_t hlen; /* header length */
-//	uint16_t alen; /* address length */
-//	uint8_t addr[NET_DEVICE_ADDR_LEN];
-//	union {
-//	uint8_t peer[NET_DEVICE_ADDR_LEN];
-//	uint8_t broadcast[NET_DEVICE_ADDR_LEN];
-//	};
-//	struct net_device_ops *ops;
-//	void *priv;
-//};
-
 type MAC string
 
 func (m MAC) Byte() []byte {
