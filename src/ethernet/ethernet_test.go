@@ -98,7 +98,6 @@ func TestReadFrame1(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	// --------------------------------------------------
 	r1 := EthHeaderSize*8
 	r2 := 0
 	m := mockSyscall.NewMockISyscall(ctrl)
@@ -121,29 +120,6 @@ func TestReadFrame1(t *testing.T) {
 	got := ReadFrame(dev, m)
 	if got.Code != psError.OK {
 		t.Errorf("ReadFrame() = %v; want %v", got.Code, psError.OK)
-	}
-
-	// --------------------------------------------------
-	//m.EXPECT().Read(gomock.Any(), gomock.Any(), gomock.Any()).Return(uintptr(r1), uintptr(r2), syscall.EINTR)
-	//got = ReadFrame(dev, m)
-	//if got.Code != psError.CantRead {
-	//	t.Errorf("ReadFrame() = %v; want %v", got.Code, psError.CantRead)
-	//}
-
-	// --------------------------------------------------
-	//r1 = 0
-	//m.EXPECT().Read(gomock.Any(), gomock.Any(), gomock.Any()).Return(uintptr(r1), uintptr(r2), syscall.Errno(0))
-	//got = ReadFrame(dev, m)
-	//if got.Code != psError.InvalidHeader {
-	//	t.Errorf("ReadFrame() = %v; want %v", got.Code, psError.InvalidHeader)
-	//}
-
-	// --------------------------------------------------
-	r1 = 0
-	m.EXPECT().Read(gomock.Any(), gomock.Any(), gomock.Any()).Return(uintptr(r1), uintptr(0), syscall.Errno(0))
-	got = ReadFrame(dev, m)
-	if got.Code != psError.InvalidHeader {
-		t.Errorf("ReadFrame() = %v; want %v", got.Code, psError.InvalidHeader)
 	}
 }
 
