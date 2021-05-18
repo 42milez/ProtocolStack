@@ -45,7 +45,7 @@ func setup() e.Error {
 	route.Register(iface, network.V4Zero)
 
 	// Create a TAP device and its iface, then link them.
-	if dev, err = ethernet.GenTapDevice("tap0", "00:00:5e:00:53:01"); err.Code != e.OK {
+	if dev, err = ethernet.GenTapDevice("tap0", ethernet.EthAddr{11, 22, 33, 44, 55, 66}); err.Code != e.OK {
 		return e.Error{Code: e.Failed}
 	}
 	middleware.RegisterDevice(dev)

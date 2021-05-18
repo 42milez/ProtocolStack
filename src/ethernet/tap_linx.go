@@ -3,6 +3,7 @@ package ethernet
 import (
 	e "github.com/42milez/ProtocolStack/src/error"
 	l "github.com/42milez/ProtocolStack/src/log"
+	s "github.com/42milez/ProtocolStack/src/syscall"
 	"syscall"
 	"unsafe"
 )
@@ -36,13 +37,13 @@ type IfreqSockAddr struct {
 
 const vnd = "/dev/net/tun"
 
-func tapOpen(dev *Device) e.Error {
+func tapOpen(dev *Device, sc s.ISyscall) e.Error {
 	var err error
 	var errno syscall.Errno
 	var fd int
 	var soc int
 
-	fd, err = syscall.Open(vnd, syscall.O_RDWR, 0666)
+	fd, err = sc.Open(vnd, syscall.O_RDWR, 0666)
 	if err != nil {
 		l.E("can't open virtual networking device: %v ", vnd)
 		return e.Error{Code: e.CantOpen}
@@ -53,19 +54,15 @@ func tapOpen(dev *Device) e.Error {
 	ifrFlags.Flags = syscall.IFF_TAP | syscall.IFF_NO_PI
 	copy(ifrFlags.Name[:], dev.Priv.Name)
 
-	_, _, errno = syscall.Syscall(
-		syscall.SYS_IOCTL,
-		uintptr(fd),
-		uintptr(syscall.TUNSETIFF),
-		uintptr(unsafe.Pointer(&ifrFlags)))
+	_, _, errno = sc.Ioctl(uintptr(fd), uintptr(syscall.TUNSETIFF), uintptr(unsafe.Pointer(&ifrFlags)))
 	if errno != 0 {
 		l.E("SYS_IOCTL (%v) failed: %v ", "TUNSETIFF", errno)
-		_ = syscall.Close(fd)
+		_ = sc.Close(fd)
 		return e.Error{Code: e.CantOpen}
 	}
 
 	// --------------------------------------------------
-	soc, err = syscall.Socket(syscall.AF_INET, syscall.SOCK_DGRAM, 0)
+	soc, err = sc.Socket(syscall.AF_INET, syscall.SOCK_DGRAM, 0)
 	if err != nil {
 		l.E("can't open socket: %v ", err)
 		return e.Error{Code: e.CantOpen}
@@ -75,24 +72,21 @@ func tapOpen(dev *Device) e.Error {
 	ifrSockAddr.Addr.Family = syscall.AF_INET
 	copy(ifrSockAddr.Name[:], dev.Priv.Name)
 
-	_, _, errno = syscall.Syscall(
-		syscall.SYS_IOCTL,
-		uintptr(soc),
-		uintptr(syscall.SIOCGIFHWADDR),
-		uintptr(unsafe.Pointer(&ifrSockAddr)))
+	_, _, errno = sc.Ioctl(uintptr(soc), uintptr(syscall.SIOCGIFHWADDR), uintptr(unsafe.Pointer(&ifrSockAddr)))
 	if errno != 0 {
 		l.E("SYS_IOCTL (%v) failed: %v ", "SIOCGIFHWADDR", errno)
-		_ = syscall.Close(soc)
+		_ = sc.Close(soc)
 		return e.Error{Code: e.CantOpen}
 	}
 
-	dev.Addr = MAC(ifrSockAddr.Addr.Data[:])
-	_ = syscall.Close(soc)
+	copy(dev.Addr[:], ifrSockAddr.Addr.Data[:])
+
+	_ = sc.Close(soc)
 
 	// --------------------------------------------------
 	var event syscall.EpollEvent
 
-	epfd, err = syscall.EpollCreate1(0)
+	epfd, err = sc.EpollCreate1(0)
 	if err != nil {
 		l.E("can't open an epoll file descriptor: %v ", err)
 		return e.Error{Code: e.CantOpen}
@@ -101,7 +95,7 @@ func tapOpen(dev *Device) e.Error {
 	event.Events = syscall.EPOLLIN
 	event.Fd = int32(fd)
 
-	err = syscall.EpollCtl(epfd, syscall.EPOLL_CTL_ADD, fd, &event)
+	err = sc.EpollCtl(epfd, syscall.EPOLL_CTL_ADD, fd, &event)
 	if err != nil {
 		l.E("can't add an entry to the interest list of the epoll file descriptor: %v ", err)
 		return e.Error{Code: e.CantOpen}
@@ -112,25 +106,25 @@ func tapOpen(dev *Device) e.Error {
 	return e.Error{Code: e.OK}
 }
 
-func tapClose(dev *Device) e.Error {
-	_ = syscall.Close(epfd)
+func tapClose(dev *Device, sc s.ISyscall) e.Error {
+	_ = sc.Close(epfd)
 	return e.Error{Code: e.OK}
 }
 
-func tapTransmit(dev *Device) e.Error {
+func tapTransmit(dev *Device, sc s.ISyscall) e.Error {
 	return e.Error{Code: e.OK}
 }
 
-func tapPoll(dev *Device, isTerminated bool) e.Error {
+func tapPoll(dev *Device, sc s.ISyscall, isTerminated bool) e.Error {
 	if isTerminated {
-		_ = syscall.Close(epfd)
+		_ = sc.Close(epfd)
 		return e.Error{Code: e.OK}
 	}
 
 	var events [MaxEpollEvents]syscall.EpollEvent
-	nEvents, err := syscall.EpollWait(epfd, events[:], EpollTimeout)
+	nEvents, err := sc.EpollWait(epfd, events[:], EpollTimeout)
 	if err != nil {
-		_ = syscall.Close(epfd)
+		_ = sc.Close(epfd)
 		return e.Error{Code: e.Interrupted}
 	}
 
@@ -142,7 +136,7 @@ func tapPoll(dev *Device, isTerminated bool) e.Error {
 		l.I("events occurred")
 		l.I("\tevents: %v ", nEvents)
 		l.I("\tdevice: %v (%v) ", dev.Name, dev.Priv.Name)
-		_ = ReadFrame(dev)
+		_ = ReadFrame(dev, sc)
 	} else {
 		l.I("no event occurred")
 	}
@@ -151,7 +145,7 @@ func tapPoll(dev *Device, isTerminated bool) e.Error {
 }
 
 // GenTapDevice generates TAP device object.
-func GenTapDevice(name string, mac MAC) (*Device, e.Error) {
+func GenTapDevice(name string, addr EthAddr) (*Device, e.Error) {
 	if len(name) > 16 {
 		return nil, e.Error{Code: e.CantCreate, Msg: "device name must be less than or equal to 16 characters"}
 	}
@@ -161,7 +155,7 @@ func GenTapDevice(name string, mac MAC) (*Device, e.Error) {
 		MTU:       EthPayloadSizeMax,
 		FLAG:      DevFlagBroadcast | DevFlagNeedArp,
 		HeaderLen: EthHeaderSize,
-		Addr:      mac,
+		Addr:      addr,
 		AddrLen:   EthAddrLen,
 		Broadcast: EthAddrBroadcast,
 		Op: Operation{

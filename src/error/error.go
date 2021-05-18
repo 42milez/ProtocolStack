@@ -5,6 +5,7 @@ import "fmt"
 const (
 	OK int = iota
 	AlreadyOpened
+	CantConvert
 	CantCreate
 	CantOpen
 	CantRead

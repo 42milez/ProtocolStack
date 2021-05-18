@@ -10,4 +10,21 @@ services:
     <<: *base
     command: make test
     volumes:
-      - .:/app
+      - type: volume
+        source: gopath
+        target: /go
+        volume:
+          nocopy: false
+      - type: volume
+        source: goroot
+        target: /usr/local/go
+        volume:
+          nocopy: false
+      - type: bind
+        source: .
+        target: /app
+volumes:
+  gopath:
+    driver: local
+  goroot:
+    driver: local

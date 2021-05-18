@@ -5,6 +5,7 @@ import (
 	"github.com/42milez/ProtocolStack/src/ethernet"
 	l "github.com/42milez/ProtocolStack/src/log"
 	"github.com/42milez/ProtocolStack/src/network"
+	s "github.com/42milez/ProtocolStack/src/syscall"
 	"os"
 	"strconv"
 	"sync"
@@ -109,7 +110,7 @@ func Start(netSigCh <-chan os.Signal, wg *sync.WaitGroup) e.Error {
 				if dev.FLAG&ethernet.DevFlagUp == 0 {
 					continue
 				}
-				if err := dev.Op.Poll(dev, terminate); err.Code != e.OK {
+				if err := dev.Op.Poll(dev, &s.Syscall{}, terminate); err.Code != e.OK {
 					l.E("error: %v ", err)
 					// TODO: notify error to main goroutine
 					// ...
