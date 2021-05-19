@@ -2,7 +2,11 @@ package ethernet
 
 import (
 	psErr "github.com/42milez/ProtocolStack/src/error"
+	psLog "github.com/42milez/ProtocolStack/src/log"
+	mockSyscall "github.com/42milez/ProtocolStack/src/mock/syscall"
+	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
+	"syscall"
 	"testing"
 )
 
@@ -40,5 +44,30 @@ func TestGenTapDevice_B(t *testing.T) {
 	}
 	if d := cmp.Diff(got2, want2); d != "" {
 		t.Errorf("GenTapDevice() differs: (-got +want)\n%s", d)
+	}
+}
+
+func TestTapOperation_Open_A(t *testing.T) {
+	psLog.DisableOutput()
+	defer psLog.EnableOutput()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	m := mockSyscall.NewMockISyscall(ctrl)
+	m.EXPECT().Open(gomock.Any(), gomock.Any(), gomock.Any()).Return(10, nil)
+	m.EXPECT().Ioctl(gomock.Any(), uintptr(syscall.TUNSETIFF), gomock.Any()).Return(uintptr(0), uintptr(0), syscall.Errno(0))
+	m.EXPECT().Socket(gomock.Any(), gomock.Any(), gomock.Any()).Return(11, nil)
+	m.EXPECT().Ioctl(gomock.Any(), uintptr(syscall.SIOCGIFHWADDR), gomock.Any()).Return(uintptr(0), uintptr(0), syscall.Errno(0))
+	m.EXPECT().Close(gomock.Any()).Return(nil)
+	m.EXPECT().EpollCreate1(gomock.Any()).Return(12, nil)
+	m.EXPECT().EpollCtl(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+
+	tapOp := TapOperation{}
+	dev := &Device{Addr: EthAddr{11, 12, 13, 14, 15, 16}}
+
+	got := tapOp.Open(dev, m)
+	if got.Code != psErr.OK {
+		t.Errorf("Open() = %v; want %v", got.Code, psErr.OK)
 	}
 }

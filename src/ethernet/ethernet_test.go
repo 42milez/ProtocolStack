@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	psError "github.com/42milez/ProtocolStack/src/error"
+	psErr "github.com/42milez/ProtocolStack/src/error"
 	psLog "github.com/42milez/ProtocolStack/src/log"
 	mockSyscall "github.com/42milez/ProtocolStack/src/mock/syscall"
 	"github.com/golang/mock/gomock"
@@ -118,8 +118,8 @@ func TestReadFrame1(t *testing.T) {
 	dev := &Device{Addr: EthAddr{11, 12, 13, 14, 15, 16}}
 
 	got := ReadFrame(dev, m)
-	if got.Code != psError.OK {
-		t.Errorf("ReadFrame() = %v; want %v", got.Code, psError.OK)
+	if got.Code != psErr.OK {
+		t.Errorf("ReadFrame() = %v; want %v", got.Code, psErr.OK)
 	}
 }
 
@@ -136,8 +136,8 @@ func TestReadFrame2(t *testing.T) {
 	m.EXPECT().Read(gomock.Any(), gomock.Any(), gomock.Any()).Return(uintptr(hdrLen), uintptr(0), syscall.EINTR)
 
 	got := ReadFrame(dev, m)
-	if got.Code != psError.CantRead {
-		t.Errorf("ReadFrame() = %v; want %v", got.Code, psError.CantRead)
+	if got.Code != psErr.CantRead {
+		t.Errorf("ReadFrame() = %v; want %v", got.Code, psErr.CantRead)
 	}
 }
 
@@ -151,11 +151,13 @@ func TestReadFrame3(t *testing.T) {
 	dev := &Device{Addr: EthAddr{11, 12, 13, 14, 15, 16}}
 	hdrLen := 0
 	m := mockSyscall.NewMockISyscall(ctrl)
-	m.EXPECT().Read(gomock.Any(), gomock.Any(), gomock.Any()).Return(uintptr(hdrLen), uintptr(0), syscall.Errno(0))
+	m.EXPECT().
+		Read(gomock.Any(), gomock.Any(), gomock.Any()).
+		Return(uintptr(hdrLen), uintptr(0), syscall.Errno(0))
 
 	got := ReadFrame(dev, m)
-	if got.Code != psError.InvalidHeader {
-		t.Errorf("ReadFrame() = %v; want %v", got.Code, psError.InvalidHeader)
+	if got.Code != psErr.InvalidHeader {
+		t.Errorf("ReadFrame() = %v; want %v", got.Code, psErr.InvalidHeader)
 	}
 }
 
@@ -172,7 +174,7 @@ func TestReadFrame4(t *testing.T) {
 	m.EXPECT().Read(gomock.Any(), gomock.Any(), gomock.Any()).Return(uintptr(hdrLen), uintptr(0), syscall.Errno(0))
 
 	got := ReadFrame(dev, m)
-	if got.Code != psError.NoDataToRead {
-		t.Errorf("ReadFrame() = %v; want %v", got.Code, psError.NoDataToRead)
+	if got.Code != psErr.NoDataToRead {
+		t.Errorf("ReadFrame() = %v; want %v", got.Code, psErr.NoDataToRead)
 	}
 }
