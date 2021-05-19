@@ -71,6 +71,7 @@ Note: `make` supports the commands below:
     - [DNF, the next-generation replacement for YUM](https://dnf.readthedocs.io/en/latest/index.html)
     - [Understanding and administering systemd](https://docs.fedoraproject.org/en-US/quick-docs/understanding-and-administering-systemd/)
   - Codecov
+    - [About the Codecov yaml](https://docs.codecov.io/docs/codecov-yaml)
     - [Codecov Delta](https://docs.codecov.io/docs/codecov-delta)
   - Docker
     - [Compose file](https://docs.docker.com/compose/compose-file/)
@@ -174,3 +175,5 @@ Note: `make` supports the commands below:
 - Use the context types properly acording to the rubric.
   - [context.Background()](https://github.com/golang/go/blob/a72622d028077643169dc48c90271a82021f0534/src/context/context.go#L208)
   - [context.TODO()](https://github.com/golang/go/blob/a72622d028077643169dc48c90271a82021f0534/src/context/context.go#L216)
+- Definition of errno in Go
+  - [go/src/syscall/zerrors_linux_amd64.go](https://github.com/golang/go/blob/master/src/syscall/zerrors_linux_amd64.go#L1205)

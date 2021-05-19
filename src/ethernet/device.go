@@ -1,9 +1,9 @@
 package ethernet
 
 import (
-	e "github.com/42milez/ProtocolStack/src/error"
-	l "github.com/42milez/ProtocolStack/src/log"
-	s "github.com/42milez/ProtocolStack/src/syscall"
+	psErr "github.com/42milez/ProtocolStack/src/error"
+	psLog "github.com/42milez/ProtocolStack/src/log"
+	psSyscall "github.com/42milez/ProtocolStack/src/syscall"
 )
 
 type DevType int
@@ -35,11 +35,11 @@ const DevFlagBroadcast DevFlag = 0x0020
 const DevFlagP2P DevFlag = 0x0040
 const DevFlagNeedArp DevFlag = 0x0100
 
-type Operation struct {
-	Open     func(dev *Device, sc s.ISyscall) e.Error
-	Close    func(dev *Device, sc s.ISyscall) e.Error
-	Transmit func(dev *Device, sc s.ISyscall) e.Error
-	Poll     func(dev *Device, sc s.ISyscall, terminate bool) e.Error
+type Operation interface {
+	Open(dev *Device, sc psSyscall.ISyscall) psErr.Error
+	Close(dev *Device, sc psSyscall.ISyscall) psErr.Error
+	Transmit(dev *Device, sc psSyscall.ISyscall) psErr.Error
+	Poll(dev *Device, sc psSyscall.ISyscall, terminate bool) psErr.Error
 }
 
 type Privilege struct {
@@ -61,22 +61,24 @@ type Device struct {
 	Priv      Privilege
 }
 
-func (dev *Device) Open() e.Error {
-	if dev.Op.Open != nil {
-		if (dev.FLAG & DevFlagUp) != 0 {
-			l.W("device is already opened")
-			l.W("\tname: %v (%v) ", dev.Name, dev.Priv.Name)
-			return e.Error{Code: e.AlreadyOpened}
-		}
-		if err := dev.Op.Open(dev, &s.Syscall{}); err.Code != e.OK {
-			l.E("can't open a device")
-			l.E("\tname: %v (%v) ", dev.Name, dev.Priv.Name)
-			l.E("\ttype: %v ", dev.Type)
-			return e.Error{Code: e.CantOpen}
-		}
-		dev.FLAG |= DevFlagUp
-		l.I("device opened")
-		l.I("\tname: %v (%v) ", dev.Name, dev.Priv.Name)
+func (dev *Device) Open() psErr.Error {
+	if (dev.FLAG & DevFlagUp) != 0 {
+		psLog.W("device is already opened")
+		psLog.W("\tname: %v (%v) ", dev.Name, dev.Priv.Name)
+		return psErr.Error{Code: psErr.AlreadyOpened}
 	}
-	return e.Error{Code: e.OK}
+
+	if err := dev.Op.Open(dev, &psSyscall.Syscall{}); err.Code != psErr.OK {
+		psLog.E("can't open a device")
+		psLog.E("\tname: %v (%v) ", dev.Name, dev.Priv.Name)
+		psLog.E("\ttype: %v ", dev.Type)
+		return psErr.Error{Code: psErr.CantOpen}
+	}
+
+	dev.FLAG |= DevFlagUp
+
+	psLog.I("device opened")
+	psLog.I("\tname: %v (%v) ", dev.Name, dev.Priv.Name)
+
+	return psErr.Error{Code: psErr.OK}
 }

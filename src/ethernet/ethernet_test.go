@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	e "github.com/42milez/ProtocolStack/src/error"
+	psErr "github.com/42milez/ProtocolStack/src/error"
 	psLog "github.com/42milez/ProtocolStack/src/log"
-	mock_syscall "github.com/42milez/ProtocolStack/src/mock/syscall"
+	mockSyscall "github.com/42milez/ProtocolStack/src/mock/syscall"
 	"github.com/golang/mock/gomock"
 	"regexp"
 	"strings"
@@ -91,14 +91,16 @@ func TestEthType_String(t *testing.T) {
 	}
 }
 
-func TestReadFrame(t *testing.T) {
+func TestReadFrame1(t *testing.T) {
 	psLog.DisableOutput()
 	defer psLog.EnableOutput()
 
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	m := mock_syscall.NewMockISyscall(ctrl)
+	r1 := EthHeaderSize * 8
+	r2 := 0
+	m := mockSyscall.NewMockISyscall(ctrl)
 	m.EXPECT().
 		Read(gomock.Any(), gomock.Any(), gomock.Any()).
 		Do(func(_ int, buf unsafe.Pointer, _ int) {
@@ -111,12 +113,68 @@ func TestReadFrame(t *testing.T) {
 			_ = binary.Write(b, binary.BigEndian, hdr)
 			copy((*(*[]byte)(buf))[:], b.Bytes())
 		}).
-		Return(uintptr(112), uintptr(0), syscall.Errno(0))
+		Return(uintptr(r1), uintptr(r2), syscall.Errno(0))
 
 	dev := &Device{Addr: EthAddr{11, 12, 13, 14, 15, 16}}
 
 	got := ReadFrame(dev, m)
-	if got.Code != e.OK {
-		t.Errorf("ReadFrame() = %v; want %v", got.Code, e.OK)
+	if got.Code != psErr.OK {
+		t.Errorf("ReadFrame() = %v; want %v", got.Code, psErr.OK)
+	}
+}
+
+func TestReadFrame2(t *testing.T) {
+	psLog.DisableOutput()
+	defer psLog.EnableOutput()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	dev := &Device{Addr: EthAddr{11, 12, 13, 14, 15, 16}}
+	hdrLen := EthHeaderSize * 8
+	m := mockSyscall.NewMockISyscall(ctrl)
+	m.EXPECT().Read(gomock.Any(), gomock.Any(), gomock.Any()).Return(uintptr(hdrLen), uintptr(0), syscall.EINTR)
+
+	got := ReadFrame(dev, m)
+	if got.Code != psErr.CantRead {
+		t.Errorf("ReadFrame() = %v; want %v", got.Code, psErr.CantRead)
+	}
+}
+
+func TestReadFrame3(t *testing.T) {
+	psLog.DisableOutput()
+	defer psLog.EnableOutput()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	dev := &Device{Addr: EthAddr{11, 12, 13, 14, 15, 16}}
+	hdrLen := 0
+	m := mockSyscall.NewMockISyscall(ctrl)
+	m.EXPECT().
+		Read(gomock.Any(), gomock.Any(), gomock.Any()).
+		Return(uintptr(hdrLen), uintptr(0), syscall.Errno(0))
+
+	got := ReadFrame(dev, m)
+	if got.Code != psErr.InvalidHeader {
+		t.Errorf("ReadFrame() = %v; want %v", got.Code, psErr.InvalidHeader)
+	}
+}
+
+func TestReadFrame4(t *testing.T) {
+	psLog.DisableOutput()
+	defer psLog.EnableOutput()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	dev := &Device{Addr: EthAddr{33, 44, 55, 66, 77, 88}}
+	hdrLen := EthHeaderSize * 8
+	m := mockSyscall.NewMockISyscall(ctrl)
+	m.EXPECT().Read(gomock.Any(), gomock.Any(), gomock.Any()).Return(uintptr(hdrLen), uintptr(0), syscall.Errno(0))
+
+	got := ReadFrame(dev, m)
+	if got.Code != psErr.NoDataToRead {
+		t.Errorf("ReadFrame() = %v; want %v", got.Code, psErr.NoDataToRead)
 	}
 }
