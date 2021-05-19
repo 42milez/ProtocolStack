@@ -1,6 +1,7 @@
 package ethernet
 
 import (
+	"fmt"
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	psLog "github.com/42milez/ProtocolStack/src/log"
 	s "github.com/42milez/ProtocolStack/src/syscall"
@@ -48,7 +49,7 @@ func (v TapOperation) Open(dev *Device, sc s.ISyscall) psErr.Error {
 	fd, err = sc.Open(vnd, syscall.O_RDWR, 0666)
 	if err != nil {
 		psLog.E("can't open virtual networking device: %v ", vnd)
-		return psErr.Error{Code: psErr.CantOpen}
+		return psErr.Error{Code: psErr.CantOpen, Msg: err.Error()}
 	}
 
 	// --------------------------------------------------
@@ -60,14 +61,14 @@ func (v TapOperation) Open(dev *Device, sc s.ISyscall) psErr.Error {
 	if errno != 0 {
 		psLog.E("SYS_IOCTL (%v) failed: %v ", "TUNSETIFF", errno)
 		_ = sc.Close(fd)
-		return psErr.Error{Code: psErr.CantOpen}
+		return psErr.Error{Code: psErr.CantOpen, Msg: fmt.Sprintf("errno: %v", errno)}
 	}
 
 	// --------------------------------------------------
 	soc, err = sc.Socket(syscall.AF_INET, syscall.SOCK_DGRAM, 0)
 	if err != nil {
 		psLog.E("can't open socket: %v ", err)
-		return psErr.Error{Code: psErr.CantOpen}
+		return psErr.Error{Code: psErr.CantOpen, Msg: err.Error()}
 	}
 
 	ifrSockAddr := IfreqSockAddr{}
@@ -78,7 +79,7 @@ func (v TapOperation) Open(dev *Device, sc s.ISyscall) psErr.Error {
 	if errno != 0 {
 		psLog.E("SYS_IOCTL (%v) failed: %v ", "SIOCGIFHWADDR", errno)
 		_ = sc.Close(soc)
-		return psErr.Error{Code: psErr.CantOpen}
+		return psErr.Error{Code: psErr.CantOpen, Msg: fmt.Sprintf("errno: %v", errno)}
 	}
 
 	copy(dev.Addr[:], ifrSockAddr.Addr.Data[:])
@@ -91,7 +92,7 @@ func (v TapOperation) Open(dev *Device, sc s.ISyscall) psErr.Error {
 	epfd, err = sc.EpollCreate1(0)
 	if err != nil {
 		psLog.E("can't open an epoll file descriptor: %v ", err)
-		return psErr.Error{Code: psErr.CantOpen}
+		return psErr.Error{Code: psErr.CantOpen, Msg: err.Error()}
 	}
 
 	event.Events = syscall.EPOLLIN
@@ -100,7 +101,7 @@ func (v TapOperation) Open(dev *Device, sc s.ISyscall) psErr.Error {
 	err = sc.EpollCtl(epfd, syscall.EPOLL_CTL_ADD, fd, &event)
 	if err != nil {
 		psLog.E("can't add an entry to the interest list of the epoll file descriptor: %v ", err)
-		return psErr.Error{Code: psErr.CantOpen}
+		return psErr.Error{Code: psErr.CantOpen, Msg: err.Error()}
 	}
 
 	dev.Priv.FD = fd

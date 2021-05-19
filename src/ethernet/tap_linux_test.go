@@ -1,6 +1,7 @@
 package ethernet
 
 import (
+	"errors"
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	psLog "github.com/42milez/ProtocolStack/src/log"
 	mockSyscall "github.com/42milez/ProtocolStack/src/mock/syscall"
@@ -69,5 +70,140 @@ func TestTapOperation_Open_A(t *testing.T) {
 	got := tapOp.Open(dev, m)
 	if got.Code != psErr.OK {
 		t.Errorf("Open() = %v; want %v", got.Code, psErr.OK)
+	}
+}
+
+func TestTapOperation_Open_B(t *testing.T) {
+	psLog.DisableOutput()
+	defer psLog.EnableOutput()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	m := mockSyscall.NewMockISyscall(ctrl)
+	m.EXPECT().Open(gomock.Any(), gomock.Any(), gomock.Any()).Return(-1, errors.New(""))
+
+	tapOp := TapOperation{}
+	dev := &Device{Addr: EthAddr{11, 12, 13, 14, 15, 16}}
+
+	got := tapOp.Open(dev, m)
+	if got.Code != psErr.CantOpen {
+		t.Errorf("Open() = %v; want %v", got.Code, psErr.CantOpen)
+	}
+}
+
+func TestTapOperation_Open_C(t *testing.T) {
+	psLog.DisableOutput()
+	defer psLog.EnableOutput()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	ioctlRetVal := -1
+	m := mockSyscall.NewMockISyscall(ctrl)
+	m.EXPECT().Open(gomock.Any(), gomock.Any(), gomock.Any()).Return(10, nil)
+	m.EXPECT().Ioctl(gomock.Any(), gomock.Any(), gomock.Any()).Return(uintptr(ioctlRetVal), uintptr(0), syscall.EBADF)
+	m.EXPECT().Close(gomock.Any()).Return(nil)
+
+	tapOp := TapOperation{}
+	dev := &Device{Addr: EthAddr{11, 12, 13, 14, 15, 16}}
+
+	got := tapOp.Open(dev, m)
+	if got.Code != psErr.CantOpen {
+		t.Errorf("Open() = %v; want %v", got.Code, psErr.CantOpen)
+	}
+}
+
+func TestTapOperation_Open_D(t *testing.T) {
+	psLog.DisableOutput()
+	defer psLog.EnableOutput()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	m := mockSyscall.NewMockISyscall(ctrl)
+	m.EXPECT().Open(gomock.Any(), gomock.Any(), gomock.Any()).Return(10, nil)
+	m.EXPECT().Ioctl(gomock.Any(), uintptr(syscall.TUNSETIFF), gomock.Any()).Return(uintptr(0), uintptr(0), syscall.Errno(0))
+	m.EXPECT().Socket(gomock.Any(), gomock.Any(), gomock.Any()).Return(-1, errors.New(""))
+
+	tapOp := TapOperation{}
+	dev := &Device{Addr: EthAddr{11, 12, 13, 14, 15, 16}}
+
+	got := tapOp.Open(dev, m)
+	if got.Code != psErr.CantOpen {
+		t.Errorf("Open() = %v; want %v", got.Code, psErr.CantOpen)
+	}
+}
+
+func TestTapOperation_Open_E(t *testing.T) {
+	psLog.DisableOutput()
+	defer psLog.EnableOutput()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	ioctlRetVal := -1
+	m := mockSyscall.NewMockISyscall(ctrl)
+	m.EXPECT().Open(gomock.Any(), gomock.Any(), gomock.Any()).Return(10, nil)
+	m.EXPECT().Ioctl(gomock.Any(), uintptr(syscall.TUNSETIFF), gomock.Any()).Return(uintptr(0), uintptr(0), syscall.Errno(0))
+	m.EXPECT().Socket(gomock.Any(), gomock.Any(), gomock.Any()).Return(11, nil)
+	m.EXPECT().Ioctl(gomock.Any(), uintptr(syscall.SIOCGIFHWADDR), gomock.Any()).Return(uintptr(ioctlRetVal), uintptr(0), syscall.EBADF)
+	m.EXPECT().Close(gomock.Any()).Return(nil)
+
+	tapOp := TapOperation{}
+	dev := &Device{Addr: EthAddr{11, 12, 13, 14, 15, 16}}
+
+	got := tapOp.Open(dev, m)
+	if got.Code != psErr.CantOpen {
+		t.Errorf("Open() = %v; want %v", got.Code, psErr.CantOpen)
+	}
+}
+
+func TestTapOperation_Open_F(t *testing.T) {
+	psLog.DisableOutput()
+	defer psLog.EnableOutput()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	m := mockSyscall.NewMockISyscall(ctrl)
+	m.EXPECT().Open(gomock.Any(), gomock.Any(), gomock.Any()).Return(10, nil)
+	m.EXPECT().Ioctl(gomock.Any(), uintptr(syscall.TUNSETIFF), gomock.Any()).Return(uintptr(0), uintptr(0), syscall.Errno(0))
+	m.EXPECT().Socket(gomock.Any(), gomock.Any(), gomock.Any()).Return(11, nil)
+	m.EXPECT().Ioctl(gomock.Any(), uintptr(syscall.SIOCGIFHWADDR), gomock.Any()).Return(uintptr(0), uintptr(0), syscall.Errno(0))
+	m.EXPECT().Close(gomock.Any()).Return(nil)
+	m.EXPECT().EpollCreate1(gomock.Any()).Return(-1, errors.New(""))
+
+	tapOp := TapOperation{}
+	dev := &Device{Addr: EthAddr{11, 12, 13, 14, 15, 16}}
+
+	got := tapOp.Open(dev, m)
+	if got.Code != psErr.CantOpen {
+		t.Errorf("Open() = %v; want %v", got.Code, psErr.CantOpen)
+	}
+}
+
+func TestTapOperation_Open_G(t *testing.T) {
+	psLog.DisableOutput()
+	defer psLog.EnableOutput()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	m := mockSyscall.NewMockISyscall(ctrl)
+	m.EXPECT().Open(gomock.Any(), gomock.Any(), gomock.Any()).Return(10, nil)
+	m.EXPECT().Ioctl(gomock.Any(), uintptr(syscall.TUNSETIFF), gomock.Any()).Return(uintptr(0), uintptr(0), syscall.Errno(0))
+	m.EXPECT().Socket(gomock.Any(), gomock.Any(), gomock.Any()).Return(11, nil)
+	m.EXPECT().Ioctl(gomock.Any(), uintptr(syscall.SIOCGIFHWADDR), gomock.Any()).Return(uintptr(0), uintptr(0), syscall.Errno(0))
+	m.EXPECT().Close(gomock.Any()).Return(nil)
+	m.EXPECT().EpollCreate1(gomock.Any()).Return(12, nil)
+	m.EXPECT().EpollCtl(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New(""))
+
+	tapOp := TapOperation{}
+	dev := &Device{Addr: EthAddr{11, 12, 13, 14, 15, 16}}
+
+	got := tapOp.Open(dev, m)
+	if got.Code != psErr.CantOpen {
+		t.Errorf("Open() = %v; want %v", got.Code, psErr.CantOpen)
 	}
 }
