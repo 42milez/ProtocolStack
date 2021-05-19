@@ -37,10 +37,10 @@ func TestGenTapDevice_B(t *testing.T) {
 	want1 := (*Device)(nil)
 	want2 := psErr.Error{
 		Code: psErr.CantCreate,
-		Msg: "device name must be less than or equal to 16 characters",
+		Msg:  "device name must be less than or equal to 16 characters",
 	}
 	got1, got2 := GenTapDevice(devName, devEthAddr)
-	if ! cmp.Equal(got1, want1) {
+	if !cmp.Equal(got1, want1) {
 		t.Errorf("GenTapDevice() = %v; want %v", got1, want1)
 	}
 	if d := cmp.Diff(got2, want2); d != "" {
@@ -297,5 +297,25 @@ func TestTapOperation_Poll_Terminated(t *testing.T) {
 	got := tapOp.Poll(dev, m, true)
 	if got.Code != psErr.OK {
 		t.Errorf("TapOperation.Poll() = %v; want %v", got.Code, psErr.OK)
+	}
+}
+
+func TestTapOperation_Poll_FailOnEpollWait(t *testing.T) {
+	psLog.DisableOutput()
+	defer psLog.EnableOutput()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	m := mockSyscall.NewMockISyscall(ctrl)
+	m.EXPECT().EpollWait(gomock.Any(), gomock.Any(), gomock.Any()).Return(-1, errors.New(""))
+	m.EXPECT().Close(gomock.Any()).Return(nil)
+
+	tapOp := TapOperation{}
+	dev := &Device{}
+
+	got := tapOp.Poll(dev, m, false)
+	if got.Code != psErr.Interrupted {
+		t.Errorf("TapOperation.Poll() = %v; want %v", got.Code, psErr.Interrupted)
 	}
 }
