@@ -66,7 +66,7 @@ func EthDump(hdr *EthHeader) {
 
 func ReadFrame(dev *Device, sc psSyscall.ISyscall) psErr.Error {
 	// TODO: make buf static variable to reuse
-	buf1 :=  make([]byte, EthFrameSizeMax)
+	buf1 := make([]byte, EthFrameSizeMax)
 
 	flen, _, errno := sc.Read(dev.Priv.FD, unsafe.Pointer(&buf1), EthFrameSizeMax)
 	if errno != 0 {

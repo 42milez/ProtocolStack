@@ -98,7 +98,7 @@ func TestReadFrame1(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	r1 := EthHeaderSize*8
+	r1 := EthHeaderSize * 8
 	r2 := 0
 	m := mockSyscall.NewMockISyscall(ctrl)
 	m.EXPECT().
@@ -131,7 +131,7 @@ func TestReadFrame2(t *testing.T) {
 	defer ctrl.Finish()
 
 	dev := &Device{Addr: EthAddr{11, 12, 13, 14, 15, 16}}
-	hdrLen := EthHeaderSize*8
+	hdrLen := EthHeaderSize * 8
 	m := mockSyscall.NewMockISyscall(ctrl)
 	m.EXPECT().Read(gomock.Any(), gomock.Any(), gomock.Any()).Return(uintptr(hdrLen), uintptr(0), syscall.EINTR)
 
@@ -167,7 +167,7 @@ func TestReadFrame4(t *testing.T) {
 	defer ctrl.Finish()
 
 	dev := &Device{Addr: EthAddr{33, 44, 55, 66, 77, 88}}
-	hdrLen := EthHeaderSize*8
+	hdrLen := EthHeaderSize * 8
 	m := mockSyscall.NewMockISyscall(ctrl)
 	m.EXPECT().Read(gomock.Any(), gomock.Any(), gomock.Any()).Return(uintptr(hdrLen), uintptr(0), syscall.Errno(0))
 

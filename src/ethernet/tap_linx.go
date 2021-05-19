@@ -37,7 +37,9 @@ type IfreqSockAddr struct {
 
 const vnd = "/dev/net/tun"
 
-func tapOpen(dev *Device, sc s.ISyscall) psErr.Error {
+type TapOperation struct{}
+
+func (v TapOperation) Open(dev *Device, sc s.ISyscall) psErr.Error {
 	var err error
 	var errno syscall.Errno
 	var fd int
@@ -106,16 +108,16 @@ func tapOpen(dev *Device, sc s.ISyscall) psErr.Error {
 	return psErr.Error{Code: psErr.OK}
 }
 
-func tapClose(dev *Device, sc s.ISyscall) psErr.Error {
+func (v TapOperation) Close(dev *Device, sc s.ISyscall) psErr.Error {
 	_ = sc.Close(epfd)
 	return psErr.Error{Code: psErr.OK}
 }
 
-func tapTransmit(dev *Device, sc s.ISyscall) psErr.Error {
+func (v TapOperation) Transmit(dev *Device, sc s.ISyscall) psErr.Error {
 	return psErr.Error{Code: psErr.OK}
 }
 
-func tapPoll(dev *Device, sc s.ISyscall, isTerminated bool) psErr.Error {
+func (v TapOperation) Poll(dev *Device, sc s.ISyscall, isTerminated bool) psErr.Error {
 	if isTerminated {
 		_ = sc.Close(epfd)
 		return psErr.Error{Code: psErr.OK}
@@ -158,13 +160,8 @@ func GenTapDevice(name string, addr EthAddr) (*Device, psErr.Error) {
 		Addr:      addr,
 		AddrLen:   EthAddrLen,
 		Broadcast: EthAddrBroadcast,
-		Op: Operation{
-			Open:     tapOpen,
-			Close:    tapClose,
-			Transmit: tapTransmit,
-			Poll:     tapPoll,
-		},
-		Priv: Privilege{FD: -1, Name: name},
+		Op:        TapOperation{},
+		Priv:      Privilege{FD: -1, Name: name},
 	}
 
 	return dev, psErr.Error{Code: psErr.OK}

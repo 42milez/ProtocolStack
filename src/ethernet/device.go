@@ -35,11 +35,11 @@ const DevFlagBroadcast DevFlag = 0x0020
 const DevFlagP2P DevFlag = 0x0040
 const DevFlagNeedArp DevFlag = 0x0100
 
-type Operation struct {
-	Open     func(dev *Device, sc psSyscall.ISyscall) psErr.Error
-	Close    func(dev *Device, sc psSyscall.ISyscall) psErr.Error
-	Transmit func(dev *Device, sc psSyscall.ISyscall) psErr.Error
-	Poll     func(dev *Device, sc psSyscall.ISyscall, terminate bool) psErr.Error
+type Operation interface {
+	Open(dev *Device, sc psSyscall.ISyscall) psErr.Error
+	Close(dev *Device, sc psSyscall.ISyscall) psErr.Error
+	Transmit(dev *Device, sc psSyscall.ISyscall) psErr.Error
+	Poll(dev *Device, sc psSyscall.ISyscall, terminate bool) psErr.Error
 }
 
 type Privilege struct {
@@ -62,21 +62,23 @@ type Device struct {
 }
 
 func (dev *Device) Open() psErr.Error {
-	if dev.Op.Open != nil {
-		if (dev.FLAG & DevFlagUp) != 0 {
-			psLog.W("device is already opened")
-			psLog.W("\tname: %v (%v) ", dev.Name, dev.Priv.Name)
-			return psErr.Error{Code: psErr.AlreadyOpened}
-		}
-		if err := dev.Op.Open(dev, &psSyscall.Syscall{}); err.Code != psErr.OK {
-			psLog.E("can't open a device")
-			psLog.E("\tname: %v (%v) ", dev.Name, dev.Priv.Name)
-			psLog.E("\ttype: %v ", dev.Type)
-			return psErr.Error{Code: psErr.CantOpen}
-		}
-		dev.FLAG |= DevFlagUp
-		psLog.I("device opened")
-		psLog.I("\tname: %v (%v) ", dev.Name, dev.Priv.Name)
+	if (dev.FLAG & DevFlagUp) != 0 {
+		psLog.W("device is already opened")
+		psLog.W("\tname: %v (%v) ", dev.Name, dev.Priv.Name)
+		return psErr.Error{Code: psErr.AlreadyOpened}
 	}
+
+	if err := dev.Op.Open(dev, &psSyscall.Syscall{}); err.Code != psErr.OK {
+		psLog.E("can't open a device")
+		psLog.E("\tname: %v (%v) ", dev.Name, dev.Priv.Name)
+		psLog.E("\ttype: %v ", dev.Type)
+		return psErr.Error{Code: psErr.CantOpen}
+	}
+
+	dev.FLAG |= DevFlagUp
+
+	psLog.I("device opened")
+	psLog.I("\tname: %v (%v) ", dev.Name, dev.Priv.Name)
+
 	return psErr.Error{Code: psErr.OK}
 }
