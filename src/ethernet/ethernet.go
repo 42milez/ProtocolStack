@@ -64,11 +64,11 @@ func EthDump(hdr *EthHeader) {
 	psLog.I("\teth_type:  0x%04x (%s)", hdr.Type.String(), hdr.Type.String())
 }
 
-func ReadFrame(dev *Device, sc psSyscall.ISyscall) psErr.Error {
+func ReadFrame(fd int, addr EthAddr, sc psSyscall.ISyscall) psErr.Error {
 	// TODO: make buf static variable to reuse
 	buf1 := make([]byte, EthFrameSizeMax)
 
-	flen, _, errno := sc.Read(dev.Priv.FD, unsafe.Pointer(&buf1), EthFrameSizeMax)
+	flen, _, errno := sc.Read(fd, unsafe.Pointer(&buf1), EthFrameSizeMax)
 	if errno != 0 {
 		psLog.E("SYS_READ failed: %v ", errno)
 		return psErr.Error{Code: psErr.CantRead}
@@ -86,14 +86,13 @@ func ReadFrame(dev *Device, sc psSyscall.ISyscall) psErr.Error {
 		return psErr.Error{Code: psErr.CantConvert, Msg: err.Error()}
 	}
 
-	if !hdr.Dst.Equal(dev.Addr) {
+	if !hdr.Dst.Equal(addr) {
 		if !hdr.Dst.Equal(EthAddrBroadcast) {
 			return psErr.Error{Code: psErr.NoDataToRead}
 		}
 	}
 
 	psLog.I("received an ethernet frame")
-	psLog.I("\tdevice:    %v (%v) ", dev.Name, dev.Priv.Name)
 	psLog.I("\tlength:    %v ", flen)
 	EthDump(&hdr)
 

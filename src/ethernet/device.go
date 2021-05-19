@@ -4,6 +4,7 @@ import (
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	psLog "github.com/42milez/ProtocolStack/src/log"
 	psSyscall "github.com/42milez/ProtocolStack/src/syscall"
+	"github.com/google/go-cmp/cmp"
 )
 
 type DevType int
@@ -35,11 +36,29 @@ const DevFlagBroadcast DevFlag = 0x0020
 const DevFlagP2P DevFlag = 0x0040
 const DevFlagNeedArp DevFlag = 0x0100
 
-type Operation interface {
-	Open(dev *Device, sc psSyscall.ISyscall) psErr.Error
-	Close(dev *Device, sc psSyscall.ISyscall) psErr.Error
-	Transmit(dev *Device, sc psSyscall.ISyscall) psErr.Error
-	Poll(dev *Device, sc psSyscall.ISyscall, terminate bool) psErr.Error
+type IDevice interface {
+	Open() psErr.Error
+	Close() psErr.Error
+	Poll(terminate bool) psErr.Error
+	Transmit() psErr.Error
+	Enable()
+	Disable()
+	Equal(dev IDevice) bool
+	Info() (string, string, string)
+	IsUp() bool
+}
+
+type Device struct {
+	Type      DevType
+	Name      string
+	Addr      EthAddr
+	Broadcast EthAddr
+	Peer      EthAddr
+	FLAG      DevFlag
+	HeaderLen uint16
+	MTU       uint16
+	Priv      Privilege
+	Syscall   psSyscall.ISyscall
 }
 
 type Privilege struct {
@@ -47,38 +66,49 @@ type Privilege struct {
 	FD   int
 }
 
-type Device struct {
-	Type      DevType
-	Name      string
-	Addr      EthAddr
-	AddrLen   uint16
-	Broadcast EthAddr
-	Peer      EthAddr
-	FLAG      DevFlag
-	HeaderLen uint16
-	MTU       uint16
-	Op        Operation
-	Priv      Privilege
+func (dev *Device) Enable() {
+	dev.FLAG |= DevFlagUp
 }
 
-func (dev *Device) Open() psErr.Error {
-	if (dev.FLAG & DevFlagUp) != 0 {
+func (dev *Device) Disable() {
+	dev.FLAG &= ^DevFlagUp
+}
+
+func (dev *Device) Equal(v IDevice) bool {
+	return cmp.Equal(dev, v)
+}
+
+func (dev *Device) Info() (string, string, string) {
+	return dev.Type.String(), dev.Name, dev.Priv.Name
+}
+
+func (dev *Device) IsUp() bool {
+	if dev.FLAG&DevFlagUp == 0 {
+		return false
+	}
+	return true
+}
+
+func Up(dev IDevice) psErr.Error {
+	typ, name1, name2 := dev.Info()
+
+	if dev.IsUp() {
 		psLog.W("device is already opened")
-		psLog.W("\tname: %v (%v) ", dev.Name, dev.Priv.Name)
+		psLog.W("\tname: %v (%v) ", name1, name2)
 		return psErr.Error{Code: psErr.AlreadyOpened}
 	}
 
-	if err := dev.Op.Open(dev, &psSyscall.Syscall{}); err.Code != psErr.OK {
+	if err := dev.Open(); err.Code != psErr.OK {
 		psLog.E("can't open a device")
-		psLog.E("\tname: %v (%v) ", dev.Name, dev.Priv.Name)
-		psLog.E("\ttype: %v ", dev.Type)
+		psLog.E("\tname: %v (%v) ", name1, name2)
+		psLog.E("\ttype: %v ", typ)
 		return psErr.Error{Code: psErr.CantOpen}
 	}
 
-	dev.FLAG |= DevFlagUp
+	dev.Enable()
 
 	psLog.I("device opened")
-	psLog.I("\tname: %v (%v) ", dev.Name, dev.Priv.Name)
+	psLog.I("\tname: %v (%v) ", name1, name2)
 
 	return psErr.Error{Code: psErr.OK}
 }

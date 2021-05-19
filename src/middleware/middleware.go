@@ -5,9 +5,7 @@ import (
 	"github.com/42milez/ProtocolStack/src/ethernet"
 	psLog "github.com/42milez/ProtocolStack/src/log"
 	"github.com/42milez/ProtocolStack/src/network"
-	s "github.com/42milez/ProtocolStack/src/syscall"
 	"os"
-	"strconv"
 	"sync"
 	"syscall"
 )
@@ -32,11 +30,11 @@ type Timer struct {
 
 type Handler func(data []uint8, dev ethernet.Device)
 
-var devices []*ethernet.Device
+var devices []ethernet.IDevice
 var interfaces []*Iface
 
 func init() {
-	devices = make([]*ethernet.Device, 0)
+	devices = make([]ethernet.IDevice, 0)
 	interfaces = make([]*Iface, 0)
 }
 
@@ -62,8 +60,9 @@ func register(protocolType ProtocolType, handler Handler) psErr.Error {
 	return psErr.Error{Code: psErr.OK}
 }
 
-// TODO: delete this comment later
-//int net_init(void)
+func NextDeviceIndex() int {
+	return len(devices)
+}
 
 func Setup() psErr.Error {
 	// ARP
@@ -89,7 +88,7 @@ func Setup() psErr.Error {
 
 func Start(netSigCh <-chan os.Signal, wg *sync.WaitGroup) psErr.Error {
 	for _, dev := range devices {
-		if err := dev.Open(); err.Code != psErr.OK {
+		if err := ethernet.Up(dev); err.Code != psErr.OK {
 			return psErr.Error{Code: psErr.Failed}
 		}
 	}
@@ -107,10 +106,10 @@ func Start(netSigCh <-chan os.Signal, wg *sync.WaitGroup) psErr.Error {
 				psLog.I("worker is running...")
 			}
 			for _, dev := range devices {
-				if dev.FLAG&ethernet.DevFlagUp == 0 {
+				if !dev.IsUp() {
 					continue
 				}
-				if err := dev.Op.Poll(dev, &s.Syscall{}, terminate); err.Code != psErr.OK {
+				if err := dev.Poll(terminate); err.Code != psErr.OK {
 					psLog.E("error: %v ", err)
 					// TODO: notify error to main goroutine
 					// ...
@@ -126,17 +125,15 @@ func Start(netSigCh <-chan os.Signal, wg *sync.WaitGroup) psErr.Error {
 	return psErr.Error{Code: psErr.OK}
 }
 
-func RegisterDevice(dev *ethernet.Device) {
-	dev.Name = "net" + strconv.Itoa(len(devices))
+func RegisterDevice(dev ethernet.IDevice) psErr.Error {
 	devices = append(devices, dev)
-	psLog.I("device registered")
-	psLog.I("\tname: %v (%v) ", dev.Name, dev.Priv.Name)
+	return psErr.Error{Code: psErr.OK}
 }
 
-func RegisterInterface(iface *Iface, dev *ethernet.Device) psErr.Error {
-	for _, v := range interfaces {
-		if v.Dev == dev && v.Family == iface.Family {
-			psLog.W("interface is already registered: %v ", v.Family.String())
+func RegisterInterface(iface *Iface, dev ethernet.IDevice) psErr.Error {
+	for _, i := range interfaces {
+		if i.Dev.Equal(dev) && i.Family == iface.Family {
+			psLog.W("interface is already registered: %v ", i.Family.String())
 			return psErr.Error{Code: psErr.CantRegister}
 		}
 	}
@@ -146,7 +143,8 @@ func RegisterInterface(iface *Iface, dev *ethernet.Device) psErr.Error {
 
 	psLog.I("interface attached")
 	psLog.I("\tip:     %v ", iface.Unicast.String())
-	psLog.I("\tdevice: %v (%v) ", iface.Dev.Name, iface.Dev.Priv.Name)
+	_, name1, name2 := dev.Info()
+	psLog.I("\tdevice: %v (%v) ", name1, name2)
 
 	return psErr.Error{Code: psErr.OK}
 }

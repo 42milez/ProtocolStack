@@ -21,14 +21,13 @@ var netSigCh chan os.Signal
 var sigCh chan os.Signal
 
 func setup() psErr.Error {
-	var dev *ethernet.Device
-	var iface *middleware.Iface
+	//var iface *middleware.Iface
 	var err psErr.Error
 
 	psLog.I("--------------------------------------------------")
 	psLog.I(" INITIALIZE PROTOCOLS                             ")
 	psLog.I("--------------------------------------------------")
-	if err = middleware.Setup(); err.Code != psErr.OK {
+	if err := middleware.Setup(); err.Code != psErr.OK {
 		return psErr.Error{Code: psErr.Failed}
 	}
 
@@ -36,27 +35,39 @@ func setup() psErr.Error {
 	psLog.I("--------------------------------------------------")
 	psLog.I(" INITIALIZE DEVICES                               ")
 	psLog.I("--------------------------------------------------")
-	dev = ethernet.GenLoopbackDevice()
-	middleware.RegisterDevice(dev)
-	iface = middleware.GenIF(ethernet.LoopbackIpAddr, ethernet.LoopbackNetmask)
-	if err = middleware.RegisterInterface(iface, dev); err.Code != psErr.OK {
+	var loopbackDev *ethernet.LoopbackDevice
+	loopbackDev, err = ethernet.GenLoopbackDevice()
+
+	if err = middleware.RegisterDevice(loopbackDev); err.Code != psErr.OK {
 		return psErr.Error{Code: psErr.Failed}
 	}
-	route.Register(iface, network.V4Zero)
+	psLog.I("device registered")
+	psLog.I("\tname: %v (%v) ", loopbackDev.Name, loopbackDev.Priv.Name)
+
+	iface1 := middleware.GenIF(ethernet.LoopbackIpAddr, ethernet.LoopbackNetmask)
+	if err = middleware.RegisterInterface(iface1, loopbackDev); err.Code != psErr.OK {
+		return psErr.Error{Code: psErr.Failed}
+	}
+
+	route.Register(iface1, network.V4Zero)
 
 	// Create a TAP device and its iface, then link them.
-	if dev, err = ethernet.GenTapDevice("tap0", ethernet.EthAddr{11, 22, 33, 44, 55, 66}); err.Code != psErr.OK {
+	var tapDev *ethernet.TapDevice
+	tapDev, err = ethernet.GenTapDevice("tap0", ethernet.EthAddr{11, 22, 33, 44, 55, 66})
+	if err.Code != psErr.OK {
 		return psErr.Error{Code: psErr.Failed}
 	}
-	middleware.RegisterDevice(dev)
-	iface = middleware.GenIF("192.0.2.2", "255.255.255.0")
-	if err = middleware.RegisterInterface(iface, dev); err.Code != psErr.OK {
+
+	middleware.RegisterDevice(tapDev)
+
+	iface2 := middleware.GenIF("192.0.2.2", "255.255.255.0")
+	if err = middleware.RegisterInterface(iface2, tapDev); err.Code != psErr.OK {
 		return psErr.Error{Code: psErr.Failed}
 	}
-	route.Register(iface, network.V4Zero)
+	route.Register(iface2, network.V4Zero)
 
 	// Register the iface of the TAP device as the default gateway.
-	route.RegisterDefaultGateway(iface, network.ParseIP("192.0.2.1"))
+	route.RegisterDefaultGateway(iface2, network.ParseIP("192.0.2.1"))
 
 	// Create sub-thread for polling.
 	psLog.I("--------------------------------------------------")
