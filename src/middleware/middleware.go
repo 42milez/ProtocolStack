@@ -4,7 +4,6 @@ import (
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	"github.com/42milez/ProtocolStack/src/ethernet"
 	psLog "github.com/42milez/ProtocolStack/src/log"
-	"github.com/42milez/ProtocolStack/src/network"
 	"os"
 	"sync"
 	"syscall"
@@ -73,9 +72,9 @@ func Setup() psErr.Error {
 
 	// IP
 	// ...
-	if err := register(ProtocolTypeIp, network.IpInputHandler); err.Code != psErr.OK {
-		return psErr.Error{Code: psErr.Failed}
-	}
+	//if err := register(ProtocolTypeIp, network.IpInputHandler); err.Code != psErr.OK {
+	//	return psErr.Error{Code: psErr.Failed}
+	//}
 
 	// TCP
 	// ...
