@@ -40,7 +40,6 @@ func Setup() psErr.Error {
 	// ...
 
 	// IP
-	// ...
 	if err := register(ProtocolTypeIp, network.IpInputHandler); err.Code != psErr.OK {
 		return psErr.Error{Code: psErr.Failed}
 	}
