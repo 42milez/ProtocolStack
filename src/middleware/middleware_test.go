@@ -17,18 +17,6 @@ func reset() {
 	protocols = make([]Protocol, 0)
 }
 
-func TestSetup(t *testing.T) {
-	defer reset()
-
-	psLog.DisableOutput()
-	defer psLog.EnableOutput()
-
-	got := Setup()
-	if got.Code != psErr.OK {
-		t.Errorf("Setup() = %v; want %v", got, psErr.OK)
-	}
-}
-
 func TestRegisterDevice(t *testing.T) {
 	defer reset()
 

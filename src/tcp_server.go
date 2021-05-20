@@ -24,13 +24,6 @@ func setup() psErr.Error {
 	//var iface *middleware.Iface
 	var err psErr.Error
 
-	psLog.I("--------------------------------------------------")
-	psLog.I(" INITIALIZE PROTOCOLS                             ")
-	psLog.I("--------------------------------------------------")
-	if err := middleware.Setup(); err.Code != psErr.OK {
-		return psErr.Error{Code: psErr.Failed}
-	}
-
 	// Create a loopback device and its iface, then link them.
 	psLog.I("--------------------------------------------------")
 	psLog.I(" INITIALIZE DEVICES                               ")

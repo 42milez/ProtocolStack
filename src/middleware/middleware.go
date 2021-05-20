@@ -30,27 +30,6 @@ type Timer struct {
 
 type Handler func(data []uint8, dev ethernet.IDevice)
 
-func Setup() psErr.Error {
-	// ARP
-	// ...
-
-	// ICMP
-	// ...
-
-	// IP
-	if err := register(ProtocolTypeIp, network.IpInputHandler); err.Code != psErr.OK {
-		return psErr.Error{Code: psErr.Failed}
-	}
-
-	// TCP
-	// ...
-
-	// UDP
-	// ...
-
-	return psErr.Error{Code: psErr.OK}
-}
-
 func RegisterDevice(dev ethernet.IDevice) psErr.Error {
 	devices = append(devices, dev)
 	_, name1, name2 := dev.Info()
@@ -115,26 +94,28 @@ func init() {
 	devices = make([]ethernet.IDevice, 0)
 	interfaces = make([]*Iface, 0)
 	protocols = make([]Protocol, 0)
+
+	// ARP
+	// ...
+
+	// ICMP
+	// ...
+
+	// IP
+	register(ProtocolTypeIp, network.IpInputHandler)
+
+	// TCP
+	// ...
+
+	// UDP
+	// ...
 }
 
 func register(protocolType ProtocolType, handler Handler) psErr.Error {
-	for _, v := range protocols {
-		if v.Type == protocolType {
-			psLog.W("protocol is already registered")
-			psLog.W("\ttype: %v ", protocolType.String())
-			return psErr.Error{Code: psErr.CantRegister}
-		}
-	}
-
 	p := Protocol{
 		Type:    protocolType,
 		Handler: handler,
 	}
-
 	protocols = append(protocols, p)
-
-	psLog.I("protocol registered")
-	psLog.I("\ttype: %v ", protocolType.String())
-
 	return psErr.Error{Code: psErr.OK}
 }
