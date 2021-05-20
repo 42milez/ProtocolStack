@@ -3,7 +3,7 @@ codecov:
 coverage:
   precision: 2
   round: down
-  range: "60...80"
+  range: "50...80"
 parsers:
   gcov:
     branch_detection:
