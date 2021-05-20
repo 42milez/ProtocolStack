@@ -87,7 +87,7 @@ func TestRegisterInterface(t *testing.T) {
 	}
 }
 
-func TestUp(t *testing.T) {
+func TestUp_SuccessOnDisabled(t *testing.T) {
 	defer reset()
 
 	psLog.DisableOutput()
@@ -107,5 +107,48 @@ func TestUp(t *testing.T) {
 	got := Up()
 	if got.Code != psErr.OK {
 		t.Errorf("Up() = %v; want %v", got, psErr.OK)
+	}
+}
+
+func TestUp_FailOnEnabled(t *testing.T) {
+	defer reset()
+
+	psLog.DisableOutput()
+	defer psLog.EnableOutput()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	m := mockEthernet.NewMockIDevice(ctrl)
+	m.EXPECT().Info().Return(ethernet.DevTypeEthernet.String(), "net0", "tap0").AnyTimes()
+	m.EXPECT().IsUp().Return(true)
+
+	_ = RegisterDevice(m)
+
+	got := Up()
+	if got.Code != psErr.AlreadyOpened {
+		t.Errorf("Up() = %v; want %v", got, psErr.AlreadyOpened)
+	}
+}
+
+func TestUp_CantOpen(t *testing.T) {
+	defer reset()
+
+	psLog.DisableOutput()
+	defer psLog.EnableOutput()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	m := mockEthernet.NewMockIDevice(ctrl)
+	m.EXPECT().Info().Return(ethernet.DevTypeEthernet.String(), "net0", "tap0").AnyTimes()
+	m.EXPECT().IsUp().Return(false)
+	m.EXPECT().Open().Return(psErr.Error{Code: psErr.CantOpen})
+
+	_ = RegisterDevice(m)
+
+	got := Up()
+	if got.Code != psErr.CantOpen {
+		t.Errorf("Up() = %v; want %v", got, psErr.CantOpen)
 	}
 }
