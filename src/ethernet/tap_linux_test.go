@@ -4,7 +4,7 @@ import (
 	"errors"
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	psLog "github.com/42milez/ProtocolStack/src/log"
-	mockSyscall "github.com/42milez/ProtocolStack/src/mock/syscall"
+	mockSyscall "github.com/42milez/ProtocolStack/src/syscall/mock"
 	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
 	"syscall"
