@@ -55,6 +55,9 @@ func Setup() psErr.Error {
 
 func RegisterDevice(dev ethernet.IDevice) psErr.Error {
 	devices = append(devices, dev)
+	psLog.I("device registered")
+	_, name1, name2 := dev.Info()
+	psLog.I("\tname: %v (%v) ", name1, name2)
 	return psErr.Error{Code: psErr.OK}
 }
 

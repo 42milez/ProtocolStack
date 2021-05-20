@@ -40,8 +40,6 @@ func setup() psErr.Error {
 	if err = middleware.RegisterDevice(loopbackDev); err.Code != psErr.OK {
 		return psErr.Error{Code: psErr.Failed}
 	}
-	psLog.I("device registered")
-	psLog.I("\tname: %v (%v) ", loopbackDev.Name, loopbackDev.Priv.Name)
 
 	iface1 := middleware.GenIface(ethernet.LoopbackIpAddr, ethernet.LoopbackNetmask)
 	if err = middleware.RegisterInterface(iface1, loopbackDev); err.Code != psErr.OK {
