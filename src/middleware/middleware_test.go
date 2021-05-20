@@ -38,12 +38,12 @@ func TestRegisterDevice(t *testing.T) {
 
 	got := RegisterDevice(dev)
 	if got.Code != psErr.OK {
-		t.Errorf("RegisterDevice() = %v; want %v", got, psErr.OK)
+		t.Errorf("RegisterDevice() = %v; want %v", got.Code, psErr.OK)
 	}
 }
 
 func TestRegisterInterface_A(t *testing.T) {
-	//defer reset()
+	defer reset()
 
 	psLog.DisableOutput()
 	defer psLog.EnableOutput()
@@ -71,12 +71,12 @@ func TestRegisterInterface_A(t *testing.T) {
 
 	got := RegisterInterface(iface, dev)
 	if got.Code != psErr.OK {
-		t.Errorf("RegisterInterface() = %v; want %v", got, psErr.OK)
+		t.Errorf("RegisterInterface() = %v; want %v", got.Code, psErr.OK)
 	}
 }
 
 func TestRegisterInterface_B(t *testing.T) {
-	//defer reset()
+	defer reset()
 
 	psLog.DisableOutput()
 	defer psLog.EnableOutput()
@@ -105,7 +105,7 @@ func TestRegisterInterface_B(t *testing.T) {
 	_ = RegisterInterface(iface, dev)
 	got := RegisterInterface(iface, dev)
 	if got.Code != psErr.CantRegister {
-		t.Errorf("RegisterInterface() = %v; want %v", got, psErr.CantRegister)
+		t.Errorf("RegisterInterface() = %v; want %v", got.Code, psErr.CantRegister)
 	}
 }
 
@@ -128,7 +128,7 @@ func TestUp_SuccessOnDisabled(t *testing.T) {
 
 	got := Up()
 	if got.Code != psErr.OK {
-		t.Errorf("Up() = %v; want %v", got, psErr.OK)
+		t.Errorf("Up() = %v; want %v", got.Code, psErr.OK)
 	}
 }
 
@@ -149,7 +149,7 @@ func TestUp_FailOnEnabled(t *testing.T) {
 
 	got := Up()
 	if got.Code != psErr.AlreadyOpened {
-		t.Errorf("Up() = %v; want %v", got, psErr.AlreadyOpened)
+		t.Errorf("Up() = %v; want %v", got.Code, psErr.AlreadyOpened)
 	}
 }
 
@@ -171,6 +171,6 @@ func TestUp_CantOpen(t *testing.T) {
 
 	got := Up()
 	if got.Code != psErr.CantOpen {
-		t.Errorf("Up() = %v; want %v", got, psErr.CantOpen)
+		t.Errorf("Up() = %v; want %v", got.Code, psErr.CantOpen)
 	}
 }
