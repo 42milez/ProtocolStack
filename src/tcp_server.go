@@ -43,7 +43,7 @@ func setup() psErr.Error {
 	psLog.I("device registered")
 	psLog.I("\tname: %v (%v) ", loopbackDev.Name, loopbackDev.Priv.Name)
 
-	iface1 := middleware.GenIF(ethernet.LoopbackIpAddr, ethernet.LoopbackNetmask)
+	iface1 := middleware.GenIface(ethernet.LoopbackIpAddr, ethernet.LoopbackNetmask)
 	if err = middleware.RegisterInterface(iface1, loopbackDev); err.Code != psErr.OK {
 		return psErr.Error{Code: psErr.Failed}
 	}
@@ -58,7 +58,7 @@ func setup() psErr.Error {
 
 	middleware.RegisterDevice(tapDev)
 
-	iface2 := middleware.GenIF("192.0.2.2", "255.255.255.0")
+	iface2 := middleware.GenIface("192.0.2.2", "255.255.255.0")
 	if err = middleware.RegisterInterface(iface2, tapDev); err.Code != psErr.OK {
 		return psErr.Error{Code: psErr.Failed}
 	}
