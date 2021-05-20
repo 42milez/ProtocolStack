@@ -4,7 +4,10 @@ import (
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	"github.com/42milez/ProtocolStack/src/ethernet"
 	psLog "github.com/42milez/ProtocolStack/src/log"
+	"github.com/42milez/ProtocolStack/src/network"
+	psSyscall "github.com/42milez/ProtocolStack/src/syscall"
 	"os"
+	"strconv"
 	"sync"
 	"syscall"
 )
@@ -27,7 +30,7 @@ type Timer struct {
 	Handler  Handler
 }
 
-type Handler func(data []uint8, dev ethernet.Device)
+type Handler func(data []uint8, dev ethernet.IDevice)
 
 var devices []ethernet.IDevice
 var interfaces []*Iface
@@ -59,8 +62,38 @@ func register(protocolType ProtocolType, handler Handler) psErr.Error {
 	return psErr.Error{Code: psErr.OK}
 }
 
-func NextDeviceIndex() int {
-	return len(devices)
+// GenLoopbackDevice generates loopback device object.
+func GenLoopbackDevice() *ethernet.LoopbackDevice {
+	dev := &ethernet.LoopbackDevice{
+		Device: ethernet.Device{
+			Name:      "net" + strconv.Itoa(len(devices)),
+			Type:      ethernet.DevTypeLoopback,
+			MTU:       ethernet.LoopbackMTU,
+			HeaderLen: 0,
+			FLAG:      ethernet.DevFlagLoopback,
+			Syscall:   &psSyscall.Syscall{},
+		},
+	}
+	return dev
+}
+
+// GenTapDevice generates TAP device object.
+func GenTapDevice(index uint8, addr ethernet.EthAddr) *ethernet.TapDevice {
+	return &ethernet.TapDevice{
+		Device: ethernet.Device{
+			Type:      ethernet.DevTypeEthernet,
+			MTU:       ethernet.EthPayloadSizeMax,
+			FLAG:      ethernet.DevFlagBroadcast | ethernet.DevFlagNeedArp,
+			HeaderLen: ethernet.EthHeaderSize,
+			Addr:      addr,
+			Broadcast: ethernet.EthAddrBroadcast,
+			Priv: ethernet.Privilege{
+				FD:   -1,
+				Name: "tap" + strconv.Itoa(int(index)),
+			},
+			Syscall: &psSyscall.Syscall{},
+		},
+	}
 }
 
 func Setup() psErr.Error {
@@ -72,15 +105,39 @@ func Setup() psErr.Error {
 
 	// IP
 	// ...
-	//if err := register(ProtocolTypeIp, network.IpInputHandler); err.Code != psErr.OK {
-	//	return psErr.Error{Code: psErr.Failed}
-	//}
+	if err := register(ProtocolTypeIp, network.IpInputHandler); err.Code != psErr.OK {
+		return psErr.Error{Code: psErr.Failed}
+	}
 
 	// TCP
 	// ...
 
 	// UDP
 	// ...
+
+	return psErr.Error{Code: psErr.OK}
+}
+
+func RegisterDevice(dev ethernet.IDevice) psErr.Error {
+	devices = append(devices, dev)
+	return psErr.Error{Code: psErr.OK}
+}
+
+func RegisterInterface(iface *Iface, dev ethernet.IDevice) psErr.Error {
+	for _, i := range interfaces {
+		if i.Dev.Equal(dev) && i.Family == iface.Family {
+			psLog.W("interface is already registered: %v ", i.Family.String())
+			return psErr.Error{Code: psErr.CantRegister}
+		}
+	}
+
+	interfaces = append(interfaces, iface)
+	iface.Dev = dev
+
+	psLog.I("interface attached")
+	psLog.I("\tip:     %v ", iface.Unicast.String())
+	_, name1, name2 := dev.Info()
+	psLog.I("\tdevice: %v (%v) ", name1, name2)
 
 	return psErr.Error{Code: psErr.OK}
 }
@@ -120,30 +177,6 @@ func Start(netSigCh <-chan os.Signal, wg *sync.WaitGroup) psErr.Error {
 			}
 		}
 	}()
-
-	return psErr.Error{Code: psErr.OK}
-}
-
-func RegisterDevice(dev ethernet.IDevice) psErr.Error {
-	devices = append(devices, dev)
-	return psErr.Error{Code: psErr.OK}
-}
-
-func RegisterInterface(iface *Iface, dev ethernet.IDevice) psErr.Error {
-	for _, i := range interfaces {
-		if i.Dev.Equal(dev) && i.Family == iface.Family {
-			psLog.W("interface is already registered: %v ", i.Family.String())
-			return psErr.Error{Code: psErr.CantRegister}
-		}
-	}
-
-	interfaces = append(interfaces, iface)
-	iface.Dev = dev
-
-	psLog.I("interface attached")
-	psLog.I("\tip:     %v ", iface.Unicast.String())
-	_, name1, name2 := dev.Info()
-	psLog.I("\tdevice: %v (%v) ", name1, name2)
 
 	return psErr.Error{Code: psErr.OK}
 }

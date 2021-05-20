@@ -35,8 +35,7 @@ func setup() psErr.Error {
 	psLog.I("--------------------------------------------------")
 	psLog.I(" INITIALIZE DEVICES                               ")
 	psLog.I("--------------------------------------------------")
-	var loopbackDev *ethernet.LoopbackDevice
-	loopbackDev, err = ethernet.GenLoopbackDevice()
+	loopbackDev := middleware.GenLoopbackDevice()
 
 	if err = middleware.RegisterDevice(loopbackDev); err.Code != psErr.OK {
 		return psErr.Error{Code: psErr.Failed}
@@ -52,8 +51,7 @@ func setup() psErr.Error {
 	route.Register(iface1, network.V4Zero)
 
 	// Create a TAP device and its iface, then link them.
-	var tapDev *ethernet.TapDevice
-	tapDev, err = ethernet.GenTapDevice("tap0", ethernet.EthAddr{11, 22, 33, 44, 55, 66})
+	tapDev := middleware.GenTapDevice(0, ethernet.EthAddr{11, 22, 33, 44, 55, 66})
 	if err.Code != psErr.OK {
 		return psErr.Error{Code: psErr.Failed}
 	}

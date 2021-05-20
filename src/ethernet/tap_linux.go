@@ -6,7 +6,6 @@ import (
 	"fmt"
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	psLog "github.com/42milez/ProtocolStack/src/log"
-	psSyscall "github.com/42milez/ProtocolStack/src/syscall"
 	"syscall"
 	"unsafe"
 )
@@ -40,7 +39,7 @@ type IfreqSockAddr struct {
 
 const vnd = "/dev/net/tun"
 
-type TapDevice struct{
+type TapDevice struct {
 	Device
 }
 
@@ -149,26 +148,4 @@ func (dev *TapDevice) Poll(isTerminated bool) psErr.Error {
 
 func (dev *TapDevice) Transmit() psErr.Error {
 	return psErr.Error{Code: psErr.OK}
-}
-
-// GenTapDevice generates TAP device object.
-func GenTapDevice(name string, addr EthAddr) (*TapDevice, psErr.Error) {
-	if len(name) > 16 {
-		return nil, psErr.Error{Code: psErr.CantCreate, Msg: "device name must be less than or equal to 16 characters"}
-	}
-
-	dev := &TapDevice{
-		Device{
-			Type:      DevTypeEthernet,
-			MTU:       EthPayloadSizeMax,
-			FLAG:      DevFlagBroadcast | DevFlagNeedArp,
-			HeaderLen: EthHeaderSize,
-			Addr:      addr,
-			Broadcast: EthAddrBroadcast,
-			Priv:      Privilege{FD: -1, Name: name},
-			Syscall:   &psSyscall.Syscall{},
-		},
-	}
-
-	return dev, psErr.Error{Code: psErr.OK}
 }

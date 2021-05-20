@@ -83,10 +83,7 @@ func (dev *Device) Info() (string, string, string) {
 }
 
 func (dev *Device) IsUp() bool {
-	if dev.FLAG&DevFlagUp == 0 {
-		return false
-	}
-	return true
+	return dev.FLAG&DevFlagUp == 1
 }
 
 func Up(dev IDevice) psErr.Error {
