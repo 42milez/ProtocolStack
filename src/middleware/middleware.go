@@ -10,6 +10,8 @@ import (
 	"syscall"
 )
 
+var devices []ethernet.IDevice
+var interfaces []*Iface
 var protocols []Protocol
 
 // TODO: delete this comment later
@@ -29,36 +31,6 @@ type Timer struct {
 }
 
 type Handler func(data []uint8, dev ethernet.IDevice)
-
-var devices []ethernet.IDevice
-var interfaces []*Iface
-
-func init() {
-	devices = make([]ethernet.IDevice, 0)
-	interfaces = make([]*Iface, 0)
-}
-
-func register(protocolType ProtocolType, handler Handler) psErr.Error {
-	for _, v := range protocols {
-		if v.Type == protocolType {
-			psLog.W("protocol is already registered")
-			psLog.W("\ttype: %v ", protocolType.String())
-			return psErr.Error{Code: psErr.CantRegister}
-		}
-	}
-
-	p := Protocol{
-		Type:    protocolType,
-		Handler: handler,
-	}
-
-	protocols = append(protocols, p)
-
-	psLog.I("protocol registered")
-	psLog.I("\ttype: %v ", protocolType.String())
-
-	return psErr.Error{Code: psErr.OK}
-}
 
 func Setup() psErr.Error {
 	// ARP
@@ -141,6 +113,33 @@ func Start(netSigCh <-chan os.Signal, wg *sync.WaitGroup) psErr.Error {
 			}
 		}
 	}()
+
+	return psErr.Error{Code: psErr.OK}
+}
+
+func init() {
+	devices = make([]ethernet.IDevice, 0)
+	interfaces = make([]*Iface, 0)
+}
+
+func register(protocolType ProtocolType, handler Handler) psErr.Error {
+	for _, v := range protocols {
+		if v.Type == protocolType {
+			psLog.W("protocol is already registered")
+			psLog.W("\ttype: %v ", protocolType.String())
+			return psErr.Error{Code: psErr.CantRegister}
+		}
+	}
+
+	p := Protocol{
+		Type:    protocolType,
+		Handler: handler,
+	}
+
+	protocols = append(protocols, p)
+
+	psLog.I("protocol registered")
+	psLog.I("\ttype: %v ", protocolType.String())
 
 	return psErr.Error{Code: psErr.OK}
 }
