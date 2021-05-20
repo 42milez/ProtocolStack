@@ -6,6 +6,7 @@ import (
 	"fmt"
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	psLog "github.com/42milez/ProtocolStack/src/log"
+	psSyscall "github.com/42milez/ProtocolStack/src/syscall"
 	"syscall"
 	"unsafe"
 )
@@ -165,6 +166,7 @@ func GenTapDevice(name string, addr EthAddr) (*TapDevice, psErr.Error) {
 			Addr:      addr,
 			Broadcast: EthAddrBroadcast,
 			Priv:      Privilege{FD: -1, Name: name},
+			Syscall:   &psSyscall.Syscall{},
 		},
 	}
 

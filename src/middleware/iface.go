@@ -7,12 +7,12 @@ import (
 
 // An Iface is a single iface.
 type Iface struct {
-	Dev       ethernet.IDevice
 	Family    network.AddrFamily
-	Unicast   network.IP
-	Netmask   network.IP
 	Network   network.IP
+	Netmask   network.IP
 	Broadcast network.IP
+	Unicast   network.IP
+	Dev       ethernet.IDevice
 }
 
 // GenIF generates Iface.
