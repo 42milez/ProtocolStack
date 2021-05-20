@@ -93,6 +93,7 @@ func start(netSigCh <-chan os.Signal, wg *sync.WaitGroup) psErr.Error {
 			if err := middleware.Poll(terminate); err.Code != psErr.OK {
 				// TODO: notify error to main goroutine
 				// ...
+				psLog.E("this is error message...")
 			}
 			if terminate {
 				return
