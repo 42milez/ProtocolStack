@@ -69,9 +69,36 @@ func setup() psErr.Error {
 	psLog.I("--------------------------------------------------")
 	psLog.I(" START WORKERS                                    ")
 	psLog.I("--------------------------------------------------")
-	if err = middleware.Start(netSigCh, &wg); err.Code != psErr.OK {
+	if err = start(netSigCh, &wg); err.Code != psErr.OK {
 		return psErr.Error{Code: psErr.Failed}
 	}
+
+	return psErr.Error{Code: psErr.OK}
+}
+
+func start(netSigCh <-chan os.Signal, wg *sync.WaitGroup) psErr.Error {
+	middleware.Up()
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		var terminate = false
+		for {
+			select {
+			case <-netSigCh:
+				psLog.I("terminating worker...")
+				terminate = true
+			default:
+				psLog.I("worker is running...")
+			}
+			if err := middleware.Poll(terminate); err.Code != psErr.OK {
+				// TODO: notify error to main goroutine
+				// ...
+			}
+			if terminate {
+				return
+			}
+		}
+	}()
 
 	return psErr.Error{Code: psErr.OK}
 }

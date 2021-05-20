@@ -2,7 +2,6 @@ package ethernet
 
 import (
 	psErr "github.com/42milez/ProtocolStack/src/error"
-	psLog "github.com/42milez/ProtocolStack/src/log"
 	psSyscall "github.com/42milez/ProtocolStack/src/syscall"
 	"github.com/google/go-cmp/cmp"
 )
@@ -84,28 +83,4 @@ func (dev *Device) Info() (string, string, string) {
 
 func (dev *Device) IsUp() bool {
 	return dev.FLAG&DevFlagUp == 1
-}
-
-func Up(dev IDevice) psErr.Error {
-	typ, name1, name2 := dev.Info()
-
-	if dev.IsUp() {
-		psLog.W("device is already opened")
-		psLog.W("\tname: %v (%v) ", name1, name2)
-		return psErr.Error{Code: psErr.AlreadyOpened}
-	}
-
-	if err := dev.Open(); err.Code != psErr.OK {
-		psLog.E("can't open a device")
-		psLog.E("\tname: %v (%v) ", name1, name2)
-		psLog.E("\ttype: %v ", typ)
-		return psErr.Error{Code: psErr.CantOpen}
-	}
-
-	dev.Enable()
-
-	psLog.I("device opened")
-	psLog.I("\tname: %v (%v) ", name1, name2)
-
-	return psErr.Error{Code: psErr.OK}
 }
