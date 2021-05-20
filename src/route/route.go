@@ -32,7 +32,8 @@ func Register(iface *middleware.Iface, nextHop network.IP) {
 	psLog.I("\tnetmask:  %v ", route.Netmask.String())
 	psLog.I("\tunicast:  %v ", iface.Unicast.String())
 	psLog.I("\tnext hop: %v ", nextHop.String())
-	psLog.I("\tdevice:   %v (%v) ", iface.Dev.Name, iface.Dev.Priv.Name)
+	_, name1, name2 := iface.Dev.Info()
+	psLog.I("\tdevice:   %v (%v) ", name1, name2)
 }
 
 func RegisterDefaultGateway(iface *middleware.Iface, nextHop network.IP) {
@@ -48,5 +49,6 @@ func RegisterDefaultGateway(iface *middleware.Iface, nextHop network.IP) {
 	psLog.I("\tnetmask:  %v ", route.Netmask.String())
 	psLog.I("\tunicast:  %v ", iface.Unicast.String())
 	psLog.I("\tnext hop: %v ", nextHop.String())
-	psLog.I("\tdevice:   %v (%v) ", iface.Dev.Name, iface.Dev.Priv.Name)
+	_, name1, name2 := iface.Dev.Info()
+	psLog.I("\tdevice:   %v (%v) ", name1, name2)
 }

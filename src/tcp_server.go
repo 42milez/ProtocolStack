@@ -21,50 +21,78 @@ var netSigCh chan os.Signal
 var sigCh chan os.Signal
 
 func setup() psErr.Error {
-	var dev *ethernet.Device
-	var iface *middleware.Iface
+	//var iface *middleware.Iface
 	var err psErr.Error
-
-	psLog.I("--------------------------------------------------")
-	psLog.I(" INITIALIZE PROTOCOLS                             ")
-	psLog.I("--------------------------------------------------")
-	if err = middleware.Setup(); err.Code != psErr.OK {
-		return psErr.Error{Code: psErr.Failed}
-	}
 
 	// Create a loopback device and its iface, then link them.
 	psLog.I("--------------------------------------------------")
 	psLog.I(" INITIALIZE DEVICES                               ")
 	psLog.I("--------------------------------------------------")
-	dev = ethernet.GenLoopbackDevice()
-	middleware.RegisterDevice(dev)
-	iface = middleware.GenIF(ethernet.LoopbackIpAddr, ethernet.LoopbackNetmask)
-	if err = middleware.RegisterInterface(iface, dev); err.Code != psErr.OK {
+	loopbackDev := middleware.GenLoopbackDevice()
+
+	if err = middleware.RegisterDevice(loopbackDev); err.Code != psErr.OK {
 		return psErr.Error{Code: psErr.Failed}
 	}
-	route.Register(iface, network.V4Zero)
+
+	iface1 := middleware.GenIface(ethernet.LoopbackIpAddr, ethernet.LoopbackNetmask)
+	if err = middleware.RegisterInterface(iface1, loopbackDev); err.Code != psErr.OK {
+		return psErr.Error{Code: psErr.Failed}
+	}
+
+	route.Register(iface1, network.V4Zero)
 
 	// Create a TAP device and its iface, then link them.
-	if dev, err = ethernet.GenTapDevice("tap0", ethernet.EthAddr{11, 22, 33, 44, 55, 66}); err.Code != psErr.OK {
+	tapDev := middleware.GenTapDevice(0, ethernet.EthAddr{11, 22, 33, 44, 55, 66})
+	if err.Code != psErr.OK {
 		return psErr.Error{Code: psErr.Failed}
 	}
-	middleware.RegisterDevice(dev)
-	iface = middleware.GenIF("192.0.2.2", "255.255.255.0")
-	if err = middleware.RegisterInterface(iface, dev); err.Code != psErr.OK {
+
+	middleware.RegisterDevice(tapDev)
+
+	iface2 := middleware.GenIface("192.0.2.2", "255.255.255.0")
+	if err = middleware.RegisterInterface(iface2, tapDev); err.Code != psErr.OK {
 		return psErr.Error{Code: psErr.Failed}
 	}
-	route.Register(iface, network.V4Zero)
+	route.Register(iface2, network.V4Zero)
 
 	// Register the iface of the TAP device as the default gateway.
-	route.RegisterDefaultGateway(iface, network.ParseIP("192.0.2.1"))
+	route.RegisterDefaultGateway(iface2, network.ParseIP("192.0.2.1"))
 
 	// Create sub-thread for polling.
 	psLog.I("--------------------------------------------------")
 	psLog.I(" START WORKERS                                    ")
 	psLog.I("--------------------------------------------------")
-	if err = middleware.Start(netSigCh, &wg); err.Code != psErr.OK {
+	if err = start(netSigCh, &wg); err.Code != psErr.OK {
 		return psErr.Error{Code: psErr.Failed}
 	}
+
+	return psErr.Error{Code: psErr.OK}
+}
+
+func start(netSigCh <-chan os.Signal, wg *sync.WaitGroup) psErr.Error {
+	middleware.Up()
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		var terminate = false
+		for {
+			select {
+			case <-netSigCh:
+				psLog.I("terminating worker...")
+				terminate = true
+			default:
+				psLog.I("worker is running...")
+			}
+			if err := middleware.Poll(terminate); err.Code != psErr.OK {
+				// TODO: notify error to main goroutine
+				// ...
+				psLog.E("this is error message...")
+			}
+			if terminate {
+				return
+			}
+		}
+	}()
 
 	return psErr.Error{Code: psErr.OK}
 }

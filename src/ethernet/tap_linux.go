@@ -1,10 +1,11 @@
+// +build amd64,linux
+
 package ethernet
 
 import (
 	"fmt"
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	psLog "github.com/42milez/ProtocolStack/src/log"
-	s "github.com/42milez/ProtocolStack/src/syscall"
 	"syscall"
 	"unsafe"
 )
@@ -38,15 +39,17 @@ type IfreqSockAddr struct {
 
 const vnd = "/dev/net/tun"
 
-type TapOperation struct{}
+type TapDevice struct {
+	Device
+}
 
-func (v TapOperation) Open(dev *Device, sc s.ISyscall) psErr.Error {
+func (dev *TapDevice) Open() psErr.Error {
 	var err error
 	var errno syscall.Errno
 	var fd int
 	var soc int
 
-	fd, err = sc.Open(vnd, syscall.O_RDWR, 0666)
+	fd, err = dev.Syscall.Open(vnd, syscall.O_RDWR, 0666)
 	if err != nil {
 		psLog.E("can't open virtual networking device: %v ", vnd)
 		return psErr.Error{Code: psErr.CantOpen, Msg: err.Error()}
@@ -57,15 +60,15 @@ func (v TapOperation) Open(dev *Device, sc s.ISyscall) psErr.Error {
 	ifrFlags.Flags = syscall.IFF_TAP | syscall.IFF_NO_PI
 	copy(ifrFlags.Name[:], dev.Priv.Name)
 
-	_, _, errno = sc.Ioctl(uintptr(fd), uintptr(syscall.TUNSETIFF), uintptr(unsafe.Pointer(&ifrFlags)))
+	_, _, errno = dev.Syscall.Ioctl(uintptr(fd), uintptr(syscall.TUNSETIFF), uintptr(unsafe.Pointer(&ifrFlags)))
 	if errno != 0 {
 		psLog.E("SYS_IOCTL (%v) failed: %v ", "TUNSETIFF", errno)
-		_ = sc.Close(fd)
+		_ = dev.Syscall.Close(fd)
 		return psErr.Error{Code: psErr.CantOpen, Msg: fmt.Sprintf("errno: %v", errno)}
 	}
 
 	// --------------------------------------------------
-	soc, err = sc.Socket(syscall.AF_INET, syscall.SOCK_DGRAM, 0)
+	soc, err = dev.Syscall.Socket(syscall.AF_INET, syscall.SOCK_DGRAM, 0)
 	if err != nil {
 		psLog.E("can't open socket: %v ", err)
 		return psErr.Error{Code: psErr.CantOpen, Msg: err.Error()}
@@ -75,21 +78,21 @@ func (v TapOperation) Open(dev *Device, sc s.ISyscall) psErr.Error {
 	ifrSockAddr.Addr.Family = syscall.AF_INET
 	copy(ifrSockAddr.Name[:], dev.Priv.Name)
 
-	_, _, errno = sc.Ioctl(uintptr(soc), uintptr(syscall.SIOCGIFHWADDR), uintptr(unsafe.Pointer(&ifrSockAddr)))
+	_, _, errno = dev.Syscall.Ioctl(uintptr(soc), uintptr(syscall.SIOCGIFHWADDR), uintptr(unsafe.Pointer(&ifrSockAddr)))
 	if errno != 0 {
 		psLog.E("SYS_IOCTL (%v) failed: %v ", "SIOCGIFHWADDR", errno)
-		_ = sc.Close(soc)
+		_ = dev.Syscall.Close(soc)
 		return psErr.Error{Code: psErr.CantOpen, Msg: fmt.Sprintf("errno: %v", errno)}
 	}
 
 	copy(dev.Addr[:], ifrSockAddr.Addr.Data[:])
 
-	_ = sc.Close(soc)
+	_ = dev.Syscall.Close(soc)
 
 	// --------------------------------------------------
 	var event syscall.EpollEvent
 
-	epfd, err = sc.EpollCreate1(0)
+	epfd, err = dev.Syscall.EpollCreate1(0)
 	if err != nil {
 		psLog.E("can't open an epoll file descriptor: %v ", err)
 		return psErr.Error{Code: psErr.CantOpen, Msg: err.Error()}
@@ -98,7 +101,7 @@ func (v TapOperation) Open(dev *Device, sc s.ISyscall) psErr.Error {
 	event.Events = syscall.EPOLLIN
 	event.Fd = int32(fd)
 
-	err = sc.EpollCtl(epfd, syscall.EPOLL_CTL_ADD, fd, &event)
+	err = dev.Syscall.EpollCtl(epfd, syscall.EPOLL_CTL_ADD, fd, &event)
 	if err != nil {
 		psLog.E("can't add an entry to the interest list of the epoll file descriptor: %v ", err)
 		return psErr.Error{Code: psErr.CantOpen, Msg: err.Error()}
@@ -109,25 +112,21 @@ func (v TapOperation) Open(dev *Device, sc s.ISyscall) psErr.Error {
 	return psErr.Error{Code: psErr.OK}
 }
 
-func (v TapOperation) Close(dev *Device, sc s.ISyscall) psErr.Error {
-	_ = sc.Close(epfd)
+func (dev *TapDevice) Close() psErr.Error {
+	_ = dev.Syscall.Close(epfd)
 	return psErr.Error{Code: psErr.OK}
 }
 
-func (v TapOperation) Transmit(dev *Device, sc s.ISyscall) psErr.Error {
-	return psErr.Error{Code: psErr.OK}
-}
-
-func (v TapOperation) Poll(dev *Device, sc s.ISyscall, isTerminated bool) psErr.Error {
+func (dev *TapDevice) Poll(isTerminated bool) psErr.Error {
 	if isTerminated {
-		_ = sc.Close(epfd)
+		_ = dev.Syscall.Close(epfd)
 		return psErr.Error{Code: psErr.OK}
 	}
 
 	var events [MaxEpollEvents]syscall.EpollEvent
-	nEvents, err := sc.EpollWait(epfd, events[:], EpollTimeout)
+	nEvents, err := dev.Syscall.EpollWait(epfd, events[:], EpollTimeout)
 	if err != nil {
-		_ = sc.Close(epfd)
+		_ = dev.Syscall.Close(epfd)
 		return psErr.Error{Code: psErr.Interrupted}
 	}
 
@@ -139,7 +138,7 @@ func (v TapOperation) Poll(dev *Device, sc s.ISyscall, isTerminated bool) psErr.
 		psLog.I("events occurred")
 		psLog.I("\tevents: %v ", nEvents)
 		psLog.I("\tdevice: %v (%v) ", dev.Name, dev.Priv.Name)
-		_ = ReadFrame(dev, sc)
+		_ = ReadFrame(dev.Priv.FD, dev.Addr, dev.Syscall)
 	} else {
 		psLog.I("no event occurred")
 	}
@@ -147,23 +146,6 @@ func (v TapOperation) Poll(dev *Device, sc s.ISyscall, isTerminated bool) psErr.
 	return psErr.Error{Code: psErr.OK}
 }
 
-// GenTapDevice generates TAP device object.
-func GenTapDevice(name string, addr EthAddr) (*Device, psErr.Error) {
-	if len(name) > 16 {
-		return nil, psErr.Error{Code: psErr.CantCreate, Msg: "device name must be less than or equal to 16 characters"}
-	}
-
-	dev := &Device{
-		Type:      DevTypeEthernet,
-		MTU:       EthPayloadSizeMax,
-		FLAG:      DevFlagBroadcast | DevFlagNeedArp,
-		HeaderLen: EthHeaderSize,
-		Addr:      addr,
-		AddrLen:   EthAddrLen,
-		Broadcast: EthAddrBroadcast,
-		Op:        TapOperation{},
-		Priv:      Privilege{FD: -1, Name: name},
-	}
-
-	return dev, psErr.Error{Code: psErr.OK}
+func (dev *TapDevice) Transmit() psErr.Error {
+	return psErr.Error{Code: psErr.OK}
 }

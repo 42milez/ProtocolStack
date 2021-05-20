@@ -117,7 +117,7 @@ func TestReadFrame1(t *testing.T) {
 
 	dev := &Device{Addr: EthAddr{11, 12, 13, 14, 15, 16}}
 
-	got := ReadFrame(dev, m)
+	got := ReadFrame(dev.Priv.FD, dev.Addr, m)
 	if got.Code != psErr.OK {
 		t.Errorf("ReadFrame() = %v; want %v", got.Code, psErr.OK)
 	}
@@ -135,7 +135,7 @@ func TestReadFrame2(t *testing.T) {
 	m := mockSyscall.NewMockISyscall(ctrl)
 	m.EXPECT().Read(gomock.Any(), gomock.Any(), gomock.Any()).Return(uintptr(hdrLen), uintptr(0), syscall.EINTR)
 
-	got := ReadFrame(dev, m)
+	got := ReadFrame(dev.Priv.FD, dev.Addr, m)
 	if got.Code != psErr.CantRead {
 		t.Errorf("ReadFrame() = %v; want %v", got.Code, psErr.CantRead)
 	}
@@ -155,7 +155,7 @@ func TestReadFrame3(t *testing.T) {
 		Read(gomock.Any(), gomock.Any(), gomock.Any()).
 		Return(uintptr(hdrLen), uintptr(0), syscall.Errno(0))
 
-	got := ReadFrame(dev, m)
+	got := ReadFrame(dev.Priv.FD, dev.Addr, m)
 	if got.Code != psErr.InvalidHeader {
 		t.Errorf("ReadFrame() = %v; want %v", got.Code, psErr.InvalidHeader)
 	}
@@ -173,7 +173,7 @@ func TestReadFrame4(t *testing.T) {
 	m := mockSyscall.NewMockISyscall(ctrl)
 	m.EXPECT().Read(gomock.Any(), gomock.Any(), gomock.Any()).Return(uintptr(hdrLen), uintptr(0), syscall.Errno(0))
 
-	got := ReadFrame(dev, m)
+	got := ReadFrame(dev.Priv.FD, dev.Addr, m)
 	if got.Code != psErr.NoDataToRead {
 		t.Errorf("ReadFrame() = %v; want %v", got.Code, psErr.NoDataToRead)
 	}
