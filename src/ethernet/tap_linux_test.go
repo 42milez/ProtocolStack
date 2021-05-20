@@ -200,7 +200,7 @@ func TestTapDevice_Poll_NoEventOccurred(t *testing.T) {
 	m := mockSyscall.NewMockISyscall(ctrl)
 	m.EXPECT().EpollWait(gomock.Any(), gomock.Any(), gomock.Any()).Return(0, nil)
 
-	tapDev := TapDevice{Device{Syscall: mockSyscall.NewMockISyscall(ctrl)}}
+	tapDev := TapDevice{Device{Syscall: m}}
 
 	got := tapDev.Poll(false)
 	if got.Code != psErr.OK {
