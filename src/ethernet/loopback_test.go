@@ -3,7 +3,7 @@ package ethernet
 import (
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	psLog "github.com/42milez/ProtocolStack/src/log"
-	mockSyscall "github.com/42milez/ProtocolStack/src/mock/syscall"
+	psSyscall "github.com/42milez/ProtocolStack/src/syscall"
 	"github.com/golang/mock/gomock"
 	"testing"
 )
@@ -15,7 +15,7 @@ func TestLoopbackDevice_Open(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	loopbackDev := LoopbackDevice{Device{Syscall: mockSyscall.NewMockISyscall(ctrl)}}
+	loopbackDev := LoopbackDevice{Device{Syscall: psSyscall.NewMockISyscall(ctrl)}}
 
 	got := loopbackDev.Open()
 	if got.Code != psErr.OK {
@@ -30,7 +30,7 @@ func TestLoopbackDevice_Close(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	loopbackDev := LoopbackDevice{Device{Syscall: mockSyscall.NewMockISyscall(ctrl)}}
+	loopbackDev := LoopbackDevice{Device{Syscall: psSyscall.NewMockISyscall(ctrl)}}
 
 	got := loopbackDev.Close()
 	if got.Code != psErr.OK {
@@ -45,7 +45,7 @@ func TestLoopbackDevice_Transmit(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	loopbackDev := LoopbackDevice{Device{Syscall: mockSyscall.NewMockISyscall(ctrl)}}
+	loopbackDev := LoopbackDevice{Device{Syscall: psSyscall.NewMockISyscall(ctrl)}}
 
 	got := loopbackDev.Transmit()
 	if got.Code != psErr.OK {
@@ -60,7 +60,7 @@ func TestLoopbackDevice_Poll(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	loopbackDev := LoopbackDevice{Device{Syscall: mockSyscall.NewMockISyscall(ctrl)}}
+	loopbackDev := LoopbackDevice{Device{Syscall: psSyscall.NewMockISyscall(ctrl)}}
 
 	got := loopbackDev.Poll(false)
 	if got.Code != psErr.OK {

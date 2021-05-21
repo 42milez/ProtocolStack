@@ -4,7 +4,6 @@ import (
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	"github.com/42milez/ProtocolStack/src/ethernet"
 	psLog "github.com/42milez/ProtocolStack/src/log"
-	mockEthernet "github.com/42milez/ProtocolStack/src/mock/ethernet"
 	"github.com/42milez/ProtocolStack/src/network"
 	psSyscall "github.com/42milez/ProtocolStack/src/syscall"
 	"github.com/golang/mock/gomock"
@@ -118,7 +117,7 @@ func TestUp_SuccessOnDisabled(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	m := mockEthernet.NewMockIDevice(ctrl)
+	m := ethernet.NewMockIDevice(ctrl)
 	m.EXPECT().Open().Return(psErr.Error{Code: psErr.OK})
 	m.EXPECT().Enable()
 	m.EXPECT().Info().Return(ethernet.DevTypeEthernet.String(), "net0", "tap0").AnyTimes()
@@ -141,7 +140,7 @@ func TestUp_FailOnEnabled(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	m := mockEthernet.NewMockIDevice(ctrl)
+	m := ethernet.NewMockIDevice(ctrl)
 	m.EXPECT().Info().Return(ethernet.DevTypeEthernet.String(), "net0", "tap0").AnyTimes()
 	m.EXPECT().IsUp().Return(true)
 
@@ -162,7 +161,7 @@ func TestUp_CantOpen(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	m := mockEthernet.NewMockIDevice(ctrl)
+	m := ethernet.NewMockIDevice(ctrl)
 	m.EXPECT().Info().Return(ethernet.DevTypeEthernet.String(), "net0", "tap0").AnyTimes()
 	m.EXPECT().IsUp().Return(false)
 	m.EXPECT().Open().Return(psErr.Error{Code: psErr.CantOpen})

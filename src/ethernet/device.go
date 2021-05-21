@@ -1,3 +1,5 @@
+//go:generate mockgen -source=device.go -destination=device_mock.go -package=$GOPACKAGE -self_package=github.com/42milez/ProtocolStack/src/$GOPACKAGE
+
 package ethernet
 
 import (
