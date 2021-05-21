@@ -96,7 +96,7 @@ func TestDevice_IsUp_A(t *testing.T) {
 	dev := &Device{}
 
 	dev.Enable()
-	if got := dev.IsUp(); ! got {
+	if got := dev.IsUp(); !got {
 		t.Errorf("Device.IsUp() = %v; want %v", got, true)
 	}
 }
