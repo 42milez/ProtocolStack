@@ -91,3 +91,21 @@ func TestDevice_Info(t *testing.T) {
 		t.Errorf("Device.Equal() = %v, %v, %v; want %v, %v, %v", typ, n1, n2, devType, devName1, devName2)
 	}
 }
+
+func TestDevice_IsUp_A(t *testing.T) {
+	dev := &Device{}
+
+	dev.Enable()
+	if got := dev.IsUp(); ! got {
+		t.Errorf("Device.IsUp() = %v; want %v", got, true)
+	}
+}
+
+func TestDevice_IsUp_B(t *testing.T) {
+	dev := &Device{}
+
+	dev.Disable()
+	if got := dev.IsUp(); got {
+		t.Errorf("Device.IsUp() = %v; want %v", got, false)
+	}
+}
