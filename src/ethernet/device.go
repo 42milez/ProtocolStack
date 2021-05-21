@@ -3,7 +3,6 @@ package ethernet
 import (
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	psSyscall "github.com/42milez/ProtocolStack/src/syscall"
-	"github.com/google/go-cmp/cmp"
 )
 
 type DevType int
@@ -74,7 +73,8 @@ func (dev *Device) Disable() {
 }
 
 func (dev *Device) Equal(v IDevice) bool {
-	return cmp.Equal(dev, v)
+	_, name, _ := v.Info()
+	return dev.Name == name
 }
 
 func (dev *Device) Info() (string, string, string) {
