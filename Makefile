@@ -1,4 +1,5 @@
 include .env
+export
 
 PROJECT_NAME := ProtocolStack
 
@@ -47,6 +48,10 @@ compile:
 .PHONY: fmt
 fmt: go-fmt
 
+## gen: generate source code
+.PHONY: gen
+gen: go-generate
+
 ## lint: run linters (golangci-lint)
 .PHONY: lint
 lint: go-lint
@@ -84,6 +89,11 @@ go-compile: go-clean go-mod go-vet go-build
 go-fmt:
 	@echo "> reformatting code..."
 	@go fmt $(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/...
+
+.PHONY: go-generate
+go-generate:
+	@echo "> generating code..."
+	@go generate $(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/...
 
 .PHONY: go-lint
 go-lint:

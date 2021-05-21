@@ -1,4 +1,4 @@
-// +build amd64,linux
+//go:generate mockgen -source=syscall_linux_amd64.go -destination=syscall_mock_linux_amd64.go -package=syscall -self_package=github.com/42milez/ProtocolStack/src/syscall
 
 package syscall
 
