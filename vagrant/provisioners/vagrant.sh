@@ -43,3 +43,7 @@ fi
 if ! type golangci-lint > /dev/null 2>&1; then
   brew install golangci-lint
 fi
+
+if ! type mockgen > /dev/null 2>&1; then
+   go install github.com/golang/mock/mockgen@latest
+fi
