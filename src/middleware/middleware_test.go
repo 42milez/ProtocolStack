@@ -39,8 +39,8 @@ func TestRegisterDevice_FAIL_WhenTryingToRegisterSameDevice(t *testing.T) {
 	dev1 := &ethernet.TapDevice{Device: ethernet.Device{Name: "net0"}}
 	dev2 := &ethernet.TapDevice{Device: ethernet.Device{Name: "net0"}}
 
-	got := RegisterDevice(dev1)
-	got = RegisterDevice(dev2)
+	_ = RegisterDevice(dev1)
+	got := RegisterDevice(dev2)
 	if got.Code != psErr.CantRegister {
 		t.Errorf("RegisterDevice() = %v; want %v", got.Code, psErr.CantRegister)
 	}
