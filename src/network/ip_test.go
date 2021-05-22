@@ -1,6 +1,7 @@
 package network
 
 import (
+	"github.com/42milez/ProtocolStack/src/ethernet"
 	"github.com/google/go-cmp/cmp"
 	"testing"
 )
@@ -33,27 +34,37 @@ func TestIP_String(t *testing.T) {
 func TestIP_ToV4(t *testing.T) {
 	want := IP{192, 168, 0, 1}
 	got := IP{192, 168, 0, 1}.ToV4()
-	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf("IP.ToV4() = %v; want %v; diff %v", got, want, diff)
+	if d := cmp.Diff(got, want); d != "" {
+		t.Errorf("IP.ToV4() differs: (-got +want)\n%s", d)
 	}
 
 	got = IP{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 192, 168, 0, 1}.ToV4()
-	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf("IP.ToV4() = %v; want %v; diff %v", got, want, diff)
+	if d := cmp.Diff(got, want); d != "" {
+		t.Errorf("IP.ToV4() differs: (-got +want)\n%s", d)
 	}
+}
+
+func TestIpInputHandler(t *testing.T) {
+	IpInputHandler(make([]byte, 0), &ethernet.TapDevice{})
 }
 
 func TestParseIP(t *testing.T) {
 	want := IP{192, 168, 0, 1}
 	got := ParseIP("192.168.0.1")
-	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf("ParseIP() = %v; want %v; diff %v", got, want, diff)
+	if d := cmp.Diff(got, want); d != "" {
+		t.Errorf("ParseIP() differs: (-got +want)\n%s", d)
+	}
+
+	want = nil
+	got = ParseIP("2001:0db8:85a3:0000:0000:8a2e:0370:7334")
+	if ! cmp.Equal(got, want) {
+		t.Errorf("ParseIP() = %v; want %v", got, want)
 	}
 
 	want = nil
 	got = ParseIP("")
-	if d := cmp.Diff(got, want); d != "" {
-		t.Errorf("ParseIP() differs: (-got +want)\n%s", d)
+	if got != nil {
+		t.Errorf("ParseIP() = %v; want %v", got, want)
 	}
 }
 

@@ -72,7 +72,7 @@ func (ip IP) ToV4() IP {
 }
 
 // IpInputHandler handles incoming datagram.
-func IpInputHandler(data []uint8, dev ethernet.IDevice) {}
+func IpInputHandler(data []byte, dev ethernet.IDevice) {}
 
 // ParseIP parses string as IPv4 or IPv6 address by detecting its format.
 func ParseIP(s string) IP {
