@@ -35,6 +35,18 @@ func TestDevType_String(t *testing.T) {
 	}
 }
 
+func TestDevice_Enable(t *testing.T) {
+	dev := Device{}
+	dev.Enable()
+
+	want := DevFlagUp
+	got := dev.FLAG & DevFlagUp
+
+	if got != want {
+		t.Errorf("Device.Enable() = %v; want %v", got, want)
+	}
+}
+
 func TestDevice_Disable(t *testing.T) {
 	dev := Device{}
 	dev.Enable()
@@ -45,18 +57,6 @@ func TestDevice_Disable(t *testing.T) {
 
 	if got != want {
 		t.Errorf("Device.Disable() = %v; want %v", got, want)
-	}
-}
-
-func TestDevice_Enable(t *testing.T) {
-	dev := Device{}
-	dev.Enable()
-
-	want := DevFlagUp
-	got := dev.FLAG & DevFlagUp
-
-	if got != want {
-		t.Errorf("Device.Enable() = %v; want %v", got, want)
 	}
 }
 
@@ -92,17 +92,13 @@ func TestDevice_Info(t *testing.T) {
 	}
 }
 
-func TestDevice_IsUp_A(t *testing.T) {
+func TestDevice_IsUp(t *testing.T) {
 	dev := &Device{}
 
 	dev.Enable()
 	if got := dev.IsUp(); !got {
 		t.Errorf("Device.IsUp() = %v; want %v", got, true)
 	}
-}
-
-func TestDevice_IsUp_B(t *testing.T) {
-	dev := &Device{}
 
 	dev.Disable()
 	if got := dev.IsUp(); got {
