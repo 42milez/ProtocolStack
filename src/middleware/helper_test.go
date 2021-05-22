@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestGenIface(t *testing.T) {
+func TestGenIface_SUCCESS(t *testing.T) {
 	want := &Iface{
 		Family:    network.FamilyV4,
 		Unicast:   network.ParseIP(ethernet.LoopbackIpAddr),
@@ -22,7 +22,7 @@ func TestGenIface(t *testing.T) {
 	}
 }
 
-func TestGenLoopbackDevice(t *testing.T) {
+func TestGenLoopbackDevice_SUCCESS(t *testing.T) {
 	want := &ethernet.LoopbackDevice{
 		Device: ethernet.Device{
 			Name:      "net0",
@@ -39,7 +39,7 @@ func TestGenLoopbackDevice(t *testing.T) {
 	}
 }
 
-func TestGenTapDevice_A(t *testing.T) {
+func TestGenTapDevice_SUCCESS(t *testing.T) {
 	devName := "tap0"
 	devEthAddr := ethernet.EthAddr{11, 12, 13, 14, 15, 16}
 	want := &ethernet.TapDevice{

@@ -41,8 +41,8 @@ type IDevice interface {
 	Close() psErr.Error
 	Poll(terminate bool) psErr.Error
 	Transmit() psErr.Error
-	Enable()
-	Disable()
+	Up()
+	Down()
 	Equal(dev IDevice) bool
 	Info() (string, string, string)
 	IsUp() bool
@@ -66,11 +66,11 @@ type Privilege struct {
 	FD   int
 }
 
-func (dev *Device) Enable() {
+func (dev *Device) Up() {
 	dev.FLAG |= DevFlagUp
 }
 
-func (dev *Device) Disable() {
+func (dev *Device) Down() {
 	dev.FLAG &= ^DevFlagUp
 }
 
