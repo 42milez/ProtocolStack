@@ -28,7 +28,7 @@ type Timer struct {
 	Handler  Handler
 }
 
-type Handler func(data []uint8, dev ethernet.IDevice)
+type Handler func(data []byte, dev ethernet.IDevice)
 
 func RegisterDevice(dev ethernet.IDevice) psErr.Error {
 	devices = append(devices, dev)

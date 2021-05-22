@@ -43,10 +43,6 @@ type IP []byte
 
 // String returns the string form of IP.
 func (ip IP) String() string {
-	if len(ip) == 0 {
-		return "<nil>"
-	}
-
 	const maxIPv4StringLen = len("255.255.255.255")
 	b := make(IP, maxIPv4StringLen)
 
@@ -69,23 +65,17 @@ func (ip IP) String() string {
 
 // ToV4 converts IP to 4 bytes representation.
 func (ip IP) ToV4() IP {
-	if len(ip) == V4AddrLen {
-		return ip
-	}
 	if len(ip) == V6AddrLen && isZeros(ip[0:10]) && ip[10] == 0xff && ip[11] == 0xff {
 		return ip[12:16]
 	}
-	return nil
+	return ip
 }
 
 // IpInputHandler handles incoming datagram.
-func IpInputHandler(data []uint8, dev ethernet.IDevice) {}
+func IpInputHandler(data []byte, dev ethernet.IDevice) {}
 
 // ParseIP parses string as IPv4 or IPv6 address by detecting its format.
 func ParseIP(s string) IP {
-	if len(s) == 0 {
-		return nil
-	}
 	if strings.Contains(s, ".") {
 		return parseV4(s)
 	}
