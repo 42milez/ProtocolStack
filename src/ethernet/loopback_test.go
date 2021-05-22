@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestLoopbackDevice_Open(t *testing.T) {
+func TestLoopbackDevice_Open_OK(t *testing.T) {
 	psLog.DisableOutput()
 	defer psLog.EnableOutput()
 
@@ -23,7 +23,7 @@ func TestLoopbackDevice_Open(t *testing.T) {
 	}
 }
 
-func TestLoopbackDevice_Close(t *testing.T) {
+func TestLoopbackDevice_Close_OK(t *testing.T) {
 	psLog.DisableOutput()
 	defer psLog.EnableOutput()
 
@@ -38,22 +38,7 @@ func TestLoopbackDevice_Close(t *testing.T) {
 	}
 }
 
-func TestLoopbackDevice_Transmit(t *testing.T) {
-	psLog.DisableOutput()
-	defer psLog.EnableOutput()
-
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	loopbackDev := LoopbackDevice{Device{Syscall: psSyscall.NewMockISyscall(ctrl)}}
-
-	got := loopbackDev.Transmit()
-	if got.Code != psErr.OK {
-		t.Errorf("LoopbackDevice.Transmit() = %v; want %v", got.Code, psErr.OK)
-	}
-}
-
-func TestLoopbackDevice_Poll(t *testing.T) {
+func TestLoopbackDevice_Poll_OK(t *testing.T) {
 	psLog.DisableOutput()
 	defer psLog.EnableOutput()
 
@@ -65,5 +50,20 @@ func TestLoopbackDevice_Poll(t *testing.T) {
 	got := loopbackDev.Poll(false)
 	if got.Code != psErr.OK {
 		t.Errorf("LoopbackDevice.Poll() = %v; want %v", got.Code, psErr.OK)
+	}
+}
+
+func TestLoopbackDevice_Transmit_OK(t *testing.T) {
+	psLog.DisableOutput()
+	defer psLog.EnableOutput()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	loopbackDev := LoopbackDevice{Device{Syscall: psSyscall.NewMockISyscall(ctrl)}}
+
+	got := loopbackDev.Transmit()
+	if got.Code != psErr.OK {
+		t.Errorf("LoopbackDevice.Transmit() = %v; want %v", got.Code, psErr.OK)
 	}
 }
