@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-func TestTapDevice_Open_A(t *testing.T) {
+func TestTapDevice_Open_SUCCESS(t *testing.T) {
 	psLog.DisableOutput()
 	defer psLog.EnableOutput()
 
@@ -34,7 +34,7 @@ func TestTapDevice_Open_A(t *testing.T) {
 	}
 }
 
-func TestTapDevice_Open_B(t *testing.T) {
+func TestTapDevice_Open_FAIL_WhenOpenSyscallFailed(t *testing.T) {
 	psLog.DisableOutput()
 	defer psLog.EnableOutput()
 
@@ -52,7 +52,7 @@ func TestTapDevice_Open_B(t *testing.T) {
 	}
 }
 
-func TestTapDevice_Open_C(t *testing.T) {
+func TestTapDevice_Open_FAIL_WhenIoctlSyscallFailed_A(t *testing.T) {
 	psLog.DisableOutput()
 	defer psLog.EnableOutput()
 
@@ -73,7 +73,7 @@ func TestTapDevice_Open_C(t *testing.T) {
 	}
 }
 
-func TestTapDevice_Open_D(t *testing.T) {
+func TestTapDevice_Open_FAIL_WhenSocketSyscallFailed(t *testing.T) {
 	psLog.DisableOutput()
 	defer psLog.EnableOutput()
 
@@ -93,7 +93,7 @@ func TestTapDevice_Open_D(t *testing.T) {
 	}
 }
 
-func TestTapDevice_Open_E(t *testing.T) {
+func TestTapDevice_Open_FAIL_WhenIoctlSyscallFailed_B(t *testing.T) {
 	psLog.DisableOutput()
 	defer psLog.EnableOutput()
 
@@ -116,7 +116,7 @@ func TestTapDevice_Open_E(t *testing.T) {
 	}
 }
 
-func TestTapDevice_Open_F(t *testing.T) {
+func TestTapDevice_Open_FAIL_WhenEpollCreate1SyscallFailed(t *testing.T) {
 	psLog.DisableOutput()
 	defer psLog.EnableOutput()
 
@@ -139,7 +139,7 @@ func TestTapDevice_Open_F(t *testing.T) {
 	}
 }
 
-func TestTapDevice_Open_G(t *testing.T) {
+func TestTapDevice_Open_FAIL_WhenEpollCtlSyscallFailed(t *testing.T) {
 	psLog.DisableOutput()
 	defer psLog.EnableOutput()
 
@@ -163,7 +163,7 @@ func TestTapDevice_Open_G(t *testing.T) {
 	}
 }
 
-func TestTapDevice_Close(t *testing.T) {
+func TestTapDevice_Close_SUCCESS(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -178,7 +178,7 @@ func TestTapDevice_Close(t *testing.T) {
 	}
 }
 
-func TestTapDevice_Transmit(t *testing.T) {
+func TestTapDevice_Transmit_SUCCESS(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -190,7 +190,7 @@ func TestTapDevice_Transmit(t *testing.T) {
 	}
 }
 
-func TestTapDevice_Poll_NoEventOccurred(t *testing.T) {
+func TestTapDevice_Poll_SUCCESS_WhenNoEventOccurred(t *testing.T) {
 	psLog.DisableOutput()
 	defer psLog.EnableOutput()
 
@@ -208,7 +208,7 @@ func TestTapDevice_Poll_NoEventOccurred(t *testing.T) {
 	}
 }
 
-func TestTapDevice_Poll_EventOccurred(t *testing.T) {
+func TestTapDevice_Poll_SUCCESS_WhenEventOccurred(t *testing.T) {
 	psLog.DisableOutput()
 	defer psLog.EnableOutput()
 
@@ -231,7 +231,7 @@ func TestTapDevice_Poll_EventOccurred(t *testing.T) {
 	}
 }
 
-func TestTapDevice_Poll_Terminated(t *testing.T) {
+func TestTapDevice_Poll_SUCCESS_WhenTerminated(t *testing.T) {
 	psLog.DisableOutput()
 	defer psLog.EnableOutput()
 
@@ -249,7 +249,7 @@ func TestTapDevice_Poll_Terminated(t *testing.T) {
 	}
 }
 
-func TestTapDevice_Poll_FailOnEpollWait(t *testing.T) {
+func TestTapDevice_Poll_FAIL_WhenEpollWaitSyscallFailed(t *testing.T) {
 	psLog.DisableOutput()
 	defer psLog.EnableOutput()
 

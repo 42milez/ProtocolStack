@@ -21,7 +21,7 @@ func format(s string) string {
 	return ret
 }
 
-func TestEthAddr_Equal_Equal(t *testing.T) {
+func TestEthAddr_Equal_SUCCESS_Equal(t *testing.T) {
 	ethAddr1 := EthAddr([EthAddrLen]byte{11, 22, 33, 44, 55, 66})
 	ethAddr2 := EthAddr([EthAddrLen]byte{11, 22, 33, 44, 55, 66})
 
@@ -31,7 +31,7 @@ func TestEthAddr_Equal_Equal(t *testing.T) {
 	}
 }
 
-func TestEthAddr_Equal_NotEqual(t *testing.T) {
+func TestEthAddr_Equal_SUCCESS_NotEqual(t *testing.T) {
 	ethAddr1 := EthAddr([EthAddrLen]byte{11, 22, 33, 44, 55, 66})
 	ethAddr2 := EthAddr([EthAddrLen]byte{})
 
@@ -41,7 +41,7 @@ func TestEthAddr_Equal_NotEqual(t *testing.T) {
 	}
 }
 
-func TestEthType_String_ARP(t *testing.T) {
+func TestEthType_String_SUCCESS_A(t *testing.T) {
 	ethType := EthType(0x0608)
 	want := "ARP"
 	got := ethType.String()
@@ -50,7 +50,7 @@ func TestEthType_String_ARP(t *testing.T) {
 	}
 }
 
-func TestEthType_String_IPv4(t *testing.T) {
+func TestEthType_String_SUCCESS_B(t *testing.T) {
 	want := "IPv4"
 	got := EthType(0x0008).String()
 	if got != want {
@@ -58,7 +58,7 @@ func TestEthType_String_IPv4(t *testing.T) {
 	}
 }
 
-func TestEthType_String_IPv6(t *testing.T) {
+func TestEthType_String_SUCCESS_C(t *testing.T) {
 	want := "IPv6"
 	got := EthType(0xdd86).String()
 	if got != want {
@@ -66,7 +66,7 @@ func TestEthType_String_IPv6(t *testing.T) {
 	}
 }
 
-func TestEthType_String_UNKNOWN(t *testing.T) {
+func TestEthType_String_SUCCESS_D(t *testing.T) {
 	want := "UNKNOWN"
 	got := EthType(0x0000).String()
 	if got != want {
@@ -74,7 +74,7 @@ func TestEthType_String_UNKNOWN(t *testing.T) {
 	}
 }
 
-func TestEthDump_ValidOutput(t *testing.T) {
+func TestEthDump_SUCCESS(t *testing.T) {
 	regexpDatetime := "[0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}"
 	macDst := EthAddr{11, 12, 13, 14, 15, 16}
 	macSrc := EthAddr{21, 22, 23, 24, 25, 26}
@@ -98,7 +98,7 @@ func TestEthDump_ValidOutput(t *testing.T) {
 	}
 }
 
-func TestReadFrame_OK(t *testing.T) {
+func TestReadFrame_SUCCESS(t *testing.T) {
 	psLog.DisableOutput()
 	defer psLog.EnableOutput()
 
@@ -130,7 +130,7 @@ func TestReadFrame_OK(t *testing.T) {
 	}
 }
 
-func TestReadFrame_CantRead(t *testing.T) {
+func TestReadFrame_FAIL_WhenReadSyscallFailed(t *testing.T) {
 	psLog.DisableOutput()
 	defer psLog.EnableOutput()
 
@@ -148,7 +148,7 @@ func TestReadFrame_CantRead(t *testing.T) {
 	}
 }
 
-func TestReadFrame_InvalidHeader(t *testing.T) {
+func TestReadFrame_FAIL_WhenHeaderLengthIsInvalid(t *testing.T) {
 	psLog.DisableOutput()
 	defer psLog.EnableOutput()
 
@@ -168,7 +168,7 @@ func TestReadFrame_InvalidHeader(t *testing.T) {
 	}
 }
 
-func TestReadFrame_NoDataToRead(t *testing.T) {
+func TestReadFrame_SUCCESS_WhenNoDataToReadExists(t *testing.T) {
 	psLog.DisableOutput()
 	defer psLog.EnableOutput()
 

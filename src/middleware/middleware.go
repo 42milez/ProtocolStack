@@ -31,10 +31,22 @@ type Timer struct {
 type Handler func(data []byte, dev ethernet.IDevice)
 
 func RegisterDevice(dev ethernet.IDevice) psErr.Error {
+	for _, d := range devices {
+		if d.Equal(dev) {
+			typ, n1, n2 := d.Info()
+			psLog.W("device is already registered")
+			psLog.W("\ttype:        %v", typ)
+			psLog.W("\tname:        %v", n1)
+			psLog.W("\tname (priv): %v", n2)
+			return psErr.Error{Code: psErr.CantRegister}
+		}
+	}
 	devices = append(devices, dev)
-	_, name1, name2 := dev.Info()
+	typ, n1, n2 := dev.Info()
 	psLog.I("device registered")
-	psLog.I("\tname: %v (%v) ", name1, name2)
+	psLog.I("\ttype:        %v", typ)
+	psLog.I("\tname:        %v", n1)
+	psLog.I("\tname (priv): %v", n2)
 	return psErr.Error{Code: psErr.OK}
 }
 
@@ -71,7 +83,7 @@ func Up() psErr.Error {
 			psLog.E("\ttype: %v ", typ)
 			return psErr.Error{Code: psErr.CantOpen}
 		}
-		dev.Enable()
+		dev.Up()
 		psLog.I("device opened")
 		psLog.I("\tname: %v (%v) ", name1, name2)
 	}

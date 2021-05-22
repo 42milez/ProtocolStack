@@ -16,7 +16,7 @@ func reset() {
 	protocols = make([]Protocol, 0)
 }
 
-func TestRegisterDevice(t *testing.T) {
+func TestRegisterDevice_SUCCESS(t *testing.T) {
 	defer reset()
 
 	psLog.DisableOutput()
@@ -41,7 +41,7 @@ func TestRegisterDevice(t *testing.T) {
 	}
 }
 
-func TestRegisterInterface_A(t *testing.T) {
+func TestRegisterInterface_SUCCESS(t *testing.T) {
 	defer reset()
 
 	psLog.DisableOutput()
@@ -74,7 +74,7 @@ func TestRegisterInterface_A(t *testing.T) {
 	}
 }
 
-func TestRegisterInterface_B(t *testing.T) {
+func TestRegisterInterface_FailWhenTryingToRegisterSameInterface(t *testing.T) {
 	defer reset()
 
 	psLog.DisableOutput()
@@ -108,7 +108,7 @@ func TestRegisterInterface_B(t *testing.T) {
 	}
 }
 
-func TestUp_SuccessOnDisabled(t *testing.T) {
+func TestUp_SUCCESS(t *testing.T) {
 	defer reset()
 
 	psLog.DisableOutput()
@@ -119,7 +119,7 @@ func TestUp_SuccessOnDisabled(t *testing.T) {
 
 	m := ethernet.NewMockIDevice(ctrl)
 	m.EXPECT().Open().Return(psErr.Error{Code: psErr.OK})
-	m.EXPECT().Enable()
+	m.EXPECT().Up()
 	m.EXPECT().Info().Return(ethernet.DevTypeEthernet.String(), "net0", "tap0").AnyTimes()
 	m.EXPECT().IsUp().Return(false)
 
@@ -131,7 +131,7 @@ func TestUp_SuccessOnDisabled(t *testing.T) {
 	}
 }
 
-func TestUp_FailOnEnabled(t *testing.T) {
+func TestUp_FailWhenDeviceIsAlreadyOpened(t *testing.T) {
 	defer reset()
 
 	psLog.DisableOutput()
@@ -152,7 +152,7 @@ func TestUp_FailOnEnabled(t *testing.T) {
 	}
 }
 
-func TestUp_CantOpen(t *testing.T) {
+func TestUp_FailWhenCouldNotGetDeviceUp(t *testing.T) {
 	defer reset()
 
 	psLog.DisableOutput()

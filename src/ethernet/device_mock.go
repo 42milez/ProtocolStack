@@ -48,28 +48,16 @@ func (mr *MockIDeviceMockRecorder) Close() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockIDevice)(nil).Close))
 }
 
-// Disable mocks base method.
-func (m *MockIDevice) Disable() {
+// Down mocks base method.
+func (m *MockIDevice) Down() {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Disable")
+	m.ctrl.Call(m, "Down")
 }
 
-// Disable indicates an expected call of Disable.
-func (mr *MockIDeviceMockRecorder) Disable() *gomock.Call {
+// Down indicates an expected call of Down.
+func (mr *MockIDeviceMockRecorder) Down() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Disable", reflect.TypeOf((*MockIDevice)(nil).Disable))
-}
-
-// Enable mocks base method.
-func (m *MockIDevice) Enable() {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Enable")
-}
-
-// Enable indicates an expected call of Enable.
-func (mr *MockIDeviceMockRecorder) Enable() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Enable", reflect.TypeOf((*MockIDevice)(nil).Enable))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Down", reflect.TypeOf((*MockIDevice)(nil).Down))
 }
 
 // Equal mocks base method.
@@ -156,4 +144,16 @@ func (m *MockIDevice) Transmit() error.Error {
 func (mr *MockIDeviceMockRecorder) Transmit() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Transmit", reflect.TypeOf((*MockIDevice)(nil).Transmit))
+}
+
+// Up mocks base method.
+func (m *MockIDevice) Up() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Up")
+}
+
+// Up indicates an expected call of Up.
+func (mr *MockIDeviceMockRecorder) Up() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Up", reflect.TypeOf((*MockIDevice)(nil).Up))
 }
