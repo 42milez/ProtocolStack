@@ -1,22 +1,23 @@
 codecov:
   require_ci_to_pass: yes
 coverage:
-  patch:
-    default:
-      threshold: 0%
   precision: 2
+  range: 60...80
   round: down
-  range: "50...80"
+  status:
+    patch:
+      default:
+        threshold: 0%
 parsers:
   gcov:
     branch_detection:
       conditional: yes
       loop: yes
-      method: no
       macro: no
+      method: no
 comment:
-  layout: "reach,diff,flags,files,footer"
   behavior: default
+  layout: reach, diff, flags, files, footer
   require_changes: no
 ignore:
-  - "src/**/*mock*.go"
+  - src/**/*mock*.go
