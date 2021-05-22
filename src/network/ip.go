@@ -76,9 +76,6 @@ func IpInputHandler(data []byte, dev ethernet.IDevice) {}
 
 // ParseIP parses string as IPv4 or IPv6 address by detecting its format.
 func ParseIP(s string) IP {
-	if len(s) == 0 {
-		return nil
-	}
 	if strings.Contains(s, ".") {
 		return parseV4(s)
 	}
