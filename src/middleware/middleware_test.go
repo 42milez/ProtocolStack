@@ -22,22 +22,27 @@ func TestRegisterDevice_SUCCESS(t *testing.T) {
 	psLog.DisableOutput()
 	defer psLog.EnableOutput()
 
-	dev := &ethernet.TapDevice{
-		Device: ethernet.Device{
-			Type:      ethernet.DevTypeEthernet,
-			MTU:       ethernet.EthPayloadSizeMax,
-			FLAG:      ethernet.DevFlagBroadcast | ethernet.DevFlagNeedArp,
-			HeaderLen: ethernet.EthHeaderSize,
-			Addr:      ethernet.EthAddr{11, 12, 13, 14, 15, 16},
-			Broadcast: ethernet.EthAddrBroadcast,
-			Priv:      ethernet.Privilege{FD: -1, Name: "tap0"},
-			Syscall:   &psSyscall.Syscall{},
-		},
-	}
+	dev := &ethernet.TapDevice{}
 
 	got := RegisterDevice(dev)
 	if got.Code != psErr.OK {
 		t.Errorf("RegisterDevice() = %v; want %v", got.Code, psErr.OK)
+	}
+}
+
+func TestRegisterDevice_FAIL_WhenTryingToRegisterSameDevice(t *testing.T) {
+	defer reset()
+
+	psLog.DisableOutput()
+	defer psLog.EnableOutput()
+
+	dev1 := &ethernet.TapDevice{Device: ethernet.Device{Name: "net0"}}
+	dev2 := &ethernet.TapDevice{Device: ethernet.Device{Name: "net0"}}
+
+	got := RegisterDevice(dev1)
+	got = RegisterDevice(dev2)
+	if got.Code != psErr.CantRegister {
+		t.Errorf("RegisterDevice() = %v; want %v", got.Code, psErr.CantRegister)
 	}
 }
 
@@ -74,7 +79,7 @@ func TestRegisterInterface_SUCCESS(t *testing.T) {
 	}
 }
 
-func TestRegisterInterface_FailWhenTryingToRegisterSameInterface(t *testing.T) {
+func TestRegisterInterface_FAIL_WhenTryingToRegisterSameInterface(t *testing.T) {
 	defer reset()
 
 	psLog.DisableOutput()
