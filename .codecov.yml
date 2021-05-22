@@ -20,4 +20,4 @@ comment:
   layout: reach, diff, flags, files, footer
   require_changes: no
 ignore:
-  - src/**/*mock*.go
+  - src/**/*_mock.go
