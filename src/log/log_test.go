@@ -19,7 +19,7 @@ func TestI(t *testing.T) {
 	})
 	got = format(got)
 	if !want.MatchString(got) {
-		t.Errorf("EtherDump() = %v; want %v", got, want.String())
+		t.Errorf("I() = %v; want %v", got, want.String())
 	}
 
 	want, _ = regexp.Compile("^\u001B\\[1;34m\\[INFO]\u001B\\[0m [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} info log$")
@@ -28,7 +28,7 @@ func TestI(t *testing.T) {
 	})
 	got = format(got)
 	if !want.MatchString(got) {
-		t.Errorf("EtherDump() = %v; want %v", got, want.String())
+		t.Errorf("I() = %v; want %v", got, want.String())
 	}
 }
 
@@ -39,7 +39,7 @@ func TestW(t *testing.T) {
 	})
 	got = format(got)
 	if !want.MatchString(got) {
-		t.Errorf("EtherDump() = %v; want %v", got, want.String())
+		t.Errorf("W() = %v; want %v", got, want.String())
 	}
 
 	want, _ = regexp.Compile("^\u001B\\[1;33m\\[WARN]\u001B\\[0m [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} warning log$")
@@ -48,7 +48,7 @@ func TestW(t *testing.T) {
 	})
 	got = format(got)
 	if !want.MatchString(got) {
-		t.Errorf("EtherDump() = %v; want %v", got, want.String())
+		t.Errorf("W() = %v; want %v", got, want.String())
 	}
 }
 
@@ -59,7 +59,7 @@ func TestE(t *testing.T) {
 	})
 	got = format(got)
 	if !want.MatchString(got) {
-		t.Errorf("EtherDump() = %v; want %v", got, want.String())
+		t.Errorf("E() = %v; want %v", got, want.String())
 	}
 
 	want, _ = regexp.Compile("^\u001B\\[1;31m\\[ERROR]\u001B\\[0m [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} error log$")
@@ -68,10 +68,10 @@ func TestE(t *testing.T) {
 	})
 	got = format(got)
 	if !want.MatchString(got) {
-		t.Errorf("EtherDump() = %v; want %v", got, want.String())
+		t.Errorf("E() = %v; want %v", got, want.String())
 	}
 }
 
 func TestF(t *testing.T) {
-	// cannot test because log.Fatal*() calls os.Exit(1)
+	// No tests exists because log.Fatal*() calls os.Exit(1).
 }
