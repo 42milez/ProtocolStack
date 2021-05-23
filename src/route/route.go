@@ -19,9 +19,9 @@ func init() {
 	routes = make([]*Route, 0)
 }
 
-func Register(iface *middleware.Iface, nextHop network.IP) {
+func Register(network network.IP, nextHop network.IP, iface *middleware.Iface) {
 	route := &Route{
-		Network: iface.Network,
+		Network: network,
 		Netmask: iface.Netmask,
 		NextHop: nextHop,
 		iface:   iface,

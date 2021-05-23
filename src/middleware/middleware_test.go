@@ -57,7 +57,6 @@ func TestRegisterInterface_SUCCESS(t *testing.T) {
 		Unicast:   network.ParseIP(ethernet.LoopbackIpAddr),
 		Netmask:   network.ParseIP(ethernet.LoopbackNetmask),
 		Broadcast: make(network.IP, 0),
-		Network:   make(network.IP, 0),
 	}
 
 	dev := &ethernet.TapDevice{
@@ -90,7 +89,6 @@ func TestRegisterInterface_FAIL_WhenTryingToRegisterSameInterface(t *testing.T) 
 		Unicast:   network.ParseIP(ethernet.LoopbackIpAddr),
 		Netmask:   network.ParseIP(ethernet.LoopbackNetmask),
 		Broadcast: make(network.IP, 0),
-		Network:   make(network.IP, 0),
 	}
 
 	dev := &ethernet.TapDevice{

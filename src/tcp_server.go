@@ -34,12 +34,12 @@ func setup() psErr.Error {
 		return psErr.Error{Code: psErr.Failed}
 	}
 
-	iface1 := middleware.GenIface(ethernet.LoopbackIpAddr, ethernet.LoopbackNetmask)
+	iface1 := middleware.GenIface(ethernet.LoopbackIpAddr, ethernet.LoopbackNetmask, ethernet.LoopbackBroadcast)
 	if err = middleware.RegisterInterface(iface1, loopbackDev); err.Code != psErr.OK {
 		return psErr.Error{Code: psErr.Failed}
 	}
 
-	route.Register(iface1, network.V4Zero)
+	route.Register(network.ParseIP(ethernet.LoopbackNetwork), network.V4Zero, iface1)
 
 	// Create a TAP device and its iface, then link them.
 	tapDev := middleware.GenTapDevice(0, ethernet.EthAddr{11, 22, 33, 44, 55, 66})
@@ -49,11 +49,11 @@ func setup() psErr.Error {
 
 	middleware.RegisterDevice(tapDev)
 
-	iface2 := middleware.GenIface("192.0.2.2", "255.255.255.0")
+	iface2 := middleware.GenIface("192.0.2.2", "255.255.255.0", "192.0.2.255")
 	if err = middleware.RegisterInterface(iface2, tapDev); err.Code != psErr.OK {
 		return psErr.Error{Code: psErr.Failed}
 	}
-	route.Register(iface2, network.V4Zero)
+	route.Register(network.ParseIP("192.0.0.0"), network.V4Zero, iface2)
 
 	// Register the iface of the TAP device as the default gateway.
 	route.RegisterDefaultGateway(iface2, network.ParseIP("192.0.2.1"))
