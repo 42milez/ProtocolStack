@@ -86,7 +86,7 @@ func start(netSigCh <-chan os.Signal, wg *sync.WaitGroup) psErr.Error {
 			if err := middleware.Poll(terminate); err.Code != psErr.OK {
 				// TODO: notify error to main goroutine
 				// ...
-				psLog.E("this is error message...")
+				psLog.F("poll failed: %v, %v", err.Code, err.Msg)
 			}
 			if terminate {
 				return
@@ -100,7 +100,8 @@ func start(netSigCh <-chan os.Signal, wg *sync.WaitGroup) psErr.Error {
 func init() {
 	mainSigCh = make(chan os.Signal)
 	netSigCh = make(chan os.Signal)
-	sigCh = make(chan os.Signal)
+	sigCh = make(chan os.Signal, 1)
+	// https://pkg.go.dev/os/signal#Notify
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 }
 

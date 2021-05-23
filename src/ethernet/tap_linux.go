@@ -3,6 +3,7 @@
 package ethernet
 
 import (
+	"errors"
 	"fmt"
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	psLog "github.com/42milez/ProtocolStack/src/log"
@@ -120,14 +121,18 @@ func (dev *TapDevice) Close() psErr.Error {
 func (dev *TapDevice) Poll(isTerminated bool) psErr.Error {
 	if isTerminated {
 		_ = dev.Syscall.Close(epfd)
-		return psErr.Error{Code: psErr.OK}
+		return psErr.Error{Code: psErr.OK, Msg: "terminated"}
 	}
 
 	var events [MaxEpollEvents]syscall.EpollEvent
 	nEvents, err := dev.Syscall.EpollWait(epfd, events[:], EpollTimeout)
 	if err != nil {
-		_ = dev.Syscall.Close(epfd)
-		return psErr.Error{Code: psErr.Interrupted}
+		// https://man7.org/linux/man-pages/man2/epoll_wait.2.html#RETURN_VALUE
+		// ignore EINTR
+		if !errors.Is(err, syscall.EINTR) {
+			_ = dev.Syscall.Close(epfd)
+			return psErr.Error{Code: psErr.Interrupted, Msg: err.Error()}
+		}
 	}
 
 	// TODO: send events to channel
