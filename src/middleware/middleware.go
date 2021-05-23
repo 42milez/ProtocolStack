@@ -12,15 +12,6 @@ var devices []ethernet.IDevice
 var interfaces []*Iface
 var protocols []Protocol
 
-// TODO: delete this comment later
-//struct net_timer {
-//	struct net_timer *next;
-//	char name[16];
-//	struct timeval interval;
-//	struct timeval last;
-//	void (*handler)(void);
-//};
-
 type Timer struct {
 	Name     string
 	Interval syscall.Timeval
