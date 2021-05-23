@@ -133,7 +133,6 @@ func (dev *TapDevice) Poll(isTerminated bool) psErr.Error {
 	// TODO: send events to channel
 	// ...
 
-	// TODO: for development (remove later)
 	if nEvents > 0 {
 		psLog.I("events occurred")
 		psLog.I("\tevents: %v ", nEvents)
