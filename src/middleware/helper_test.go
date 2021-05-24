@@ -24,8 +24,8 @@ func TestGenIface_SUCCESS(t *testing.T) {
 func TestGenLoopbackDevice_SUCCESS(t *testing.T) {
 	want := &ethernet.LoopbackDevice{
 		Device: ethernet.Device{
-			Name:      "net0",
 			Type:      ethernet.DevTypeLoopback,
+			Name:      "net0",
 			MTU:       ethernet.LoopbackMTU,
 			HeaderLen: 0,
 			FLAG:      ethernet.DevFlagLoopback,
@@ -44,6 +44,7 @@ func TestGenTapDevice_SUCCESS(t *testing.T) {
 	want := &ethernet.TapDevice{
 		Device: ethernet.Device{
 			Type:      ethernet.DevTypeEthernet,
+			Name:      "net0",
 			MTU:       ethernet.EthPayloadSizeMax,
 			FLAG:      ethernet.DevFlagBroadcast | ethernet.DevFlagNeedArp,
 			HeaderLen: ethernet.EthHeaderSize,
