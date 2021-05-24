@@ -67,21 +67,21 @@ func ReadFrame(fd int, addr EthAddr, sc psSyscall.ISyscall) psErr.Error {
 	// TODO: make buf static variable to reuse
 	buf1 := make([]byte, EthFrameSizeMax)
 
-	flen, err := sc.Read(fd, buf1)
+	fsize, err := sc.Read(fd, buf1)
 	if err != nil {
 		psLog.E("SYS_READ failed: %v ", err)
 		return psErr.Error{Code: psErr.CantRead}
 	}
 
-	if flen < EthHeaderSize {
+	if fsize < EthHeaderSize {
 		psLog.E("the length of ethernet header is too short")
-		psLog.E("\tflen: %v", flen)
+		psLog.E("\tfsize: %v bytes", fsize)
 		return psErr.Error{Code: psErr.InvalidHeader}
 	}
 
 	hdr := EthHeader{}
 	buf2 := bytes.NewBuffer(buf1)
-	if err := binary.Read(buf2, binary.BigEndian, &hdr); err != nil {
+	if err := binary.Read(buf2, binary.LittleEndian, &hdr); err != nil {
 		return psErr.Error{Code: psErr.CantConvert, Msg: err.Error()}
 	}
 
@@ -92,7 +92,7 @@ func ReadFrame(fd int, addr EthAddr, sc psSyscall.ISyscall) psErr.Error {
 	}
 
 	psLog.I("received an ethernet frame")
-	psLog.I("\tlength:    %v ", flen)
+	psLog.I("\tfsize:     %v bytes", fsize)
 	EthDump(&hdr)
 
 	return psErr.Error{Code: psErr.OK}
