@@ -21,7 +21,6 @@ var netSigCh chan os.Signal
 var sigCh chan os.Signal
 
 func setup() psErr.Error {
-	//var iface *middleware.Iface
 	var err psErr.Error
 
 	// Create a loopback device and its iface, then link them.
@@ -138,8 +137,7 @@ func main() {
 				psLog.I("shutting down server...")
 				return
 			default:
-				psLog.I("server is running...")
-				time.Sleep(time.Second * 3)
+				time.Sleep(time.Second * 1)
 			}
 		}
 	}()
