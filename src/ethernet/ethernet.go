@@ -33,7 +33,7 @@ func (v EthAddr) Equal(vv EthAddr) bool {
 }
 
 func (v EthAddr) String() string {
-	return fmt.Sprintf("%v:%v:%v:%v:%v:%v", v[0], v[1], v[2], v[3], v[4], v[5])
+	return fmt.Sprintf("%02x:%02x:%02x:%02x:%02x:%02x", v[0], v[1], v[2], v[3], v[4], v[5])
 }
 
 type EthType uint16
