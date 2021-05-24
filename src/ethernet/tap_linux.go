@@ -139,7 +139,7 @@ func (dev *TapDevice) Poll(isTerminated bool) psErr.Error {
 	// ...
 
 	if nEvents > 0 {
-		psLog.I("events occurred")
+		psLog.I("event occurred")
 		psLog.I("\tevents: %v ", nEvents)
 		psLog.I("\tdevice: %v (%v) ", dev.Name, dev.Priv.Name)
 		_ = ReadFrame(dev.Priv.FD, dev.Addr, dev.Syscall)
