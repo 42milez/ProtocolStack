@@ -8,7 +8,6 @@ import (
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	psLog "github.com/42milez/ProtocolStack/src/log"
 	psSyscall "github.com/42milez/ProtocolStack/src/syscall"
-	"unsafe"
 )
 
 const EthAddrLen = 6
@@ -59,8 +58,8 @@ type EthHeader struct {
 }
 
 func EthDump(hdr *EthHeader) {
-	psLog.I("\tmac (dst): %d:%d:%d:%d:%d:%d", hdr.Dst[0], hdr.Dst[1], hdr.Dst[2], hdr.Dst[3], hdr.Dst[4], hdr.Dst[5])
-	psLog.I("\tmac (src): %d:%d:%d:%d:%d:%d", hdr.Src[0], hdr.Src[1], hdr.Src[2], hdr.Src[3], hdr.Src[4], hdr.Src[5])
+	psLog.I("\tmac (dst): %v", hdr.Dst.String())
+	psLog.I("\tmac (src): %v", hdr.Src.String())
 	psLog.I("\teth_type:  0x%04x (%s)", hdr.Type.String(), hdr.Type.String())
 }
 
@@ -68,15 +67,15 @@ func ReadFrame(fd int, addr EthAddr, sc psSyscall.ISyscall) psErr.Error {
 	// TODO: make buf static variable to reuse
 	buf1 := make([]byte, EthFrameSizeMax)
 
-	flen, _, errno := sc.Read(fd, unsafe.Pointer(&buf1), EthFrameSizeMax)
-	if errno != 0 {
-		psLog.E("SYS_READ failed: %v ", errno)
+	flen, err := sc.Read(fd, buf1)
+	if err != nil {
+		psLog.E("SYS_READ failed: %v ", err)
 		return psErr.Error{Code: psErr.CantRead}
 	}
 
-	if flen < EthHeaderSize*8 {
+	if flen < EthHeaderSize {
 		psLog.E("the length of ethernet header is too short")
-		psLog.E("\tflen: %v ", errno)
+		psLog.E("\tflen: %v", flen)
 		return psErr.Error{Code: psErr.InvalidHeader}
 	}
 

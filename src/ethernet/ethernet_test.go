@@ -3,6 +3,7 @@ package ethernet
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	psLog "github.com/42milez/ProtocolStack/src/log"
@@ -10,9 +11,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"regexp"
 	"strings"
-	"syscall"
 	"testing"
-	"unsafe"
 )
 
 func format(s string) string {
@@ -105,12 +104,10 @@ func TestReadFrame_SUCCESS(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	r1 := EthHeaderSize * 8
-	r2 := 0
 	m := psSyscall.NewMockISyscall(ctrl)
 	m.EXPECT().
-		Read(gomock.Any(), gomock.Any(), gomock.Any()).
-		Do(func(_ int, buf unsafe.Pointer, _ int) {
+		Read(gomock.Any(), gomock.Any()).
+		Do(func(_ int, buf []byte) {
 			hdr := EthHeader{
 				Dst:  EthAddr{11, 12, 13, 14, 15, 16},
 				Src:  EthAddr{21, 22, 23, 24, 25, 26},
@@ -118,9 +115,9 @@ func TestReadFrame_SUCCESS(t *testing.T) {
 			}
 			b := new(bytes.Buffer)
 			_ = binary.Write(b, binary.BigEndian, hdr)
-			copy((*(*[]byte)(buf))[:], b.Bytes())
+			copy(buf, b.Bytes())
 		}).
-		Return(uintptr(r1), uintptr(r2), syscall.Errno(0))
+		Return(150, nil)
 
 	dev := &Device{Addr: EthAddr{11, 12, 13, 14, 15, 16}}
 
@@ -138,9 +135,8 @@ func TestReadFrame_FAIL_WhenReadSyscallFailed(t *testing.T) {
 	defer ctrl.Finish()
 
 	dev := &Device{Addr: EthAddr{11, 12, 13, 14, 15, 16}}
-	hdrLen := EthHeaderSize * 8
 	m := psSyscall.NewMockISyscall(ctrl)
-	m.EXPECT().Read(gomock.Any(), gomock.Any(), gomock.Any()).Return(uintptr(hdrLen), uintptr(0), syscall.EINTR)
+	m.EXPECT().Read(gomock.Any(), gomock.Any()).Return(-1, errors.New(""))
 
 	got := ReadFrame(dev.Priv.FD, dev.Addr, m)
 	if got.Code != psErr.CantRead {
@@ -156,11 +152,8 @@ func TestReadFrame_FAIL_WhenHeaderLengthIsInvalid(t *testing.T) {
 	defer ctrl.Finish()
 
 	dev := &Device{Addr: EthAddr{11, 12, 13, 14, 15, 16}}
-	hdrLen := 0
 	m := psSyscall.NewMockISyscall(ctrl)
-	m.EXPECT().
-		Read(gomock.Any(), gomock.Any(), gomock.Any()).
-		Return(uintptr(hdrLen), uintptr(0), syscall.Errno(0))
+	m.EXPECT().Read(gomock.Any(), gomock.Any()).Return(10, nil)
 
 	got := ReadFrame(dev.Priv.FD, dev.Addr, m)
 	if got.Code != psErr.InvalidHeader {
@@ -176,9 +169,8 @@ func TestReadFrame_SUCCESS_WhenNoDataToReadExists(t *testing.T) {
 	defer ctrl.Finish()
 
 	dev := &Device{Addr: EthAddr{33, 44, 55, 66, 77, 88}}
-	hdrLen := EthHeaderSize * 8
 	m := psSyscall.NewMockISyscall(ctrl)
-	m.EXPECT().Read(gomock.Any(), gomock.Any(), gomock.Any()).Return(uintptr(hdrLen), uintptr(0), syscall.Errno(0))
+	m.EXPECT().Read(gomock.Any(), gomock.Any()).Return(150, nil)
 
 	got := ReadFrame(dev.Priv.FD, dev.Addr, m)
 	if got.Code != psErr.NoDataToRead {

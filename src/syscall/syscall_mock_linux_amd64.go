@@ -7,7 +7,6 @@ package syscall
 import (
 	reflect "reflect"
 	syscall "syscall"
-	unsafe "unsafe"
 
 	gomock "github.com/golang/mock/gomock"
 )
@@ -125,19 +124,18 @@ func (mr *MockISyscallMockRecorder) Open(path, mode, perm interface{}) *gomock.C
 }
 
 // Read mocks base method.
-func (m *MockISyscall) Read(fd int, buf unsafe.Pointer, size int) (uintptr, uintptr, syscall.Errno) {
+func (m *MockISyscall) Read(fd int, p []byte) (int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Read", fd, buf, size)
-	ret0, _ := ret[0].(uintptr)
-	ret1, _ := ret[1].(uintptr)
-	ret2, _ := ret[2].(syscall.Errno)
-	return ret0, ret1, ret2
+	ret := m.ctrl.Call(m, "Read", fd, p)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // Read indicates an expected call of Read.
-func (mr *MockISyscallMockRecorder) Read(fd, buf, size interface{}) *gomock.Call {
+func (mr *MockISyscallMockRecorder) Read(fd, p interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Read", reflect.TypeOf((*MockISyscall)(nil).Read), fd, buf, size)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Read", reflect.TypeOf((*MockISyscall)(nil).Read), fd, p)
 }
 
 // Socket mocks base method.
