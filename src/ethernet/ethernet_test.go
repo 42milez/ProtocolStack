@@ -75,8 +75,8 @@ func TestEthType_String_SUCCESS_D(t *testing.T) {
 
 func TestEthDump_SUCCESS(t *testing.T) {
 	regexpDatetime := "[0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}"
-	macDst := EthAddr{11, 12, 13, 14, 15, 16}
-	macSrc := EthAddr{21, 22, 23, 24, 25, 26}
+	macDst := EthAddr{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}
+	macSrc := EthAddr{0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f}
 	ethType := EthType(0x0008)
 	want, _ := regexp.Compile(fmt.Sprintf(
 		"^.+ %v mac \\(dst\\): %v.+ %v mac \\(src\\): %v.+ %v eth_type:  0x%04x \\(%v\\)$",
@@ -85,7 +85,7 @@ func TestEthDump_SUCCESS(t *testing.T) {
 		regexpDatetime,
 		macSrc.String(),
 		regexpDatetime,
-		ethType.String(),
+		ntoh16(uint16(ethType)),
 		ethType.String()))
 	got := psLog.CaptureLogOutput(func() {
 		hdr := EthHeader{Dst: macDst, Src: macSrc, Type: ethType}
