@@ -65,9 +65,9 @@ func EthDump(hdr *EthHeader) {
 
 func ReadFrame(fd int, addr EthAddr, sc psSyscall.ISyscall) psErr.Error {
 	// TODO: make buf static variable to reuse
-	buf1 := make([]byte, EthFrameSizeMax)
+	buf := make([]byte, EthFrameSizeMax)
 
-	fsize, err := sc.Read(fd, buf1)
+	fsize, err := sc.Read(fd, buf)
 	if err != nil {
 		psLog.E("SYS_READ failed: %v ", err)
 		return psErr.Error{Code: psErr.CantRead}
@@ -80,8 +80,7 @@ func ReadFrame(fd int, addr EthAddr, sc psSyscall.ISyscall) psErr.Error {
 	}
 
 	hdr := EthHeader{}
-	buf2 := bytes.NewBuffer(buf1)
-	if err := binary.Read(buf2, binary.LittleEndian, &hdr); err != nil {
+	if err := binary.Read(bytes.NewBuffer(buf), binary.BigEndian, &hdr); err != nil {
 		return psErr.Error{Code: psErr.CantConvert, Msg: err.Error()}
 	}
 
