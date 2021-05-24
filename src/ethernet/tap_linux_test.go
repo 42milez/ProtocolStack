@@ -216,12 +216,9 @@ func TestTapDevice_Poll_SUCCESS_WhenEventOccurred(t *testing.T) {
 	defer ctrl.Finish()
 
 	nEvents := 1
-	ethHdrLen := EthHeaderSize * 8
 	m := psSyscall.NewMockISyscall(ctrl)
 	m.EXPECT().EpollWait(gomock.Any(), gomock.Any(), gomock.Any()).Return(nEvents, nil)
-	m.EXPECT().
-		Read(gomock.Any(), gomock.Any(), gomock.Any()).
-		Return(uintptr(ethHdrLen), uintptr(0), syscall.Errno(0))
+	m.EXPECT().Read(gomock.Any(), gomock.Any()).Return(150, nil)
 
 	tapDev := TapDevice{Device{Syscall: m}}
 

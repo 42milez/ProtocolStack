@@ -38,6 +38,7 @@ func GenTapDevice(index uint8, addr ethernet.EthAddr) *ethernet.TapDevice {
 	return &ethernet.TapDevice{
 		Device: ethernet.Device{
 			Type:      ethernet.DevTypeEthernet,
+			Name:      "net" + strconv.Itoa(len(devices)),
 			MTU:       ethernet.EthPayloadSizeMax,
 			FLAG:      ethernet.DevFlagBroadcast | ethernet.DevFlagNeedArp,
 			HeaderLen: ethernet.EthHeaderSize,

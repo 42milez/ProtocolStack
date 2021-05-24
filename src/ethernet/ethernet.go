@@ -8,7 +8,6 @@ import (
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	psLog "github.com/42milez/ProtocolStack/src/log"
 	psSyscall "github.com/42milez/ProtocolStack/src/syscall"
-	"unsafe"
 )
 
 const EthAddrLen = 6
@@ -34,7 +33,7 @@ func (v EthAddr) Equal(vv EthAddr) bool {
 }
 
 func (v EthAddr) String() string {
-	return fmt.Sprintf("%v:%v:%v:%v:%v:%v", v[0], v[1], v[2], v[3], v[4], v[5])
+	return fmt.Sprintf("%02x:%02x:%02x:%02x:%02x:%02x", v[0], v[1], v[2], v[3], v[4], v[5])
 }
 
 type EthType uint16
@@ -59,30 +58,29 @@ type EthHeader struct {
 }
 
 func EthDump(hdr *EthHeader) {
-	psLog.I("\tmac (dst): %d:%d:%d:%d:%d:%d", hdr.Dst[0], hdr.Dst[1], hdr.Dst[2], hdr.Dst[3], hdr.Dst[4], hdr.Dst[5])
-	psLog.I("\tmac (src): %d:%d:%d:%d:%d:%d", hdr.Src[0], hdr.Src[1], hdr.Src[2], hdr.Src[3], hdr.Src[4], hdr.Src[5])
-	psLog.I("\teth_type:  0x%04x (%s)", hdr.Type.String(), hdr.Type.String())
+	psLog.I("\tmac (dst): %v", hdr.Dst.String())
+	psLog.I("\tmac (src): %v", hdr.Src.String())
+	psLog.I("\teth_type:  0x%04x (%s)", ntoh16(uint16(hdr.Type)), hdr.Type.String())
 }
 
 func ReadFrame(fd int, addr EthAddr, sc psSyscall.ISyscall) psErr.Error {
 	// TODO: make buf static variable to reuse
-	buf1 := make([]byte, EthFrameSizeMax)
+	buf := make([]byte, EthFrameSizeMax)
 
-	flen, _, errno := sc.Read(fd, unsafe.Pointer(&buf1), EthFrameSizeMax)
-	if errno != 0 {
-		psLog.E("SYS_READ failed: %v ", errno)
+	fsize, err := sc.Read(fd, buf)
+	if err != nil {
+		psLog.E("SYS_READ failed: %v ", err)
 		return psErr.Error{Code: psErr.CantRead}
 	}
 
-	if flen < EthHeaderSize*8 {
+	if fsize < EthHeaderSize {
 		psLog.E("the length of ethernet header is too short")
-		psLog.E("\tflen: %v ", errno)
+		psLog.E("\tfsize: %v bytes", fsize)
 		return psErr.Error{Code: psErr.InvalidHeader}
 	}
 
 	hdr := EthHeader{}
-	buf2 := bytes.NewBuffer(buf1)
-	if err := binary.Read(buf2, binary.BigEndian, &hdr); err != nil {
+	if err := binary.Read(bytes.NewBuffer(buf), binary.LittleEndian, &hdr); err != nil {
 		return psErr.Error{Code: psErr.CantConvert, Msg: err.Error()}
 	}
 
@@ -93,7 +91,7 @@ func ReadFrame(fd int, addr EthAddr, sc psSyscall.ISyscall) psErr.Error {
 	}
 
 	psLog.I("received an ethernet frame")
-	psLog.I("\tlength:    %v ", flen)
+	psLog.I("\tfsize:     %v bytes", fsize)
 	EthDump(&hdr)
 
 	return psErr.Error{Code: psErr.OK}
