@@ -8,7 +8,6 @@ import (
 // An Iface is a single iface.
 type Iface struct {
 	Family    network.AddrFamily
-	Network   network.IP
 	Netmask   network.IP
 	Broadcast network.IP
 	Unicast   network.IP

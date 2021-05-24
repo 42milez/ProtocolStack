@@ -8,22 +8,13 @@ import (
 )
 
 // GenIface generates Iface.
-func GenIface(unicast string, netmask string) *Iface {
+func GenIface(unicast string, netmask string, broadcast string) *Iface {
 	iface := &Iface{
 		Family:    network.FamilyV4,
 		Unicast:   network.ParseIP(unicast),
 		Netmask:   network.ParseIP(netmask),
-		Broadcast: make(network.IP, 0),
-		Network:   make(network.IP, 0),
+		Broadcast: network.ParseIP(broadcast),
 	}
-
-	//unicastUint32 := binary.BigEndian.Uint32(iface.Unicast)
-	//netmaskUint32 := binary.BigEndian.Uint32(iface.Netmask)
-	//broadcastUint32 := (unicastUint32 & netmaskUint32) | ^netmaskUint32
-
-	//binary.BigEndian.PutUint32(iface.Broadcast, broadcastUint32)
-	//binary.BigEndian.PutUint32(iface.Network, unicastUint32 & netmaskUint32)
-
 	return iface
 }
 

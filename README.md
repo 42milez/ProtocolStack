@@ -51,6 +51,8 @@ Note: `make` supports the commands below:
 - `build` build project
 - `clean` clean up caches
 - `compile` clean up caches, resolve dependencies, and build the program
+- `fmt` run formatter
+- `gen` generate source code
 - `lint` run linters (golangci-lint)
 - `resolve` resolve dependencies
 - `test` run all tests

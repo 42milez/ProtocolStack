@@ -13,10 +13,9 @@ func TestGenIface_SUCCESS(t *testing.T) {
 		Family:    network.FamilyV4,
 		Unicast:   network.ParseIP(ethernet.LoopbackIpAddr),
 		Netmask:   network.ParseIP(ethernet.LoopbackNetmask),
-		Broadcast: make(network.IP, 0),
-		Network:   make(network.IP, 0),
+		Broadcast: network.ParseIP(ethernet.LoopbackBroadcast),
 	}
-	got := GenIface(ethernet.LoopbackIpAddr, ethernet.LoopbackNetmask)
+	got := GenIface(ethernet.LoopbackIpAddr, ethernet.LoopbackNetmask, ethernet.LoopbackBroadcast)
 	if d := cmp.Diff(got, want); d != "" {
 		t.Errorf("GenIface() differs: (-got +want)\n%s", d)
 	}
