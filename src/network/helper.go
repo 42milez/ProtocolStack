@@ -21,7 +21,7 @@ func GenIface(unicast string, netmask string, broadcast string) *Iface {
 func GenLoopbackDevice() *ethernet.LoopbackDevice {
 	dev := &ethernet.LoopbackDevice{
 		Device: ethernet.Device{
-			Name:      "net" + strconv.Itoa(len(devices)),
+			Name:      "net" + strconv.Itoa(DeviceRepo.NextNumber()),
 			Type:      ethernet.DevTypeLoopback,
 			MTU:       ethernet.LoopbackMTU,
 			HeaderLen: 0,
@@ -37,7 +37,7 @@ func GenTapDevice(index uint8, addr ethernet.EthAddr) *ethernet.TapDevice {
 	return &ethernet.TapDevice{
 		Device: ethernet.Device{
 			Type:      ethernet.DevTypeEthernet,
-			Name:      "net" + strconv.Itoa(len(devices)),
+			Name:      "net" + strconv.Itoa(DeviceRepo.NextNumber()),
 			MTU:       ethernet.EthPayloadSizeMax,
 			FLAG:      ethernet.DevFlagBroadcast | ethernet.DevFlagNeedArp,
 			HeaderLen: ethernet.EthHeaderSize,

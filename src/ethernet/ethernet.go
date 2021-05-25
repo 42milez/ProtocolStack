@@ -94,6 +94,11 @@ func ReadFrame(fd int, addr EthAddr, sc psSyscall.ISyscall) psErr.Error {
 	psLog.I("\tfsize:     %v bytes", fsize)
 	EthDump(&hdr)
 
+	RxCh <- &Packet{
+		Type:    hdr.Type,
+		Payload: buf[EthHeaderSize:],
+	}
+
 	return psErr.Error{Code: psErr.OK}
 }
 

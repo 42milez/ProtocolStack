@@ -1,8 +1,6 @@
 package network
 
-import "sync"
-
-type ProtocolType uint16
+type ProtocolType uint8
 
 const (
 	ProtocolTypeArp ProtocolType = iota
@@ -27,10 +25,4 @@ func (t ProtocolType) String() string {
 	default:
 		return "UNKNOWN"
 	}
-}
-
-type Protocol struct {
-	Type    ProtocolType
-	Mutex   *sync.Mutex
-	Handler Handler
 }

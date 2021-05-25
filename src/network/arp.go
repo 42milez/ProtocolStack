@@ -110,9 +110,13 @@ func ArpInputHandler(payload []byte, dev ethernet.IDevice) psErr.Error {
 	psLog.I("arp packet received")
 	arpDump(&msg)
 
-	cache.Update(&msg)
+	//isUpdated := cache.Update(&msg)
 
-	//iface := middleware.GetIface(dev, FamilyV4)
+	//for _, v := range ifaces {
+	//	if v.Dev.Equal(dev) && v.Family == FamilyV4 && v.Unicast {
+	//
+	//	}
+	//}
 
 	return psErr.Error{Code: psErr.OK}
 }

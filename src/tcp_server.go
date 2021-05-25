@@ -5,7 +5,6 @@ import (
 	"github.com/42milez/ProtocolStack/src/ethernet"
 	psLog "github.com/42milez/ProtocolStack/src/log"
 	"github.com/42milez/ProtocolStack/src/network"
-	"github.com/42milez/ProtocolStack/src/route"
 	"os"
 	"os/signal"
 	"sync"
@@ -28,16 +27,16 @@ func setup() psErr.Error {
 	psLog.I("--------------------------------------------------")
 	loopbackDev := network.GenLoopbackDevice()
 
-	if err = network.RegisterDevice(loopbackDev); err.Code != psErr.OK {
+	if err = network.DeviceRepo.Register(loopbackDev); err.Code != psErr.OK {
 		return psErr.Error{Code: psErr.Failed}
 	}
 
 	iface1 := network.GenIface(ethernet.LoopbackIpAddr, ethernet.LoopbackNetmask, ethernet.LoopbackBroadcast)
-	if err = network.RegisterInterface(iface1, loopbackDev); err.Code != psErr.OK {
+	if err = network.IfaceRepo.Register(iface1, loopbackDev); err.Code != psErr.OK {
 		return psErr.Error{Code: psErr.Failed}
 	}
 
-	route.RegisterRoute(network.ParseIP(ethernet.LoopbackNetwork), network.V4Zero, iface1)
+	network.RegisterRoute(network.ParseIP(ethernet.LoopbackNetwork), network.V4Zero, iface1)
 
 	// Create a TAP device and its iface, then link them.
 	tapDev := network.GenTapDevice(0, ethernet.EthAddr{11, 22, 33, 44, 55, 66})
@@ -45,16 +44,16 @@ func setup() psErr.Error {
 		return psErr.Error{Code: psErr.Failed}
 	}
 
-	network.RegisterDevice(tapDev)
+	network.DeviceRepo.Register(tapDev)
 
 	iface2 := network.GenIface("192.0.2.2", "255.255.255.0", "192.0.2.255")
-	if err = network.RegisterInterface(iface2, tapDev); err.Code != psErr.OK {
+	if err = network.IfaceRepo.Register(iface2, tapDev); err.Code != psErr.OK {
 		return psErr.Error{Code: psErr.Failed}
 	}
-	route.RegisterRoute(network.ParseIP("192.0.0.0"), network.V4Zero, iface2)
+	network.RegisterRoute(network.ParseIP("192.0.0.0"), network.V4Zero, iface2)
 
 	// Register the iface of the TAP device as the default gateway.
-	route.RegisterDefaultGateway(iface2, network.ParseIP("192.0.2.1"))
+	network.RegisterDefaultGateway(iface2, network.ParseIP("192.0.2.1"))
 
 	// Create sub-thread for polling.
 	psLog.I("--------------------------------------------------")
@@ -68,7 +67,7 @@ func setup() psErr.Error {
 }
 
 func start(netSigCh <-chan os.Signal, wg *sync.WaitGroup) psErr.Error {
-	network.Up()
+	network.DeviceRepo.Up()
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -81,7 +80,7 @@ func start(netSigCh <-chan os.Signal, wg *sync.WaitGroup) psErr.Error {
 			default:
 				psLog.I("worker is running...")
 			}
-			if err := network.Poll(terminate); err.Code != psErr.OK {
+			if err := network.DeviceRepo.Poll(terminate); err.Code != psErr.OK {
 				// TODO: notify error to main goroutine
 				// ...
 				psLog.F("poll failed: %v, %v", err.Code, err.Msg)
