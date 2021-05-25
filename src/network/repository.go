@@ -10,13 +10,6 @@ import (
 var DeviceRepo *deviceRepo
 var IfaceRepo *ifaceRepo
 
-//type IDeviceRepo interface {
-//	NextNumber() int
-//	Poll(terminate bool) psErr.Error
-//	Register(dev ethernet.IDevice) psErr.Error
-//	Up() psErr.Error
-//}
-
 type deviceRepo struct {
 	devices []ethernet.IDevice
 }
@@ -77,10 +70,6 @@ func (p *deviceRepo) Up() psErr.Error {
 	}
 	return psErr.Error{Code: psErr.OK}
 }
-
-//type IIfaceRepo interface {
-//	Register(iface *Iface, dev ethernet.IDevice) psErr.Error
-//}
 
 type ifaceRepo struct {
 	ifaces []*Iface
