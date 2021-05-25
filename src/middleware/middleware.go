@@ -19,7 +19,11 @@ type Timer struct {
 	Handler  Handler
 }
 
-type Handler func(data []byte, dev ethernet.IDevice)
+type Handler func(data []byte, dev ethernet.IDevice) psErr.Error
+
+func GetIface(dev ethernet.IDevice, family network.AddrFamily) {
+
+}
 
 func RegisterDevice(dev ethernet.IDevice) psErr.Error {
 	for _, d := range devices {

@@ -7,6 +7,7 @@ import (
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	"github.com/42milez/ProtocolStack/src/ethernet"
 	psLog "github.com/42milez/ProtocolStack/src/log"
+	"github.com/42milez/ProtocolStack/src/middleware"
 	"sync"
 	"time"
 )
@@ -78,7 +79,7 @@ func (p *ArpCache) Update(msg *ArpMessage) psErr.Error {
 	return psErr.Error{Code: psErr.OK}
 }
 
-func ArpInputHandler(payload []byte) psErr.Error {
+func ArpInputHandler(payload []byte, dev ethernet.IDevice) psErr.Error {
 	if len(payload) < ArpMessageSize {
 		return psErr.Error{
 			Code: psErr.InvalidPacket,
@@ -108,6 +109,8 @@ func ArpInputHandler(payload []byte) psErr.Error {
 
 	psLog.I("arp packet received")
 	arpDump(&msg)
+
+	iface := middleware.GetIface(dev, FamilyV4)
 
 	return psErr.Error{Code: psErr.OK}
 }
