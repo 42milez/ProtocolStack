@@ -37,7 +37,7 @@ func setup() psErr.Error {
 		return psErr.Error{Code: psErr.Failed}
 	}
 
-	route.Register(network.ParseIP(ethernet.LoopbackNetwork), network.V4Zero, iface1)
+	route.RegisterRoute(network.ParseIP(ethernet.LoopbackNetwork), network.V4Zero, iface1)
 
 	// Create a TAP device and its iface, then link them.
 	tapDev := network.GenTapDevice(0, ethernet.EthAddr{11, 22, 33, 44, 55, 66})
@@ -51,7 +51,7 @@ func setup() psErr.Error {
 	if err = network.RegisterInterface(iface2, tapDev); err.Code != psErr.OK {
 		return psErr.Error{Code: psErr.Failed}
 	}
-	route.Register(network.ParseIP("192.0.0.0"), network.V4Zero, iface2)
+	route.RegisterRoute(network.ParseIP("192.0.0.0"), network.V4Zero, iface2)
 
 	// Register the iface of the TAP device as the default gateway.
 	route.RegisterDefaultGateway(iface2, network.ParseIP("192.0.2.1"))

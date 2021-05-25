@@ -102,13 +102,13 @@ func init() {
 	protocols = make([]Protocol, 0)
 
 	// ARP
-	register(ProtocolTypeArp, ArpInputHandler)
+	registerProtocol(ProtocolTypeArp, ArpInputHandler)
 
 	// ICMP
 	// ...
 
 	// IP
-	register(ProtocolTypeIp, IpInputHandler)
+	registerProtocol(ProtocolTypeIp, IpInputHandler)
 
 	// TCP
 	// ...
@@ -117,7 +117,7 @@ func init() {
 	// ...
 }
 
-func register(protocolType ProtocolType, handler Handler) psErr.Error {
+func registerProtocol(protocolType ProtocolType, handler Handler) psErr.Error {
 	p := Protocol{
 		Type:    protocolType,
 		Handler: handler,
