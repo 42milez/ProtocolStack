@@ -99,7 +99,7 @@ func init() {
 	protocols = make([]Protocol, 0)
 
 	// ARP
-	// ...
+	register(ProtocolTypeArp, network.ArpInputHandler)
 
 	// ICMP
 	// ...

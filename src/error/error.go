@@ -13,7 +13,9 @@ const (
 	Failed
 	Interrupted
 	InvalidHeader
+	InvalidPacket
 	NoDataToRead
+	NotFound
 )
 
 type Error struct {
