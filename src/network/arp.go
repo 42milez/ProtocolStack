@@ -16,31 +16,32 @@ const ArpMessageSize = 68
 
 var cache *ArpCache
 
+// nolint:structcheck
 type ArpHdr struct {
-	hType ArpHwType // Hardware type
-	pType ArpOp     // Protocol type
-	hlen uint8      // Hardware address length
-	plen uint8      // Protocol address length
+	hType ArpHwType // hardware type
+	pType ArpOp     // protocol type
+	hlen  uint8     // hardware length
+	plen  uint8     // protocol length
 }
 
 type ArpMessage struct {
 	ArpHdr
-	SHA [ethernet.EthAddrLen]byte // Sender hardware address
-	SPA [V4AddrLen]byte           // Sender protocol address
-	THA [ethernet.EthAddrLen]byte // Target hardware address
-	TPA [V4AddrLen]byte           // Target protocol address
+	SHA [ethernet.EthAddrLen]byte // sender hardware address
+	SPA [V4AddrLen]byte           // sender protocol address
+	THA [ethernet.EthAddrLen]byte // target hardware address
+	TPA [V4AddrLen]byte           // target protocol address
 }
 
 type ArpCacheEntry struct {
-	State ArpCacheState
+	State     ArpCacheState
 	CreatedAt time.Time
-	SHA [ethernet.EthAddrLen]byte
-	SPA [V4AddrLen]byte
+	SHA       [ethernet.EthAddrLen]byte
+	SPA       [V4AddrLen]byte
 }
 
 type ArpCache struct {
 	entries [ArpCacheSize]ArpCacheEntry
-	mtx sync.Mutex
+	mtx     sync.Mutex
 }
 
 func (p *ArpCache) Delete() psErr.Error {
@@ -82,7 +83,7 @@ func ArpInputHandler(payload []byte, dev ethernet.IDevice) psErr.Error {
 	if len(payload) < ArpMessageSize {
 		return psErr.Error{
 			Code: psErr.InvalidPacket,
-			Msg: "message size is too small",
+			Msg:  "message size is too small",
 		}
 	}
 
@@ -95,19 +96,21 @@ func ArpInputHandler(payload []byte, dev ethernet.IDevice) psErr.Error {
 	if msg.hType != ArpHwTypeEthernet || msg.hlen != ethernet.EthAddrLen {
 		return psErr.Error{
 			Code: psErr.InvalidPacket,
-			Msg: "invalid arp packet",
+			Msg:  "invalid arp packet",
 		}
 	}
 
 	if msg.pType != ArpOpRequest || msg.plen != V4AddrLen {
 		return psErr.Error{
 			Code: psErr.InvalidPacket,
-			Msg: "invalid arp packet",
+			Msg:  "invalid arp packet",
 		}
 	}
 
 	psLog.I("arp packet received")
 	arpDump(&msg)
+
+	cache.Update(&msg)
 
 	//iface := middleware.GetIface(dev, FamilyV4)
 
@@ -116,9 +119,9 @@ func ArpInputHandler(payload []byte, dev ethernet.IDevice) psErr.Error {
 
 func arpDump(msg *ArpMessage) {}
 
-func arpReply() psErr.Error {
-	return psErr.Error{Code: psErr.OK}
-}
+//func arpReply() psErr.Error {
+//	return psErr.Error{Code: psErr.OK}
+//}
 
 func init() {
 	cache = &ArpCache{}

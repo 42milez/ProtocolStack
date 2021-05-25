@@ -1,8 +1,7 @@
-package middleware
+package network
 
 import (
 	"github.com/42milez/ProtocolStack/src/ethernet"
-	"github.com/42milez/ProtocolStack/src/network"
 	psSyscall "github.com/42milez/ProtocolStack/src/syscall"
 	"strconv"
 )
@@ -10,10 +9,10 @@ import (
 // GenIface generates Iface.
 func GenIface(unicast string, netmask string, broadcast string) *Iface {
 	iface := &Iface{
-		Family:    network.FamilyV4,
-		Unicast:   network.ParseIP(unicast),
-		Netmask:   network.ParseIP(netmask),
-		Broadcast: network.ParseIP(broadcast),
+		Family:    FamilyV4,
+		Unicast:   ParseIP(unicast),
+		Netmask:   ParseIP(netmask),
+		Broadcast: ParseIP(broadcast),
 	}
 	return iface
 }

@@ -1,10 +1,9 @@
-package middleware
+package network
 
 import (
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	"github.com/42milez/ProtocolStack/src/ethernet"
 	psLog "github.com/42milez/ProtocolStack/src/log"
-	"github.com/42milez/ProtocolStack/src/network"
 	psSyscall "github.com/42milez/ProtocolStack/src/syscall"
 	"github.com/golang/mock/gomock"
 	"testing"
@@ -53,10 +52,10 @@ func TestRegisterInterface_SUCCESS(t *testing.T) {
 	defer psLog.EnableOutput()
 
 	iface := &Iface{
-		Family:    network.FamilyV4,
-		Unicast:   network.ParseIP(ethernet.LoopbackIpAddr),
-		Netmask:   network.ParseIP(ethernet.LoopbackNetmask),
-		Broadcast: make(network.IP, 0),
+		Family:    FamilyV4,
+		Unicast:   ParseIP(ethernet.LoopbackIpAddr),
+		Netmask:   ParseIP(ethernet.LoopbackNetmask),
+		Broadcast: make(IP, 0),
 	}
 
 	dev := &ethernet.TapDevice{
@@ -85,10 +84,10 @@ func TestRegisterInterface_FAIL_WhenTryingToRegisterSameInterface(t *testing.T) 
 	defer psLog.EnableOutput()
 
 	iface := &Iface{
-		Family:    network.FamilyV4,
-		Unicast:   network.ParseIP(ethernet.LoopbackIpAddr),
-		Netmask:   network.ParseIP(ethernet.LoopbackNetmask),
-		Broadcast: make(network.IP, 0),
+		Family:    FamilyV4,
+		Unicast:   ParseIP(ethernet.LoopbackIpAddr),
+		Netmask:   ParseIP(ethernet.LoopbackNetmask),
+		Broadcast: make(IP, 0),
 	}
 
 	dev := &ethernet.TapDevice{

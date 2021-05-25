@@ -1,10 +1,9 @@
-package middleware
+package network
 
 import (
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	"github.com/42milez/ProtocolStack/src/ethernet"
 	psLog "github.com/42milez/ProtocolStack/src/log"
-	"github.com/42milez/ProtocolStack/src/network"
 	"syscall"
 )
 
@@ -21,7 +20,7 @@ type Timer struct {
 
 type Handler func(data []byte, dev ethernet.IDevice) psErr.Error
 
-func GetIface(dev ethernet.IDevice, family network.AddrFamily) {
+func GetIface(dev ethernet.IDevice, family AddrFamily) {
 
 }
 
@@ -103,13 +102,13 @@ func init() {
 	protocols = make([]Protocol, 0)
 
 	// ARP
-	register(ProtocolTypeArp, network.ArpInputHandler)
+	register(ProtocolTypeArp, ArpInputHandler)
 
 	// ICMP
 	// ...
 
 	// IP
-	register(ProtocolTypeIp, network.IpInputHandler)
+	register(ProtocolTypeIp, IpInputHandler)
 
 	// TCP
 	// ...

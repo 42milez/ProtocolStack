@@ -4,7 +4,6 @@ import (
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	"github.com/42milez/ProtocolStack/src/ethernet"
 	psLog "github.com/42milez/ProtocolStack/src/log"
-	"github.com/42milez/ProtocolStack/src/middleware"
 	"github.com/42milez/ProtocolStack/src/network"
 	"github.com/42milez/ProtocolStack/src/route"
 	"os"
@@ -27,29 +26,29 @@ func setup() psErr.Error {
 	psLog.I("--------------------------------------------------")
 	psLog.I(" INITIALIZE DEVICES                               ")
 	psLog.I("--------------------------------------------------")
-	loopbackDev := middleware.GenLoopbackDevice()
+	loopbackDev := network.GenLoopbackDevice()
 
-	if err = middleware.RegisterDevice(loopbackDev); err.Code != psErr.OK {
+	if err = network.RegisterDevice(loopbackDev); err.Code != psErr.OK {
 		return psErr.Error{Code: psErr.Failed}
 	}
 
-	iface1 := middleware.GenIface(ethernet.LoopbackIpAddr, ethernet.LoopbackNetmask, ethernet.LoopbackBroadcast)
-	if err = middleware.RegisterInterface(iface1, loopbackDev); err.Code != psErr.OK {
+	iface1 := network.GenIface(ethernet.LoopbackIpAddr, ethernet.LoopbackNetmask, ethernet.LoopbackBroadcast)
+	if err = network.RegisterInterface(iface1, loopbackDev); err.Code != psErr.OK {
 		return psErr.Error{Code: psErr.Failed}
 	}
 
 	route.Register(network.ParseIP(ethernet.LoopbackNetwork), network.V4Zero, iface1)
 
 	// Create a TAP device and its iface, then link them.
-	tapDev := middleware.GenTapDevice(0, ethernet.EthAddr{11, 22, 33, 44, 55, 66})
+	tapDev := network.GenTapDevice(0, ethernet.EthAddr{11, 22, 33, 44, 55, 66})
 	if err.Code != psErr.OK {
 		return psErr.Error{Code: psErr.Failed}
 	}
 
-	middleware.RegisterDevice(tapDev)
+	network.RegisterDevice(tapDev)
 
-	iface2 := middleware.GenIface("192.0.2.2", "255.255.255.0", "192.0.2.255")
-	if err = middleware.RegisterInterface(iface2, tapDev); err.Code != psErr.OK {
+	iface2 := network.GenIface("192.0.2.2", "255.255.255.0", "192.0.2.255")
+	if err = network.RegisterInterface(iface2, tapDev); err.Code != psErr.OK {
 		return psErr.Error{Code: psErr.Failed}
 	}
 	route.Register(network.ParseIP("192.0.0.0"), network.V4Zero, iface2)
@@ -69,7 +68,7 @@ func setup() psErr.Error {
 }
 
 func start(netSigCh <-chan os.Signal, wg *sync.WaitGroup) psErr.Error {
-	middleware.Up()
+	network.Up()
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -82,7 +81,7 @@ func start(netSigCh <-chan os.Signal, wg *sync.WaitGroup) psErr.Error {
 			default:
 				psLog.I("worker is running...")
 			}
-			if err := middleware.Poll(terminate); err.Code != psErr.OK {
+			if err := network.Poll(terminate); err.Code != psErr.OK {
 				// TODO: notify error to main goroutine
 				// ...
 				psLog.F("poll failed: %v, %v", err.Code, err.Msg)
