@@ -7,7 +7,6 @@ import (
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	"github.com/42milez/ProtocolStack/src/ethernet"
 	psLog "github.com/42milez/ProtocolStack/src/log"
-	"github.com/42milez/ProtocolStack/src/middleware"
 	"sync"
 	"time"
 )
@@ -110,7 +109,7 @@ func ArpInputHandler(payload []byte, dev ethernet.IDevice) psErr.Error {
 	psLog.I("arp packet received")
 	arpDump(&msg)
 
-	iface := middleware.GetIface(dev, FamilyV4)
+	//iface := middleware.GetIface(dev, FamilyV4)
 
 	return psErr.Error{Code: psErr.OK}
 }
