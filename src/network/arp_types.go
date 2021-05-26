@@ -23,6 +23,26 @@ const (
 
 type ArpHwType uint16
 
+func (v ArpHwType) String() string {
+	switch v {
+	case ArpHwTypeEthernet:
+		return "Ethernet"
+	default:
+		return "Unknown"
+	}
+}
+
 type ArpOpcode uint16
+
+func (v ArpOpcode) String() string {
+	switch v {
+	case ArpOpRequest:
+		return "REQUEST"
+	case ArpOpReply:
+		return "REPLY"
+	default:
+		return "Unknown"
+	}
+}
 
 type ArpCacheState uint8

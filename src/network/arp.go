@@ -121,7 +121,17 @@ func ArpInputHandler(payload []byte) psErr.Error {
 	return psErr.Error{Code: psErr.OK}
 }
 
-func arpDump(msg *ArpMessage) {}
+func arpDump(msg *ArpMessage) {
+	psLog.I("\thardware type:           %s", msg.HT)
+	psLog.I("\tprotocol Type:           %s", msg.PT)
+	psLog.I("\thardware address length: %d", msg.HAL)
+	psLog.I("\tprotocol address length: %d", msg.PAL)
+	psLog.I("\topcode:                  %s (%d)", msg.Opcode, uint16(msg.Opcode))
+	psLog.I("\tsender hardware address: %v", msg.SHA)
+	psLog.I("\tsender protocol address: %v", msg.SPA)
+	psLog.I("\ttarget hardware address: %v", msg.THA)
+	psLog.I("\ttarget hardware address: %v", msg.TPA)
+}
 
 //func arpReply() psErr.Error {
 //	return psErr.Error{Code: psErr.OK}
