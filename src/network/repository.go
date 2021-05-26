@@ -45,7 +45,7 @@ func (p *deviceRepo) Register(dev ethernet.IDevice) psErr.Error {
 		if d.Equal(dev) {
 			typ := d.Typ()
 			name, privName := d.Names()
-			psLog.W("device is already registered")
+			psLog.W("device already registered")
 			psLog.W("\ttype: %s", typ)
 			psLog.W("\tname: %s (%s)", name, privName)
 			return psErr.Error{Code: psErr.CantRegister}
@@ -69,7 +69,7 @@ func (p *deviceRepo) Up() psErr.Error {
 		typ := dev.Typ()
 		name, privName := dev.Names()
 		if dev.IsUp() {
-			psLog.W("device is already opened")
+			psLog.W("device already opened")
 			psLog.W("\ttype: %s ", typ)
 			psLog.W("\tname: %s (%s) ", name, privName)
 			return psErr.Error{Code: psErr.AlreadyOpened}
@@ -92,10 +92,19 @@ type ifaceRepo struct {
 	ifaces []*Iface
 }
 
+func (p *ifaceRepo) Get(dev ethernet.IDevice, family AddrFamily) *Iface {
+	for _, v := range p.ifaces {
+		if v.Dev.Equal(dev) && v.Family == family {
+			return v
+		}
+	}
+	return nil
+}
+
 func (p *ifaceRepo) Register(iface *Iface, dev ethernet.IDevice) psErr.Error {
 	for _, i := range p.ifaces {
 		if i.Dev.Equal(dev) && i.Family == iface.Family {
-			psLog.W("interface is already registered: %v ", i.Family.String())
+			psLog.W("interface already registered: %v ", i.Family.String())
 			return psErr.Error{Code: psErr.CantRegister}
 		}
 	}

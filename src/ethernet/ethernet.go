@@ -71,7 +71,7 @@ func ReadFrame(fd int, addr EthAddr, sc psSyscall.ISyscall) psErr.Error {
 	}
 
 	if fsize < EthHeaderSize {
-		psLog.E("the length of ethernet header is too short")
+		psLog.E("ethernet header length too short")
 		psLog.E("\tfsize: %v bytes", fsize)
 		return psErr.Error{Code: psErr.InvalidHeader}
 	}
