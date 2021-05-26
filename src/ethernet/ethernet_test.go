@@ -121,7 +121,7 @@ func TestReadFrame_SUCCESS(t *testing.T) {
 
 	dev := &Device{Addr: EthAddr{11, 12, 13, 14, 15, 16}}
 
-	got := ReadFrame(dev.Priv.FD, dev.Addr, m)
+	_, got := ReadFrame(dev.Priv.FD, dev.Addr, m)
 	if got.Code != psErr.OK {
 		t.Errorf("ReadFrame() = %v; want %v", got.Code, psErr.OK)
 	}
@@ -138,7 +138,7 @@ func TestReadFrame_FAIL_WhenReadSyscallFailed(t *testing.T) {
 	m := psSyscall.NewMockISyscall(ctrl)
 	m.EXPECT().Read(gomock.Any(), gomock.Any()).Return(-1, errors.New(""))
 
-	got := ReadFrame(dev.Priv.FD, dev.Addr, m)
+	_, got := ReadFrame(dev.Priv.FD, dev.Addr, m)
 	if got.Code != psErr.CantRead {
 		t.Errorf("ReadFrame() = %v; want %v", got.Code, psErr.CantRead)
 	}
@@ -155,13 +155,13 @@ func TestReadFrame_FAIL_WhenHeaderLengthIsInvalid(t *testing.T) {
 	m := psSyscall.NewMockISyscall(ctrl)
 	m.EXPECT().Read(gomock.Any(), gomock.Any()).Return(10, nil)
 
-	got := ReadFrame(dev.Priv.FD, dev.Addr, m)
+	_, got := ReadFrame(dev.Priv.FD, dev.Addr, m)
 	if got.Code != psErr.InvalidHeader {
 		t.Errorf("ReadFrame() = %v; want %v", got.Code, psErr.InvalidHeader)
 	}
 }
 
-func TestReadFrame_SUCCESS_WhenNoDataToReadExists(t *testing.T) {
+func TestReadFrame_SUCCESS_WhenNoDataExists(t *testing.T) {
 	psLog.DisableOutput()
 	defer psLog.EnableOutput()
 
@@ -172,7 +172,7 @@ func TestReadFrame_SUCCESS_WhenNoDataToReadExists(t *testing.T) {
 	m := psSyscall.NewMockISyscall(ctrl)
 	m.EXPECT().Read(gomock.Any(), gomock.Any()).Return(150, nil)
 
-	got := ReadFrame(dev.Priv.FD, dev.Addr, m)
+	_, got := ReadFrame(dev.Priv.FD, dev.Addr, m)
 	if got.Code != psErr.NoDataToRead {
 		t.Errorf("ReadFrame() = %v; want %v", got.Code, psErr.NoDataToRead)
 	}

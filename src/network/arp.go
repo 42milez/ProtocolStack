@@ -60,7 +60,7 @@ func (p *ArpCache) Delete() psErr.Error {
 	return psErr.Error{Code: psErr.OK}
 }
 
-func (p *ArpCache) Insert() psErr.Error {
+func (p *ArpCache) Insert(msg *ArpMessage) psErr.Error {
 	return psErr.Error{Code: psErr.OK}
 }
 
@@ -91,11 +91,11 @@ func (p *ArpCache) Update(msg *ArpMessage) psErr.Error {
 	return psErr.Error{Code: psErr.OK}
 }
 
-func ArpInputHandler(payload []byte) psErr.Error {
+func ArpInputHandler(payload []byte, dev ethernet.IDevice) psErr.Error {
 	if len(payload) < ArpMessageSize {
 		return psErr.Error{
 			Code: psErr.InvalidPacket,
-			Msg:  "message size is too small",
+			Msg:  "message size too small",
 		}
 	}
 
@@ -122,7 +122,23 @@ func ArpInputHandler(payload []byte) psErr.Error {
 	psLog.I("arp packet received")
 	arpDump(&msg)
 
-	_ = cache.Update(&msg)
+	iface := IfaceRepo.Get(dev, FamilyV4)
+	if iface == nil {
+		return psErr.Error{Code: psErr.NotFound, Msg: "interface not found"}
+	}
+
+	if isSameIP(msg.TPA, iface.Unicast) {
+		if err := cache.Update(&msg); err.Code != psErr.OK {
+			cache.Insert(&msg)
+		}
+		if msg.Opcode == ArpOpRequest {
+			if err := arpReply(); err.Code != psErr.OK {
+				return psErr.Error{Code: psErr.CantSend, Msg: "can't send arp reply"}
+			}
+		}
+	} else {
+		psLog.I("ignored arp packet (different address)")
+	}
 
 	return psErr.Error{Code: psErr.OK}
 }
@@ -139,9 +155,13 @@ func arpDump(msg *ArpMessage) {
 	psLog.I("\ttarget hardware address: %s", msg.TPA.String())
 }
 
-//func arpReply() psErr.Error {
-//	return psErr.Error{Code: psErr.OK}
-//}
+func arpReply() psErr.Error {
+	return psErr.Error{Code: psErr.OK}
+}
+
+func isSameIP(a ArpProtoAddr, b IP) bool {
+	return a[0] == b[0] && a[1] == b[1] && a[2] == b[2] && a[3] == b[3]
+}
 
 func init() {
 	cache = &ArpCache{}

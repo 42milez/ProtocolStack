@@ -9,7 +9,7 @@ import (
 func InputHandler(packet *ethernet.Packet) psErr.Error {
 	switch packet.Type {
 	case ethernet.EthTypeArp:
-		if err := ArpInputHandler(packet.Payload); err.Code != psErr.OK {
+		if err := ArpInputHandler(packet.Payload, packet.Dev); err.Code != psErr.OK {
 			psLog.E("can't process arp packet: %s", err.Error())
 			return psErr.Error{Code: psErr.CantProcess}
 		}

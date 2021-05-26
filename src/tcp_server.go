@@ -85,7 +85,7 @@ func start(wg *sync.WaitGroup) psErr.Error {
 				if err := network.DeviceRepo.Poll(terminate); err.Code != psErr.OK {
 					// TODO: notify error to main goroutine
 					// ...
-					psLog.F("poll failed: %v, %v", err.Code, err.Msg)
+					psLog.F("poll failed: %s", err.Error())
 				}
 			}
 			if terminate {

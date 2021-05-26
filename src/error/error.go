@@ -1,15 +1,14 @@
 package error
 
-import "fmt"
-
 const (
 	OK int = iota
 	AlreadyOpened
 	CantConvert
-	CantProcess
 	CantOpen
+	CantProcess
 	CantRead
 	CantRegister
+	CantSend
 	Failed
 	Interrupted
 	InvalidHeader
@@ -24,5 +23,32 @@ type Error struct {
 }
 
 func (p *Error) Error() string {
-	return fmt.Sprintf("%v (code: %v)", p.Msg, p.Code)
+	switch p.Code {
+	case OK:
+		return "OK"
+	case AlreadyOpened:
+		return "ALREADY_OPENED"
+	case CantConvert:
+		return "CANT_CONVERT"
+	case CantProcess:
+		return "CANT_PROCESS"
+	case CantRead:
+		return "CANT_READ"
+	case CantSend:
+		return "CANT_SEND"
+	case Failed:
+		return "FAILED"
+	case Interrupted:
+		return "INTERRUPTED"
+	case InvalidHeader:
+		return "INVALID_HEADER"
+	case InvalidPacket:
+		return "INVALID_PACKET"
+	case NoDataToRead:
+		return "NO_DATA_TO_READ"
+	case NotFound:
+		return "NOT_FOUND"
+	default:
+		return "UNKNOWN"
+	}
 }
