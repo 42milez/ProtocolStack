@@ -16,12 +16,11 @@ const ArpMessageSize = 68
 
 var cache *ArpCache
 
-// nolint:structcheck
 type ArpHdr struct {
-	hType ArpHwType // hardware type
-	pType ArpOp     // protocol type
-	hlen  uint8     // hardware length
-	plen  uint8     // protocol length
+	Htype ArpHwType // hardware type
+	Ptype ArpOp     // protocol type
+	Hlen  uint8     // hardware length
+	Plen  uint8     // protocol length
 }
 
 type ArpMessage struct {
@@ -79,7 +78,7 @@ func (p *ArpCache) Update(msg *ArpMessage) psErr.Error {
 	return psErr.Error{Code: psErr.OK}
 }
 
-func ArpInputHandler(payload []byte, dev ethernet.IDevice) psErr.Error {
+func ArpInputHandler(payload []byte) psErr.Error {
 	if len(payload) < ArpMessageSize {
 		return psErr.Error{
 			Code: psErr.InvalidPacket,
@@ -89,18 +88,18 @@ func ArpInputHandler(payload []byte, dev ethernet.IDevice) psErr.Error {
 
 	buf := bytes.NewBuffer(payload)
 	msg := ArpMessage{}
-	if err := binary.Read(buf, binary.LittleEndian, &msg); err != nil {
+	if err := binary.Read(buf, binary.BigEndian, &msg); err != nil {
 		return psErr.Error{Code: psErr.CantRead, Msg: err.Error()}
 	}
 
-	if msg.hType != ArpHwTypeEthernet || msg.hlen != ethernet.EthAddrLen {
+	if msg.Htype != ArpHwTypeEthernet || msg.Hlen != ethernet.EthAddrLen {
 		return psErr.Error{
 			Code: psErr.InvalidPacket,
 			Msg:  "invalid arp packet",
 		}
 	}
 
-	if msg.pType != ArpOpRequest || msg.plen != V4AddrLen {
+	if msg.Ptype != ArpOpRequest || msg.Plen != V4AddrLen {
 		return psErr.Error{
 			Code: psErr.InvalidPacket,
 			Msg:  "invalid arp packet",

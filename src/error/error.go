@@ -6,7 +6,7 @@ const (
 	OK int = iota
 	AlreadyOpened
 	CantConvert
-	CantCreate
+	CantProcess
 	CantOpen
 	CantRead
 	CantRegister

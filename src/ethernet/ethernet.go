@@ -60,7 +60,7 @@ type EthHeader struct {
 func EthDump(hdr *EthHeader) {
 	psLog.I("\tmac (dst): %v", hdr.Dst.String())
 	psLog.I("\tmac (src): %v", hdr.Src.String())
-	psLog.I("\teth_type:  0x%04x (%s)", ntoh16(uint16(hdr.Type)), hdr.Type.String())
+	psLog.I("\teth_type:  0x%04x (%s)", uint16(hdr.Type), hdr.Type.String())
 }
 
 func ReadFrame(fd int, addr EthAddr, sc psSyscall.ISyscall) psErr.Error {
@@ -80,7 +80,7 @@ func ReadFrame(fd int, addr EthAddr, sc psSyscall.ISyscall) psErr.Error {
 	}
 
 	hdr := EthHeader{}
-	if err := binary.Read(bytes.NewBuffer(buf), binary.LittleEndian, &hdr); err != nil {
+	if err := binary.Read(bytes.NewBuffer(buf), binary.BigEndian, &hdr); err != nil {
 		return psErr.Error{Code: psErr.CantConvert, Msg: err.Error()}
 	}
 
@@ -90,7 +90,7 @@ func ReadFrame(fd int, addr EthAddr, sc psSyscall.ISyscall) psErr.Error {
 		}
 	}
 
-	psLog.I("received an ethernet frame")
+	psLog.I("received ethernet frame")
 	psLog.I("\tfsize:     %v bytes", fsize)
 	EthDump(&hdr)
 

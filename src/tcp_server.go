@@ -14,6 +14,7 @@ import (
 
 var wg sync.WaitGroup
 
+var ethSigCh chan os.Signal
 var mainSigCh chan os.Signal
 var netSigCh chan os.Signal
 var sigCh chan os.Signal
@@ -59,34 +60,60 @@ func setup() psErr.Error {
 	psLog.I("--------------------------------------------------")
 	psLog.I(" START WORKERS                                    ")
 	psLog.I("--------------------------------------------------")
-	if err = start(netSigCh, &wg); err.Code != psErr.OK {
+	if err = start(&wg); err.Code != psErr.OK {
 		return psErr.Error{Code: psErr.Failed}
 	}
 
 	return psErr.Error{Code: psErr.OK}
 }
 
-func start(netSigCh <-chan os.Signal, wg *sync.WaitGroup) psErr.Error {
+func start(wg *sync.WaitGroup) psErr.Error {
 	network.DeviceRepo.Up()
+
+	// worker for polling incoming packets
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		var terminate = false
 		for {
 			select {
-			case <-netSigCh:
-				psLog.I("terminating worker...")
+			case <-ethSigCh:
+				psLog.I("terminating eth worker...")
 				terminate = true
 			default:
-				psLog.I("worker is running...")
-			}
-			if err := network.DeviceRepo.Poll(terminate); err.Code != psErr.OK {
-				// TODO: notify error to main goroutine
-				// ...
-				psLog.F("poll failed: %v, %v", err.Code, err.Msg)
+				if err := network.DeviceRepo.Poll(terminate); err.Code != psErr.OK {
+					// TODO: notify error to main goroutine
+					// ...
+					psLog.F("poll failed: %v, %v", err.Code, err.Msg)
+				}
 			}
 			if terminate {
 				return
+			}
+		}
+	}()
+
+	// worker for handling incoming/outgoing packets
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case <-netSigCh:
+				psLog.I("terminating net worker...")
+				return
+			case packet := <-ethernet.RxCh:
+				if err := network.InputHandler(packet); err.Code != psErr.OK {
+					// TODO: notify error to main goroutine
+					// ...
+					psLog.F("processing incoming packet failed: %v, %v", err.Code, err.Msg)
+				}
+			case packet := <-ethernet.TxCh:
+				if err := network.OutputHandler(packet); err.Code != psErr.OK {
+					// TODO: notify error to main goroutine
+					// ...
+					psLog.F("processing outgoing packet failed: %v, %v", err.Code, err.Msg)
+				}
 			}
 		}
 	}()
@@ -96,6 +123,7 @@ func start(netSigCh <-chan os.Signal, wg *sync.WaitGroup) psErr.Error {
 
 func init() {
 	mainSigCh = make(chan os.Signal)
+	ethSigCh = make(chan os.Signal)
 	netSigCh = make(chan os.Signal)
 	sigCh = make(chan os.Signal, 1)
 	// https://pkg.go.dev/os/signal#Notify
@@ -108,6 +136,7 @@ func handleSignal(sigCh <-chan os.Signal, wg *sync.WaitGroup) {
 		defer wg.Done()
 		sig := <-sigCh
 		psLog.I("signal received: %s ", sig)
+		ethSigCh <- syscall.SIGUSR1
 		mainSigCh <- syscall.SIGUSR1
 		netSigCh <- syscall.SIGUSR1
 	}()
