@@ -1,8 +1,7 @@
-package middleware
+package network
 
 import (
 	"github.com/42milez/ProtocolStack/src/ethernet"
-	"github.com/42milez/ProtocolStack/src/network"
 	psSyscall "github.com/42milez/ProtocolStack/src/syscall"
 	"strconv"
 )
@@ -10,10 +9,10 @@ import (
 // GenIface generates Iface.
 func GenIface(unicast string, netmask string, broadcast string) *Iface {
 	iface := &Iface{
-		Family:    network.FamilyV4,
-		Unicast:   network.ParseIP(unicast),
-		Netmask:   network.ParseIP(netmask),
-		Broadcast: network.ParseIP(broadcast),
+		Family:    FamilyV4,
+		Unicast:   ParseIP(unicast),
+		Netmask:   ParseIP(netmask),
+		Broadcast: ParseIP(broadcast),
 	}
 	return iface
 }
@@ -22,7 +21,7 @@ func GenIface(unicast string, netmask string, broadcast string) *Iface {
 func GenLoopbackDevice() *ethernet.LoopbackDevice {
 	dev := &ethernet.LoopbackDevice{
 		Device: ethernet.Device{
-			Name:      "net" + strconv.Itoa(len(devices)),
+			Name:      "net" + strconv.Itoa(DeviceRepo.NextNumber()),
 			Type:      ethernet.DevTypeLoopback,
 			MTU:       ethernet.LoopbackMTU,
 			HeaderLen: 0,
@@ -38,7 +37,7 @@ func GenTapDevice(index uint8, addr ethernet.EthAddr) *ethernet.TapDevice {
 	return &ethernet.TapDevice{
 		Device: ethernet.Device{
 			Type:      ethernet.DevTypeEthernet,
-			Name:      "net" + strconv.Itoa(len(devices)),
+			Name:      "net" + strconv.Itoa(DeviceRepo.NextNumber()),
 			MTU:       ethernet.EthPayloadSizeMax,
 			FLAG:      ethernet.DevFlagBroadcast | ethernet.DevFlagNeedArp,
 			HeaderLen: ethernet.EthHeaderSize,

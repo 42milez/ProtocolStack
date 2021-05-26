@@ -135,16 +135,19 @@ func (dev *TapDevice) Poll(isTerminated bool) psErr.Error {
 		}
 	}
 
-	// TODO: send events to channel
-	// ...
-
 	if nEvents > 0 {
 		psLog.I("event occurred")
 		psLog.I("\tevents: %v ", nEvents)
 		psLog.I("\tdevice: %v (%v) ", dev.Name, dev.Priv.Name)
-		_ = ReadFrame(dev.Priv.FD, dev.Addr, dev.Syscall)
-	} else {
-		psLog.I("no event occurred")
+		if packet, err := ReadFrame(dev.Priv.FD, dev.Addr, dev.Syscall); err.Code != psErr.OK {
+			if err.Code != psErr.NoDataToRead {
+				psLog.E("can't read ethernet frame (code: %s)", err.Error())
+				return psErr.Error{Code: psErr.CantRead}
+			}
+		} else {
+			packet.Dev = dev
+			RxCh <- packet
+		}
 	}
 
 	return psErr.Error{Code: psErr.OK}

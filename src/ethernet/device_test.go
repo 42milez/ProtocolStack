@@ -41,7 +41,7 @@ func TestDevType_String_SUCCESS_D(t *testing.T) {
 	}
 }
 
-func TestDevice_Enable_SUCCESS(t *testing.T) {
+func TestDevice_Up_SUCCESS(t *testing.T) {
 	dev := Device{}
 	dev.Up()
 
@@ -53,7 +53,7 @@ func TestDevice_Enable_SUCCESS(t *testing.T) {
 	}
 }
 
-func TestDevice_Disable_SUCCESS(t *testing.T) {
+func TestDevice_Down_SUCCESS(t *testing.T) {
 	dev := Device{}
 	dev.Up()
 	dev.Down()
@@ -71,30 +71,13 @@ func TestDevice_Equal_SUCCESS(t *testing.T) {
 	defer ctrl.Finish()
 
 	m := NewMockIDevice(ctrl)
-	m.EXPECT().Info().Return("", "net0", "")
+	m.EXPECT().Names().Return("net0", "")
 
 	dev1 := &Device{Name: "net0"}
 
 	got := dev1.Equal(m)
 	if !got {
 		t.Errorf("Device.Equal() = %v; want %v", got, true)
-	}
-}
-
-func TestDevice_Info_SUCCESS(t *testing.T) {
-	devType := DevTypeEthernet
-	devName1 := "net0"
-	devName2 := "tap0"
-	dev := &Device{
-		Type: devType,
-		Name: devName1,
-		Priv: Privilege{
-			Name: devName2,
-		},
-	}
-	typ, n1, n2 := dev.Info()
-	if typ != devType.String() || n1 != devName1 || n2 != devName2 {
-		t.Errorf("Device.Equal() = %v, %v, %v; want %v, %v, %v", typ, n1, n2, devType, devName1, devName2)
 	}
 }
 

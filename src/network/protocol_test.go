@@ -1,4 +1,4 @@
-package middleware
+package network
 
 import "testing"
 
@@ -34,7 +34,7 @@ func TestProtocolType_String_SUCCESS(t *testing.T) {
 	}
 
 	want = "UNKNOWN"
-	got = ProtocolType(999).String()
+	got = ProtocolType(100).String()
 	if got != want {
 		t.Errorf("ProtocolType.String() = %v; want %v", got, want)
 	}

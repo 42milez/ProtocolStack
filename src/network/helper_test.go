@@ -1,8 +1,7 @@
-package middleware
+package network
 
 import (
 	"github.com/42milez/ProtocolStack/src/ethernet"
-	"github.com/42milez/ProtocolStack/src/network"
 	psSyscall "github.com/42milez/ProtocolStack/src/syscall"
 	"github.com/google/go-cmp/cmp"
 	"testing"
@@ -10,10 +9,10 @@ import (
 
 func TestGenIface_SUCCESS(t *testing.T) {
 	want := &Iface{
-		Family:    network.FamilyV4,
-		Unicast:   network.ParseIP(ethernet.LoopbackIpAddr),
-		Netmask:   network.ParseIP(ethernet.LoopbackNetmask),
-		Broadcast: network.ParseIP(ethernet.LoopbackBroadcast),
+		Family:    FamilyV4,
+		Unicast:   ParseIP(ethernet.LoopbackIpAddr),
+		Netmask:   ParseIP(ethernet.LoopbackNetmask),
+		Broadcast: ParseIP(ethernet.LoopbackBroadcast),
 	}
 	got := GenIface(ethernet.LoopbackIpAddr, ethernet.LoopbackNetmask, ethernet.LoopbackBroadcast)
 	if d := cmp.Diff(got, want); d != "" {

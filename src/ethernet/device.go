@@ -44,8 +44,10 @@ type IDevice interface {
 	Up()
 	Down()
 	Equal(dev IDevice) bool
-	Info() (string, string, string)
 	IsUp() bool
+	EthAddrs() (addr EthAddr, broadcast EthAddr, peer EthAddr)
+	Names() (name string, privName string)
+	Typ() (typ DevType)
 }
 
 type Device struct {
@@ -66,23 +68,37 @@ type Privilege struct {
 	FD   int
 }
 
-func (dev *Device) Up() {
-	dev.FLAG |= DevFlagUp
+func (p *Device) Up() {
+	p.FLAG |= DevFlagUp
 }
 
-func (dev *Device) Down() {
-	dev.FLAG &= ^DevFlagUp
+func (p *Device) Down() {
+	p.FLAG &= ^DevFlagUp
 }
 
-func (dev *Device) Equal(v IDevice) bool {
-	_, name, _ := v.Info()
-	return dev.Name == name
+func (p *Device) Equal(pp IDevice) bool {
+	name, _ := pp.Names()
+	return p.Name == name
 }
 
-func (dev *Device) Info() (string, string, string) {
-	return dev.Type.String(), dev.Name, dev.Priv.Name
+func (p *Device) IsUp() bool {
+	return p.FLAG&DevFlagUp == 1
 }
 
-func (dev *Device) IsUp() bool {
-	return dev.FLAG&DevFlagUp == 1
+func (p *Device) EthAddrs() (addr EthAddr, broadcast EthAddr, peer EthAddr) {
+	addr = p.Addr
+	broadcast = p.Broadcast
+	peer = p.Peer
+	return
+}
+
+func (p *Device) Names() (name string, privName string) {
+	name = p.Name
+	privName = p.Priv.Name
+	return
+}
+
+func (p *Device) Typ() (typ DevType) {
+	typ = p.Type
+	return
 }

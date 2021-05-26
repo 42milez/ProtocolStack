@@ -14,3 +14,7 @@ func ByteOrder() int {
 		return LittleEndian
 	}
 }
+
+func Swap16(v uint16) uint16 {
+	return (v << 8) | (v >> 8)
+}
