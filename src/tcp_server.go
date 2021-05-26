@@ -75,6 +75,7 @@ func start(wg *sync.WaitGroup) psErr.Error {
 	go func() {
 		defer wg.Done()
 		var terminate = false
+		psLog.I("eth worker started")
 		for {
 			select {
 			case <-ethSigCh:
@@ -97,6 +98,7 @@ func start(wg *sync.WaitGroup) psErr.Error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+		psLog.I("net worker started")
 		for {
 			select {
 			case <-netSigCh:
