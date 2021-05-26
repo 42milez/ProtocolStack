@@ -16,6 +16,18 @@ const ArpMessageSize = 68
 
 //var cache *ArpCache
 
+type ArpHwAddr [ethernet.EthAddrLen]byte
+
+func (p *ArpHwAddr) String() string {
+	return fmt.Sprintf("%02x:%02x:%02x:%02x:%02x:%02x", p[0], p[1], p[2], p[3], p[4], p[5])
+}
+
+type ArpProtoAddr [V4AddrLen]byte
+
+func (p *ArpProtoAddr) String() string {
+	return fmt.Sprintf("%d.%d.%d.%d", p[0], p[1], p[2], p[3])
+}
+
 type ArpHdr struct {
 	HT     ArpHwType        // hardware type
 	PT     ethernet.EthType // protocol type
@@ -26,10 +38,10 @@ type ArpHdr struct {
 
 type ArpMessage struct {
 	ArpHdr
-	SHA [ethernet.EthAddrLen]byte // sender hardware address
-	SPA [V4AddrLen]byte           // sender protocol address
-	THA [ethernet.EthAddrLen]byte // target hardware address
-	TPA [V4AddrLen]byte           // target protocol address
+	SHA ArpHwAddr    // sender hardware address
+	SPA ArpProtoAddr // sender protocol address
+	THA ArpHwAddr    // target hardware address
+	TPA ArpProtoAddr // target protocol address
 }
 
 type ArpCacheEntry struct {
@@ -127,10 +139,10 @@ func arpDump(msg *ArpMessage) {
 	psLog.I("\thardware address length: %d", msg.HAL)
 	psLog.I("\tprotocol address length: %d", msg.PAL)
 	psLog.I("\topcode:                  %s (%d)", msg.Opcode, uint16(msg.Opcode))
-	psLog.I("\tsender hardware address: %v", msg.SHA)
-	psLog.I("\tsender protocol address: %v", msg.SPA)
-	psLog.I("\ttarget hardware address: %v", msg.THA)
-	psLog.I("\ttarget hardware address: %v", msg.TPA)
+	psLog.I("\tsender hardware address: %s", msg.SHA.String())
+	psLog.I("\tsender protocol address: %s", msg.SPA.String())
+	psLog.I("\ttarget hardware address: %s", msg.THA.String())
+	psLog.I("\ttarget hardware address: %s", msg.TPA.String())
 }
 
 //func arpReply() psErr.Error {
