@@ -122,8 +122,9 @@ func TestUp_SUCCESS(t *testing.T) {
 	m.EXPECT().Open().Return(psErr.Error{Code: psErr.OK})
 	m.EXPECT().Up()
 	m.EXPECT().IsUp().Return(false)
+	m.EXPECT().EthAddrs().Return(ethernet.EthAddr{}, ethernet.EthAddr{}, ethernet.EthAddr{})
 	m.EXPECT().Names().Return("net0", "tap0").AnyTimes()
-	m.EXPECT().Typ().Return(ethernet.DevTypeEthernet.String()).AnyTimes()
+	m.EXPECT().Typ().Return(ethernet.DevTypeEthernet).AnyTimes()
 
 	_ = DeviceRepo.Register(m)
 
@@ -144,8 +145,9 @@ func TestUp_FailWhenDeviceIsAlreadyOpened(t *testing.T) {
 
 	m := ethernet.NewMockIDevice(ctrl)
 	m.EXPECT().IsUp().Return(true)
-	m.EXPECT().Names().Return("net0", "tap0")
-	m.EXPECT().Typ().Return(ethernet.DevTypeEthernet.String())
+	m.EXPECT().EthAddrs().Return(ethernet.EthAddr{}, ethernet.EthAddr{}, ethernet.EthAddr{})
+	m.EXPECT().Names().Return("net0", "tap0").AnyTimes()
+	m.EXPECT().Typ().Return(ethernet.DevTypeEthernet).AnyTimes()
 
 	_ = DeviceRepo.Register(m)
 
@@ -167,8 +169,9 @@ func TestUp_FailWhenCouldNotGetDeviceUp(t *testing.T) {
 	m := ethernet.NewMockIDevice(ctrl)
 	m.EXPECT().Open().Return(psErr.Error{Code: psErr.CantOpen})
 	m.EXPECT().IsUp().Return(false)
+	m.EXPECT().EthAddrs().Return(ethernet.EthAddr{}, ethernet.EthAddr{}, ethernet.EthAddr{})
 	m.EXPECT().Names().Return("net0", "tap0").AnyTimes()
-	m.EXPECT().Typ().Return(ethernet.DevTypeEthernet.String()).AnyTimes()
+	m.EXPECT().Typ().Return(ethernet.DevTypeEthernet).AnyTimes()
 
 	_ = DeviceRepo.Register(m)
 

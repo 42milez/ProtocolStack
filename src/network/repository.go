@@ -9,6 +9,16 @@ import (
 
 var DeviceRepo *deviceRepo
 var IfaceRepo *ifaceRepo
+var RouteRepo *routeRepo
+
+type Handler func(data []byte, dev ethernet.IDevice) psErr.Error
+
+type Timer struct {
+	Name     string
+	Interval syscall.Timeval
+	Last     syscall.Timeval
+	Handler  Handler
+}
 
 type deviceRepo struct {
 	devices []ethernet.IDevice
@@ -60,18 +70,20 @@ func (p *deviceRepo) Up() psErr.Error {
 		name, privName := dev.Names()
 		if dev.IsUp() {
 			psLog.W("device is already opened")
-			psLog.W("\tname: %v (%v) ", name, privName)
+			psLog.W("\ttype: %s ", typ)
+			psLog.W("\tname: %s (%s) ", name, privName)
 			return psErr.Error{Code: psErr.AlreadyOpened}
 		}
 		if err := dev.Open(); err.Code != psErr.OK {
 			psLog.E("can't open a device")
-			psLog.E("\tname: %v (%v) ", name, privName)
-			psLog.E("\ttype: %v ", typ)
+			psLog.E("\ttype: %s ", typ)
+			psLog.E("\tname: %s (%s) ", name, privName)
 			return psErr.Error{Code: psErr.CantOpen}
 		}
 		dev.Up()
 		psLog.I("device opened")
-		psLog.I("\tname: %v (%v) ", name, privName)
+		psLog.I("\ttype: %s ", typ)
+		psLog.I("\tname: %s (%s) ", name, privName)
 	}
 	return psErr.Error{Code: psErr.OK}
 }
@@ -99,16 +111,53 @@ func (p *ifaceRepo) Register(iface *Iface, dev ethernet.IDevice) psErr.Error {
 	return psErr.Error{Code: psErr.OK}
 }
 
-type Handler func(data []byte, dev ethernet.IDevice) psErr.Error
+type route struct {
+	Network IP
+	Netmask IP
+	NextHop IP
+	iface   *Iface
+}
 
-type Timer struct {
-	Name     string
-	Interval syscall.Timeval
-	Last     syscall.Timeval
-	Handler  Handler
+type routeRepo struct {
+	routes []*route
+}
+
+func (p *routeRepo) Register(network IP, nextHop IP, iface *Iface) {
+	route := &route{
+		Network: network,
+		Netmask: iface.Netmask,
+		NextHop: nextHop,
+		iface:   iface,
+	}
+	p.routes = append(p.routes, route)
+	name, privName := iface.Dev.Names()
+	psLog.I("route registered")
+	psLog.I("\tnetwork:  %s", route.Network)
+	psLog.I("\tnetmask:  %s", route.Netmask)
+	psLog.I("\tunicast:  %s", iface.Unicast)
+	psLog.I("\tnext hop: %s", nextHop)
+	psLog.I("\tdevice:   %s (%s) ", name, privName)
+}
+
+func (p *routeRepo) RegisterDefaultGateway(iface *Iface, nextHop IP) {
+	route := &route{
+		Network: V4Zero,
+		Netmask: V4Zero,
+		NextHop: nextHop,
+		iface:   iface,
+	}
+	p.routes = append(p.routes, route)
+	name, privName := iface.Dev.Names()
+	psLog.I("default gateway registered")
+	psLog.I("\tnetwork:  %s", route.Network)
+	psLog.I("\tnetmask:  %s", route.Netmask)
+	psLog.I("\tunicast:  %s", iface.Unicast)
+	psLog.I("\tnext hop: %s", nextHop)
+	psLog.I("\tdevice:   %s (%s) ", name, privName)
 }
 
 func init() {
 	DeviceRepo = &deviceRepo{}
 	IfaceRepo = &ifaceRepo{}
+	RouteRepo = &routeRepo{}
 }
