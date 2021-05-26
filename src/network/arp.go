@@ -17,10 +17,11 @@ const ArpMessageSize = 68
 var cache *ArpCache
 
 type ArpHdr struct {
-	Htype ArpHwType // hardware type
-	Ptype ArpOp     // protocol type
-	Hlen  uint8     // hardware length
-	Plen  uint8     // protocol length
+	HT     ArpHwType        // hardware type
+	PT     ethernet.EthType // protocol type
+	HAL    uint8            // hardware address length
+	PAL    uint8            // protocol address length
+	Opcode ArpOpcode
 }
 
 type ArpMessage struct {
@@ -92,14 +93,14 @@ func ArpInputHandler(payload []byte) psErr.Error {
 		return psErr.Error{Code: psErr.CantRead, Msg: err.Error()}
 	}
 
-	if msg.Htype != ArpHwTypeEthernet || msg.Hlen != ethernet.EthAddrLen {
+	if msg.HT != ArpHwTypeEthernet || msg.HAL != ethernet.EthAddrLen {
 		return psErr.Error{
 			Code: psErr.InvalidPacket,
 			Msg:  "invalid arp packet",
 		}
 	}
 
-	if msg.Ptype != ArpOpRequest || msg.Plen != V4AddrLen {
+	if msg.PT != ethernet.EthTypeIpv4 || msg.PAL != V4AddrLen {
 		return psErr.Error{
 			Code: psErr.InvalidPacket,
 			Msg:  "invalid arp packet",

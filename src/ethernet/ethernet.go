@@ -17,9 +17,9 @@ const EthFrameSizeMax = 1514
 const EthPayloadSizeMin = EthFrameSizeMin - EthHeaderSize
 const EthPayloadSizeMax = EthFrameSizeMax - EthHeaderSize
 
-const EthTypeArp = 0x0806
-const EthTypeIpv4 = 0x0800
-const EthTypeIpv6 = 0x86dd
+const EthTypeArp EthType = 0x0806
+const EthTypeIpv4 EthType = 0x0800
+const EthTypeIpv6 EthType = 0x86dd
 
 var EthAddrAny = EthAddr{0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 var EthAddrBroadcast = EthAddr{0xff, 0xff, 0xff, 0xff, 0xff, 0xff}
@@ -39,7 +39,7 @@ func (v EthAddr) String() string {
 type EthType uint16
 
 func (v EthType) String() string {
-	switch ntoh16(uint16(v)) {
+	switch v {
 	case EthTypeArp:
 		return "ARP"
 	case EthTypeIpv4:

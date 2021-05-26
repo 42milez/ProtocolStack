@@ -1,39 +1,18 @@
 package network
 
+// Address Resolution Protocol (ARP) Parameters
 // https://www.iana.org/assignments/arp-parameters/arp-parameters.xhtml
 
-const ArpHwTypeEthernet = 1
+// EtherType
+// https://en.wikipedia.org/wiki/EtherType#Examples
 
-type ArpHwType uint16
+// Notes:
+//  - Protocol Type is same as EtherType.
 
-func (v ArpHwType) String() string {
-	switch v {
-	case ArpHwTypeEthernet:
-		return "Ethernet"
-	default:
-		return "UNKNOWN"
-	}
-}
+const ArpHwTypeEthernet ArpHwType = 1
 
-// https://www.iana.org/assignments/arp-parameters/arp-parameters.xhtml#arp-parameters-1
-
-const ArpOpRequest = 1
-const ArpOpReply = 2
-
-type ArpOp uint16
-
-func (v ArpOp) String() string {
-	switch v {
-	case ArpOpRequest:
-		return "REQUEST"
-	case ArpOpReply:
-		return "REPLY"
-	default:
-		return "UNKNOWN"
-	}
-}
-
-type ArpCacheState uint8
+const ArpOpRequest ArpOpcode = 1
+const ArpOpReply ArpOpcode = 2
 
 const (
 	ArpCacheStateFree ArpCacheState = iota
@@ -41,3 +20,9 @@ const (
 	ArpCacheStateResolved
 	ArpCacheStateStatic
 )
+
+type ArpHwType uint16
+
+type ArpOpcode uint16
+
+type ArpCacheState uint8

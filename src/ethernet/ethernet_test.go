@@ -41,7 +41,7 @@ func TestEthAddr_Equal_SUCCESS_NotEqual(t *testing.T) {
 }
 
 func TestEthType_String_SUCCESS_A(t *testing.T) {
-	ethType := EthType(0x0608)
+	ethType := EthType(0x0806)
 	want := "ARP"
 	got := ethType.String()
 	if got != want {
@@ -51,7 +51,7 @@ func TestEthType_String_SUCCESS_A(t *testing.T) {
 
 func TestEthType_String_SUCCESS_B(t *testing.T) {
 	want := "IPv4"
-	got := EthType(0x0008).String()
+	got := EthType(0x0800).String()
 	if got != want {
 		t.Errorf("EthType.String() = %v; want %v", got, want)
 	}
@@ -59,7 +59,7 @@ func TestEthType_String_SUCCESS_B(t *testing.T) {
 
 func TestEthType_String_SUCCESS_C(t *testing.T) {
 	want := "IPv6"
-	got := EthType(0xdd86).String()
+	got := EthType(0x86dd).String()
 	if got != want {
 		t.Errorf("EthType.String() = %v; want %v", got, want)
 	}
@@ -77,7 +77,7 @@ func TestEthDump_SUCCESS(t *testing.T) {
 	regexpDatetime := "[0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}"
 	macDst := EthAddr{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}
 	macSrc := EthAddr{0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f}
-	ethType := EthType(0x0008)
+	ethType := EthType(0x0800)
 	want, _ := regexp.Compile(fmt.Sprintf(
 		"^.+ %v mac \\(dst\\): %v.+ %v mac \\(src\\): %v.+ %v eth_type:  0x%04x \\(%v\\)$",
 		regexpDatetime,
@@ -85,7 +85,7 @@ func TestEthDump_SUCCESS(t *testing.T) {
 		regexpDatetime,
 		macSrc.String(),
 		regexpDatetime,
-		ntoh16(uint16(ethType)),
+		uint16(ethType),
 		ethType.String()))
 	got := psLog.CaptureLogOutput(func() {
 		hdr := EthHeader{Dst: macDst, Src: macSrc, Type: ethType}
@@ -111,7 +111,7 @@ func TestReadFrame_SUCCESS(t *testing.T) {
 			hdr := EthHeader{
 				Dst:  EthAddr{11, 12, 13, 14, 15, 16},
 				Src:  EthAddr{21, 22, 23, 24, 25, 26},
-				Type: EthType(0x0008), // big endian
+				Type: EthType(0x0800),
 			}
 			b := new(bytes.Buffer)
 			_ = binary.Write(b, binary.BigEndian, hdr)
