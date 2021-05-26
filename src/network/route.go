@@ -27,11 +27,11 @@ func RegisterRoute(network IP, nextHop IP, iface *Iface) {
 	routes = append(routes, route)
 	name, privName := iface.Dev.Names()
 	psLog.I("route registered")
-	psLog.I("\tnetwork:  %v ", route.Network.String())
-	psLog.I("\tnetmask:  %v ", route.Netmask.String())
-	psLog.I("\tunicast:  %v ", iface.Unicast.String())
-	psLog.I("\tnext hop: %v ", nextHop.String())
-	psLog.I("\tdevice:   %v (%v) ", name, privName)
+	psLog.I("\tnetwork:  %s", route.Network)
+	psLog.I("\tnetmask:  %s", route.Netmask)
+	psLog.I("\tunicast:  %s", iface.Unicast)
+	psLog.I("\tnext hop: %s", nextHop)
+	psLog.I("\tdevice:   %s (%s) ", name, privName)
 }
 
 func RegisterDefaultGateway(iface *Iface, nextHop IP) {
@@ -44,9 +44,9 @@ func RegisterDefaultGateway(iface *Iface, nextHop IP) {
 	routes = append(routes, route)
 	name, privName := iface.Dev.Names()
 	psLog.I("default gateway registered")
-	psLog.I("\tnetwork:  %v ", route.Network.String())
-	psLog.I("\tnetmask:  %v ", route.Netmask.String())
-	psLog.I("\tunicast:  %v ", iface.Unicast.String())
-	psLog.I("\tnext hop: %v ", nextHop.String())
-	psLog.I("\tdevice:   %v (%v) ", name, privName)
+	psLog.I("\tnetwork:  %s", route.Network)
+	psLog.I("\tnetmask:  %s", route.Netmask)
+	psLog.I("\tunicast:  %s", iface.Unicast)
+	psLog.I("\tnext hop: %s", nextHop)
+	psLog.I("\tdevice:   %s (%s) ", name, privName)
 }

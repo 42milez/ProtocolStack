@@ -36,19 +36,21 @@ func (p *deviceRepo) Register(dev ethernet.IDevice) psErr.Error {
 			typ := d.Typ()
 			name, privName := d.Names()
 			psLog.W("device is already registered")
-			psLog.W("\ttype:        %v", typ)
-			psLog.W("\tname:        %v", name)
-			psLog.W("\tname (priv): %v", privName)
+			psLog.W("\ttype: %s", typ)
+			psLog.W("\tname: %s (%s)", name, privName)
 			return psErr.Error{Code: psErr.CantRegister}
 		}
 	}
 	p.devices = append(p.devices, dev)
 	typ := dev.Typ()
 	name, privName := dev.Names()
+	addr, broadcast, peer := dev.EthAddrs()
 	psLog.I("device registered")
-	psLog.I("\ttype:        %v", typ)
-	psLog.I("\tname:        %v", name)
-	psLog.I("\tname (priv): %v", privName)
+	psLog.I("\ttype:      %s", typ)
+	psLog.I("\tname:      %s (%s)", name, privName)
+	psLog.I("\taddr:      %s", addr)
+	psLog.I("\tbroadcast: %s", broadcast)
+	psLog.I("\tpeer:      %s", peer)
 	return psErr.Error{Code: psErr.OK}
 }
 
