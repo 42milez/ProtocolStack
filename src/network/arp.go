@@ -14,7 +14,7 @@ import (
 const ArpCacheSize = 32
 const ArpMessageSize = 68
 
-//var cache *ArpCache
+var cache *ArpCache
 
 type ArpHwAddr [ethernet.EthAddrLen]byte
 
@@ -122,13 +122,7 @@ func ArpInputHandler(payload []byte) psErr.Error {
 	psLog.I("arp packet received")
 	arpDump(&msg)
 
-	//isUpdated := cache.Update(&msg)
-
-	//for _, v := range ifaces {
-	//	if v.Dev.Equal(dev) && v.Family == FamilyV4 && v.Unicast {
-	//
-	//	}
-	//}
+	_ = cache.Update(&msg)
 
 	return psErr.Error{Code: psErr.OK}
 }
@@ -149,6 +143,6 @@ func arpDump(msg *ArpMessage) {
 //	return psErr.Error{Code: psErr.OK}
 //}
 
-//func init() {
-//	cache = &ArpCache{}
-//}
+func init() {
+	cache = &ArpCache{}
+}
