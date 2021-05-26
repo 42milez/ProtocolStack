@@ -14,7 +14,7 @@ import (
 const ArpCacheSize = 32
 const ArpMessageSize = 68
 
-var cache *ArpCache
+//var cache *ArpCache
 
 type ArpHdr struct {
 	HT     ArpHwType        // hardware type
@@ -127,6 +127,6 @@ func arpDump(msg *ArpMessage) {}
 //	return psErr.Error{Code: psErr.OK}
 //}
 
-func init() {
-	cache = &ArpCache{}
-}
+//func init() {
+//	cache = &ArpCache{}
+//}
