@@ -35,6 +35,9 @@ func (p *deviceRepo) Poll(terminate bool) psErr.E {
 			continue
 		}
 		if err := dev.Poll(terminate); err != psErr.OK {
+			if err == psErr.Interrupted {
+				return psErr.OK
+			}
 			psLog.E(fmt.Sprintf("IDevice.Poll() failed: %s", err))
 			return psErr.Error
 		}

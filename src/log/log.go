@@ -93,8 +93,8 @@ var e *goLog.Logger
 var f *goLog.Logger
 
 func init() {
-	i = goLog.New(os.Stdout, "\u001B[1;34m[INFO]\u001B[0m ", goLog.LstdFlags)
-	w = goLog.New(os.Stdout, "\u001B[1;33m[WARN]\u001B[0m ", goLog.LstdFlags)
-	e = goLog.New(os.Stderr, "\u001B[1;31m[ERROR]\u001B[0m ", goLog.LstdFlags)
-	f = goLog.New(os.Stderr, "\u001B[1;31m[FATAL]\u001B[0m ", goLog.LstdFlags)
+	i = goLog.New(os.Stdout, "\u001B[1;34m[I]\u001B[0m ", goLog.LstdFlags)
+	w = goLog.New(os.Stdout, "\u001B[1;33m[W]\u001B[0m ", goLog.LstdFlags)
+	e = goLog.New(os.Stderr, "\u001B[1;31m[E]\u001B[0m ", goLog.LstdFlags)
+	f = goLog.New(os.Stderr, "\u001B[1;31m[F]\u001B[0m ", goLog.LstdFlags)
 }
