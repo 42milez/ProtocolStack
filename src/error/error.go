@@ -18,7 +18,6 @@ const (
 
 type E int
 
-
 func (v E) Error() string {
 	switch v {
 	case OK:

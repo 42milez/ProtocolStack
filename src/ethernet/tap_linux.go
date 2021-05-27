@@ -105,7 +105,7 @@ func (dev *TapDevice) Open() psErr.E {
 	event.Events = syscall.EPOLLIN
 	event.Fd = int32(fd)
 
-	if e := dev.Syscall.EpollCtl(epfd, syscall.EPOLL_CTL_ADD, fd, &event); e != nil {
+	if err := dev.Syscall.EpollCtl(epfd, syscall.EPOLL_CTL_ADD, fd, &event); err != nil {
 		_ = dev.Syscall.Close(epfd)
 		psLog.E(fmt.Sprintf("syscall.EpollCtl() failed: %s", err))
 		return psErr.CantModifyIOResourceParameter

@@ -37,6 +37,8 @@ func (Syscall) EpollWait(epfd int, events []syscall.EpollEvent, msec int) (n int
 }
 
 func (Syscall) Ioctl(a1, a2, a3 uintptr) (r1, r2 uintptr, err syscall.Errno) {
+	// doc: second return value of syscall.Syscall needs to be documented #29842
+	// https://github.com/golang/go/issues/29842
 	return syscall.Syscall(syscall.SYS_IOCTL, a1, a2, a3)
 }
 
