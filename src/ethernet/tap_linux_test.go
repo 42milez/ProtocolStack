@@ -58,7 +58,6 @@ func TestTapDevice_Open_2(t *testing.T) {
 	defer ctrl.Finish()
 
 	m := psSyscall.NewMockISyscall(ctrl)
-
 	m.EXPECT().Open(Any, Any, Any).Return(RetValOnFail, ErrorWithNoMessage)
 
 	tapDev := TapDevice{Device{Syscall: m}}
@@ -78,7 +77,6 @@ func TestTapDevice_Open_3(t *testing.T) {
 	defer ctrl.Finish()
 
 	m := psSyscall.NewMockISyscall(ctrl)
-
 	m.EXPECT().Open(Any, Any, Any).Return(10, nil)
 	m.EXPECT().Ioctl(Any, Any, Any).Return(uintptr(RetValOnFail), R2Zero, syscall.EBADF)
 	m.EXPECT().Close(Any).Return(nil)
@@ -180,14 +178,13 @@ func TestTapDevice_Open_7(t *testing.T) {
 	defer ctrl.Finish()
 
 	m := psSyscall.NewMockISyscall(ctrl)
-
 	m.EXPECT().Open(Any, Any, Any).Return(10, nil)
 	m.EXPECT().Ioctl(Any, uintptr(syscall.TUNSETIFF), Any).Return(uintptr(RetValOnSuccess), R2Zero, ErrnoSuccess)
 	m.EXPECT().Socket(Any, Any, Any).Return(11, nil)
 	m.EXPECT().Ioctl(Any, uintptr(syscall.SIOCGIFHWADDR), Any).Return(uintptr(RetValOnSuccess), R2Zero, ErrnoSuccess)
 	m.EXPECT().EpollCreate1(Any).Return(12, nil)
 	m.EXPECT().EpollCtl(Any, Any, Any, Any).Return(ErrorWithNoMessage)
-	m.EXPECT().Close(Any).Return(nil)
+	m.EXPECT().Close(Any).Return(nil).AnyTimes()
 
 	tapDev := TapDevice{Device{Syscall: m}}
 
@@ -217,12 +214,18 @@ func TestTapDevice_Close(t *testing.T) {
 }
 
 func TestTapDevice_Transmit(t *testing.T) {
+	psLog.DisableOutput()
+	defer psLog.EnableOutput()
+
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	m := psSyscall.NewMockISyscall(ctrl)
+	m.EXPECT().Write(Any, Any).Return(0, nil)
+
 	tapDev := TapDevice{
 		Device{
-			Syscall: psSyscall.NewMockISyscall(ctrl),
+			Syscall: m,
 		},
 	}
 
@@ -241,7 +244,6 @@ func TestTapDevice_Poll_1(t *testing.T) {
 	defer ctrl.Finish()
 
 	m := psSyscall.NewMockISyscall(ctrl)
-
 	m.EXPECT().EpollWait(Any, Any, Any).Return(0, nil)
 
 	tapDev := TapDevice{Device{Syscall: m}}
@@ -261,7 +263,6 @@ func TestTapDevice_Poll_2(t *testing.T) {
 	defer ctrl.Finish()
 
 	m := psSyscall.NewMockISyscall(ctrl)
-
 	m.EXPECT().EpollWait(Any, Any, Any).Return(1, nil)
 	m.EXPECT().Read(Any, Any).Return(150, nil)
 
@@ -282,14 +283,13 @@ func TestTapDevice_Poll_3(t *testing.T) {
 	defer ctrl.Finish()
 
 	m := psSyscall.NewMockISyscall(ctrl)
-
 	m.EXPECT().Close(Any).Return(nil)
 
 	tapDev := TapDevice{Device{Syscall: m}}
 
 	got := tapDev.Poll(true)
-	if got != psErr.OK {
-		t.Errorf("TapDevice.Poll() = %v; want %v", got, psErr.OK)
+	if got != psErr.Terminated {
+		t.Errorf("TapDevice.Poll() = %v; want %v", got, psErr.Terminated)
 	}
 }
 
@@ -302,9 +302,7 @@ func TestTapDevice_Poll_4(t *testing.T) {
 	defer ctrl.Finish()
 
 	m := psSyscall.NewMockISyscall(ctrl)
-
-	m.EXPECT().EpollWait(Any, Any, Any).Return(RetValOnFail, ErrorWithNoMessage)
-	m.EXPECT().Close(Any).Return(nil)
+	m.EXPECT().EpollWait(Any, Any, Any).Return(RetValOnFail, syscall.EINTR)
 
 	tapDev := TapDevice{Device{Syscall: m}}
 

@@ -21,16 +21,15 @@ func trim(s string) string {
 }
 
 func TestEthAddr_Equal(t *testing.T) {
-	ethAddr1 := EthAddr([EthAddrLen]byte{11, 22, 33, 44, 55, 66})
-	ethAddr2 := EthAddr([EthAddrLen]byte{11, 22, 33, 44, 55, 66})
+	ethAddr1 := EthAddr{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}
+	ethAddr2 := EthAddr{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}
 	got := ethAddr1.Equal(ethAddr2)
 	if got != true {
 		t.Errorf("EthAddr.Equal() = %t; want %t", got, true)
 	}
 
-	ethAddr1 = EthAddr([EthAddrLen]byte{11, 22, 33, 44, 55, 66})
-	ethAddr2 = EthAddr([EthAddrLen]byte{})
-	got = ethAddr1.Equal(ethAddr2)
+	ethAddr3 := EthAddr{}
+	got = ethAddr1.Equal(ethAddr3)
 	if got != false {
 		t.Errorf("EthAddr.Equal() = %t; want %t", got, false)
 	}
@@ -86,7 +85,7 @@ func TestEthDump(t *testing.T) {
 	}
 }
 
-func TestReadFrame_SUCCESS(t *testing.T) {
+func TestReadFrame_1(t *testing.T) {
 	psLog.DisableOutput()
 	defer psLog.EnableOutput()
 

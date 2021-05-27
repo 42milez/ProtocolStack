@@ -137,6 +137,7 @@ func (dev *TapDevice) Poll(isTerminated bool) psErr.E {
 			return psErr.Error
 		}
 		psLog.I("Syscall.EpollWait() was interrupted")
+		return psErr.Interrupted
 	}
 
 	if nEvents > 0 {
