@@ -7,7 +7,6 @@ const (
 	CantModifyIOResourceParameter
 	CantOpenIOResource
 	CantRead
-	Error
 	InterfaceNotFound
 	Interrupted
 	InvalidHeader
@@ -15,6 +14,7 @@ const (
 	NoDataToRead
 	NotFound
 	Terminated
+	Error
 )
 
 type E int
@@ -33,8 +33,6 @@ func (v E) Error() string {
 		return "CANT_OPEN_IO_RESOURCE"
 	case CantRead:
 		return "CANT_READ"
-	case Error:
-		return "ERROR"
 	case InterfaceNotFound:
 		return "INTERFACE_NOT_FOUND"
 	case Interrupted:
@@ -49,6 +47,8 @@ func (v E) Error() string {
 		return "NOT_FOUND"
 	case Terminated:
 		return "TERMINATED"
+	case Error:
+		return "ERROR"
 	default:
 		return "UNKNOWN"
 	}
