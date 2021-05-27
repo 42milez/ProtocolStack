@@ -163,12 +163,19 @@ func (dev *TapDevice) Transmit(dest EthAddr, payload []byte, typ EthType) psErr.
 	}
 
 	buf := new(bytes.Buffer)
-	_ = binary.Write(buf, binary.BigEndian, &hdr)
-	_ = binary.Write(buf, binary.BigEndian, &payload)
+	if err := binary.Write(buf, binary.BigEndian, &hdr); err != nil {
+		return psErr.Error{Code: psErr.CantWriteToBuffer}
+	}
+
+	if err := binary.Write(buf, binary.BigEndian, &payload); err != nil {
+		return psErr.Error{Code: psErr.CantWriteToBuffer}
+	}
 
 	if fsize := buf.Len(); fsize < EthFrameSizeMin {
 		pad := make([]byte, EthFrameSizeMin-fsize)
-		_ = binary.Write(buf, binary.BigEndian, &pad)
+		if err := binary.Write(buf, binary.BigEndian, &pad); err != nil {
+			return psErr.Error{Code: psErr.CantWriteToBuffer}
+		}
 	}
 
 	psLog.I("▶ Ethernet frame prepared")
@@ -182,6 +189,13 @@ func (dev *TapDevice) Transmit(dest EthAddr, payload []byte, typ EthType) psErr.
 			psLog.I("%s", payloadHex)
 			payloadHex = "\t\t "
 		}
+	}
+
+	if n, err := dev.Syscall.Write(dev.Priv.FD, buf.Bytes()); err != nil {
+		psLog.E("▶ Write failed")
+		return psErr.Error{Code: psErr.CantWriteToFile}
+	} else {
+		psLog.I("count: %d", n)
 	}
 
 	return psErr.Error{Code: psErr.OK}

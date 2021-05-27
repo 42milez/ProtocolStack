@@ -15,6 +15,7 @@ type ISyscall interface {
 	Open(path string, mode int, perm uint32) (fd int, err error)
 	Read(fd int, p []byte) (n int, err error)
 	Socket(domain, typ, proto int) (fd int, err error)
+	Write(fd int, p []byte) (n int, err error)
 }
 
 type Syscall struct{}
@@ -49,4 +50,8 @@ func (Syscall) Read(fd int, p []byte) (n int, err error) {
 
 func (Syscall) Socket(domain, typ, proto int) (fd int, err error) {
 	return syscall.Socket(domain, typ, proto)
+}
+
+func (Syscall) Write(fd int, p []byte) (n int, err error) {
+	return syscall.Write(fd, p)
 }

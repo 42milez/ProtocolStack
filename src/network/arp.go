@@ -174,11 +174,7 @@ func arpReply(tha ethernet.EthAddr, tpa ArpProtoAddr, iface *Iface) psErr.Error 
 	psLog.I("▶ ARP packet prepared (reply)")
 	arpDump(&packet)
 
-	psLog.I("▶ ARP packet (reply) will be sent from:")
-	psLog.I("\ttype:      %s", iface.Family)
-	psLog.I("\tunicast:   %s", iface.Unicast)
-	psLog.I("\tnetmask:   %s", iface.Netmask)
-	psLog.I("\tbroadcast: %s", iface.Broadcast)
+	psLog.I("▶ ARP packet (reply) will be sent from %s", iface.Unicast)
 
 	buf := new(bytes.Buffer)
 	if err := binary.Write(buf, binary.BigEndian, &packet); err != nil {

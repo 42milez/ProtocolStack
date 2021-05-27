@@ -152,3 +152,18 @@ func (mr *MockISyscallMockRecorder) Socket(domain, typ, proto interface{}) *gomo
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Socket", reflect.TypeOf((*MockISyscall)(nil).Socket), domain, typ, proto)
 }
+
+// Write mocks base method.
+func (m *MockISyscall) Write(fd int, p []byte) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Write", fd, p)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Write indicates an expected call of Write.
+func (mr *MockISyscallMockRecorder) Write(fd, p interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Write", reflect.TypeOf((*MockISyscall)(nil).Write), fd, p)
+}
