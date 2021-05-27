@@ -69,9 +69,6 @@ Note: `make` supports the commands below:
   - [Multiplayer Game Programming: Architecting Networked Games](https://www.oreilly.com/library/view/multiplayer-game-programming/9780134034355)
   - [TCP/IP Illustrated](https://en.wikipedia.org/wiki/TCP/IP_Illustrated)
 - Docs
-  - fedora
-    - [DNF, the next-generation replacement for YUM](https://dnf.readthedocs.io/en/latest/index.html)
-    - [Understanding and administering systemd](https://docs.fedoraproject.org/en-US/quick-docs/understanding-and-administering-systemd/)
   - Codecov
     - [About the Codecov yaml](https://docs.codecov.io/docs/codecov-yaml)
     - [Codecov Delta](https://docs.codecov.io/docs/codecov-delta)
@@ -79,6 +76,9 @@ Note: `make` supports the commands below:
     - [Compose file](https://docs.docker.com/compose/compose-file/)
     - [Dockerfile](https://docs.docker.com/engine/reference/builder/)
     - [Overview of Docker Compose](https://docs.docker.com/compose/)
+  - fedora
+      - [DNF, the next-generation replacement for YUM](https://dnf.readthedocs.io/en/latest/index.html)
+      - [Understanding and administering systemd](https://docs.fedoraproject.org/en-US/quick-docs/understanding-and-administering-systemd/)
   - GitHub Actions
     - [Reference](https://docs.github.com/en/actions/reference)
   - Mutagen
@@ -88,6 +88,9 @@ Note: `make` supports the commands below:
       - [Block Kit](https://app.slack.com/block-kit-builder/T82HLGL84#%7B%22blocks%22:%5B%5D%7D)
       - [Message](https://api.slack.com/docs/messages/builder?msg=%7B%22text%22%3A%22I%20am%20a%20test%20message%22%2C%22attachments%22%3A%5B%7B%22text%22%3A%22And%20here%E2%80%99s%20an%20attachment!%22%7D%5D%7D)
     - [Reference guides for app features](https://api.slack.com/reference)
+  - UI
+    - [Error Message Guidelines](https://docs.microsoft.com/en-us/windows/win32/debug/error-message-guidelines?redirectedfrom=MSDN)
+    - [Messages: UI Text Guidelines](https://docs.microsoft.com/en-us/previous-versions/windows/desktop/bb226791(v=vs.85))
   - Vagrant
     - [Vagrantfile](https://www.vagrantup.com/docs/vagrantfile)
 - Go
