@@ -20,10 +20,13 @@ var mainSigCh chan os.Signal
 var netSigCh chan os.Signal
 var sigCh chan os.Signal
 
+var terminate bool
+
 func setup() psErr.E {
 	psLog.I("--------------------------------------------------")
 	psLog.I(" INITIALIZE DEVICES                               ")
 	psLog.I("--------------------------------------------------")
+	psLog.I("")
 
 	// Create a loopback device and its iface, then link them.
 	loopbackDev := network.GenLoopbackDevice()
@@ -57,9 +60,11 @@ func setup() psErr.E {
 	network.RouteRepo.Register(network.ParseIP("192.0.0.0"), network.V4Zero, iface2)
 	network.RouteRepo.RegisterDefaultGateway(iface2, network.ParseIP("192.0.2.1"))
 
+	psLog.I("")
 	psLog.I("--------------------------------------------------")
 	psLog.I(" START WORKERS                                    ")
 	psLog.I("--------------------------------------------------")
+	psLog.I("")
 
 	if err := start(&wg); err != psErr.OK {
 		psLog.E(fmt.Sprintf("start() failed: %s", err))
@@ -75,12 +80,10 @@ func start(wg *sync.WaitGroup) psErr.E {
 		return psErr.Error
 	}
 
-	// worker for polling incoming packets
+	// worker for watching I/O resource
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		var terminate = false
-		psLog.I("Eth worker started")
 		for {
 			select {
 			case <-ethSigCh:
@@ -103,7 +106,6 @@ func start(wg *sync.WaitGroup) psErr.E {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		psLog.I("Net worker started")
 		for {
 			select {
 			case <-netSigCh:
@@ -149,18 +151,16 @@ func handleSignal(sigCh <-chan os.Signal, wg *sync.WaitGroup) {
 	}()
 }
 
+func init() {
+	terminate = false
+}
+
 func main() {
 	if err := setup(); err != psErr.OK {
 		psLog.F("Setup failed")
 	}
 
 	handleSignal(sigCh, &wg)
-
-	psLog.I("                                                  ")
-	psLog.I("//////////////////////////////////////////////////")
-	psLog.I("           S E R V E R    S T A R T E D           ")
-	psLog.I("//////////////////////////////////////////////////")
-	psLog.I("                                                  ")
 
 	wg.Add(1)
 	go func() {
@@ -175,6 +175,12 @@ func main() {
 			}
 		}
 	}()
+
+	psLog.I("")
+	psLog.I("//////////////////////////////////////////////////")
+	psLog.I("           S E R V E R    S T A R T E D           ")
+	psLog.I("//////////////////////////////////////////////////")
+	psLog.I("")
 
 	wg.Wait()
 

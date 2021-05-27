@@ -147,7 +147,7 @@ func arpDump(msg *ArpPacket) {
 	psLog.I(fmt.Sprintf("\tsender hardware address: %s", msg.SHA))
 	psLog.I(fmt.Sprintf("\tsender protocol address: %s", msg.SPA))
 	psLog.I(fmt.Sprintf("\ttarget hardware address: %s", msg.THA))
-	psLog.I(fmt.Sprintf("\ttarget hardware address: %s", msg.TPA))
+	psLog.I(fmt.Sprintf("\ttarget protocol address: %s", msg.TPA))
 }
 
 func arpReply(tha ethernet.EthAddr, tpa ArpProtoAddr, iface *Iface) psErr.E {
