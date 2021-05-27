@@ -105,7 +105,7 @@ func ArpInputHandler(payload []byte, dev ethernet.IDevice) psErr.E {
 		return psErr.InvalidPacket
 	}
 
-	psLog.I("Incoming ARP packet:")
+	psLog.I("Incoming ARP packet")
 	arpDump(&msg)
 
 	iface := IfaceRepo.Get(dev, FamilyV4)
@@ -121,14 +121,9 @@ func ArpInputHandler(payload []byte, dev ethernet.IDevice) psErr.E {
 				psLog.E(fmt.Sprintf("ArpCache.Insert() failed: %s", err))
 			}
 		} else {
-			psLog.I("updated arp entry")
-			psLog.I(fmt.Sprintf(
-				"\tSPA: %v",
-				fmt.Sprintf("%d.%d.%d.%d", msg.SPA[0], msg.SPA[1], msg.SPA[2], msg.SPA[3])))
-			psLog.I(fmt.Sprintf(
-				"\tSHA: %v",
-				fmt.Sprintf("%02x:%02x:%02x:%02x:%02x:%02x", msg.SHA[0], msg.SHA[1], msg.SHA[2], msg.SHA[3], msg.SHA[4],
-					msg.SHA[5])))
+			psLog.I("ARP entry was updated")
+			psLog.I(fmt.Sprintf("\tSPA: %v", msg.SPA.String()))
+			psLog.I(fmt.Sprintf("\tSHA: %v", msg.SHA.String()))
 		}
 		if msg.Opcode == ArpOpRequest {
 			if err := arpReply(msg.SHA, msg.SPA, iface); err != psErr.OK {
