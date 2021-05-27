@@ -3,6 +3,8 @@
 package ethernet
 
 import (
+	"bytes"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	psErr "github.com/42milez/ProtocolStack/src/error"
@@ -154,6 +156,33 @@ func (dev *TapDevice) Poll(isTerminated bool) psErr.Error {
 }
 
 func (dev *TapDevice) Transmit(dest EthAddr, payload []byte, typ EthType) psErr.Error {
+	hdr := EthHeader{
+		Dst:  dest,
+		Src:  dev.Addr,
+		Type: typ,
+	}
+
+	buf := new(bytes.Buffer)
+	_ = binary.Write(buf, binary.BigEndian, &hdr)
+	_ = binary.Write(buf, binary.BigEndian, &payload)
+
+	if fsize := buf.Len(); fsize < EthFrameSizeMin {
+		pad := make([]byte, EthFrameSizeMin-fsize)
+		_ = binary.Write(buf, binary.BigEndian, &pad)
+	}
+
+	psLog.I("▶ Ethernet frame prepared")
+	psLog.I("\tdest:    %s", hdr.Dst)
+	psLog.I("\tsrc:     %s", hdr.Src)
+	psLog.I("\ttype:    %s", hdr.Type)
+	payloadHex := "\tpayload: "
+	for i, v := range payload {
+		payloadHex += fmt.Sprintf("%02x ", v)
+		if (i+1)%10 == 0 {
+			psLog.I("%s", payloadHex)
+			payloadHex = "\t\t "
+		}
+	}
 
 	return psErr.Error{Code: psErr.OK}
 }
