@@ -52,7 +52,6 @@ type TapDevice struct {
 func (dev *TapDevice) Open() psErr.E {
 	var err error
 	var fd int
-	var soc int
 
 	fd, err = dev.Syscall.Open(vnd, syscall.O_RDWR, 0666)
 	if err != nil {
@@ -61,6 +60,7 @@ func (dev *TapDevice) Open() psErr.E {
 	}
 
 	// --------------------------------------------------
+
 	ifrFlags := IfreqFlags{}
 	ifrFlags.Flags = syscall.IFF_TAP | syscall.IFF_NO_PI
 	copy(ifrFlags.Name[:], dev.Priv.Name)
@@ -72,6 +72,8 @@ func (dev *TapDevice) Open() psErr.E {
 	}
 
 	// --------------------------------------------------
+
+	var soc int
 	soc, err = dev.Syscall.Socket(syscall.AF_INET, syscall.SOCK_DGRAM, 0)
 	if err != nil {
 		psLog.E("syscall.Socket() failed: %s", err)
@@ -91,6 +93,7 @@ func (dev *TapDevice) Open() psErr.E {
 	_ = dev.Syscall.Close(soc)
 
 	// --------------------------------------------------
+
 	epfd, err = dev.Syscall.EpollCreate1(0)
 	if err != nil {
 		psLog.E("syscall.EpollCreate1() failed: %s", err)
