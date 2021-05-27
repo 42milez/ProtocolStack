@@ -216,6 +216,7 @@ Note: `make` supports the commands below:
     - [Continuation](https://en.wikipedia.org/wiki/Continuation)
     - [Cooperative multitasking](https://en.wikipedia.org/wiki/Cooperative_multitasking)
     - [Critical section](https://en.wikipedia.org/wiki/Critical_section)
+    - [Ellipsis (computer programming)](https://en.wikipedia.org/wiki/Ellipsis_(computer_programming))
     - [Fair-share scheduling](https://en.wikipedia.org/wiki/Fair-share_scheduling)
     - [Fork-join model](https://en.wikipedia.org/wiki/Fork%E2%80%93join_model)
     - [Generic programming](https://en.wikipedia.org/wiki/Generic_programming)
