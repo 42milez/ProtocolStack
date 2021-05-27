@@ -9,50 +9,33 @@ import (
 	"regexp"
 )
 
-func reformat(format string) (ret string) {
-	if m, _ := regexp.MatchString("^\\S", format); !m {
-		ret = "▶ " + format
+func format(s string) (ret string) {
+	if m, _ := regexp.MatchString("^\\S", s); m {
+		ret = "▶ " + s
+	} else {
+		ret = s
 	}
 	return
 }
 
-func I(format string, v ...interface{}) {
-	s := reformat(format)
-	if m, _ := regexp.MatchString("^\\S", s); !m {
-		s = "▶ " + s
-	}
-	if len(v) == 0 {
-		i.Println(s)
-	} else {
-		i.Printf(s+"\n", v...)
-	}
+func I(s string) {
+	format(s)
+	i.Println(s)
 }
 
-func W(format string, v ...interface{}) {
-	s := reformat(format)
-	if len(v) == 0 {
-		w.Println(s)
-	} else {
-		w.Printf(s+"\n", v...)
-	}
+func W(s string) {
+	format(s)
+	w.Println(s)
 }
 
-func E(format string, v ...interface{}) {
-	s := reformat(format)
-	if len(v) == 0 {
-		e.Println(s)
-	} else {
-		e.Printf(s+"\n", v...)
-	}
+func E(s string) {
+	format(s)
+	e.Println(s)
 }
 
-func F(format string, v ...interface{}) {
-	s := reformat(format)
-	if len(v) == 0 {
-		f.Fatalln(s)
-	} else {
-		f.Fatalf(s+"\n", v...)
-	}
+func F(s string) {
+	format(s)
+	f.Fatalln(s)
 }
 
 func CaptureLogOutput(f func()) string {

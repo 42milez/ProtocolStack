@@ -55,9 +55,9 @@ type EthHeader struct {
 }
 
 func EthDump(hdr *EthHeader) {
-	psLog.I("\tmac (dst): %v", hdr.Dst.String())
-	psLog.I("\tmac (src): %v", hdr.Src.String())
-	psLog.I("\teth_type:  0x%04x (%s)", uint16(hdr.Type), hdr.Type.String())
+	psLog.I(fmt.Sprintf("\tdst:  %s", hdr.Dst))
+	psLog.I(fmt.Sprintf("\tsrc:  %s", hdr.Src))
+	psLog.I(fmt.Sprintf("\ttype: 0x%04x (%s)", uint16(hdr.Type), hdr.Type))
 }
 
 func ReadFrame(fd int, addr EthAddr, sc psSyscall.ISyscall) (*Packet, psErr.E) {
@@ -66,19 +66,19 @@ func ReadFrame(fd int, addr EthAddr, sc psSyscall.ISyscall) (*Packet, psErr.E) {
 
 	fsize, err := sc.Read(fd, buf)
 	if err != nil {
-		psLog.E("syscall.Read() failed: %s", err)
+		psLog.E(fmt.Sprintf("syscall.Read() failed: %s", err))
 		return nil, psErr.Error
 	}
 
 	if fsize < EthHeaderSize {
 		psLog.E("Ethernet header length is too short")
-		psLog.E("\tlength: %v bytes", fsize)
+		psLog.E(fmt.Sprintf("\tlength: %v bytes", fsize))
 		return nil, psErr.Error
 	}
 
 	hdr := EthHeader{}
 	if err := binary.Read(bytes.NewBuffer(buf), binary.BigEndian, &hdr); err != nil {
-		psLog.E("binary.Read() failed: %s", err)
+		psLog.E(fmt.Sprintf("binary.Read() failed: %s", err))
 		return nil, psErr.Error
 	}
 
@@ -88,8 +88,7 @@ func ReadFrame(fd int, addr EthAddr, sc psSyscall.ISyscall) (*Packet, psErr.E) {
 		}
 	}
 
-	psLog.I("Ethernet frame received")
-	psLog.I("\tlength:    %v bytes", fsize)
+	psLog.I("Incoming ethernet frame:")
 	EthDump(&hdr)
 
 	packet := &Packet{

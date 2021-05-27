@@ -2,13 +2,12 @@ package error
 
 const (
 	OK E = iota
-	AlreadyOpened
-	CantInitialize
-	CantOpen
+	CantCreateEndpoint
+	CantCreateEpollInstance
+	CantModifyIOResourceParameter
+	CantOpenIOResource
 	CantRead
-	CantRegister
 	Error
-	InterfaceNotFound
 	Interrupted
 	InvalidHeader
 	InvalidPacket
@@ -19,44 +18,36 @@ const (
 
 type E int
 
-//
-//func (v E) Error() string {
-//	switch v {
-//	case OK:
-//		return "OK"
-//	case AlreadyOpened:
-//		return "ALREADY_OPENED"
-//	case CantConvert:
-//		return "CANT_CONVERT"
-//	case CantInitialize:
-//		return "CANT_INITIALIZE"
-//	case CantProcess:
-//		return "CANT_PROCESS"
-//	case CantRead:
-//		return "CANT_READ"
-//	case CantSend:
-//		return "CANT_SEND"
-//	case CantWriteToBuffer:
-//		return "CANT_WRITE_TO_BUFFER"
-//	case CantWriteToFile:
-//		return "CANT_WRITE_TO_FILE"
-//	case Error:
-//		return "ERROR"
-//	case Failed:
-//		return "FAILED"
-//	case Interrupted:
-//		return "INTERRUPTED"
-//	case InvalidHeader:
-//		return "INVALID_HEADER"
-//	case InvalidPacket:
-//		return "INVALID_PACKET"
-//	case NoDataToRead:
-//		return "NO_DATA_TO_READ"
-//	case NotFound:
-//		return "NOT_FOUND"
-//	case Terminated:
-//		return "TERMINATED"
-//	default:
-//		return "UNKNOWN"
-//	}
-//}
+
+func (v E) Error() string {
+	switch v {
+	case OK:
+		return "OK"
+	case CantCreateEndpoint:
+		return "CANT_CREATE_ENDPOINT"
+	case CantCreateEpollInstance:
+		return "CANT_CREATE_EPOLL_INSTANCE"
+	case CantModifyIOResourceParameter:
+		return "CANT_MODIFY_IO_RESOURCE_PARAMETER"
+	case CantOpenIOResource:
+		return "CANT_OPEN_IO_RESOURCE"
+	case CantRead:
+		return "CANT_READ"
+	case Error:
+		return "ERROR"
+	case Interrupted:
+		return "INTERRUPTED"
+	case InvalidHeader:
+		return "INVALID_HEADER"
+	case InvalidPacket:
+		return "INVALID_PACKET"
+	case NoDataToRead:
+		return "NO_DATA_TO_READ"
+	case NotFound:
+		return "NOT_FOUND"
+	case Terminated:
+		return "TERMINATED"
+	default:
+		return "UNKNOWN"
+	}
+}
