@@ -60,35 +60,36 @@ func EthDump(hdr *EthHeader) {
 	psLog.I("\teth_type:  0x%04x (%s)", uint16(hdr.Type), hdr.Type.String())
 }
 
-func ReadFrame(fd int, addr EthAddr, sc psSyscall.ISyscall) (*Packet, psErr.Error) {
+func ReadFrame(fd int, addr EthAddr, sc psSyscall.ISyscall) (*Packet, psErr.E) {
 	// TODO: make buf static variable to reuse
 	buf := make([]byte, EthFrameSizeMax)
 
 	fsize, err := sc.Read(fd, buf)
 	if err != nil {
-		psLog.E("SYS_READ failed: %v ", err)
-		return nil, psErr.Error{Code: psErr.CantRead}
+		psLog.E("syscall.Read() failed: %s", err)
+		return nil, psErr.Error
 	}
 
 	if fsize < EthHeaderSize {
-		psLog.E("▶ Ethernet header length too short")
+		psLog.E("Ethernet header length is too short")
 		psLog.E("\tlength: %v bytes", fsize)
-		return nil, psErr.Error{Code: psErr.InvalidHeader}
+		return nil, psErr.Error
 	}
 
 	hdr := EthHeader{}
 	if err := binary.Read(bytes.NewBuffer(buf), binary.BigEndian, &hdr); err != nil {
-		return nil, psErr.Error{Code: psErr.CantConvert, Msg: err.Error()}
+		psLog.E("binary.Read() failed: %s", err)
+		return nil, psErr.Error
 	}
 
 	if !hdr.Dst.Equal(addr) {
 		if !hdr.Dst.Equal(EthAddrBroadcast) {
-			return nil, psErr.Error{Code: psErr.NoDataToRead}
+			return nil, psErr.NoDataToRead
 		}
 	}
 
-	psLog.I("▶ Ethernet frame received")
-	psLog.I("\tlength:     %v bytes", fsize)
+	psLog.I("Ethernet frame received")
+	psLog.I("\tlength:    %v bytes", fsize)
 	EthDump(&hdr)
 
 	packet := &Packet{
@@ -96,5 +97,5 @@ func ReadFrame(fd int, addr EthAddr, sc psSyscall.ISyscall) (*Packet, psErr.Erro
 		Payload: buf[EthHeaderSize:],
 	}
 
-	return packet, psErr.Error{Code: psErr.OK}
+	return packet, psErr.OK
 }

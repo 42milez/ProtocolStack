@@ -19,55 +19,53 @@ var mainSigCh chan os.Signal
 var netSigCh chan os.Signal
 var sigCh chan os.Signal
 
-func setup() psErr.Error {
-	var err psErr.Error
-
-	// Create a loopback device and its iface, then link them.
+func setup() psErr.E {
 	psLog.I("--------------------------------------------------")
 	psLog.I(" INITIALIZE DEVICES                               ")
 	psLog.I("--------------------------------------------------")
+
+	// Create a loopback device and its iface, then link them.
 	loopbackDev := network.GenLoopbackDevice()
 
-	if err = network.DeviceRepo.Register(loopbackDev); err.Code != psErr.OK {
-		return psErr.Error{Code: psErr.Failed}
+	if err := network.DeviceRepo.Register(loopbackDev); err != psErr.OK {
+		psLog.E("network.DeviceRepo.Register() failed: %s", err)
+		return psErr.Error
 	}
 
 	iface1 := network.GenIface(ethernet.LoopbackIpAddr, ethernet.LoopbackNetmask, ethernet.LoopbackBroadcast)
-	if err = network.IfaceRepo.Register(iface1, loopbackDev); err.Code != psErr.OK {
-		return psErr.Error{Code: psErr.Failed}
+	if err := network.IfaceRepo.Register(iface1, loopbackDev); err != psErr.OK {
+		psLog.E("network.IfaceRepo.Register() failed: %s", err)
+		return psErr.Error
 	}
 
 	network.RouteRepo.Register(network.ParseIP(ethernet.LoopbackNetwork), network.V4Zero, iface1)
 
-	// Create a TAP device and its iface, then link them.
+	// Create a TAP device and its interface, then link them.
 	tapDev := network.GenTapDevice(0, ethernet.EthAddr{11, 22, 33, 44, 55, 66})
-	if err.Code != psErr.OK {
-		return psErr.Error{Code: psErr.Failed}
-	}
-
 	network.DeviceRepo.Register(tapDev)
 
 	iface2 := network.GenIface("192.0.2.2", "255.255.255.0", "192.0.2.255")
-	if err = network.IfaceRepo.Register(iface2, tapDev); err.Code != psErr.OK {
-		return psErr.Error{Code: psErr.Failed}
+	if err := network.IfaceRepo.Register(iface2, tapDev); err != psErr.OK {
+		psLog.E("network.IfaceRepo.Register() failed: %s", err)
+		return psErr.Error
 	}
-	network.RouteRepo.Register(network.ParseIP("192.0.0.0"), network.V4Zero, iface2)
 
-	// Register the iface of the TAP device as the default gateway.
+	network.RouteRepo.Register(network.ParseIP("192.0.0.0"), network.V4Zero, iface2)
 	network.RouteRepo.RegisterDefaultGateway(iface2, network.ParseIP("192.0.2.1"))
 
-	// Create sub-thread for polling.
 	psLog.I("--------------------------------------------------")
 	psLog.I(" START WORKERS                                    ")
 	psLog.I("--------------------------------------------------")
-	if err = start(&wg); err.Code != psErr.OK {
-		return psErr.Error{Code: psErr.Failed}
+
+	if err := start(&wg); err != psErr.OK {
+		psLog.E("start() failed: %s", err)
+		return psErr.Error
 	}
 
-	return psErr.Error{Code: psErr.OK}
+	return psErr.OK
 }
 
-func start(wg *sync.WaitGroup) psErr.Error {
+func start(wg *sync.WaitGroup) psErr.E {
 	network.DeviceRepo.Up()
 
 	// worker for polling incoming packets
@@ -75,17 +73,17 @@ func start(wg *sync.WaitGroup) psErr.Error {
 	go func() {
 		defer wg.Done()
 		var terminate = false
-		psLog.I("▶ Eth worker started")
+		psLog.I("Eth worker started")
 		for {
 			select {
 			case <-ethSigCh:
-				psLog.I("▶ Terminating eth worker...")
+				psLog.I("Terminating Eth worker...")
 				terminate = true
 			default:
-				if err := network.DeviceRepo.Poll(terminate); err.Code != psErr.OK {
+				if err := network.DeviceRepo.Poll(terminate); err != psErr.OK {
 					// TODO: notify error to main goroutine
 					// ...
-					psLog.F("▶ Polling failed: %s", err.Error())
+					psLog.F("network.DeviceRepo.Poll() failed: %s", err)
 				}
 			}
 			if terminate {
@@ -98,29 +96,29 @@ func start(wg *sync.WaitGroup) psErr.Error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		psLog.I("▶ Net worker started")
+		psLog.I("Net worker started")
 		for {
 			select {
 			case <-netSigCh:
-				psLog.I("▶ Terminating net worker...")
+				psLog.I("Terminating Net worker...")
 				return
 			case packet := <-ethernet.RxCh:
-				if err := network.InputHandler(packet); err.Code != psErr.OK {
+				if err := network.InputHandler(packet); err != psErr.OK {
+					psLog.F("network.InputHandler() failed: %s", err)
 					// TODO: notify error to main goroutine
 					// ...
-					psLog.F("▶ Processing incoming packet failed: %v, %v", err.Code, err.Msg)
 				}
 			case packet := <-ethernet.TxCh:
-				if err := network.OutputHandler(packet); err.Code != psErr.OK {
+				if err := network.OutputHandler(packet); err != psErr.OK {
+					psLog.F("network.OutputHandler() failed: %s", err)
 					// TODO: notify error to main goroutine
 					// ...
-					psLog.F("▶ Processing outgoing packet failed: %v, %v", err.Code, err.Msg)
 				}
 			}
 		}
 	}()
 
-	return psErr.Error{Code: psErr.OK}
+	return psErr.OK
 }
 
 func init() {
@@ -137,7 +135,7 @@ func handleSignal(sigCh <-chan os.Signal, wg *sync.WaitGroup) {
 	go func() {
 		defer wg.Done()
 		sig := <-sigCh
-		psLog.I("▶ Signal received: %s ", sig)
+		psLog.I("Signal received: %s", sig)
 		ethSigCh <- syscall.SIGUSR1
 		mainSigCh <- syscall.SIGUSR1
 		netSigCh <- syscall.SIGUSR1
@@ -145,8 +143,8 @@ func handleSignal(sigCh <-chan os.Signal, wg *sync.WaitGroup) {
 }
 
 func main() {
-	if err := setup(); err.Code != psErr.OK {
-		psLog.F("▶ Setup failed")
+	if err := setup(); err != psErr.OK {
+		psLog.F("Setup failed")
 	}
 
 	handleSignal(sigCh, &wg)
@@ -163,7 +161,7 @@ func main() {
 		for {
 			select {
 			case <-mainSigCh:
-				psLog.I("▶ Shutting down server...")
+				psLog.I("Shutting down server...")
 				return
 			default:
 				time.Sleep(time.Second * 1)
@@ -173,5 +171,5 @@ func main() {
 
 	wg.Wait()
 
-	psLog.I("▶ Server stopped")
+	psLog.I("Server stopped")
 }

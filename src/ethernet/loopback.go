@@ -15,18 +15,18 @@ type LoopbackDevice struct {
 	Device
 }
 
-func (dev *LoopbackDevice) Open() psErr.Error {
-	return psErr.Error{Code: psErr.OK}
+func (dev *LoopbackDevice) Open() psErr.E {
+	return psErr.OK
 }
 
-func (dev *LoopbackDevice) Close() psErr.Error {
-	return psErr.Error{Code: psErr.OK}
+func (dev *LoopbackDevice) Close() psErr.E {
+	return psErr.OK
 }
 
-func (dev *LoopbackDevice) Poll(terminate bool) psErr.Error {
-	return psErr.Error{Code: psErr.OK}
+func (dev *LoopbackDevice) Poll(terminate bool) psErr.E {
+	return psErr.OK
 }
 
-func (dev *LoopbackDevice) Transmit(dest EthAddr, payload []byte, typ EthType) psErr.Error {
-	return psErr.Error{Code: psErr.OK}
+func (dev *LoopbackDevice) Transmit(dest EthAddr, payload []byte, typ EthType) psErr.E {
+	return psErr.OK
 }

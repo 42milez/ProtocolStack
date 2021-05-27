@@ -29,8 +29,8 @@ func TestTapDevice_Open_SUCCESS(t *testing.T) {
 	tapDev := TapDevice{Device{Syscall: m}}
 
 	got := tapDev.Open()
-	if got.Code != psErr.OK {
-		t.Errorf("TapDevice.Open() = %v; want %v", got.Code, psErr.OK)
+	if got != psErr.OK {
+		t.Errorf("TapDevice.Open() = %v; want %v", got, psErr.OK)
 	}
 }
 
@@ -47,8 +47,8 @@ func TestTapDevice_Open_FAIL_WhenOpenSyscallFailed(t *testing.T) {
 	tapDev := TapDevice{Device{Syscall: m}}
 
 	got := tapDev.Open()
-	if got.Code != psErr.CantOpen {
-		t.Errorf("TapDevice.Open() = %v; want %v", got.Code, psErr.CantOpen)
+	if got != psErr.CantOpen {
+		t.Errorf("TapDevice.Open() = %v; want %v", got, psErr.CantOpen)
 	}
 }
 
@@ -68,8 +68,8 @@ func TestTapDevice_Open_FAIL_WhenIoctlSyscallFailed_A(t *testing.T) {
 	tapDev := TapDevice{Device{Syscall: m}}
 
 	got := tapDev.Open()
-	if got.Code != psErr.CantOpen {
-		t.Errorf("TapDevice.Open() = %v; want %v", got.Code, psErr.CantOpen)
+	if got != psErr.CantOpen {
+		t.Errorf("TapDevice.Open() = %v; want %v", got, psErr.CantOpen)
 	}
 }
 
@@ -88,8 +88,8 @@ func TestTapDevice_Open_FAIL_WhenSocketSyscallFailed(t *testing.T) {
 	tapDev := TapDevice{Device{Syscall: m}}
 
 	got := tapDev.Open()
-	if got.Code != psErr.CantOpen {
-		t.Errorf("TapDevice.Open() = %v; want %v", got.Code, psErr.CantOpen)
+	if got != psErr.CantOpen {
+		t.Errorf("TapDevice.Open() = %v; want %v", got, psErr.CantOpen)
 	}
 }
 
@@ -111,8 +111,8 @@ func TestTapDevice_Open_FAIL_WhenIoctlSyscallFailed_B(t *testing.T) {
 	tapDev := TapDevice{Device{Syscall: m}}
 
 	got := tapDev.Open()
-	if got.Code != psErr.CantOpen {
-		t.Errorf("TapDevice.Open() = %v; want %v", got.Code, psErr.CantOpen)
+	if got != psErr.CantOpen {
+		t.Errorf("TapDevice.Open() = %v; want %v", got, psErr.CantOpen)
 	}
 }
 
@@ -134,8 +134,8 @@ func TestTapDevice_Open_FAIL_WhenEpollCreate1SyscallFailed(t *testing.T) {
 	tapDev := TapDevice{Device{Syscall: m}}
 
 	got := tapDev.Open()
-	if got.Code != psErr.CantOpen {
-		t.Errorf("TapDevice.Open() = %v; want %v", got.Code, psErr.CantOpen)
+	if got != psErr.CantOpen {
+		t.Errorf("TapDevice.Open() = %v; want %v", got, psErr.CantOpen)
 	}
 }
 
@@ -158,8 +158,8 @@ func TestTapDevice_Open_FAIL_WhenEpollCtlSyscallFailed(t *testing.T) {
 	tapDev := TapDevice{Device{Syscall: m}}
 
 	got := tapDev.Open()
-	if got.Code != psErr.CantOpen {
-		t.Errorf("TapDevice.Open() = %v; want %v", got.Code, psErr.CantOpen)
+	if got != psErr.CantOpen {
+		t.Errorf("TapDevice.Open() = %v; want %v", got, psErr.CantOpen)
 	}
 }
 
@@ -173,8 +173,8 @@ func TestTapDevice_Close_SUCCESS(t *testing.T) {
 	tapDev := TapDevice{Device{Syscall: m}}
 
 	got := tapDev.Close()
-	if got.Code != psErr.OK {
-		t.Errorf("TapDevice.Close() = %v; want %v", got.Code, psErr.OK)
+	if got != psErr.OK {
+		t.Errorf("TapDevice.Close() = %v; want %v", got, psErr.OK)
 	}
 }
 
@@ -185,8 +185,8 @@ func TestTapDevice_Transmit_SUCCESS(t *testing.T) {
 	tapDev := TapDevice{Device{Syscall: psSyscall.NewMockISyscall(ctrl)}}
 
 	got := tapDev.Transmit(EthAddr{}, make([]byte, 0), EthTypeArp)
-	if got.Code != psErr.OK {
-		t.Errorf("TapDevice.Transmit() = %v; want %v", got.Code, psErr.OK)
+	if got != psErr.OK {
+		t.Errorf("TapDevice.Transmit() = %v; want %v", got, psErr.OK)
 	}
 }
 
@@ -203,8 +203,8 @@ func TestTapDevice_Poll_SUCCESS_WhenNoEventOccurred(t *testing.T) {
 	tapDev := TapDevice{Device{Syscall: m}}
 
 	got := tapDev.Poll(false)
-	if got.Code != psErr.OK {
-		t.Errorf("TapDevice.Poll() = %v; want %v", got.Code, psErr.OK)
+	if got != psErr.OK {
+		t.Errorf("TapDevice.Poll() = %v; want %v", got, psErr.OK)
 	}
 }
 
@@ -223,8 +223,8 @@ func TestTapDevice_Poll_SUCCESS_WhenEventOccurred(t *testing.T) {
 	tapDev := TapDevice{Device{Syscall: m}}
 
 	got := tapDev.Poll(false)
-	if got.Code != psErr.OK {
-		t.Errorf("TapDevice.Poll() = %v; want %v", got.Code, psErr.OK)
+	if got != psErr.OK {
+		t.Errorf("TapDevice.Poll() = %v; want %v", got, psErr.OK)
 	}
 }
 
@@ -241,8 +241,8 @@ func TestTapDevice_Poll_SUCCESS_WhenTerminated(t *testing.T) {
 	tapDev := TapDevice{Device{Syscall: m}}
 
 	got := tapDev.Poll(true)
-	if got.Code != psErr.OK {
-		t.Errorf("TapDevice.Poll() = %v; want %v", got.Code, psErr.OK)
+	if got != psErr.OK {
+		t.Errorf("TapDevice.Poll() = %v; want %v", got, psErr.OK)
 	}
 }
 
@@ -260,7 +260,7 @@ func TestTapDevice_Poll_FAIL_WhenEpollWaitSyscallFailed(t *testing.T) {
 	tapDev := TapDevice{Device{Syscall: m}}
 
 	got := tapDev.Poll(false)
-	if got.Code != psErr.Interrupted {
-		t.Errorf("TapDevice.Poll() = %v; want %v", got.Code, psErr.Interrupted)
+	if got != psErr.Interrupted {
+		t.Errorf("TapDevice.Poll() = %v; want %v", got, psErr.Interrupted)
 	}
 }

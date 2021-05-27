@@ -37,10 +37,10 @@ const DevFlagP2P DevFlag = 0x0040
 const DevFlagNeedArp DevFlag = 0x0100
 
 type IDevice interface {
-	Open() psErr.Error
-	Close() psErr.Error
-	Poll(terminate bool) psErr.Error
-	Transmit(dest EthAddr, payload []byte, typ EthType) psErr.Error
+	Open() psErr.E
+	Close() psErr.E
+	Poll(terminate bool) psErr.E
+	Transmit(dest EthAddr, payload []byte, typ EthType) psErr.E
 	Up()
 	Down()
 	Equal(dev IDevice) bool

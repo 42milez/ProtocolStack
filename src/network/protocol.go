@@ -13,15 +13,15 @@ const (
 func (t ProtocolType) String() string {
 	switch t {
 	case ProtocolTypeArp:
-		return "PROTOCOL_TYPE_ARP"
+		return "ARP"
 	case ProtocolTypeIcmp:
-		return "PROTOCOL_TYPE_ICMP"
+		return "ICMP"
 	case ProtocolTypeIp:
-		return "PROTOCOL_TYPE_IP"
+		return "IP"
 	case ProtocolTypeTcp:
-		return "PROTOCOL_TYPE_TCP"
+		return "TCP"
 	case ProtocolTypeUdp:
-		return "PROTOCOL_TYPE_UDP"
+		return "UDP"
 	default:
 		return "UNKNOWN"
 	}

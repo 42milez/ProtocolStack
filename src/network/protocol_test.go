@@ -3,31 +3,31 @@ package network
 import "testing"
 
 func TestProtocolType_String_SUCCESS(t *testing.T) {
-	want := "PROTOCOL_TYPE_ARP"
+	want := "ARP"
 	got := ProtocolTypeArp.String()
 	if got != want {
 		t.Errorf("ProtocolType.String() = %v; want %v", got, want)
 	}
 
-	want = "PROTOCOL_TYPE_ICMP"
+	want = "ICMP"
 	got = ProtocolTypeIcmp.String()
 	if got != want {
 		t.Errorf("ProtocolType.String() = %v; want %v", got, want)
 	}
 
-	want = "PROTOCOL_TYPE_IP"
+	want = "IP"
 	got = ProtocolTypeIp.String()
 	if got != want {
 		t.Errorf("ProtocolType.String() = %v; want %v", got, want)
 	}
 
-	want = "PROTOCOL_TYPE_TCP"
+	want = "TCP"
 	got = ProtocolTypeTcp.String()
 	if got != want {
 		t.Errorf("ProtocolType.String() = %v; want %v", got, want)
 	}
 
-	want = "PROTOCOL_TYPE_UDP"
+	want = "UDP"
 	got = ProtocolTypeUdp.String()
 	if got != want {
 		t.Errorf("ProtocolType.String() = %v; want %v", got, want)

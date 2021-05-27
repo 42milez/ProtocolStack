@@ -6,9 +6,21 @@ import (
 	"io/ioutil"
 	goLog "log"
 	"os"
+	"regexp"
 )
 
-func I(s string, v ...interface{}) {
+func reformat(format string) (ret string) {
+	if m, _ := regexp.MatchString("^\\S", format); !m {
+		ret = "▶ " + format
+	}
+	return
+}
+
+func I(format string, v ...interface{}) {
+	s := reformat(format)
+	if m, _ := regexp.MatchString("^\\S", s); !m {
+		s = "▶ " + s
+	}
 	if len(v) == 0 {
 		i.Println(s)
 	} else {
@@ -16,7 +28,8 @@ func I(s string, v ...interface{}) {
 	}
 }
 
-func W(s string, v ...interface{}) {
+func W(format string, v ...interface{}) {
+	s := reformat(format)
 	if len(v) == 0 {
 		w.Println(s)
 	} else {
@@ -24,7 +37,8 @@ func W(s string, v ...interface{}) {
 	}
 }
 
-func E(s string, v ...interface{}) {
+func E(format string, v ...interface{}) {
+	s := reformat(format)
 	if len(v) == 0 {
 		e.Println(s)
 	} else {
@@ -32,7 +46,8 @@ func E(s string, v ...interface{}) {
 	}
 }
 
-func F(s string, v ...interface{}) {
+func F(format string, v ...interface{}) {
+	s := reformat(format)
 	if len(v) == 0 {
 		f.Fatalln(s)
 	} else {

@@ -56,7 +56,7 @@ func (dev *TapDevice) Open() psErr.E {
 	fd, err = dev.Syscall.Open(vnd, syscall.O_RDWR, 0666)
 	if err != nil {
 		psLog.E("syscall.Open() failed: %s", err)
-		return psErr.E(psErr.CantOpen)
+		return psErr.CantOpen
 	}
 
 	// --------------------------------------------------
@@ -68,7 +68,7 @@ func (dev *TapDevice) Open() psErr.E {
 	if _, _, errno := dev.Syscall.Ioctl(uintptr(fd), uintptr(syscall.TUNSETIFF), uintptr(unsafe.Pointer(&ifrFlags))); errno != 0 {
 		_ = dev.Syscall.Close(fd)
 		psLog.E("syscall.Syscall(SYS_IOCTL, TUNSETIFF) failed: %s", errno)
-		return psErr.E(psErr.CantInitialize)
+		return psErr.CantInitialize
 	}
 
 	// --------------------------------------------------
@@ -77,7 +77,7 @@ func (dev *TapDevice) Open() psErr.E {
 	soc, err = dev.Syscall.Socket(syscall.AF_INET, syscall.SOCK_DGRAM, 0)
 	if err != nil {
 		psLog.E("syscall.Socket() failed: %s", err)
-		return psErr.E(psErr.CantInitialize)
+		return psErr.CantInitialize
 	}
 
 	ifrSockAddr := IfreqSockAddr{}
@@ -87,7 +87,7 @@ func (dev *TapDevice) Open() psErr.E {
 	if _, _, errno := dev.Syscall.Ioctl(uintptr(soc), uintptr(syscall.SIOCGIFHWADDR), uintptr(unsafe.Pointer(&ifrSockAddr))); errno != 0 {
 		_ = dev.Syscall.Close(soc)
 		psLog.E("syscall.Syscall(SYS_IOCTL, SIOCGIFHWADDR) failed: %s", errno)
-		return psErr.E(psErr.CantInitialize)
+		return psErr.CantInitialize
 	}
 	copy(dev.Addr[:], ifrSockAddr.Addr.Data[:])
 	_ = dev.Syscall.Close(soc)
@@ -97,7 +97,7 @@ func (dev *TapDevice) Open() psErr.E {
 	epfd, err = dev.Syscall.EpollCreate1(0)
 	if err != nil {
 		psLog.E("syscall.EpollCreate1() failed: %s", err)
-		return psErr.E(psErr.CantInitialize)
+		return psErr.CantInitialize
 	}
 
 	var event syscall.EpollEvent
@@ -107,23 +107,23 @@ func (dev *TapDevice) Open() psErr.E {
 	if e := dev.Syscall.EpollCtl(epfd, syscall.EPOLL_CTL_ADD, fd, &event); e != nil {
 		_ = dev.Syscall.Close(epfd)
 		psLog.E("syscall.EpollCtl() failed: %s", err)
-		return psErr.E(psErr.CantInitialize)
+		return psErr.CantInitialize
 	}
 
 	dev.Priv.FD = fd
 
-	return psErr.E(psErr.OK)
+	return psErr.OK
 }
 
-func (dev *TapDevice) Close() error {
+func (dev *TapDevice) Close() psErr.E {
 	_ = dev.Syscall.Close(epfd)
-	return psErr.Error{Code: psErr.OK}
+	return psErr.OK
 }
 
-func (dev *TapDevice) Poll(isTerminated bool) error {
+func (dev *TapDevice) Poll(isTerminated bool) psErr.E {
 	if isTerminated {
 		_ = dev.Syscall.Close(epfd)
-		return psErr.Error{Code: psErr.OK, Msg: "terminated"}
+		return psErr.Terminated
 	}
 
 	var events [MaxEpollEvents]syscall.EpollEvent
@@ -133,18 +133,19 @@ func (dev *TapDevice) Poll(isTerminated bool) error {
 		// ignore EINTR
 		if !errors.Is(err, syscall.EINTR) {
 			_ = dev.Syscall.Close(epfd)
-			return psErr.Error{Code: psErr.Interrupted, Msg: err.Error()}
+			return psErr.Error
 		}
+		psLog.I("Syscall.EpollWait() was interrupted")
 	}
 
 	if nEvents > 0 {
-		psLog.I("▶ Events occurred")
-		psLog.I("\tevents: %v ", nEvents)
-		psLog.I("\tdevice: %v (%v) ", dev.Name, dev.Priv.Name)
-		if packet, err := ReadFrame(dev.Priv.FD, dev.Addr, dev.Syscall); err.Code != psErr.OK {
-			if err.Code != psErr.NoDataToRead {
-				psLog.E("can't read ethernet frame (code: %s)", err.Error())
-				return psErr.Error{Code: psErr.CantRead}
+		psLog.I("Events occurred")
+		psLog.I("\tevents: %v", nEvents)
+		psLog.I("\tdevice: %v (%v)", dev.Name, dev.Priv.Name)
+		if packet, err := ReadFrame(dev.Priv.FD, dev.Addr, dev.Syscall); err != psErr.OK {
+			if err != psErr.NoDataToRead {
+				psLog.E("ReadFrame() failed: %s", err)
+				return psErr.CantRead
 			}
 		} else {
 			packet.Dev = dev
@@ -152,10 +153,10 @@ func (dev *TapDevice) Poll(isTerminated bool) error {
 		}
 	}
 
-	return psErr.Error{Code: psErr.OK}
+	return psErr.OK
 }
 
-func (dev *TapDevice) Transmit(dest EthAddr, payload []byte, typ EthType) error {
+func (dev *TapDevice) Transmit(dest EthAddr, payload []byte, typ EthType) psErr.E {
 	hdr := EthHeader{
 		Dst:  dest,
 		Src:  dev.Addr,
@@ -164,39 +165,41 @@ func (dev *TapDevice) Transmit(dest EthAddr, payload []byte, typ EthType) error 
 
 	buf := new(bytes.Buffer)
 	if err := binary.Write(buf, binary.BigEndian, &hdr); err != nil {
-		return psErr.Error{Code: psErr.CantWriteToBuffer}
+		psLog.E("binary.Write() failed: %s", err)
+		return psErr.Error
 	}
-
 	if err := binary.Write(buf, binary.BigEndian, &payload); err != nil {
-		return psErr.Error{Code: psErr.CantWriteToBuffer}
+		psLog.E("binary.Write() failed: %s", err)
+		return psErr.Error
 	}
 
 	if fsize := buf.Len(); fsize < EthFrameSizeMin {
 		pad := make([]byte, EthFrameSizeMin-fsize)
 		if err := binary.Write(buf, binary.BigEndian, &pad); err != nil {
-			return psErr.Error{Code: psErr.CantWriteToBuffer}
+			psLog.E("binary.Write() failed: %s", err)
+			return psErr.Error
 		}
 	}
 
-	psLog.I("▶ Ethernet frame prepared")
+	psLog.I("Ethernet frame to be sent")
 	psLog.I("\tdest:    %s", hdr.Dst)
 	psLog.I("\tsrc:     %s", hdr.Src)
 	psLog.I("\ttype:    %s", hdr.Type)
-	payloadHex := "\tpayload: "
+	s := "\tpayload: "
 	for i, v := range payload {
-		payloadHex += fmt.Sprintf("%02x ", v)
+		s += fmt.Sprintf("%02x", v)
 		if (i+1)%10 == 0 {
-			psLog.I("%s", payloadHex)
-			payloadHex = "\t\t "
+			psLog.I("%s", s)
+			s = "\t\t "
 		}
 	}
 
 	if n, err := dev.Syscall.Write(dev.Priv.FD, buf.Bytes()); err != nil {
-		psLog.E("▶ Write failed")
-		return psErr.Error{Code: psErr.CantWriteToFile}
+		psLog.E("syscall.Write() failed: %s", err)
+		return psErr.Error
 	} else {
-		psLog.I("count: %d", n)
+		psLog.I("Ethernet frame has been written: %d bytes", n)
 	}
 
-	return psErr.Error{Code: psErr.OK}
+	return psErr.OK
 }
