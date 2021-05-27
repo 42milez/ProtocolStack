@@ -191,7 +191,7 @@ func (dev *TapDevice) Transmit(dest EthAddr, payload []byte, typ EthType) psErr.
 	for i, v := range payload {
 		s += fmt.Sprintf("%02x", v)
 		if (i+1)%10 == 0 {
-			psLog.I(fmt.Sprintf("%s", s))
+			psLog.I(s)
 			s = "\t\t "
 		}
 	}

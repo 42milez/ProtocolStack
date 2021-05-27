@@ -8,6 +8,7 @@ const (
 	CantOpenIOResource
 	CantRead
 	Error
+	InterfaceNotFound
 	Interrupted
 	InvalidHeader
 	InvalidPacket
@@ -34,6 +35,8 @@ func (v E) Error() string {
 		return "CANT_READ"
 	case Error:
 		return "ERROR"
+	case InterfaceNotFound:
+		return "INTERFACE_NOT_FOUND"
 	case Interrupted:
 		return "INTERRUPTED"
 	case InvalidHeader:

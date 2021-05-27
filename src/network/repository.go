@@ -1,6 +1,7 @@
 package network
 
 import (
+	"fmt"
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	"github.com/42milez/ProtocolStack/src/ethernet"
 	psLog "github.com/42milez/ProtocolStack/src/log"
@@ -34,7 +35,7 @@ func (p *deviceRepo) Poll(terminate bool) psErr.E {
 			continue
 		}
 		if err := dev.Poll(terminate); err != psErr.OK {
-			psLog.E("IDevice.Poll() failed: %s", err)
+			psLog.E(fmt.Sprintf("IDevice.Poll() failed: %s", err))
 			return psErr.Error
 		}
 	}
@@ -47,8 +48,8 @@ func (p *deviceRepo) Register(dev ethernet.IDevice) psErr.E {
 			typ := d.Typ()
 			name, privName := d.Names()
 			psLog.W("Device is already registered")
-			psLog.W("\ttype: %s", typ)
-			psLog.W("\tname: %s (%s)", name, privName)
+			psLog.W(fmt.Sprintf("\ttype: %s", typ))
+			psLog.W(fmt.Sprintf("\tname: %s (%s)", name, privName))
 			return psErr.Error
 		}
 	}
@@ -57,11 +58,11 @@ func (p *deviceRepo) Register(dev ethernet.IDevice) psErr.E {
 	name, privName := dev.Names()
 	addr, broadcast, peer := dev.EthAddrs()
 	psLog.I("Device was registered")
-	psLog.I("\ttype:      %s", typ)
-	psLog.I("\tname:      %s (%s)", name, privName)
-	psLog.I("\taddr:      %s", addr)
-	psLog.I("\tbroadcast: %s", broadcast)
-	psLog.I("\tpeer:      %s", peer)
+	psLog.I(fmt.Sprintf("\ttype:      %s", typ))
+	psLog.I(fmt.Sprintf("\tname:      %s (%s)", name, privName))
+	psLog.I(fmt.Sprintf("\taddr:      %s", addr))
+	psLog.I(fmt.Sprintf("\tbroadcast: %s", broadcast))
+	psLog.I(fmt.Sprintf("\tpeer:      %s", peer))
 	return psErr.OK
 }
 
@@ -71,20 +72,20 @@ func (p *deviceRepo) Up() psErr.E {
 		name, privName := dev.Names()
 		if dev.IsUp() {
 			psLog.W("Device is already opened")
-			psLog.W("\ttype: %s", typ)
-			psLog.W("\tname: %s (%s)", name, privName)
+			psLog.W(fmt.Sprintf("\ttype: %s", typ))
+			psLog.W(fmt.Sprintf("\tname: %s (%s)", name, privName))
 			return psErr.Error
 		}
 		if err := dev.Open(); err != psErr.OK {
-			psLog.E("IDevice.Open() failed: %s", err)
-			psLog.E("\ttype: %s", typ)
-			psLog.E("\tname: %s (%s)", name, privName)
+			psLog.E(fmt.Sprintf("IDevice.Open() failed: %s", err))
+			psLog.E(fmt.Sprintf("\ttype: %s", typ))
+			psLog.E(fmt.Sprintf("\tname: %s (%s)", name, privName))
 			return psErr.Error
 		}
 		dev.Up()
 		psLog.I("Device was opened")
-		psLog.I("\ttype: %s", typ)
-		psLog.I("\tname: %s (%s)", name, privName)
+		psLog.I(fmt.Sprintf("\ttype: %s", typ))
+		psLog.I(fmt.Sprintf("\tname: %s (%s)", name, privName))
 	}
 	return psErr.OK
 }
@@ -105,7 +106,7 @@ func (p *ifaceRepo) Get(dev ethernet.IDevice, family AddrFamily) *Iface {
 func (p *ifaceRepo) Register(iface *Iface, dev ethernet.IDevice) psErr.E {
 	for _, i := range p.ifaces {
 		if i.Dev.Equal(dev) && i.Family == iface.Family {
-			psLog.W("Interface is already registered: %s", i.Family)
+			psLog.W(fmt.Sprintf("Interface is already registered: %s", i.Family))
 			return psErr.Error
 		}
 	}
@@ -115,8 +116,8 @@ func (p *ifaceRepo) Register(iface *Iface, dev ethernet.IDevice) psErr.E {
 
 	name, privName := dev.Names()
 	psLog.I("Interface was attached")
-	psLog.I("\tip:     %s", iface.Unicast)
-	psLog.I("\tdevice: %s (%s)", name, privName)
+	psLog.I(fmt.Sprintf("\tip:     %s", iface.Unicast))
+	psLog.I(fmt.Sprintf("\tdevice: %s (%s)", name, privName))
 
 	return psErr.OK
 }
@@ -142,11 +143,11 @@ func (p *routeRepo) Register(network IP, nextHop IP, iface *Iface) {
 	p.routes = append(p.routes, route)
 	name, privName := iface.Dev.Names()
 	psLog.I("Route was registered")
-	psLog.I("\tnetwork:  %s", route.Network)
-	psLog.I("\tnetmask:  %s", route.Netmask)
-	psLog.I("\tunicast:  %s", iface.Unicast)
-	psLog.I("\tnext hop: %s", nextHop)
-	psLog.I("\tdevice:   %s (%s)", name, privName)
+	psLog.I(fmt.Sprintf("\tnetwork:  %s", route.Network))
+	psLog.I(fmt.Sprintf("\tnetmask:  %s", route.Netmask))
+	psLog.I(fmt.Sprintf("\tunicast:  %s", iface.Unicast))
+	psLog.I(fmt.Sprintf("\tnext hop: %s", nextHop))
+	psLog.I(fmt.Sprintf("\tdevice:   %s (%s)", name, privName))
 }
 
 func (p *routeRepo) RegisterDefaultGateway(iface *Iface, nextHop IP) {
@@ -159,11 +160,11 @@ func (p *routeRepo) RegisterDefaultGateway(iface *Iface, nextHop IP) {
 	p.routes = append(p.routes, route)
 	name, privName := iface.Dev.Names()
 	psLog.I("Default gateway was registered")
-	psLog.I("\tnetwork:  %s", route.Network)
-	psLog.I("\tnetmask:  %s", route.Netmask)
-	psLog.I("\tunicast:  %s", iface.Unicast)
-	psLog.I("\tnext hop: %s", nextHop)
-	psLog.I("\tdevice:   %s (%s)", name, privName)
+	psLog.I(fmt.Sprintf("\tnetwork:  %s", route.Network))
+	psLog.I(fmt.Sprintf("\tnetmask:  %s", route.Netmask))
+	psLog.I(fmt.Sprintf("\tunicast:  %s", iface.Unicast))
+	psLog.I(fmt.Sprintf("\tnext hop: %s", nextHop))
+	psLog.I(fmt.Sprintf("\tdevice:   %s (%s)", name, privName))
 }
 
 func init() {

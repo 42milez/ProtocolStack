@@ -84,14 +84,14 @@ func (p *ArpCache) Update(msg *ArpPacket) psErr.E {
 
 func ArpInputHandler(payload []byte, dev ethernet.IDevice) psErr.E {
 	if len(payload) < ArpPacketSize {
-		psLog.E("ARP packet size is too small: %d bytes", len(payload))
+		psLog.E(fmt.Sprintf("ARP packet size is too small: %d bytes", len(payload)))
 		return psErr.InvalidPacket
 	}
 
 	buf := bytes.NewBuffer(payload)
 	msg := ArpPacket{}
 	if err := binary.Read(buf, binary.BigEndian, &msg); err != nil {
-		psLog.E("binary.Read() failed: %s", err)
+		psLog.E(fmt.Sprintf("binary.Read() failed: %s", err))
 		return psErr.Error
 	}
 
@@ -111,23 +111,28 @@ func ArpInputHandler(payload []byte, dev ethernet.IDevice) psErr.E {
 	iface := IfaceRepo.Get(dev, FamilyV4)
 	if iface == nil {
 		devName, _ := dev.Names()
-		psLog.E("Interface for %s not found", devName)
+		psLog.E(fmt.Sprintf("Interface for %s is not registered", devName))
 		return psErr.InterfaceNotFound
 	}
 
 	if isSameIP(msg.TPA, iface.Unicast) {
 		if err := cache.Update(&msg); err == psErr.NotFound {
 			if err := cache.Insert(&msg); err != psErr.OK {
-				psLog.E("ArpCache.Insert() failed: %s", err)
+				psLog.E(fmt.Sprintf("ArpCache.Insert() failed: %s", err))
 			}
 		} else {
 			psLog.I("updated arp entry")
-			psLog.I("\tSPA: %v", fmt.Sprintf("%d.%d.%d.%d", msg.SPA[0], msg.SPA[1], msg.SPA[2], msg.SPA[3]))
-			psLog.I("\tSHA: %v", fmt.Sprintf("%02x:%02x:%02x:%02x:%02x:%02x", msg.SHA[0], msg.SHA[1], msg.SHA[2], msg.SHA[3], msg.SHA[4], msg.SHA[5]))
+			psLog.I(fmt.Sprintf(
+				"\tSPA: %v",
+				fmt.Sprintf("%d.%d.%d.%d", msg.SPA[0], msg.SPA[1], msg.SPA[2], msg.SPA[3])))
+			psLog.I(fmt.Sprintf(
+				"\tSHA: %v",
+				fmt.Sprintf("%02x:%02x:%02x:%02x:%02x:%02x", msg.SHA[0], msg.SHA[1], msg.SHA[2], msg.SHA[3], msg.SHA[4],
+					msg.SHA[5])))
 		}
 		if msg.Opcode == ArpOpRequest {
 			if err := arpReply(msg.SHA, msg.SPA, iface); err != psErr.OK {
-				psLog.E("arpReply() failed: %s", err)
+				psLog.E(fmt.Sprintf("arpReply() failed: %s", err))
 				return psErr.Error
 			}
 		}
@@ -139,15 +144,15 @@ func ArpInputHandler(payload []byte, dev ethernet.IDevice) psErr.E {
 }
 
 func arpDump(msg *ArpPacket) {
-	psLog.I("\thardware type:           %s", msg.HT)
-	psLog.I("\tprotocol Type:           %s", msg.PT)
-	psLog.I("\thardware address length: %d", msg.HAL)
-	psLog.I("\tprotocol address length: %d", msg.PAL)
-	psLog.I("\topcode:                  %s (%d)", msg.Opcode, uint16(msg.Opcode))
-	psLog.I("\tsender hardware address: %s", msg.SHA.String())
-	psLog.I("\tsender protocol address: %s", msg.SPA.String())
-	psLog.I("\ttarget hardware address: %s", msg.THA.String())
-	psLog.I("\ttarget hardware address: %s", msg.TPA.String())
+	psLog.I(fmt.Sprintf("\thardware type:           %s", msg.HT))
+	psLog.I(fmt.Sprintf("\tprotocol Type:           %s", msg.PT))
+	psLog.I(fmt.Sprintf("\thardware address length: %d", msg.HAL))
+	psLog.I(fmt.Sprintf("\tprotocol address length: %d", msg.PAL))
+	psLog.I(fmt.Sprintf("\topcode:                  %s (%d)", msg.Opcode, uint16(msg.Opcode)))
+	psLog.I(fmt.Sprintf("\tsender hardware address: %s", msg.SHA))
+	psLog.I(fmt.Sprintf("\tsender protocol address: %s", msg.SPA))
+	psLog.I(fmt.Sprintf("\ttarget hardware address: %s", msg.THA))
+	psLog.I(fmt.Sprintf("\ttarget hardware address: %s", msg.TPA))
 }
 
 func arpReply(tha ethernet.EthAddr, tpa ArpProtoAddr, iface *Iface) psErr.E {
@@ -169,16 +174,16 @@ func arpReply(tha ethernet.EthAddr, tpa ArpProtoAddr, iface *Iface) psErr.E {
 	psLog.I("Outgoing ARP packet (REPLY):")
 	arpDump(&packet)
 
-	psLog.I("ARP packet (REPLY) will be sent from %s", iface.Unicast)
+	psLog.I(fmt.Sprintf("ARP packet (REPLY) will be sent from %s", iface.Unicast))
 
 	buf := new(bytes.Buffer)
 	if err := binary.Write(buf, binary.BigEndian, &packet); err != nil {
-		psLog.E("binary.Write() failed: %s", err)
+		psLog.E(fmt.Sprintf("binary.Write() failed: %s", err))
 		return psErr.Error
 	}
 
 	if err := iface.Dev.Transmit(tha, buf.Bytes(), ethernet.EthTypeArp); err != psErr.OK {
-		psLog.E("IDevice.Transmit() failed: %s", err)
+		psLog.E(fmt.Sprintf("IDevice.Transmit() failed: %s", err))
 		return psErr.Error
 	}
 

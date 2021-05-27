@@ -14,7 +14,7 @@ func reset() {
 	IfaceRepo = &ifaceRepo{}
 }
 
-func TestDeviceRepo_Register_SUCCESS(t *testing.T) {
+func TestDeviceRepo_Register_1(t *testing.T) {
 	defer reset()
 
 	psLog.DisableOutput()
@@ -24,11 +24,12 @@ func TestDeviceRepo_Register_SUCCESS(t *testing.T) {
 
 	got := DeviceRepo.Register(dev)
 	if got != psErr.OK {
-		t.Errorf("DeviceRepo.Register() = %v; want %v", got, psErr.OK)
+		t.Errorf("DeviceRepo.Register() = %s; want %s", got, psErr.OK)
 	}
 }
 
-func TestDeviceRepo_Register_FAIL_WhenTryingToRegisterSameDevice(t *testing.T) {
+// Fail when it's trying to register same device.
+func TestDeviceRepo_Register_2(t *testing.T) {
 	defer reset()
 
 	psLog.DisableOutput()
@@ -39,12 +40,12 @@ func TestDeviceRepo_Register_FAIL_WhenTryingToRegisterSameDevice(t *testing.T) {
 
 	_ = DeviceRepo.Register(dev1)
 	got := DeviceRepo.Register(dev2)
-	if got != psErr.CantRegister {
-		t.Errorf("DeviceRepo.Register() = %v; want %v", got, psErr.CantRegister)
+	if got != psErr.Error {
+		t.Errorf("DeviceRepo.Register() = %s; want %s", got, psErr.Error)
 	}
 }
 
-func TestIfaceRepo_Register_SUCCESS(t *testing.T) {
+func TestIfaceRepo_Register_1(t *testing.T) {
 	defer reset()
 
 	psLog.DisableOutput()
@@ -76,7 +77,8 @@ func TestIfaceRepo_Register_SUCCESS(t *testing.T) {
 	}
 }
 
-func TestIfaceRepo_Register_FAIL_WhenTryingToRegisterSameInterface(t *testing.T) {
+// Fail when it's trying to register same interface.
+func TestIfaceRepo_Register_2(t *testing.T) {
 	defer reset()
 
 	psLog.DisableOutput()
@@ -103,13 +105,14 @@ func TestIfaceRepo_Register_FAIL_WhenTryingToRegisterSameInterface(t *testing.T)
 	}
 
 	_ = IfaceRepo.Register(iface, dev)
+
 	got := IfaceRepo.Register(iface, dev)
-	if got != psErr.CantRegister {
-		t.Errorf("IfaceRepo.Register() = %v; want %v", got, psErr.CantRegister)
+	if got != psErr.Error {
+		t.Errorf("IfaceRepo.Register() = %s; want %s", got, psErr.Error)
 	}
 }
 
-func TestUp_SUCCESS(t *testing.T) {
+func TestUp_1(t *testing.T) {
 	defer reset()
 
 	psLog.DisableOutput()
@@ -134,7 +137,8 @@ func TestUp_SUCCESS(t *testing.T) {
 	}
 }
 
-func TestUp_FailWhenDeviceIsAlreadyOpened(t *testing.T) {
+// Fail when device is already opened.
+func TestUp_2(t *testing.T) {
 	defer reset()
 
 	psLog.DisableOutput()
@@ -152,12 +156,13 @@ func TestUp_FailWhenDeviceIsAlreadyOpened(t *testing.T) {
 	_ = DeviceRepo.Register(m)
 
 	got := DeviceRepo.Up()
-	if got != psErr.AlreadyOpened {
-		t.Errorf("Up() = %v; want %v", got, psErr.AlreadyOpened)
+	if got != psErr.Error {
+		t.Errorf("Up() = %s; want %s", got, psErr.Error)
 	}
 }
 
-func TestUp_FailWhenCouldNotGetDeviceUp(t *testing.T) {
+// Fail when it could not get device up.
+func TestUp_3(t *testing.T) {
 	defer reset()
 
 	psLog.DisableOutput()
@@ -167,7 +172,7 @@ func TestUp_FailWhenCouldNotGetDeviceUp(t *testing.T) {
 	defer ctrl.Finish()
 
 	m := ethernet.NewMockIDevice(ctrl)
-	m.EXPECT().Open().Return(psErr.CantOpen)
+	m.EXPECT().Open().Return(psErr.Error)
 	m.EXPECT().IsUp().Return(false)
 	m.EXPECT().EthAddrs().Return(ethernet.EthAddr{}, ethernet.EthAddr{}, ethernet.EthAddr{})
 	m.EXPECT().Names().Return("net0", "tap0").AnyTimes()
@@ -176,7 +181,7 @@ func TestUp_FailWhenCouldNotGetDeviceUp(t *testing.T) {
 	_ = DeviceRepo.Register(m)
 
 	got := DeviceRepo.Up()
-	if got != psErr.CantOpen {
-		t.Errorf("Up() = %v; want %v", got, psErr.CantOpen)
+	if got != psErr.Error {
+		t.Errorf("Up() = %s; want %s", got, psErr.Error)
 	}
 }

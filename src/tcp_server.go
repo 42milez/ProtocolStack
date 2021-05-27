@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	"github.com/42milez/ProtocolStack/src/ethernet"
 	psLog "github.com/42milez/ProtocolStack/src/log"
@@ -28,13 +29,13 @@ func setup() psErr.E {
 	loopbackDev := network.GenLoopbackDevice()
 
 	if err := network.DeviceRepo.Register(loopbackDev); err != psErr.OK {
-		psLog.E("network.DeviceRepo.Register() failed: %s", err)
+		psLog.E(fmt.Sprintf("network.DeviceRepo.Register() failed: %s", err))
 		return psErr.Error
 	}
 
 	iface1 := network.GenIface(ethernet.LoopbackIpAddr, ethernet.LoopbackNetmask, ethernet.LoopbackBroadcast)
 	if err := network.IfaceRepo.Register(iface1, loopbackDev); err != psErr.OK {
-		psLog.E("network.IfaceRepo.Register() failed: %s", err)
+		psLog.E(fmt.Sprintf("network.IfaceRepo.Register() failed: %s", err))
 		return psErr.Error
 	}
 
@@ -42,11 +43,14 @@ func setup() psErr.E {
 
 	// Create a TAP device and its interface, then link them.
 	tapDev := network.GenTapDevice(0, ethernet.EthAddr{11, 22, 33, 44, 55, 66})
-	network.DeviceRepo.Register(tapDev)
+	if err := network.DeviceRepo.Register(tapDev); err != psErr.OK {
+		psLog.E(fmt.Sprintf("network.DeviceRepo.Register() failed: %s", err))
+		return psErr.Error
+	}
 
 	iface2 := network.GenIface("192.0.2.2", "255.255.255.0", "192.0.2.255")
 	if err := network.IfaceRepo.Register(iface2, tapDev); err != psErr.OK {
-		psLog.E("network.IfaceRepo.Register() failed: %s", err)
+		psLog.E(fmt.Sprintf("network.IfaceRepo.Register() failed: %s", err))
 		return psErr.Error
 	}
 
@@ -58,7 +62,7 @@ func setup() psErr.E {
 	psLog.I("--------------------------------------------------")
 
 	if err := start(&wg); err != psErr.OK {
-		psLog.E("start() failed: %s", err)
+		psLog.E(fmt.Sprintf("start() failed: %s", err))
 		return psErr.Error
 	}
 
@@ -66,7 +70,10 @@ func setup() psErr.E {
 }
 
 func start(wg *sync.WaitGroup) psErr.E {
-	network.DeviceRepo.Up()
+	if err := network.DeviceRepo.Up(); err != psErr.OK {
+		psLog.E(fmt.Sprintf("network.DeviceRepo.Up() failed: %s", err))
+		return psErr.Error
+	}
 
 	// worker for polling incoming packets
 	wg.Add(1)
@@ -83,7 +90,7 @@ func start(wg *sync.WaitGroup) psErr.E {
 				if err := network.DeviceRepo.Poll(terminate); err != psErr.OK {
 					// TODO: notify error to main goroutine
 					// ...
-					psLog.F("network.DeviceRepo.Poll() failed: %s", err)
+					psLog.F(fmt.Sprintf("network.DeviceRepo.Poll() failed: %s", err))
 				}
 			}
 			if terminate {
@@ -104,13 +111,13 @@ func start(wg *sync.WaitGroup) psErr.E {
 				return
 			case packet := <-ethernet.RxCh:
 				if err := network.InputHandler(packet); err != psErr.OK {
-					psLog.F("network.InputHandler() failed: %s", err)
+					psLog.F(fmt.Sprintf("network.InputHandler() failed: %s", err))
 					// TODO: notify error to main goroutine
 					// ...
 				}
 			case packet := <-ethernet.TxCh:
 				if err := network.OutputHandler(packet); err != psErr.OK {
-					psLog.F("network.OutputHandler() failed: %s", err)
+					psLog.F(fmt.Sprintf("network.OutputHandler() failed: %s", err))
 					// TODO: notify error to main goroutine
 					// ...
 				}
@@ -135,7 +142,7 @@ func handleSignal(sigCh <-chan os.Signal, wg *sync.WaitGroup) {
 	go func() {
 		defer wg.Done()
 		sig := <-sigCh
-		psLog.I("Signal received: %s", sig)
+		psLog.I(fmt.Sprintf("Signal received: %s", sig))
 		ethSigCh <- syscall.SIGUSR1
 		mainSigCh <- syscall.SIGUSR1
 		netSigCh <- syscall.SIGUSR1

@@ -10,7 +10,7 @@ import (
 )
 
 func format(s string) (ret string) {
-	if m, _ := regexp.MatchString("^\\S", s); m {
+	if m, _ := regexp.MatchString("^\\w", s); m {
 		ret = "▶ " + s
 	} else {
 		ret = s
@@ -19,23 +19,19 @@ func format(s string) (ret string) {
 }
 
 func I(s string) {
-	format(s)
-	i.Println(s)
+	i.Println(format(s))
 }
 
 func W(s string) {
-	format(s)
-	w.Println(s)
+	w.Println(format(s))
 }
 
 func E(s string) {
-	format(s)
-	e.Println(s)
+	e.Println(format(s))
 }
 
 func F(s string) {
-	format(s)
-	f.Fatalln(s)
+	f.Fatalln(format(s))
 }
 
 func CaptureLogOutput(f func()) string {
