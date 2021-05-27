@@ -35,10 +35,10 @@ func (m *MockIDevice) EXPECT() *MockIDeviceMockRecorder {
 }
 
 // Close mocks base method.
-func (m *MockIDevice) Close() error.Error {
+func (m *MockIDevice) Close() error.E {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Close")
-	ret0, _ := ret[0].(error.Error)
+	ret0, _ := ret[0].(error.E)
 	return ret0
 }
 
@@ -120,10 +120,10 @@ func (mr *MockIDeviceMockRecorder) Names() *gomock.Call {
 }
 
 // Open mocks base method.
-func (m *MockIDevice) Open() error.Error {
+func (m *MockIDevice) Open() error.E {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Open")
-	ret0, _ := ret[0].(error.Error)
+	ret0, _ := ret[0].(error.E)
 	return ret0
 }
 
@@ -134,10 +134,10 @@ func (mr *MockIDeviceMockRecorder) Open() *gomock.Call {
 }
 
 // Poll mocks base method.
-func (m *MockIDevice) Poll(terminate bool) error.Error {
+func (m *MockIDevice) Poll(terminate bool) error.E {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Poll", terminate)
-	ret0, _ := ret[0].(error.Error)
+	ret0, _ := ret[0].(error.E)
 	return ret0
 }
 
@@ -148,17 +148,17 @@ func (mr *MockIDeviceMockRecorder) Poll(terminate interface{}) *gomock.Call {
 }
 
 // Transmit mocks base method.
-func (m *MockIDevice) Transmit() error.Error {
+func (m *MockIDevice) Transmit(dest EthAddr, payload []byte, typ EthType) error.E {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Transmit")
-	ret0, _ := ret[0].(error.Error)
+	ret := m.ctrl.Call(m, "Transmit", dest, payload, typ)
+	ret0, _ := ret[0].(error.E)
 	return ret0
 }
 
 // Transmit indicates an expected call of Transmit.
-func (mr *MockIDeviceMockRecorder) Transmit() *gomock.Call {
+func (mr *MockIDeviceMockRecorder) Transmit(dest, payload, typ interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Transmit", reflect.TypeOf((*MockIDevice)(nil).Transmit))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Transmit", reflect.TypeOf((*MockIDevice)(nil).Transmit), dest, payload, typ)
 }
 
 // Typ mocks base method.

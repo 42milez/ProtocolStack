@@ -1,43 +1,42 @@
 package error
 
 const (
-	OK int = iota
-	AlreadyOpened
-	CantConvert
-	CantOpen
-	CantProcess
+	OK E = iota
+	CantCreateEndpoint
+	CantCreateEpollInstance
+	CantModifyIOResourceParameter
+	CantOpenIOResource
 	CantRead
-	CantRegister
-	CantSend
-	Failed
+	Error
+	InterfaceNotFound
 	Interrupted
 	InvalidHeader
 	InvalidPacket
 	NoDataToRead
 	NotFound
+	Terminated
 )
 
-type Error struct {
-	Code int
-	Msg  string
-}
+type E int
 
-func (p *Error) Error() string {
-	switch p.Code {
+func (v E) Error() string {
+	switch v {
 	case OK:
 		return "OK"
-	case AlreadyOpened:
-		return "ALREADY_OPENED"
-	case CantConvert:
-		return "CANT_CONVERT"
-	case CantProcess:
-		return "CANT_PROCESS"
+	case CantCreateEndpoint:
+		return "CANT_CREATE_ENDPOINT"
+	case CantCreateEpollInstance:
+		return "CANT_CREATE_EPOLL_INSTANCE"
+	case CantModifyIOResourceParameter:
+		return "CANT_MODIFY_IO_RESOURCE_PARAMETER"
+	case CantOpenIOResource:
+		return "CANT_OPEN_IO_RESOURCE"
 	case CantRead:
 		return "CANT_READ"
-	case CantSend:
-		return "CANT_SEND"
-	case Failed:
-		return "FAILED"
+	case Error:
+		return "ERROR"
+	case InterfaceNotFound:
+		return "INTERFACE_NOT_FOUND"
 	case Interrupted:
 		return "INTERRUPTED"
 	case InvalidHeader:
@@ -48,6 +47,8 @@ func (p *Error) Error() string {
 		return "NO_DATA_TO_READ"
 	case NotFound:
 		return "NOT_FOUND"
+	case Terminated:
+		return "TERMINATED"
 	default:
 		return "UNKNOWN"
 	}

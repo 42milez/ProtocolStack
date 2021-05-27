@@ -14,72 +14,60 @@ import (
 	"testing"
 )
 
-func format(s string) string {
+func trim(s string) string {
 	ret := strings.Replace(s, "\t", "", -1)
 	ret = strings.Replace(ret, "\n", "", -1)
 	return ret
 }
 
-func TestEthAddr_Equal_SUCCESS_Equal(t *testing.T) {
-	ethAddr1 := EthAddr([EthAddrLen]byte{11, 22, 33, 44, 55, 66})
-	ethAddr2 := EthAddr([EthAddrLen]byte{11, 22, 33, 44, 55, 66})
-
+func TestEthAddr_Equal(t *testing.T) {
+	ethAddr1 := EthAddr{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}
+	ethAddr2 := EthAddr{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}
 	got := ethAddr1.Equal(ethAddr2)
 	if got != true {
-		t.Errorf("EthAddr.Equal() = %v; want %v", got, true)
+		t.Errorf("EthAddr.Equal() = %t; want %t", got, true)
 	}
-}
 
-func TestEthAddr_Equal_SUCCESS_NotEqual(t *testing.T) {
-	ethAddr1 := EthAddr([EthAddrLen]byte{11, 22, 33, 44, 55, 66})
-	ethAddr2 := EthAddr([EthAddrLen]byte{})
-
-	got := ethAddr1.Equal(ethAddr2)
+	ethAddr3 := EthAddr{}
+	got = ethAddr1.Equal(ethAddr3)
 	if got != false {
-		t.Errorf("EthAddr.Equal() = %v; want %v", got, false)
+		t.Errorf("EthAddr.Equal() = %t; want %t", got, false)
 	}
 }
 
-func TestEthType_String_SUCCESS_A(t *testing.T) {
-	ethType := EthType(0x0806)
+func TestEthType_String(t *testing.T) {
 	want := "ARP"
-	got := ethType.String()
+	got := EthType(0x0806).String()
 	if got != want {
-		t.Errorf("EthType.String() = %v; want %v", got, want)
+		t.Errorf("EthType.String() = %s; want %s", got, want)
+	}
+
+	want = "IPv4"
+	got = EthType(0x0800).String()
+	if got != want {
+		t.Errorf("EthType.String() = %s; want %s", got, want)
+	}
+
+	want = "IPv6"
+	got = EthType(0x86dd).String()
+	if got != want {
+		t.Errorf("EthType.String() = %s; want %s", got, want)
+	}
+
+	want = "UNKNOWN"
+	got = EthType(0x0000).String()
+	if got != want {
+		t.Errorf("EthType.String() = %s; want %s", got, want)
 	}
 }
 
-func TestEthType_String_SUCCESS_B(t *testing.T) {
-	want := "IPv4"
-	got := EthType(0x0800).String()
-	if got != want {
-		t.Errorf("EthType.String() = %v; want %v", got, want)
-	}
-}
-
-func TestEthType_String_SUCCESS_C(t *testing.T) {
-	want := "IPv6"
-	got := EthType(0x86dd).String()
-	if got != want {
-		t.Errorf("EthType.String() = %v; want %v", got, want)
-	}
-}
-
-func TestEthType_String_SUCCESS_D(t *testing.T) {
-	want := "UNKNOWN"
-	got := EthType(0x0000).String()
-	if got != want {
-		t.Errorf("EthType.String() = %v; want %v", got, want)
-	}
-}
-
-func TestEthDump_SUCCESS(t *testing.T) {
+func TestEthDump(t *testing.T) {
 	regexpDatetime := "[0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}"
 	macDst := EthAddr{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}
 	macSrc := EthAddr{0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f}
 	ethType := EthType(0x0800)
 	want, _ := regexp.Compile(fmt.Sprintf(
-		"^.+ %v mac \\(dst\\): %v.+ %v mac \\(src\\): %v.+ %v eth_type:  0x%04x \\(%v\\)$",
+		"^.+ %v dst:  %v.+ %v src:  %v.+ %v type: 0x%04x \\(%v\\)$",
 		regexpDatetime,
 		macDst.String(),
 		regexpDatetime,
@@ -91,13 +79,13 @@ func TestEthDump_SUCCESS(t *testing.T) {
 		hdr := EthHeader{Dst: macDst, Src: macSrc, Type: ethType}
 		EthDump(&hdr)
 	})
-	got = format(got)
+	got = trim(got)
 	if !want.MatchString(got) {
 		t.Errorf("EthDump() = %v; want %v", got, want)
 	}
 }
 
-func TestReadFrame_SUCCESS(t *testing.T) {
+func TestReadFrame_1(t *testing.T) {
 	psLog.DisableOutput()
 	defer psLog.EnableOutput()
 
@@ -122,12 +110,13 @@ func TestReadFrame_SUCCESS(t *testing.T) {
 	dev := &Device{Addr: EthAddr{11, 12, 13, 14, 15, 16}}
 
 	_, got := ReadFrame(dev.Priv.FD, dev.Addr, m)
-	if got.Code != psErr.OK {
-		t.Errorf("ReadFrame() = %v; want %v", got.Code, psErr.OK)
+	if got != psErr.OK {
+		t.Errorf("ReadFrame() = %v; want %v", got, psErr.OK)
 	}
 }
 
-func TestReadFrame_FAIL_WhenReadSyscallFailed(t *testing.T) {
+// Fail when Read() returns error.
+func TestReadFrame_2(t *testing.T) {
 	psLog.DisableOutput()
 	defer psLog.EnableOutput()
 
@@ -139,12 +128,13 @@ func TestReadFrame_FAIL_WhenReadSyscallFailed(t *testing.T) {
 	m.EXPECT().Read(gomock.Any(), gomock.Any()).Return(-1, errors.New(""))
 
 	_, got := ReadFrame(dev.Priv.FD, dev.Addr, m)
-	if got.Code != psErr.CantRead {
-		t.Errorf("ReadFrame() = %v; want %v", got.Code, psErr.CantRead)
+	if got != psErr.Error {
+		t.Errorf("ReadFrame() = %v; want %v", got, psErr.Error)
 	}
 }
 
-func TestReadFrame_FAIL_WhenHeaderLengthIsInvalid(t *testing.T) {
+// Fail when header length is invalid.
+func TestReadFrame_3(t *testing.T) {
 	psLog.DisableOutput()
 	defer psLog.EnableOutput()
 
@@ -156,12 +146,13 @@ func TestReadFrame_FAIL_WhenHeaderLengthIsInvalid(t *testing.T) {
 	m.EXPECT().Read(gomock.Any(), gomock.Any()).Return(10, nil)
 
 	_, got := ReadFrame(dev.Priv.FD, dev.Addr, m)
-	if got.Code != psErr.InvalidHeader {
-		t.Errorf("ReadFrame() = %v; want %v", got.Code, psErr.InvalidHeader)
+	if got != psErr.Error {
+		t.Errorf("ReadFrame() = %v; want %v", got, psErr.Error)
 	}
 }
 
-func TestReadFrame_SUCCESS_WhenNoDataExists(t *testing.T) {
+// Success when no data exits.
+func TestReadFrame_4(t *testing.T) {
 	psLog.DisableOutput()
 	defer psLog.EnableOutput()
 
@@ -173,7 +164,7 @@ func TestReadFrame_SUCCESS_WhenNoDataExists(t *testing.T) {
 	m.EXPECT().Read(gomock.Any(), gomock.Any()).Return(150, nil)
 
 	_, got := ReadFrame(dev.Priv.FD, dev.Addr, m)
-	if got.Code != psErr.NoDataToRead {
-		t.Errorf("ReadFrame() = %v; want %v", got.Code, psErr.NoDataToRead)
+	if got != psErr.NoDataToRead {
+		t.Errorf("ReadFrame() = %v; want %v", got, psErr.NoDataToRead)
 	}
 }

@@ -7,17 +7,22 @@ import (
 )
 
 type ISyscall interface {
+	Open(path string, mode int, perm uint32) (fd int, err error)
 	Close(fd int) (err error)
 	EpollCreate1(flag int) (fd int, err error)
 	EpollCtl(epfd int, op int, fd int, event *syscall.EpollEvent) (err error)
 	EpollWait(epfd int, events []syscall.EpollEvent, msec int) (n int, err error)
 	Ioctl(a1, a2, a3 uintptr) (r1, r2 uintptr, err syscall.Errno)
-	Open(path string, mode int, perm uint32) (fd int, err error)
-	Read(fd int, p []byte) (n int, err error)
 	Socket(domain, typ, proto int) (fd int, err error)
+	Read(fd int, p []byte) (n int, err error)
+	Write(fd int, p []byte) (n int, err error)
 }
 
 type Syscall struct{}
+
+func (Syscall) Open(path string, mode int, perm uint32) (fd int, err error) {
+	return syscall.Open(path, mode, perm)
+}
 
 func (Syscall) Close(fd int) (err error) {
 	return syscall.Close(fd)
@@ -36,17 +41,19 @@ func (Syscall) EpollWait(epfd int, events []syscall.EpollEvent, msec int) (n int
 }
 
 func (Syscall) Ioctl(a1, a2, a3 uintptr) (r1, r2 uintptr, err syscall.Errno) {
+	// doc: second return value of syscall.Syscall needs to be documented #29842
+	// https://github.com/golang/go/issues/29842
 	return syscall.Syscall(syscall.SYS_IOCTL, a1, a2, a3)
 }
 
-func (Syscall) Open(path string, mode int, perm uint32) (fd int, err error) {
-	return syscall.Open(path, mode, perm)
+func (Syscall) Socket(domain, typ, proto int) (fd int, err error) {
+	return syscall.Socket(domain, typ, proto)
 }
 
 func (Syscall) Read(fd int, p []byte) (n int, err error) {
 	return syscall.Read(fd, p)
 }
 
-func (Syscall) Socket(domain, typ, proto int) (fd int, err error) {
-	return syscall.Socket(domain, typ, proto)
+func (Syscall) Write(fd int, p []byte) (n int, err error) {
+	return syscall.Write(fd, p)
 }

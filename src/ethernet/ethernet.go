@@ -55,40 +55,40 @@ type EthHeader struct {
 }
 
 func EthDump(hdr *EthHeader) {
-	psLog.I("\tmac (dst): %v", hdr.Dst.String())
-	psLog.I("\tmac (src): %v", hdr.Src.String())
-	psLog.I("\teth_type:  0x%04x (%s)", uint16(hdr.Type), hdr.Type.String())
+	psLog.I(fmt.Sprintf("\tdst:  %s", hdr.Dst))
+	psLog.I(fmt.Sprintf("\tsrc:  %s", hdr.Src))
+	psLog.I(fmt.Sprintf("\ttype: 0x%04x (%s)", uint16(hdr.Type), hdr.Type))
 }
 
-func ReadFrame(fd int, addr EthAddr, sc psSyscall.ISyscall) (*Packet, psErr.Error) {
+func ReadFrame(fd int, addr EthAddr, sc psSyscall.ISyscall) (*Packet, psErr.E) {
 	// TODO: make buf static variable to reuse
 	buf := make([]byte, EthFrameSizeMax)
 
 	fsize, err := sc.Read(fd, buf)
 	if err != nil {
-		psLog.E("SYS_READ failed: %v ", err)
-		return nil, psErr.Error{Code: psErr.CantRead}
+		psLog.E(fmt.Sprintf("syscall.Read() failed: %s", err))
+		return nil, psErr.Error
 	}
 
 	if fsize < EthHeaderSize {
-		psLog.E("ethernet header length too short")
-		psLog.E("\tfsize: %v bytes", fsize)
-		return nil, psErr.Error{Code: psErr.InvalidHeader}
+		psLog.E("Ethernet header length is too short")
+		psLog.E(fmt.Sprintf("\tlength: %v bytes", fsize))
+		return nil, psErr.Error
 	}
 
 	hdr := EthHeader{}
 	if err := binary.Read(bytes.NewBuffer(buf), binary.BigEndian, &hdr); err != nil {
-		return nil, psErr.Error{Code: psErr.CantConvert, Msg: err.Error()}
+		psLog.E(fmt.Sprintf("binary.Read() failed: %s", err))
+		return nil, psErr.Error
 	}
 
 	if !hdr.Dst.Equal(addr) {
 		if !hdr.Dst.Equal(EthAddrBroadcast) {
-			return nil, psErr.Error{Code: psErr.NoDataToRead}
+			return nil, psErr.NoDataToRead
 		}
 	}
 
-	psLog.I("received ethernet frame")
-	psLog.I("\tfsize:     %v bytes", fsize)
+	psLog.I("Incoming ethernet frame:")
 	EthDump(&hdr)
 
 	packet := &Packet{
@@ -96,5 +96,5 @@ func ReadFrame(fd int, addr EthAddr, sc psSyscall.ISyscall) (*Packet, psErr.Erro
 		Payload: buf[EthHeaderSize:],
 	}
 
-	return packet, psErr.Error{Code: psErr.OK}
+	return packet, psErr.OK
 }

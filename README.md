@@ -57,6 +57,72 @@ Note: `make` supports the commands below:
 - `resolve` resolve dependencies
 - `test` run all tests
 
+## Example
+
+<details>
+<summary>Log</summary>
+
+```text
+[vagrant@ps ~]$ ./app/bin/tcp_server
+[INFO] 2021/05/27 06:52:33 --------------------------------------------------
+[INFO] 2021/05/27 06:52:33  INITIALIZE DEVICES
+[INFO] 2021/05/27 06:52:33 --------------------------------------------------
+[INFO] 2021/05/27 06:52:33 device registered
+[INFO] 2021/05/27 06:52:33 	type:      DEVICE_TYPE_LOOPBACK
+[INFO] 2021/05/27 06:52:33 	name:      net0 ()
+[INFO] 2021/05/27 06:52:33 	addr:      00:00:00:00:00:00
+[INFO] 2021/05/27 06:52:33 	broadcast: 00:00:00:00:00:00
+[INFO] 2021/05/27 06:52:33 	peer:      00:00:00:00:00:00
+[INFO] 2021/05/27 06:52:33 interface attached
+[INFO] 2021/05/27 06:52:33 	ip:     127.0.0.1
+[INFO] 2021/05/27 06:52:33 	device: net0 ()
+[INFO] 2021/05/27 06:52:33 route registered
+[INFO] 2021/05/27 06:52:33 	network:  127.0.0.0
+[INFO] 2021/05/27 06:52:33 	netmask:  255.0.0.0
+[INFO] 2021/05/27 06:52:33 	unicast:  127.0.0.1
+[INFO] 2021/05/27 06:52:33 	next hop: 0.0.0.0
+[INFO] 2021/05/27 06:52:33 	device:   net0 ()
+[INFO] 2021/05/27 06:52:33 device registered
+[INFO] 2021/05/27 06:52:33 	type:      DEVICE_TYPE_ETHERNET
+[INFO] 2021/05/27 06:52:33 	name:      net1 (tap0)
+[INFO] 2021/05/27 06:52:33 	addr:      0b:16:21:2c:37:42
+[INFO] 2021/05/27 06:52:33 	broadcast: ff:ff:ff:ff:ff:ff
+[INFO] 2021/05/27 06:52:33 	peer:      00:00:00:00:00:00
+[INFO] 2021/05/27 06:52:33 interface attached
+[INFO] 2021/05/27 06:52:33 	ip:     192.0.2.2
+[INFO] 2021/05/27 06:52:33 	device: net1 (tap0)
+[INFO] 2021/05/27 06:52:33 route registered
+[INFO] 2021/05/27 06:52:33 	network:  192.0.0.0
+[INFO] 2021/05/27 06:52:33 	netmask:  255.255.255.0
+[INFO] 2021/05/27 06:52:33 	unicast:  192.0.2.2
+[INFO] 2021/05/27 06:52:33 	next hop: 0.0.0.0
+[INFO] 2021/05/27 06:52:33 	device:   net1 (tap0)
+[INFO] 2021/05/27 06:52:33 default gateway registered
+[INFO] 2021/05/27 06:52:33 	network:  0.0.0.0
+[INFO] 2021/05/27 06:52:33 	netmask:  0.0.0.0
+[INFO] 2021/05/27 06:52:33 	unicast:  192.0.2.2
+[INFO] 2021/05/27 06:52:33 	next hop: 192.0.2.1
+[INFO] 2021/05/27 06:52:33 	device:   net1 (tap0)
+[INFO] 2021/05/27 06:52:33 --------------------------------------------------
+[INFO] 2021/05/27 06:52:33  START WORKERS
+[INFO] 2021/05/27 06:52:33 --------------------------------------------------
+[INFO] 2021/05/27 06:52:33 device opened
+[INFO] 2021/05/27 06:52:33 	type: DEVICE_TYPE_LOOPBACK
+[INFO] 2021/05/27 06:52:33 	name: net0 ()
+[ERROR] 2021/05/27 06:52:33 can't open virtual networking device: /dev/net/tun no such file or directory
+[ERROR] 2021/05/27 06:52:33 can't open a device
+[ERROR] 2021/05/27 06:52:33 	type: DEVICE_TYPE_ETHERNET
+[ERROR] 2021/05/27 06:52:33 	name: net1 (tap0)
+[INFO] 2021/05/27 06:52:33
+[INFO] 2021/05/27 06:52:33 //////////////////////////////////////////////////
+[INFO] 2021/05/27 06:52:33            S E R V E R    S T A R T E D
+[INFO] 2021/05/27 06:52:33 //////////////////////////////////////////////////
+[INFO] 2021/05/27 06:52:33
+[INFO] 2021/05/27 06:52:33 ▶ Net worker started
+[INFO] 2021/05/27 06:52:33 ▶ Eth worker started
+```
+</details>
+
 ## References
 - Articles
   - [Demystifying memory management in modern programming languages](https://deepu.tech/memory-management-in-programming)
@@ -69,9 +135,6 @@ Note: `make` supports the commands below:
   - [Multiplayer Game Programming: Architecting Networked Games](https://www.oreilly.com/library/view/multiplayer-game-programming/9780134034355)
   - [TCP/IP Illustrated](https://en.wikipedia.org/wiki/TCP/IP_Illustrated)
 - Docs
-  - fedora
-    - [DNF, the next-generation replacement for YUM](https://dnf.readthedocs.io/en/latest/index.html)
-    - [Understanding and administering systemd](https://docs.fedoraproject.org/en-US/quick-docs/understanding-and-administering-systemd/)
   - Codecov
     - [About the Codecov yaml](https://docs.codecov.io/docs/codecov-yaml)
     - [Codecov Delta](https://docs.codecov.io/docs/codecov-delta)
@@ -79,6 +142,9 @@ Note: `make` supports the commands below:
     - [Compose file](https://docs.docker.com/compose/compose-file/)
     - [Dockerfile](https://docs.docker.com/engine/reference/builder/)
     - [Overview of Docker Compose](https://docs.docker.com/compose/)
+  - fedora
+      - [DNF, the next-generation replacement for YUM](https://dnf.readthedocs.io/en/latest/index.html)
+      - [Understanding and administering systemd](https://docs.fedoraproject.org/en-US/quick-docs/understanding-and-administering-systemd/)
   - GitHub Actions
     - [Reference](https://docs.github.com/en/actions/reference)
   - Mutagen
@@ -88,6 +154,9 @@ Note: `make` supports the commands below:
       - [Block Kit](https://app.slack.com/block-kit-builder/T82HLGL84#%7B%22blocks%22:%5B%5D%7D)
       - [Message](https://api.slack.com/docs/messages/builder?msg=%7B%22text%22%3A%22I%20am%20a%20test%20message%22%2C%22attachments%22%3A%5B%7B%22text%22%3A%22And%20here%E2%80%99s%20an%20attachment!%22%7D%5D%7D)
     - [Reference guides for app features](https://api.slack.com/reference)
+  - UI
+    - [Error Message Guidelines](https://docs.microsoft.com/en-us/windows/win32/debug/error-message-guidelines?redirectedfrom=MSDN)
+    - [Messages: UI Text Guidelines](https://docs.microsoft.com/en-us/previous-versions/windows/desktop/bb226791(v=vs.85))
   - Vagrant
     - [Vagrantfile](https://www.vagrantup.com/docs/vagrantfile)
 - Go
@@ -147,6 +216,7 @@ Note: `make` supports the commands below:
     - [Continuation](https://en.wikipedia.org/wiki/Continuation)
     - [Cooperative multitasking](https://en.wikipedia.org/wiki/Cooperative_multitasking)
     - [Critical section](https://en.wikipedia.org/wiki/Critical_section)
+    - [Ellipsis (computer programming)](https://en.wikipedia.org/wiki/Ellipsis_(computer_programming))
     - [Fair-share scheduling](https://en.wikipedia.org/wiki/Fair-share_scheduling)
     - [Fork-join model](https://en.wikipedia.org/wiki/Fork%E2%80%93join_model)
     - [Generic programming](https://en.wikipedia.org/wiki/Generic_programming)

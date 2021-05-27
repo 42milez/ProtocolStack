@@ -6,38 +6,32 @@ import (
 	"io/ioutil"
 	goLog "log"
 	"os"
+	"regexp"
 )
 
-func I(s string, v ...interface{}) {
-	if len(v) == 0 {
-		i.Println(s)
+func format(s string) (ret string) {
+	if m, _ := regexp.MatchString("^\\w", s); m {
+		ret = "▶ " + s
 	} else {
-		i.Printf(s+"\n", v...)
+		ret = s
 	}
+	return
 }
 
-func W(s string, v ...interface{}) {
-	if len(v) == 0 {
-		w.Println(s)
-	} else {
-		w.Printf(s+"\n", v...)
-	}
+func I(s string) {
+	i.Println(format(s))
 }
 
-func E(s string, v ...interface{}) {
-	if len(v) == 0 {
-		e.Println(s)
-	} else {
-		e.Printf(s+"\n", v...)
-	}
+func W(s string) {
+	w.Println(format(s))
 }
 
-func F(s string, v ...interface{}) {
-	if len(v) == 0 {
-		f.Fatalln(s)
-	} else {
-		f.Fatalf(s+"\n", v...)
-	}
+func E(s string) {
+	e.Println(format(s))
+}
+
+func F(s string) {
+	f.Fatalln(format(s))
 }
 
 func CaptureLogOutput(f func()) string {

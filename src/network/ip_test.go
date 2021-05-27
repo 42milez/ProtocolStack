@@ -1,7 +1,6 @@
 package network
 
 import (
-	"github.com/42milez/ProtocolStack/src/ethernet"
 	"github.com/google/go-cmp/cmp"
 	"testing"
 )
@@ -42,10 +41,6 @@ func TestIP_ToV4(t *testing.T) {
 	if d := cmp.Diff(got, want); d != "" {
 		t.Errorf("IP.ToV4() differs: (-got +want)\n%s", d)
 	}
-}
-
-func TestIpInputHandler(t *testing.T) {
-	IpInputHandler(make([]byte, 0), &ethernet.TapDevice{})
 }
 
 func TestParseIP(t *testing.T) {

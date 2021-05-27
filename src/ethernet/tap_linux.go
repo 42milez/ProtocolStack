@@ -3,6 +3,8 @@
 package ethernet
 
 import (
+	"bytes"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	psErr "github.com/42milez/ProtocolStack/src/error"
@@ -16,8 +18,11 @@ const MaxEpollEvents = 32
 
 var epfd int
 
-// error numbers @ errno-baspsErr.h
-// https://github.com/torvalds/linux/blob/master/include/uapi/asm-generic/errno-baspsErr.h
+// src/syscall/zerrors_linux_amd64.go
+// https://golang.org/src/syscall/zerrors_linux_amd64.go
+
+// error numbers
+// https://github.com/torvalds/linux/blob/master/include/uapi/asm-generic/errno-base.h
 
 // struct ifreq @ if.h
 // https://github.com/torvalds/linux/blob/e48661230cc35b3d0f4367eddfc19f86463ab917/include/uapi/linux/if.h#L225
@@ -44,84 +49,82 @@ type TapDevice struct {
 	Device
 }
 
-func (dev *TapDevice) Open() psErr.Error {
+func (dev *TapDevice) Open() psErr.E {
 	var err error
-	var errno syscall.Errno
 	var fd int
-	var soc int
 
 	fd, err = dev.Syscall.Open(vnd, syscall.O_RDWR, 0666)
 	if err != nil {
-		psLog.E("can't open virtual networking device: %v ", vnd)
-		return psErr.Error{Code: psErr.CantOpen, Msg: err.Error()}
+		psLog.E(fmt.Sprintf("syscall.Open() failed: %s", err))
+		return psErr.CantOpenIOResource
 	}
 
 	// --------------------------------------------------
+
 	ifrFlags := IfreqFlags{}
 	ifrFlags.Flags = syscall.IFF_TAP | syscall.IFF_NO_PI
 	copy(ifrFlags.Name[:], dev.Priv.Name)
 
-	_, _, errno = dev.Syscall.Ioctl(uintptr(fd), uintptr(syscall.TUNSETIFF), uintptr(unsafe.Pointer(&ifrFlags)))
-	if errno != 0 {
-		psLog.E("SYS_IOCTL (%v) failed: %v ", "TUNSETIFF", errno)
+	if _, _, errno := dev.Syscall.Ioctl(uintptr(fd), uintptr(syscall.TUNSETIFF), uintptr(unsafe.Pointer(&ifrFlags))); errno != 0 {
 		_ = dev.Syscall.Close(fd)
-		return psErr.Error{Code: psErr.CantOpen, Msg: fmt.Sprintf("errno: %v", errno)}
+		psLog.E(fmt.Sprintf("syscall.Syscall(SYS_IOCTL, TUNSETIFF) failed: %s", errno))
+		return psErr.CantModifyIOResourceParameter
 	}
 
 	// --------------------------------------------------
+
+	var soc int
 	soc, err = dev.Syscall.Socket(syscall.AF_INET, syscall.SOCK_DGRAM, 0)
 	if err != nil {
-		psLog.E("can't open socket: %v ", err)
-		return psErr.Error{Code: psErr.CantOpen, Msg: err.Error()}
+		_ = dev.Syscall.Close(fd)
+		psLog.E(fmt.Sprintf("syscall.Socket() failed: %s", err))
+		return psErr.CantCreateEndpoint
 	}
 
 	ifrSockAddr := IfreqSockAddr{}
 	ifrSockAddr.Addr.Family = syscall.AF_INET
 	copy(ifrSockAddr.Name[:], dev.Priv.Name)
 
-	_, _, errno = dev.Syscall.Ioctl(uintptr(soc), uintptr(syscall.SIOCGIFHWADDR), uintptr(unsafe.Pointer(&ifrSockAddr)))
-	if errno != 0 {
-		psLog.E("SYS_IOCTL (%v) failed: %v ", "SIOCGIFHWADDR", errno)
+	if _, _, errno := dev.Syscall.Ioctl(uintptr(soc), uintptr(syscall.SIOCGIFHWADDR), uintptr(unsafe.Pointer(&ifrSockAddr))); errno != 0 {
 		_ = dev.Syscall.Close(soc)
-		return psErr.Error{Code: psErr.CantOpen, Msg: fmt.Sprintf("errno: %v", errno)}
+		psLog.E(fmt.Sprintf("syscall.Syscall(SYS_IOCTL, SIOCGIFHWADDR) failed: %s", errno))
+		return psErr.CantModifyIOResourceParameter
 	}
-
 	copy(dev.Addr[:], ifrSockAddr.Addr.Data[:])
-
 	_ = dev.Syscall.Close(soc)
 
 	// --------------------------------------------------
-	var event syscall.EpollEvent
 
 	epfd, err = dev.Syscall.EpollCreate1(0)
 	if err != nil {
-		psLog.E("can't open an epoll file descriptor: %v ", err)
-		return psErr.Error{Code: psErr.CantOpen, Msg: err.Error()}
+		psLog.E(fmt.Sprintf("syscall.EpollCreate1() failed: %s", err))
+		return psErr.CantCreateEpollInstance
 	}
 
+	var event syscall.EpollEvent
 	event.Events = syscall.EPOLLIN
 	event.Fd = int32(fd)
 
-	err = dev.Syscall.EpollCtl(epfd, syscall.EPOLL_CTL_ADD, fd, &event)
-	if err != nil {
-		psLog.E("can't add an entry to the interest list of the epoll file descriptor: %v ", err)
-		return psErr.Error{Code: psErr.CantOpen, Msg: err.Error()}
+	if err := dev.Syscall.EpollCtl(epfd, syscall.EPOLL_CTL_ADD, fd, &event); err != nil {
+		_ = dev.Syscall.Close(epfd)
+		psLog.E(fmt.Sprintf("syscall.EpollCtl() failed: %s", err))
+		return psErr.CantModifyIOResourceParameter
 	}
 
 	dev.Priv.FD = fd
 
-	return psErr.Error{Code: psErr.OK}
+	return psErr.OK
 }
 
-func (dev *TapDevice) Close() psErr.Error {
+func (dev *TapDevice) Close() psErr.E {
 	_ = dev.Syscall.Close(epfd)
-	return psErr.Error{Code: psErr.OK}
+	return psErr.OK
 }
 
-func (dev *TapDevice) Poll(isTerminated bool) psErr.Error {
+func (dev *TapDevice) Poll(isTerminated bool) psErr.E {
 	if isTerminated {
 		_ = dev.Syscall.Close(epfd)
-		return psErr.Error{Code: psErr.OK, Msg: "terminated"}
+		return psErr.Terminated
 	}
 
 	var events [MaxEpollEvents]syscall.EpollEvent
@@ -131,18 +134,20 @@ func (dev *TapDevice) Poll(isTerminated bool) psErr.Error {
 		// ignore EINTR
 		if !errors.Is(err, syscall.EINTR) {
 			_ = dev.Syscall.Close(epfd)
-			return psErr.Error{Code: psErr.Interrupted, Msg: err.Error()}
+			return psErr.Error
 		}
+		psLog.I("Syscall.EpollWait() was interrupted")
+		return psErr.Interrupted
 	}
 
 	if nEvents > 0 {
-		psLog.I("event occurred")
-		psLog.I("\tevents: %v ", nEvents)
-		psLog.I("\tdevice: %v (%v) ", dev.Name, dev.Priv.Name)
-		if packet, err := ReadFrame(dev.Priv.FD, dev.Addr, dev.Syscall); err.Code != psErr.OK {
-			if err.Code != psErr.NoDataToRead {
-				psLog.E("can't read ethernet frame (code: %s)", err.Error())
-				return psErr.Error{Code: psErr.CantRead}
+		psLog.I("Events occurred")
+		psLog.I(fmt.Sprintf("\tevents: %v", nEvents))
+		psLog.I(fmt.Sprintf("\tdevice: %v (%v)", dev.Name, dev.Priv.Name))
+		if packet, err := ReadFrame(dev.Priv.FD, dev.Addr, dev.Syscall); err != psErr.OK {
+			if err != psErr.NoDataToRead {
+				psLog.E(fmt.Sprintf("ReadFrame() failed: %s", err))
+				return psErr.CantRead
 			}
 		} else {
 			packet.Dev = dev
@@ -150,9 +155,53 @@ func (dev *TapDevice) Poll(isTerminated bool) psErr.Error {
 		}
 	}
 
-	return psErr.Error{Code: psErr.OK}
+	return psErr.OK
 }
 
-func (dev *TapDevice) Transmit() psErr.Error {
-	return psErr.Error{Code: psErr.OK}
+func (dev *TapDevice) Transmit(dest EthAddr, payload []byte, typ EthType) psErr.E {
+	hdr := EthHeader{
+		Dst:  dest,
+		Src:  dev.Addr,
+		Type: typ,
+	}
+
+	buf := new(bytes.Buffer)
+	if err := binary.Write(buf, binary.BigEndian, &hdr); err != nil {
+		psLog.E(fmt.Sprintf("binary.Write() failed: %s", err))
+		return psErr.Error
+	}
+	if err := binary.Write(buf, binary.BigEndian, &payload); err != nil {
+		psLog.E(fmt.Sprintf("binary.Write() failed: %s", err))
+		return psErr.Error
+	}
+
+	if fsize := buf.Len(); fsize < EthFrameSizeMin {
+		pad := make([]byte, EthFrameSizeMin-fsize)
+		if err := binary.Write(buf, binary.BigEndian, &pad); err != nil {
+			psLog.E(fmt.Sprintf("binary.Write() failed: %s", err))
+			return psErr.Error
+		}
+	}
+
+	psLog.I("Ethernet frame to be sent")
+	psLog.I(fmt.Sprintf("\tdest:    %s", hdr.Dst))
+	psLog.I(fmt.Sprintf("\tsrc:     %s", hdr.Src))
+	psLog.I(fmt.Sprintf("\ttype:    %s", hdr.Type))
+	s := "\tpayload: "
+	for i, v := range payload {
+		s += fmt.Sprintf("%02x", v)
+		if (i+1)%10 == 0 {
+			psLog.I(s)
+			s = "\t\t "
+		}
+	}
+
+	if n, err := dev.Syscall.Write(dev.Priv.FD, buf.Bytes()); err != nil {
+		psLog.E(fmt.Sprintf("syscall.Write() failed: %s", err))
+		return psErr.Error
+	} else {
+		psLog.I(fmt.Sprintf("Ethernet frame has been written: %d bytes", n))
+	}
+
+	return psErr.OK
 }

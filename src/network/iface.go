@@ -7,8 +7,8 @@ import (
 // An Iface is a single iface.
 type Iface struct {
 	Family    AddrFamily
+	Unicast   IP
 	Netmask   IP
 	Broadcast IP
-	Unicast   IP
 	Dev       ethernet.IDevice
 }

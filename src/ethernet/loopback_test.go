@@ -18,8 +18,8 @@ func TestLoopbackDevice_Open_SUCCESS(t *testing.T) {
 	loopbackDev := LoopbackDevice{Device{Syscall: psSyscall.NewMockISyscall(ctrl)}}
 
 	got := loopbackDev.Open()
-	if got.Code != psErr.OK {
-		t.Errorf("LoopbackDevice.Open() = %v; want %v", got.Code, psErr.OK)
+	if got != psErr.OK {
+		t.Errorf("LoopbackDevice.Open() = %v; want %v", got, psErr.OK)
 	}
 }
 
@@ -33,8 +33,8 @@ func TestLoopbackDevice_Close_SUCCESS(t *testing.T) {
 	loopbackDev := LoopbackDevice{Device{Syscall: psSyscall.NewMockISyscall(ctrl)}}
 
 	got := loopbackDev.Close()
-	if got.Code != psErr.OK {
-		t.Errorf("LoopbackDevice.Close() = %v; want %v", got.Code, psErr.OK)
+	if got != psErr.OK {
+		t.Errorf("LoopbackDevice.Close() = %v; want %v", got, psErr.OK)
 	}
 }
 
@@ -48,8 +48,8 @@ func TestLoopbackDevice_Poll_SUCCESS(t *testing.T) {
 	loopbackDev := LoopbackDevice{Device{Syscall: psSyscall.NewMockISyscall(ctrl)}}
 
 	got := loopbackDev.Poll(false)
-	if got.Code != psErr.OK {
-		t.Errorf("LoopbackDevice.Poll() = %v; want %v", got.Code, psErr.OK)
+	if got != psErr.OK {
+		t.Errorf("LoopbackDevice.Poll() = %v; want %v", got, psErr.OK)
 	}
 }
 
@@ -62,8 +62,8 @@ func TestLoopbackDevice_Transmit_SUCCESS(t *testing.T) {
 
 	loopbackDev := LoopbackDevice{Device{Syscall: psSyscall.NewMockISyscall(ctrl)}}
 
-	got := loopbackDev.Transmit()
-	if got.Code != psErr.OK {
-		t.Errorf("LoopbackDevice.Transmit() = %v; want %v", got.Code, psErr.OK)
+	got := loopbackDev.Transmit(EthAddr{}, make([]byte, 0), EthTypeArp)
+	if got != psErr.OK {
+		t.Errorf("LoopbackDevice.Transmit() = %v; want %v", got, psErr.OK)
 	}
 }

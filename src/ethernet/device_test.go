@@ -5,94 +5,84 @@ import (
 	"testing"
 )
 
-func TestDevType_String_SUCCESS_A(t *testing.T) {
+func TestDevType_String(t *testing.T) {
 	devType := DevTypeEthernet
-	want := "DEVICE_TYPE_ETHERNET"
+	want := "ETHERNET"
 	got := devType.String()
+	if got != want {
+		t.Errorf("DevType.String() = %v; want %v", got, want)
+	}
+
+	devType = DevTypeLoopback
+	want = "LOOPBACK"
+	got = devType.String()
+	if got != want {
+		t.Errorf("DevType.String() = %v; want %v", got, want)
+	}
+
+	devType = DevTypeNull
+	want = "NULL"
+	got = devType.String()
+	if got != want {
+		t.Errorf("DevType.String() = %v; want %v", got, want)
+	}
+
+	devType = DevType(99)
+	want = "UNKNOWN"
+	got = devType.String()
 	if got != want {
 		t.Errorf("DevType.String() = %v; want %v", got, want)
 	}
 }
 
-func TestDevType_String_SUCCESS_B(t *testing.T) {
-	devType := DevTypeLoopback
-	want := "DEVICE_TYPE_LOOPBACK"
-	got := devType.String()
-	if got != want {
-		t.Errorf("DevType.String() = %v; want %v", got, want)
-	}
-}
-
-func TestDevType_String_SUCCESS_C(t *testing.T) {
-	devType := DevTypeNull
-	want := "DEVICE_TYPE_NULL"
-	got := devType.String()
-	if got != want {
-		t.Errorf("DevType.String() = %v; want %v", got, want)
-	}
-}
-
-func TestDevType_String_SUCCESS_D(t *testing.T) {
-	devType := DevType(99)
-	want := "UNKNOWN"
-	got := devType.String()
-	if got != want {
-		t.Errorf("DevType.String() = %v; want %v", got, want)
-	}
-}
-
-func TestDevice_Up_SUCCESS(t *testing.T) {
+func TestDevice_Up_Down(t *testing.T) {
 	dev := Device{}
-	dev.Up()
 
+	dev.Up()
 	want := DevFlagUp
 	got := dev.FLAG & DevFlagUp
-
 	if got != want {
 		t.Errorf("Device.Up() = %v; want %v", got, want)
 	}
-}
 
-func TestDevice_Down_SUCCESS(t *testing.T) {
-	dev := Device{}
-	dev.Up()
 	dev.Down()
-
-	want := DevFlag(0)
-	got := dev.FLAG & DevFlagUp
-
+	want = DevFlag(0)
+	got = dev.FLAG & DevFlagUp
 	if got != want {
 		t.Errorf("Device.Down() = %v; want %v", got, want)
 	}
 }
 
-func TestDevice_Equal_SUCCESS(t *testing.T) {
+func TestDevice_Equal(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	m := NewMockIDevice(ctrl)
-	m.EXPECT().Names().Return("net0", "")
+	m.EXPECT().Names().Return("net0", "").AnyTimes()
 
-	dev1 := &Device{Name: "net0"}
-
-	got := dev1.Equal(m)
+	dev := Device{Name: "net0"}
+	got := dev.Equal(m)
 	if !got {
-		t.Errorf("Device.Equal() = %v; want %v", got, true)
+		t.Errorf("Device.Equal() = %t; want %t", got, true)
+	}
+
+	dev = Device{Name: "net1"}
+	got = dev.Equal(m)
+	if got {
+		t.Errorf("Device.Equal() = %t; want %t", got, false)
 	}
 }
 
-func TestDevice_IsUp_SUCCESS_WhenDeviceIsUp(t *testing.T) {
-	dev := &Device{}
+func TestDevice_IsUp(t *testing.T) {
+	dev := Device{}
 	dev.Up()
 	if got := dev.IsUp(); !got {
-		t.Errorf("Device.IsUp() = %v; want %v", got, true)
+		t.Errorf("Device.IsUp() = %t; want %t", got, true)
 	}
-}
 
-func TestDevice_IsUp_SUCCESS_WhenDeviceIsDown(t *testing.T) {
-	dev := &Device{}
+	dev = Device{}
 	dev.Down()
 	if got := dev.IsUp(); got {
-		t.Errorf("Device.IsUp() = %v; want %v", got, false)
+		t.Errorf("Device.IsUp() = %t; want %t", got, false)
 	}
 }

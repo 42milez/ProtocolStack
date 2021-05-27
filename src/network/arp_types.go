@@ -41,7 +41,7 @@ func (v ArpOpcode) String() string {
 	case ArpOpReply:
 		return "REPLY"
 	default:
-		return "Unknown"
+		return "UNKNOWN"
 	}
 }
 
