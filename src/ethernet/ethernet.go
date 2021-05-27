@@ -71,8 +71,8 @@ func ReadFrame(fd int, addr EthAddr, sc psSyscall.ISyscall) (*Packet, psErr.Erro
 	}
 
 	if fsize < EthHeaderSize {
-		psLog.E("ethernet header length too short")
-		psLog.E("\tfsize: %v bytes", fsize)
+		psLog.E("▶ Ethernet header length too short")
+		psLog.E("\tlength: %v bytes", fsize)
 		return nil, psErr.Error{Code: psErr.InvalidHeader}
 	}
 
@@ -87,8 +87,8 @@ func ReadFrame(fd int, addr EthAddr, sc psSyscall.ISyscall) (*Packet, psErr.Erro
 		}
 	}
 
-	psLog.I("received ethernet frame")
-	psLog.I("\tfsize:     %v bytes", fsize)
+	psLog.I("▶ Ethernet frame received")
+	psLog.I("\tlength:     %v bytes", fsize)
 	EthDump(&hdr)
 
 	packet := &Packet{

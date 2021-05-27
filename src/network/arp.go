@@ -12,15 +12,15 @@ import (
 )
 
 const ArpCacheSize = 32
-const ArpMessageSize = 68
+const ArpPacketSize = 68
 
 var cache *ArpCache
 
-type ArpHwAddr [ethernet.EthAddrLen]byte
-
-func (p *ArpHwAddr) String() string {
-	return fmt.Sprintf("%02x:%02x:%02x:%02x:%02x:%02x", p[0], p[1], p[2], p[3], p[4], p[5])
-}
+//type ArpHwAddr [ethernet.EthAddrLen]byte
+//
+//func (p *ArpHwAddr) String() string {
+//	return fmt.Sprintf("%02x:%02x:%02x:%02x:%02x:%02x", p[0], p[1], p[2], p[3], p[4], p[5])
+//}
 
 type ArpProtoAddr [V4AddrLen]byte
 
@@ -36,12 +36,12 @@ type ArpHdr struct {
 	Opcode ArpOpcode
 }
 
-type ArpMessage struct {
+type ArpPacket struct {
 	ArpHdr
-	SHA ArpHwAddr    // sender hardware address
-	SPA ArpProtoAddr // sender protocol address
-	THA ArpHwAddr    // target hardware address
-	TPA ArpProtoAddr // target protocol address
+	SHA ethernet.EthAddr // sender hardware address
+	SPA ArpProtoAddr     // sender protocol address
+	THA ethernet.EthAddr // target hardware address
+	TPA ArpProtoAddr     // target protocol address
 }
 
 type ArpCacheEntry struct {
@@ -60,7 +60,7 @@ func (p *ArpCache) Delete() psErr.Error {
 	return psErr.Error{Code: psErr.OK}
 }
 
-func (p *ArpCache) Insert(msg *ArpMessage) psErr.Error {
+func (p *ArpCache) Insert(msg *ArpPacket) psErr.Error {
 	return psErr.Error{Code: psErr.OK}
 }
 
@@ -75,7 +75,7 @@ func (p *ArpCache) Select(ip [V4AddrLen]byte) *ArpCacheEntry {
 	return nil
 }
 
-func (p *ArpCache) Update(msg *ArpMessage) psErr.Error {
+func (p *ArpCache) Update(msg *ArpPacket) psErr.Error {
 	entry := p.Select(msg.SPA)
 	if entry == nil {
 		return psErr.Error{Code: psErr.NotFound}
@@ -92,15 +92,15 @@ func (p *ArpCache) Update(msg *ArpMessage) psErr.Error {
 }
 
 func ArpInputHandler(payload []byte, dev ethernet.IDevice) psErr.Error {
-	if len(payload) < ArpMessageSize {
+	if len(payload) < ArpPacketSize {
 		return psErr.Error{
 			Code: psErr.InvalidPacket,
-			Msg:  "message size too small",
+			Msg:  "packet size too small",
 		}
 	}
 
 	buf := bytes.NewBuffer(payload)
-	msg := ArpMessage{}
+	msg := ArpPacket{}
 	if err := binary.Read(buf, binary.BigEndian, &msg); err != nil {
 		return psErr.Error{Code: psErr.CantRead, Msg: err.Error()}
 	}
@@ -119,7 +119,7 @@ func ArpInputHandler(payload []byte, dev ethernet.IDevice) psErr.Error {
 		}
 	}
 
-	psLog.I("arp packet received")
+	psLog.I("▶ Arp packet received")
 	arpDump(&msg)
 
 	iface := IfaceRepo.Get(dev, FamilyV4)
@@ -132,18 +132,18 @@ func ArpInputHandler(payload []byte, dev ethernet.IDevice) psErr.Error {
 			cache.Insert(&msg)
 		}
 		if msg.Opcode == ArpOpRequest {
-			if err := arpReply(); err.Code != psErr.OK {
+			if err := arpReply(msg.SHA, msg.SPA, iface); err.Code != psErr.OK {
 				return psErr.Error{Code: psErr.CantSend, Msg: "can't send arp reply"}
 			}
 		}
 	} else {
-		psLog.I("ignored arp packet (different address)")
+		psLog.I("▶ Ignored arp packet (It was sent to different address)")
 	}
 
 	return psErr.Error{Code: psErr.OK}
 }
 
-func arpDump(msg *ArpMessage) {
+func arpDump(msg *ArpPacket) {
 	psLog.I("\thardware type:           %s", msg.HT)
 	psLog.I("\tprotocol Type:           %s", msg.PT)
 	psLog.I("\thardware address length: %d", msg.HAL)
@@ -155,7 +155,40 @@ func arpDump(msg *ArpMessage) {
 	psLog.I("\ttarget hardware address: %s", msg.TPA.String())
 }
 
-func arpReply() psErr.Error {
+func arpReply(tha ethernet.EthAddr, tpa ArpProtoAddr, iface *Iface) psErr.Error {
+	addr, _, _ := iface.Dev.EthAddrs()
+	packet := ArpPacket{
+		ArpHdr: ArpHdr{
+			HT:     ArpHwTypeEthernet,
+			PT:     ethernet.EthTypeIpv4,
+			HAL:    ethernet.EthAddrLen,
+			PAL:    V4AddrLen,
+			Opcode: ArpOpReply,
+		},
+		THA: tha,
+		TPA: tpa,
+	}
+	copy(packet.SHA[:], addr[:])
+	copy(packet.SPA[:], iface.Unicast[:])
+
+	psLog.I("▶ ARP packet prepared (reply)")
+	arpDump(&packet)
+
+	psLog.I("▶ ARP packet (reply) will be sent from:")
+	psLog.I("\ttype:      %s", iface.Family)
+	psLog.I("\tunicast:   %s", iface.Unicast)
+	psLog.I("\tnetmask:   %s", iface.Netmask)
+	psLog.I("\tbroadcast: %s", iface.Broadcast)
+
+	buf := new(bytes.Buffer)
+	if err := binary.Write(buf, binary.BigEndian, &packet); err != nil {
+		return psErr.Error{Code: psErr.CantWriteToBuffer}
+	}
+
+	if err := iface.Dev.Transmit(tha, buf.Bytes(), ethernet.EthTypeArp); err.Code != psErr.OK {
+		return psErr.Error{Code: psErr.CantSend, Msg: "transmit failed"}
+	}
+
 	return psErr.Error{Code: psErr.OK}
 }
 

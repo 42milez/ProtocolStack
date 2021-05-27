@@ -9,6 +9,7 @@ const (
 	CantRead
 	CantRegister
 	CantSend
+	CantWriteToBuffer
 	Failed
 	Interrupted
 	InvalidHeader
@@ -36,6 +37,8 @@ func (p *Error) Error() string {
 		return "CANT_READ"
 	case CantSend:
 		return "CANT_SEND"
+	case CantWriteToBuffer:
+		return "CANT_WRITE_TO_BUFFER"
 	case Failed:
 		return "FAILED"
 	case Interrupted:

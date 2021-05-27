@@ -62,7 +62,7 @@ func TestLoopbackDevice_Transmit_SUCCESS(t *testing.T) {
 
 	loopbackDev := LoopbackDevice{Device{Syscall: psSyscall.NewMockISyscall(ctrl)}}
 
-	got := loopbackDev.Transmit()
+	got := loopbackDev.Transmit(EthAddr{}, make([]byte, 0), EthTypeArp)
 	if got.Code != psErr.OK {
 		t.Errorf("LoopbackDevice.Transmit() = %v; want %v", got.Code, psErr.OK)
 	}

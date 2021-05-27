@@ -136,7 +136,7 @@ func (dev *TapDevice) Poll(isTerminated bool) psErr.Error {
 	}
 
 	if nEvents > 0 {
-		psLog.I("event occurred")
+		psLog.I("▶ Events occurred")
 		psLog.I("\tevents: %v ", nEvents)
 		psLog.I("\tdevice: %v (%v) ", dev.Name, dev.Priv.Name)
 		if packet, err := ReadFrame(dev.Priv.FD, dev.Addr, dev.Syscall); err.Code != psErr.OK {
@@ -153,6 +153,7 @@ func (dev *TapDevice) Poll(isTerminated bool) psErr.Error {
 	return psErr.Error{Code: psErr.OK}
 }
 
-func (dev *TapDevice) Transmit() psErr.Error {
+func (dev *TapDevice) Transmit(dest EthAddr, payload []byte, typ EthType) psErr.Error {
+
 	return psErr.Error{Code: psErr.OK}
 }

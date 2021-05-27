@@ -27,6 +27,6 @@ func (dev *LoopbackDevice) Poll(terminate bool) psErr.Error {
 	return psErr.Error{Code: psErr.OK}
 }
 
-func (dev *LoopbackDevice) Transmit() psErr.Error {
+func (dev *LoopbackDevice) Transmit(dest EthAddr, payload []byte, typ EthType) psErr.Error {
 	return psErr.Error{Code: psErr.OK}
 }

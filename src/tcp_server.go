@@ -75,17 +75,17 @@ func start(wg *sync.WaitGroup) psErr.Error {
 	go func() {
 		defer wg.Done()
 		var terminate = false
-		psLog.I("eth worker started")
+		psLog.I("▶ Eth worker started")
 		for {
 			select {
 			case <-ethSigCh:
-				psLog.I("terminating eth worker...")
+				psLog.I("▶ Terminating eth worker...")
 				terminate = true
 			default:
 				if err := network.DeviceRepo.Poll(terminate); err.Code != psErr.OK {
 					// TODO: notify error to main goroutine
 					// ...
-					psLog.F("poll failed: %s", err.Error())
+					psLog.F("▶ Polling failed: %s", err.Error())
 				}
 			}
 			if terminate {
@@ -98,23 +98,23 @@ func start(wg *sync.WaitGroup) psErr.Error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		psLog.I("net worker started")
+		psLog.I("▶ Net worker started")
 		for {
 			select {
 			case <-netSigCh:
-				psLog.I("terminating net worker...")
+				psLog.I("▶ Terminating net worker...")
 				return
 			case packet := <-ethernet.RxCh:
 				if err := network.InputHandler(packet); err.Code != psErr.OK {
 					// TODO: notify error to main goroutine
 					// ...
-					psLog.F("processing incoming packet failed: %v, %v", err.Code, err.Msg)
+					psLog.F("▶ Processing incoming packet failed: %v, %v", err.Code, err.Msg)
 				}
 			case packet := <-ethernet.TxCh:
 				if err := network.OutputHandler(packet); err.Code != psErr.OK {
 					// TODO: notify error to main goroutine
 					// ...
-					psLog.F("processing outgoing packet failed: %v, %v", err.Code, err.Msg)
+					psLog.F("▶ Processing outgoing packet failed: %v, %v", err.Code, err.Msg)
 				}
 			}
 		}
@@ -137,7 +137,7 @@ func handleSignal(sigCh <-chan os.Signal, wg *sync.WaitGroup) {
 	go func() {
 		defer wg.Done()
 		sig := <-sigCh
-		psLog.I("signal received: %s ", sig)
+		psLog.I("▶ Signal received: %s ", sig)
 		ethSigCh <- syscall.SIGUSR1
 		mainSigCh <- syscall.SIGUSR1
 		netSigCh <- syscall.SIGUSR1
@@ -146,7 +146,7 @@ func handleSignal(sigCh <-chan os.Signal, wg *sync.WaitGroup) {
 
 func main() {
 	if err := setup(); err.Code != psErr.OK {
-		psLog.F("setup failed.")
+		psLog.F("▶ Setup failed")
 	}
 
 	handleSignal(sigCh, &wg)
@@ -163,7 +163,7 @@ func main() {
 		for {
 			select {
 			case <-mainSigCh:
-				psLog.I("shutting down server...")
+				psLog.I("▶ Shutting down server...")
 				return
 			default:
 				time.Sleep(time.Second * 1)
@@ -173,5 +173,5 @@ func main() {
 
 	wg.Wait()
 
-	psLog.I("server stopped.")
+	psLog.I("▶ Server stopped")
 }

@@ -40,7 +40,7 @@ type IDevice interface {
 	Open() psErr.Error
 	Close() psErr.Error
 	Poll(terminate bool) psErr.Error
-	Transmit() psErr.Error
+	Transmit(dest EthAddr, payload []byte, typ EthType) psErr.Error
 	Up()
 	Down()
 	Equal(dev IDevice) bool

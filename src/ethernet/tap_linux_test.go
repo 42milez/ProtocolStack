@@ -184,7 +184,7 @@ func TestTapDevice_Transmit_SUCCESS(t *testing.T) {
 
 	tapDev := TapDevice{Device{Syscall: psSyscall.NewMockISyscall(ctrl)}}
 
-	got := tapDev.Transmit()
+	got := tapDev.Transmit(EthAddr{}, make([]byte, 0), EthTypeArp)
 	if got.Code != psErr.OK {
 		t.Errorf("TapDevice.Transmit() = %v; want %v", got.Code, psErr.OK)
 	}
