@@ -18,6 +18,9 @@ const MaxEpollEvents = 32
 
 var epfd int
 
+// src/syscall/zerrors_linux_amd64.go
+// https://golang.org/src/syscall/zerrors_linux_amd64.go
+
 // error numbers
 // https://github.com/torvalds/linux/blob/master/include/uapi/asm-generic/errno-base.h
 
@@ -46,16 +49,15 @@ type TapDevice struct {
 	Device
 }
 
-func (dev *TapDevice) Open() psErr.Error {
+func (dev *TapDevice) Open() psErr.E {
 	var err error
-	var errno syscall.Errno
 	var fd int
 	var soc int
 
 	fd, err = dev.Syscall.Open(vnd, syscall.O_RDWR, 0666)
 	if err != nil {
-		psLog.E("can't open virtual networking device: %v ", vnd)
-		return psErr.Error{Code: psErr.CantOpen, Msg: err.Error()}
+		psLog.E("syscall.Open() failed: %s", err)
+		return psErr.E(psErr.CantOpen)
 	}
 
 	// --------------------------------------------------
@@ -63,64 +65,59 @@ func (dev *TapDevice) Open() psErr.Error {
 	ifrFlags.Flags = syscall.IFF_TAP | syscall.IFF_NO_PI
 	copy(ifrFlags.Name[:], dev.Priv.Name)
 
-	_, _, errno = dev.Syscall.Ioctl(uintptr(fd), uintptr(syscall.TUNSETIFF), uintptr(unsafe.Pointer(&ifrFlags)))
-	if errno != 0 {
-		psLog.E("SYS_IOCTL (%v) failed: %v ", "TUNSETIFF", errno)
+	if _, _, errno := dev.Syscall.Ioctl(uintptr(fd), uintptr(syscall.TUNSETIFF), uintptr(unsafe.Pointer(&ifrFlags))); errno != 0 {
 		_ = dev.Syscall.Close(fd)
-		return psErr.Error{Code: psErr.CantOpen, Msg: fmt.Sprintf("errno: %v", errno)}
+		psLog.E("syscall.Syscall(SYS_IOCTL, TUNSETIFF) failed: %s", errno)
+		return psErr.E(psErr.CantInitialize)
 	}
 
 	// --------------------------------------------------
 	soc, err = dev.Syscall.Socket(syscall.AF_INET, syscall.SOCK_DGRAM, 0)
 	if err != nil {
-		psLog.E("can't open socket: %v ", err)
-		return psErr.Error{Code: psErr.CantOpen, Msg: err.Error()}
+		psLog.E("syscall.Socket() failed: %s", err)
+		return psErr.E(psErr.CantInitialize)
 	}
 
 	ifrSockAddr := IfreqSockAddr{}
 	ifrSockAddr.Addr.Family = syscall.AF_INET
 	copy(ifrSockAddr.Name[:], dev.Priv.Name)
 
-	_, _, errno = dev.Syscall.Ioctl(uintptr(soc), uintptr(syscall.SIOCGIFHWADDR), uintptr(unsafe.Pointer(&ifrSockAddr)))
-	if errno != 0 {
-		psLog.E("SYS_IOCTL (%v) failed: %v ", "SIOCGIFHWADDR", errno)
+	if _, _, errno := dev.Syscall.Ioctl(uintptr(soc), uintptr(syscall.SIOCGIFHWADDR), uintptr(unsafe.Pointer(&ifrSockAddr))); errno != 0 {
 		_ = dev.Syscall.Close(soc)
-		return psErr.Error{Code: psErr.CantOpen, Msg: fmt.Sprintf("errno: %v", errno)}
+		psLog.E("syscall.Syscall(SYS_IOCTL, SIOCGIFHWADDR) failed: %s", errno)
+		return psErr.E(psErr.CantInitialize)
 	}
-
 	copy(dev.Addr[:], ifrSockAddr.Addr.Data[:])
-
 	_ = dev.Syscall.Close(soc)
 
 	// --------------------------------------------------
-	var event syscall.EpollEvent
-
 	epfd, err = dev.Syscall.EpollCreate1(0)
 	if err != nil {
-		psLog.E("can't open an epoll file descriptor: %v ", err)
-		return psErr.Error{Code: psErr.CantOpen, Msg: err.Error()}
+		psLog.E("syscall.EpollCreate1() failed: %s", err)
+		return psErr.E(psErr.CantInitialize)
 	}
 
+	var event syscall.EpollEvent
 	event.Events = syscall.EPOLLIN
 	event.Fd = int32(fd)
 
-	err = dev.Syscall.EpollCtl(epfd, syscall.EPOLL_CTL_ADD, fd, &event)
-	if err != nil {
-		psLog.E("can't add an entry to the interest list of the epoll file descriptor: %v ", err)
-		return psErr.Error{Code: psErr.CantOpen, Msg: err.Error()}
+	if e := dev.Syscall.EpollCtl(epfd, syscall.EPOLL_CTL_ADD, fd, &event); e != nil {
+		_ = dev.Syscall.Close(epfd)
+		psLog.E("syscall.EpollCtl() failed: %s", err)
+		return psErr.E(psErr.CantInitialize)
 	}
 
 	dev.Priv.FD = fd
 
-	return psErr.Error{Code: psErr.OK}
+	return psErr.E(psErr.OK)
 }
 
-func (dev *TapDevice) Close() psErr.Error {
+func (dev *TapDevice) Close() error {
 	_ = dev.Syscall.Close(epfd)
 	return psErr.Error{Code: psErr.OK}
 }
 
-func (dev *TapDevice) Poll(isTerminated bool) psErr.Error {
+func (dev *TapDevice) Poll(isTerminated bool) error {
 	if isTerminated {
 		_ = dev.Syscall.Close(epfd)
 		return psErr.Error{Code: psErr.OK, Msg: "terminated"}
@@ -155,7 +152,7 @@ func (dev *TapDevice) Poll(isTerminated bool) psErr.Error {
 	return psErr.Error{Code: psErr.OK}
 }
 
-func (dev *TapDevice) Transmit(dest EthAddr, payload []byte, typ EthType) psErr.Error {
+func (dev *TapDevice) Transmit(dest EthAddr, payload []byte, typ EthType) error {
 	hdr := EthHeader{
 		Dst:  dest,
 		Src:  dev.Addr,

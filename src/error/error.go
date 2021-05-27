@@ -4,6 +4,7 @@ const (
 	OK int = iota
 	AlreadyOpened
 	CantConvert
+	CantInitialize
 	CantOpen
 	CantProcess
 	CantRead
@@ -19,19 +20,18 @@ const (
 	NotFound
 )
 
-type Error struct {
-	Code int
-	Msg  string
-}
+type E int
 
-func (p *Error) Error() string {
-	switch p.Code {
+func (v E) Error() string {
+	switch int(v) {
 	case OK:
 		return "OK"
 	case AlreadyOpened:
 		return "ALREADY_OPENED"
 	case CantConvert:
 		return "CANT_CONVERT"
+	case CantInitialize:
+		return "CANT_INITIALIZE"
 	case CantProcess:
 		return "CANT_PROCESS"
 	case CantRead:
