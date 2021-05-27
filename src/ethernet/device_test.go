@@ -5,43 +5,37 @@ import (
 	"testing"
 )
 
-func TestDevType_String_SUCCESS_A(t *testing.T) {
+func TestDevType_String(t *testing.T) {
 	devType := DevTypeEthernet
-	want := "DEVICE_TYPE_ETHERNET"
+	want := "ETHERNET"
 	got := devType.String()
+	if got != want {
+		t.Errorf("DevType.String() = %v; want %v", got, want)
+	}
+
+	devType = DevTypeLoopback
+	want = "LOOPBACK"
+	got = devType.String()
+	if got != want {
+		t.Errorf("DevType.String() = %v; want %v", got, want)
+	}
+
+	devType = DevTypeNull
+	want = "NULL"
+	got = devType.String()
+	if got != want {
+		t.Errorf("DevType.String() = %v; want %v", got, want)
+	}
+
+	devType = DevType(99)
+	want = "UNKNOWN"
+	got = devType.String()
 	if got != want {
 		t.Errorf("DevType.String() = %v; want %v", got, want)
 	}
 }
 
-func TestDevType_String_SUCCESS_B(t *testing.T) {
-	devType := DevTypeLoopback
-	want := "DEVICE_TYPE_LOOPBACK"
-	got := devType.String()
-	if got != want {
-		t.Errorf("DevType.String() = %v; want %v", got, want)
-	}
-}
-
-func TestDevType_String_SUCCESS_C(t *testing.T) {
-	devType := DevTypeNull
-	want := "DEVICE_TYPE_NULL"
-	got := devType.String()
-	if got != want {
-		t.Errorf("DevType.String() = %v; want %v", got, want)
-	}
-}
-
-func TestDevType_String_SUCCESS_D(t *testing.T) {
-	devType := DevType(99)
-	want := "UNKNOWN"
-	got := devType.String()
-	if got != want {
-		t.Errorf("DevType.String() = %v; want %v", got, want)
-	}
-}
-
-func TestDevice_Up_SUCCESS(t *testing.T) {
+func TestDevice_Up(t *testing.T) {
 	dev := Device{}
 	dev.Up()
 
@@ -53,7 +47,7 @@ func TestDevice_Up_SUCCESS(t *testing.T) {
 	}
 }
 
-func TestDevice_Down_SUCCESS(t *testing.T) {
+func TestDevice_Down(t *testing.T) {
 	dev := Device{}
 	dev.Up()
 	dev.Down()
@@ -66,7 +60,7 @@ func TestDevice_Down_SUCCESS(t *testing.T) {
 	}
 }
 
-func TestDevice_Equal_SUCCESS(t *testing.T) {
+func TestDevice_Equal(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -81,16 +75,14 @@ func TestDevice_Equal_SUCCESS(t *testing.T) {
 	}
 }
 
-func TestDevice_IsUp_SUCCESS_WhenDeviceIsUp(t *testing.T) {
-	dev := &Device{}
+func TestDevice_IsUp(t *testing.T) {
+	dev := Device{}
 	dev.Up()
 	if got := dev.IsUp(); !got {
 		t.Errorf("Device.IsUp() = %v; want %v", got, true)
 	}
-}
 
-func TestDevice_IsUp_SUCCESS_WhenDeviceIsDown(t *testing.T) {
-	dev := &Device{}
+	dev = Device{}
 	dev.Down()
 	if got := dev.IsUp(); got {
 		t.Errorf("Device.IsUp() = %v; want %v", got, false)

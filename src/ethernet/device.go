@@ -18,11 +18,11 @@ const (
 func (t DevType) String() string {
 	switch t {
 	case DevTypeEthernet:
-		return "DEVICE_TYPE_ETHERNET"
+		return "ETHERNET"
 	case DevTypeLoopback:
-		return "DEVICE_TYPE_LOOPBACK"
+		return "LOOPBACK"
 	case DevTypeNull:
-		return "DEVICE_TYPE_NULL"
+		return "NULL"
 	default:
 		return "UNKNOWN"
 	}
