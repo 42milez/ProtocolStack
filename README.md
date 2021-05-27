@@ -57,6 +57,72 @@ Note: `make` supports the commands below:
 - `resolve` resolve dependencies
 - `test` run all tests
 
+## Example
+
+<details>
+<summary>Log</summary>
+
+```text
+[vagrant@ps ~]$ ./app/bin/tcp_server
+[INFO] 2021/05/27 06:52:33 --------------------------------------------------
+[INFO] 2021/05/27 06:52:33  INITIALIZE DEVICES
+[INFO] 2021/05/27 06:52:33 --------------------------------------------------
+[INFO] 2021/05/27 06:52:33 device registered
+[INFO] 2021/05/27 06:52:33 	type:      DEVICE_TYPE_LOOPBACK
+[INFO] 2021/05/27 06:52:33 	name:      net0 ()
+[INFO] 2021/05/27 06:52:33 	addr:      00:00:00:00:00:00
+[INFO] 2021/05/27 06:52:33 	broadcast: 00:00:00:00:00:00
+[INFO] 2021/05/27 06:52:33 	peer:      00:00:00:00:00:00
+[INFO] 2021/05/27 06:52:33 interface attached
+[INFO] 2021/05/27 06:52:33 	ip:     127.0.0.1
+[INFO] 2021/05/27 06:52:33 	device: net0 ()
+[INFO] 2021/05/27 06:52:33 route registered
+[INFO] 2021/05/27 06:52:33 	network:  127.0.0.0
+[INFO] 2021/05/27 06:52:33 	netmask:  255.0.0.0
+[INFO] 2021/05/27 06:52:33 	unicast:  127.0.0.1
+[INFO] 2021/05/27 06:52:33 	next hop: 0.0.0.0
+[INFO] 2021/05/27 06:52:33 	device:   net0 ()
+[INFO] 2021/05/27 06:52:33 device registered
+[INFO] 2021/05/27 06:52:33 	type:      DEVICE_TYPE_ETHERNET
+[INFO] 2021/05/27 06:52:33 	name:      net1 (tap0)
+[INFO] 2021/05/27 06:52:33 	addr:      0b:16:21:2c:37:42
+[INFO] 2021/05/27 06:52:33 	broadcast: ff:ff:ff:ff:ff:ff
+[INFO] 2021/05/27 06:52:33 	peer:      00:00:00:00:00:00
+[INFO] 2021/05/27 06:52:33 interface attached
+[INFO] 2021/05/27 06:52:33 	ip:     192.0.2.2
+[INFO] 2021/05/27 06:52:33 	device: net1 (tap0)
+[INFO] 2021/05/27 06:52:33 route registered
+[INFO] 2021/05/27 06:52:33 	network:  192.0.0.0
+[INFO] 2021/05/27 06:52:33 	netmask:  255.255.255.0
+[INFO] 2021/05/27 06:52:33 	unicast:  192.0.2.2
+[INFO] 2021/05/27 06:52:33 	next hop: 0.0.0.0
+[INFO] 2021/05/27 06:52:33 	device:   net1 (tap0)
+[INFO] 2021/05/27 06:52:33 default gateway registered
+[INFO] 2021/05/27 06:52:33 	network:  0.0.0.0
+[INFO] 2021/05/27 06:52:33 	netmask:  0.0.0.0
+[INFO] 2021/05/27 06:52:33 	unicast:  192.0.2.2
+[INFO] 2021/05/27 06:52:33 	next hop: 192.0.2.1
+[INFO] 2021/05/27 06:52:33 	device:   net1 (tap0)
+[INFO] 2021/05/27 06:52:33 --------------------------------------------------
+[INFO] 2021/05/27 06:52:33  START WORKERS
+[INFO] 2021/05/27 06:52:33 --------------------------------------------------
+[INFO] 2021/05/27 06:52:33 device opened
+[INFO] 2021/05/27 06:52:33 	type: DEVICE_TYPE_LOOPBACK
+[INFO] 2021/05/27 06:52:33 	name: net0 ()
+[ERROR] 2021/05/27 06:52:33 can't open virtual networking device: /dev/net/tun no such file or directory
+[ERROR] 2021/05/27 06:52:33 can't open a device
+[ERROR] 2021/05/27 06:52:33 	type: DEVICE_TYPE_ETHERNET
+[ERROR] 2021/05/27 06:52:33 	name: net1 (tap0)
+[INFO] 2021/05/27 06:52:33
+[INFO] 2021/05/27 06:52:33 //////////////////////////////////////////////////
+[INFO] 2021/05/27 06:52:33            S E R V E R    S T A R T E D
+[INFO] 2021/05/27 06:52:33 //////////////////////////////////////////////////
+[INFO] 2021/05/27 06:52:33
+[INFO] 2021/05/27 06:52:33 ▶ Net worker started
+[INFO] 2021/05/27 06:52:33 ▶ Eth worker started
+```
+</details>
+
 ## References
 - Articles
   - [Demystifying memory management in modern programming languages](https://deepu.tech/memory-management-in-programming)
