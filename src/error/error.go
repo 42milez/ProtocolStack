@@ -3,17 +3,11 @@ package error
 const (
 	OK E = iota
 	AlreadyOpened
-	CantConvert
 	CantInitialize
 	CantOpen
-	CantProcess
 	CantRead
 	CantRegister
-	CantSend
-	CantWriteToBuffer
-	CantWriteToFile
 	Error
-	Failed
 	InterfaceNotFound
 	Interrupted
 	InvalidHeader
