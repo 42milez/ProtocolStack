@@ -115,7 +115,8 @@ func TestReadFrame_1(t *testing.T) {
 	}
 }
 
-func TestReadFrame_FAIL_WhenReadSyscallFailed(t *testing.T) {
+// Fail when Read() returns error.
+func TestReadFrame_2(t *testing.T) {
 	psLog.DisableOutput()
 	defer psLog.EnableOutput()
 
@@ -132,7 +133,8 @@ func TestReadFrame_FAIL_WhenReadSyscallFailed(t *testing.T) {
 	}
 }
 
-func TestReadFrame_FAIL_WhenHeaderLengthIsInvalid(t *testing.T) {
+// Fail when header length is invalid.
+func TestReadFrame_3(t *testing.T) {
 	psLog.DisableOutput()
 	defer psLog.EnableOutput()
 
@@ -149,7 +151,8 @@ func TestReadFrame_FAIL_WhenHeaderLengthIsInvalid(t *testing.T) {
 	}
 }
 
-func TestReadFrame_SUCCESS_WhenNoDataExists(t *testing.T) {
+// Success when no data exits.
+func TestReadFrame_4(t *testing.T) {
 	psLog.DisableOutput()
 	defer psLog.EnableOutput()
 
