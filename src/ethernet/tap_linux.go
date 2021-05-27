@@ -18,8 +18,8 @@ const MaxEpollEvents = 32
 
 var epfd int
 
-// error numbers @ errno-baspsErr.h
-// https://github.com/torvalds/linux/blob/master/include/uapi/asm-generic/errno-baspsErr.h
+// error numbers
+// https://github.com/torvalds/linux/blob/master/include/uapi/asm-generic/errno-base.h
 
 // struct ifreq @ if.h
 // https://github.com/torvalds/linux/blob/e48661230cc35b3d0f4367eddfc19f86463ab917/include/uapi/linux/if.h#L225
