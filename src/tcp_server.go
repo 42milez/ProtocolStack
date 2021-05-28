@@ -29,7 +29,6 @@ func setup() psErr.E {
 
 	// Create a loopback device and its iface, then link them.
 	loopbackDev := network.GenLoopbackDevice()
-
 	if err := network.DeviceRepo.Register(loopbackDev); err != psErr.OK {
 		psLog.E(fmt.Sprintf("network.DeviceRepo.Register() failed: %s", err))
 		return psErr.Error
