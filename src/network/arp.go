@@ -169,7 +169,7 @@ func ArpInputHandler(payload []byte, dev ethernet.IDevice) psErr.E {
 			}
 		}
 	} else {
-		psLog.I("Ignored arp packet (It was sent to different address)")
+		psLog.I("Ignored ARP packet (It was sent to different address)")
 	}
 
 	return psErr.OK
