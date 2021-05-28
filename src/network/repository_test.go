@@ -125,9 +125,12 @@ func TestUp_1(t *testing.T) {
 	m.EXPECT().Open().Return(psErr.OK)
 	m.EXPECT().Up()
 	m.EXPECT().IsUp().Return(false)
-	m.EXPECT().EthAddrs().Return(ethernet.EthAddr{}, ethernet.EthAddr{}, ethernet.EthAddr{})
-	m.EXPECT().Names().Return("net0", "tap0").AnyTimes()
-	m.EXPECT().Typ().Return(ethernet.DevTypeEthernet).AnyTimes()
+	m.EXPECT().EthAddr().Return(ethernet.EthAddr{})
+	m.EXPECT().BroadcastEthAddr().Return(ethernet.EthAddr{})
+	m.EXPECT().PeerEthAddr().Return(ethernet.EthAddr{})
+	m.EXPECT().DevType().Return(ethernet.DevTypeEthernet).AnyTimes()
+	m.EXPECT().DevName().Return("net0").AnyTimes()
+	m.EXPECT().PrivDevName().Return("tap0").AnyTimes()
 
 	_ = DeviceRepo.Register(m)
 
@@ -149,9 +152,12 @@ func TestUp_2(t *testing.T) {
 
 	m := ethernet.NewMockIDevice(ctrl)
 	m.EXPECT().IsUp().Return(true)
-	m.EXPECT().EthAddrs().Return(ethernet.EthAddr{}, ethernet.EthAddr{}, ethernet.EthAddr{})
-	m.EXPECT().Names().Return("net0", "tap0").AnyTimes()
-	m.EXPECT().Typ().Return(ethernet.DevTypeEthernet).AnyTimes()
+	m.EXPECT().DevType().Return(ethernet.DevTypeEthernet).AnyTimes()
+	m.EXPECT().DevName().Return("net0").AnyTimes()
+	m.EXPECT().PrivDevName().Return("tap0").AnyTimes()
+	m.EXPECT().EthAddr().Return(ethernet.EthAddr{})
+	m.EXPECT().BroadcastEthAddr().Return(ethernet.EthAddr{})
+	m.EXPECT().PeerEthAddr().Return(ethernet.EthAddr{})
 
 	_ = DeviceRepo.Register(m)
 
@@ -174,9 +180,12 @@ func TestUp_3(t *testing.T) {
 	m := ethernet.NewMockIDevice(ctrl)
 	m.EXPECT().Open().Return(psErr.Error)
 	m.EXPECT().IsUp().Return(false)
-	m.EXPECT().EthAddrs().Return(ethernet.EthAddr{}, ethernet.EthAddr{}, ethernet.EthAddr{})
-	m.EXPECT().Names().Return("net0", "tap0").AnyTimes()
-	m.EXPECT().Typ().Return(ethernet.DevTypeEthernet).AnyTimes()
+	m.EXPECT().DevType().Return(ethernet.DevTypeEthernet).AnyTimes()
+	m.EXPECT().DevName().Return("net0").AnyTimes()
+	m.EXPECT().PrivDevName().Return("tap0").AnyTimes()
+	m.EXPECT().EthAddr().Return(ethernet.EthAddr{})
+	m.EXPECT().BroadcastEthAddr().Return(ethernet.EthAddr{})
+	m.EXPECT().PeerEthAddr().Return(ethernet.EthAddr{})
 
 	_ = DeviceRepo.Register(m)
 

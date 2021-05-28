@@ -58,7 +58,7 @@ func TestDevice_Equal(t *testing.T) {
 	defer ctrl.Finish()
 
 	m := NewMockIDevice(ctrl)
-	m.EXPECT().Names().Return("net0", "").AnyTimes()
+	m.EXPECT().DevName().Return("net0").AnyTimes()
 
 	dev := Device{Name: "net0"}
 	got := dev.Equal(m)

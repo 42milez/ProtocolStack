@@ -110,8 +110,7 @@ func ArpInputHandler(payload []byte, dev ethernet.IDevice) psErr.E {
 
 	iface := IfaceRepo.Get(dev, FamilyV4)
 	if iface == nil {
-		devName, _ := dev.Names()
-		psLog.E(fmt.Sprintf("Interface for %s is not registered", devName))
+		psLog.E(fmt.Sprintf("Interface for %s is not registered", dev.DevName()))
 		return psErr.InterfaceNotFound
 	}
 
@@ -151,7 +150,6 @@ func arpDump(msg *ArpPacket) {
 }
 
 func arpReply(tha ethernet.EthAddr, tpa ArpProtoAddr, iface *Iface) psErr.E {
-	addr, _, _ := iface.Dev.EthAddrs()
 	packet := ArpPacket{
 		ArpHdr: ArpHdr{
 			HT:     ArpHwTypeEthernet,
@@ -163,6 +161,7 @@ func arpReply(tha ethernet.EthAddr, tpa ArpProtoAddr, iface *Iface) psErr.E {
 		THA: tha,
 		TPA: tpa,
 	}
+	addr := iface.Dev.EthAddr()
 	copy(packet.SHA[:], addr[:])
 	copy(packet.SPA[:], iface.Unicast[:])
 

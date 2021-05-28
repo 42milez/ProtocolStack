@@ -48,47 +48,40 @@ func (p *deviceRepo) Poll(terminate bool) psErr.E {
 func (p *deviceRepo) Register(dev ethernet.IDevice) psErr.E {
 	for _, d := range p.devices {
 		if d.Equal(dev) {
-			typ := d.Typ()
-			name, privName := d.Names()
 			psLog.W("Device is already registered")
-			psLog.W(fmt.Sprintf("\ttype: %s", typ))
-			psLog.W(fmt.Sprintf("\tname: %s (%s)", name, privName))
+			psLog.W(fmt.Sprintf("\ttype: %s", d.DevType()))
+			psLog.W(fmt.Sprintf("\tname: %s (%s)", d.DevName(), d.PrivDevName()))
 			return psErr.Error
 		}
 	}
 	p.devices = append(p.devices, dev)
-	typ := dev.Typ()
-	name, privName := dev.Names()
-	addr, broadcast, peer := dev.EthAddrs()
 	psLog.I("Device was registered")
-	psLog.I(fmt.Sprintf("\ttype:      %s", typ))
-	psLog.I(fmt.Sprintf("\tname:      %s (%s)", name, privName))
-	psLog.I(fmt.Sprintf("\taddr:      %s", addr))
-	psLog.I(fmt.Sprintf("\tbroadcast: %s", broadcast))
-	psLog.I(fmt.Sprintf("\tpeer:      %s", peer))
+	psLog.I(fmt.Sprintf("\ttype:      %s", dev.DevType()))
+	psLog.I(fmt.Sprintf("\tname:      %s (%s)", dev.DevName(), dev.PrivDevName()))
+	psLog.I(fmt.Sprintf("\taddr:      %s", dev.EthAddr()))
+	psLog.I(fmt.Sprintf("\tbroadcast: %s", dev.BroadcastEthAddr()))
+	psLog.I(fmt.Sprintf("\tpeer:      %s", dev.PeerEthAddr()))
 	return psErr.OK
 }
 
 func (p *deviceRepo) Up() psErr.E {
 	for _, dev := range p.devices {
-		typ := dev.Typ()
-		name, privName := dev.Names()
 		if dev.IsUp() {
 			psLog.W("Device is already opened")
-			psLog.W(fmt.Sprintf("\ttype: %s", typ))
-			psLog.W(fmt.Sprintf("\tname: %s (%s)", name, privName))
+			psLog.W(fmt.Sprintf("\ttype: %s", dev.DevType()))
+			psLog.W(fmt.Sprintf("\tname: %s (%s)", dev.DevName(), dev.PrivDevName()))
 			return psErr.Error
 		}
 		if err := dev.Open(); err != psErr.OK {
 			psLog.E(fmt.Sprintf("IDevice.Open() failed: %s", err))
-			psLog.E(fmt.Sprintf("\ttype: %s", typ))
-			psLog.E(fmt.Sprintf("\tname: %s (%s)", name, privName))
+			psLog.E(fmt.Sprintf("\ttype: %s", dev.DevType()))
+			psLog.E(fmt.Sprintf("\tname: %s (%s)", dev.DevName(), dev.PrivDevName()))
 			return psErr.Error
 		}
 		dev.Up()
 		psLog.I("Device was opened")
-		psLog.I(fmt.Sprintf("\ttype: %s", typ))
-		psLog.I(fmt.Sprintf("\tname: %s (%s)", name, privName))
+		psLog.I(fmt.Sprintf("\ttype: %s", dev.DevType()))
+		psLog.I(fmt.Sprintf("\tname: %s (%s)", dev.DevName(), dev.PrivDevName()))
 	}
 	return psErr.OK
 }
@@ -117,10 +110,9 @@ func (p *ifaceRepo) Register(iface *Iface, dev ethernet.IDevice) psErr.E {
 	p.ifaces = append(p.ifaces, iface)
 	iface.Dev = dev
 
-	name, privName := dev.Names()
 	psLog.I("Interface was attached")
 	psLog.I(fmt.Sprintf("\tip:     %s", iface.Unicast))
-	psLog.I(fmt.Sprintf("\tdevice: %s (%s)", name, privName))
+	psLog.I(fmt.Sprintf("\tdevice: %s (%s)", dev.DevName(), dev.PrivDevName()))
 
 	return psErr.OK
 }
@@ -144,13 +136,12 @@ func (p *routeRepo) Register(network IP, nextHop IP, iface *Iface) {
 		iface:   iface,
 	}
 	p.routes = append(p.routes, route)
-	name, privName := iface.Dev.Names()
 	psLog.I("Route was registered")
 	psLog.I(fmt.Sprintf("\tnetwork:  %s", route.Network))
 	psLog.I(fmt.Sprintf("\tnetmask:  %s", route.Netmask))
 	psLog.I(fmt.Sprintf("\tunicast:  %s", iface.Unicast))
 	psLog.I(fmt.Sprintf("\tnext hop: %s", nextHop))
-	psLog.I(fmt.Sprintf("\tdevice:   %s (%s)", name, privName))
+	psLog.I(fmt.Sprintf("\tdevice:   %s (%s)", iface.Dev.DevName(), iface.Dev.PrivDevName()))
 }
 
 func (p *routeRepo) RegisterDefaultGateway(iface *Iface, nextHop IP) {
@@ -161,13 +152,12 @@ func (p *routeRepo) RegisterDefaultGateway(iface *Iface, nextHop IP) {
 		iface:   iface,
 	}
 	p.routes = append(p.routes, route)
-	name, privName := iface.Dev.Names()
 	psLog.I("Default gateway was registered")
 	psLog.I(fmt.Sprintf("\tnetwork:  %s", route.Network))
 	psLog.I(fmt.Sprintf("\tnetmask:  %s", route.Netmask))
 	psLog.I(fmt.Sprintf("\tunicast:  %s", iface.Unicast))
 	psLog.I(fmt.Sprintf("\tnext hop: %s", nextHop))
-	psLog.I(fmt.Sprintf("\tdevice:   %s (%s)", name, privName))
+	psLog.I(fmt.Sprintf("\tdevice:   %s (%s)", iface.Dev.DevName(), iface.Dev.PrivDevName()))
 }
 
 func init() {
