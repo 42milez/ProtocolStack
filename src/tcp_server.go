@@ -26,7 +26,6 @@ func setup() psErr.E {
 	psLog.I("--------------------------------------------------")
 	psLog.I(" INITIALIZE DEVICES                               ")
 	psLog.I("--------------------------------------------------")
-	psLog.I("")
 
 	// Create a loopback device and its iface, then link them.
 	loopbackDev := network.GenLoopbackDevice()
@@ -60,11 +59,9 @@ func setup() psErr.E {
 	network.RouteRepo.Register(network.ParseIP("192.0.0.0"), network.V4Zero, iface2)
 	network.RouteRepo.RegisterDefaultGateway(iface2, network.ParseIP("192.0.2.1"))
 
-	psLog.I("")
 	psLog.I("--------------------------------------------------")
-	psLog.I(" START WORKERS                                    ")
+	psLog.I(" START SERVER                                     ")
 	psLog.I("--------------------------------------------------")
-	psLog.I("")
 
 	if err := start(&wg); err != psErr.OK {
 		psLog.E(fmt.Sprintf("start() failed: %s", err))
@@ -174,12 +171,6 @@ func main() {
 			}
 		}
 	}()
-
-	psLog.I("")
-	psLog.I("//////////////////////////////////////////////////")
-	psLog.I("           S E R V E R    S T A R T E D           ")
-	psLog.I("//////////////////////////////////////////////////")
-	psLog.I("")
 
 	wg.Wait()
 
