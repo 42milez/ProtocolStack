@@ -135,14 +135,14 @@ func ipDump(hdr *IpHeader) {
 // ASSIGNED INTERNET PROTOCOL NUMBERS
 // https://datatracker.ietf.org/doc/html/rfc790#page-6
 
-var protocolNumbers = map[int]string {
-	1: "ICMP",
-	3: "Gateway-to-Gateway",
-	4: "CMCC Gateway Monitoring Message",
-	5: "ST",
-	6: "TCP",
-	7: "UCL",
-	9: "Secure",
+var protocolNumbers = map[int]string{
+	1:  "ICMP",
+	3:  "Gateway-to-Gateway",
+	4:  "CMCC Gateway Monitoring Message",
+	5:  "ST",
+	6:  "TCP",
+	7:  "UCL",
+	9:  "Secure",
 	10: "BBN RCC Monitoring",
 	11: "NVP",
 	12: "PUP",
