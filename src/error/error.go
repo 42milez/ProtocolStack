@@ -6,6 +6,7 @@ const (
 	CantCreateEpollInstance       E = "CANT_CREATE_EPOLL_INSTANCE"
 	CantModifyIOResourceParameter E = "CANT_MODIFY_IO_RESOURCE_PARAMETER"
 	CantOpenIOResource            E = "CANT_OPEN_IO_RESOURCE"
+	ChecksumMismatch              E = "CHECKSUM_MISMATCH"
 	Exist                         E = "EXIST"
 	InterfaceNotFound             E = "INTERFACE_NOT_FOUND"
 	Interrupted                   E = "INTERRUPTED"
@@ -13,6 +14,8 @@ const (
 	NoDataToRead                  E = "NO_DATA_TO_READ"
 	NotFound                      E = "NOT_FOUND"
 	Terminated                    E = "TERMINATED"
+	TtlExpired                    E = "TTL_EXPIRED"
+	UnsupportedVersion            E = "UNSUPPORTED_VERSION"
 	Error                         E = "ERROR"
 )
 
