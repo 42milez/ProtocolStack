@@ -18,7 +18,7 @@ var cache *ArpCache
 
 type ArpProtoAddr [V4AddrLen]byte
 
-func (p *ArpProtoAddr) String() string {
+func (p ArpProtoAddr) String() string {
 	return fmt.Sprintf("%d.%d.%d.%d", p[0], p[1], p[2], p[3])
 }
 
@@ -41,8 +41,8 @@ type ArpPacket struct {
 type ArpCacheEntry struct {
 	State     ArpCacheState
 	CreatedAt time.Time
-	SHA       [ethernet.EthAddrLen]byte
-	SPA       [V4AddrLen]byte
+	SHA       ethernet.EthAddr
+	SPA       ArpProtoAddr
 }
 
 type ArpCache struct {
@@ -144,9 +144,9 @@ func arpDump(msg *ArpPacket) {
 	psLog.I(fmt.Sprintf("\tprotocol address length: %d", msg.PAL))
 	psLog.I(fmt.Sprintf("\topcode:                  %s (%d)", msg.Opcode, uint16(msg.Opcode)))
 	psLog.I(fmt.Sprintf("\tsender hardware address: %s", msg.SHA))
-	psLog.I(fmt.Sprintf("\tsender protocol address: %s", msg.SPA))
+	psLog.I(fmt.Sprintf("\tsender protocol address: %v", msg.SPA))
 	psLog.I(fmt.Sprintf("\ttarget hardware address: %s", msg.THA))
-	psLog.I(fmt.Sprintf("\ttarget protocol address: %s", msg.TPA))
+	psLog.I(fmt.Sprintf("\ttarget protocol address: %v", msg.TPA))
 }
 
 func arpReply(tha ethernet.EthAddr, tpa ArpProtoAddr, iface *Iface) psErr.E {
