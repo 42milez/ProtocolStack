@@ -147,7 +147,7 @@ func (dev *TapDevice) Poll(isTerminated bool) psErr.E {
 		if packet, err := ReadFrame(dev.Priv.FD, dev.Addr, dev.Syscall); err != psErr.OK {
 			if err != psErr.NoDataToRead {
 				psLog.E(fmt.Sprintf("ReadFrame() failed: %s", err))
-				return psErr.CantRead
+				return psErr.Error
 			}
 		} else {
 			packet.Dev = dev
