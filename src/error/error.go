@@ -6,6 +6,7 @@ const (
 	CantCreateEpollInstance       E = "CANT_CREATE_EPOLL_INSTANCE"
 	CantModifyIOResourceParameter E = "CANT_MODIFY_IO_RESOURCE_PARAMETER"
 	CantOpenIOResource            E = "CANT_OPEN_IO_RESOURCE"
+	Exist                         E = "EXIST"
 	InterfaceNotFound             E = "INTERFACE_NOT_FOUND"
 	Interrupted                   E = "INTERRUPTED"
 	InvalidPacket                 E = "INVALID_PACKET"
