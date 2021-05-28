@@ -32,18 +32,19 @@ if ! type go > /dev/null 2>&1; then
   . "${BASHRC}"
 fi
 
-#  Go - Delve
+#  Go - Modules
 # --------------------------------------------------
+# dlv
 if ! type dlv > /dev/null 2>&1; then
   go install github.com/go-delve/delve/cmd/dlv@latest
 fi
 
-#  Go - golangci-lint
-# --------------------------------------------------
+# golangci-lint
 if ! type golangci-lint > /dev/null 2>&1; then
   brew install golangci-lint
 fi
 
+# mockgen
 if ! type mockgen > /dev/null 2>&1; then
    go install github.com/golang/mock/mockgen@latest
 fi

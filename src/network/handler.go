@@ -15,7 +15,10 @@ func InputHandler(packet *ethernet.Packet) psErr.E {
 			return psErr.Error
 		}
 	case ethernet.EthTypeIpv4:
-		psLog.I("icmp packet received")
+		if err := IpInputHandler(packet.Payload, packet.Dev); err != psErr.OK {
+			psLog.E(fmt.Sprintf("IpInputHandler() failed: %s", err))
+			return psErr.Error
+		}
 		return psErr.OK
 	default:
 		psLog.E(fmt.Sprintf("Unknown ether type: 0x%04x", uint16(packet.Type)))

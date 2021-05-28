@@ -45,9 +45,12 @@ type IDevice interface {
 	Down()
 	Equal(dev IDevice) bool
 	IsUp() bool
-	EthAddrs() (addr EthAddr, broadcast EthAddr, peer EthAddr)
-	Names() (name string, privName string)
-	Typ() (typ DevType)
+	DevType() DevType
+	DevName() string
+	PrivDevName() string
+	EthAddr() EthAddr
+	BroadcastEthAddr() EthAddr
+	PeerEthAddr() EthAddr
 }
 
 type Device struct {
@@ -77,28 +80,33 @@ func (p *Device) Down() {
 }
 
 func (p *Device) Equal(pp IDevice) bool {
-	name, _ := pp.Names()
-	return p.Name == name
+	return p.Name == pp.DevName()
 }
 
 func (p *Device) IsUp() bool {
 	return p.FLAG&DevFlagUp == 1
 }
 
-func (p *Device) EthAddrs() (addr EthAddr, broadcast EthAddr, peer EthAddr) {
-	addr = p.Addr
-	broadcast = p.Broadcast
-	peer = p.Peer
-	return
+func (p *Device) DevType() DevType {
+	return p.Type
 }
 
-func (p *Device) Names() (name string, privName string) {
-	name = p.Name
-	privName = p.Priv.Name
-	return
+func (p *Device) DevName() string {
+	return p.Name
 }
 
-func (p *Device) Typ() (typ DevType) {
-	typ = p.Type
-	return
+func (p *Device) PrivDevName() string {
+	return p.Priv.Name
+}
+
+func (p *Device) EthAddr() EthAddr {
+	return p.Addr
+}
+
+func (p *Device) BroadcastEthAddr() EthAddr {
+	return p.Addr
+}
+
+func (p *Device) PeerEthAddr() EthAddr {
+	return p.Addr
 }

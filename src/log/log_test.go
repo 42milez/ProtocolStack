@@ -13,7 +13,7 @@ func trim(s string) string {
 }
 
 func TestI(t *testing.T) {
-	want, _ := regexp.Compile("^\u001B\\[1;34m\\[INFO]\u001B\\[0m [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} ▶ info$")
+	want, _ := regexp.Compile("^\u001B\\[1;34m\\[I]\u001B\\[0m [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} ▶ info$")
 	got := CaptureLogOutput(func() {
 		I("info")
 	})
@@ -22,7 +22,7 @@ func TestI(t *testing.T) {
 		t.Errorf("I() = %v; want %v", got, want.String())
 	}
 
-	want, _ = regexp.Compile("^\u001B\\[1;34m\\[INFO]\u001B\\[0m [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} info$")
+	want, _ = regexp.Compile("^\u001B\\[1;34m\\[I]\u001B\\[0m [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} info$")
 	got = CaptureLogOutput(func() {
 		I("\tinfo")
 	})
@@ -33,7 +33,7 @@ func TestI(t *testing.T) {
 }
 
 func TestW(t *testing.T) {
-	want, _ := regexp.Compile("^\u001B\\[1;33m\\[WARN]\u001B\\[0m [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} ▶ warning$")
+	want, _ := regexp.Compile("^\u001B\\[1;33m\\[W]\u001B\\[0m [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} ▶ warning$")
 	got := CaptureLogOutput(func() {
 		W("warning")
 	})
@@ -42,7 +42,7 @@ func TestW(t *testing.T) {
 		t.Errorf("W() = %v; want %v", got, want.String())
 	}
 
-	want, _ = regexp.Compile("^\u001B\\[1;33m\\[WARN]\u001B\\[0m [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} warning$")
+	want, _ = regexp.Compile("^\u001B\\[1;33m\\[W]\u001B\\[0m [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} warning$")
 	got = CaptureLogOutput(func() {
 		W("\twarning")
 	})
@@ -53,7 +53,7 @@ func TestW(t *testing.T) {
 }
 
 func TestE(t *testing.T) {
-	want, _ := regexp.Compile("^\u001B\\[1;31m\\[ERROR]\u001B\\[0m [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} ▶ error$")
+	want, _ := regexp.Compile("^\u001B\\[1;31m\\[E]\u001B\\[0m [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} ▶ error$")
 	got := CaptureLogOutput(func() {
 		E("error")
 	})
@@ -62,7 +62,7 @@ func TestE(t *testing.T) {
 		t.Errorf("E() = %v; want %v", got, want.String())
 	}
 
-	want, _ = regexp.Compile("^\u001B\\[1;31m\\[ERROR]\u001B\\[0m [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} error$")
+	want, _ = regexp.Compile("^\u001B\\[1;31m\\[E]\u001B\\[0m [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} error$")
 	got = CaptureLogOutput(func() {
 		E("\terror")
 	})

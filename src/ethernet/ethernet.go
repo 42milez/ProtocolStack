@@ -88,7 +88,7 @@ func ReadFrame(fd int, addr EthAddr, sc psSyscall.ISyscall) (*Packet, psErr.E) {
 		}
 	}
 
-	psLog.I("Incoming ethernet frame:")
+	psLog.I("Incoming ethernet frame")
 	EthDump(&hdr)
 
 	packet := &Packet{

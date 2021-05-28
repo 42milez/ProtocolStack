@@ -64,6 +64,7 @@ resolve: go-mod
 .PHONY: test
 test:
 	@go test -race -covermode=atomic -coverprofile=coverage.out -v \
+		$(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/error \
 		$(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/ethernet \
 		$(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/log \
 		$(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/network

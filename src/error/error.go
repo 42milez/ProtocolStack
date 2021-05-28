@@ -1,55 +1,26 @@
 package error
 
 const (
-	OK E = iota
-	CantCreateEndpoint
-	CantCreateEpollInstance
-	CantModifyIOResourceParameter
-	CantOpenIOResource
-	CantRead
-	Error
-	InterfaceNotFound
-	Interrupted
-	InvalidHeader
-	InvalidPacket
-	NoDataToRead
-	NotFound
-	Terminated
+	OK                            E = "OK"
+	CantCreateEndpoint            E = "CANT_CREATE_ENDPOINT"
+	CantCreateEpollInstance       E = "CANT_CREATE_EPOLL_INSTANCE"
+	CantModifyIOResourceParameter E = "CANT_MODIFY_IO_RESOURCE_PARAMETER"
+	CantOpenIOResource            E = "CANT_OPEN_IO_RESOURCE"
+	ChecksumMismatch              E = "CHECKSUM_MISMATCH"
+	Exist                         E = "EXIST"
+	InterfaceNotFound             E = "INTERFACE_NOT_FOUND"
+	Interrupted                   E = "INTERRUPTED"
+	InvalidPacket                 E = "INVALID_PACKET"
+	NoDataToRead                  E = "NO_DATA_TO_READ"
+	NotFound                      E = "NOT_FOUND"
+	Terminated                    E = "TERMINATED"
+	TtlExpired                    E = "TTL_EXPIRED"
+	UnsupportedVersion            E = "UNSUPPORTED_VERSION"
+	Error                         E = "ERROR"
 )
 
-type E int
+type E string
 
 func (v E) Error() string {
-	switch v {
-	case OK:
-		return "OK"
-	case CantCreateEndpoint:
-		return "CANT_CREATE_ENDPOINT"
-	case CantCreateEpollInstance:
-		return "CANT_CREATE_EPOLL_INSTANCE"
-	case CantModifyIOResourceParameter:
-		return "CANT_MODIFY_IO_RESOURCE_PARAMETER"
-	case CantOpenIOResource:
-		return "CANT_OPEN_IO_RESOURCE"
-	case CantRead:
-		return "CANT_READ"
-	case Error:
-		return "ERROR"
-	case InterfaceNotFound:
-		return "INTERFACE_NOT_FOUND"
-	case Interrupted:
-		return "INTERRUPTED"
-	case InvalidHeader:
-		return "INVALID_HEADER"
-	case InvalidPacket:
-		return "INVALID_PACKET"
-	case NoDataToRead:
-		return "NO_DATA_TO_READ"
-	case NotFound:
-		return "NOT_FOUND"
-	case Terminated:
-		return "TERMINATED"
-	default:
-		return "UNKNOWN"
-	}
+	return string(v)
 }
