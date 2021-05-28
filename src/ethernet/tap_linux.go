@@ -141,7 +141,7 @@ func (dev *TapDevice) Poll(isTerminated bool) psErr.E {
 	}
 
 	if nEvents > 0 {
-		psLog.I("Events occurred")
+		psLog.I("Event occurred")
 		psLog.I(fmt.Sprintf("\tevents: %v", nEvents))
 		psLog.I(fmt.Sprintf("\tdevice: %v (%v)", dev.Name, dev.Priv.Name))
 		if packet, err := ReadFrame(dev.Priv.FD, dev.Addr, dev.Syscall); err != psErr.OK {
