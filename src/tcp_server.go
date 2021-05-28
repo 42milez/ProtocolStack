@@ -144,10 +144,10 @@ func handleSignal(sigCh <-chan os.Signal, wg *sync.WaitGroup) {
 	go func() {
 		defer wg.Done()
 		sig := <-sigCh
-		psLog.I(fmt.Sprintf("Signal received: %s", sig))
-		ethSigCh <- syscall.SIGUSR1
-		mainSigCh <- syscall.SIGUSR1
-		netSigCh <- syscall.SIGUSR1
+		psLog.I(fmt.Sprintf("Signal: %s", sig))
+		ethSigCh <-syscall.SIGUSR1
+		mainSigCh <-syscall.SIGUSR1
+		netSigCh <-syscall.SIGUSR1
 	}()
 }
 
@@ -168,7 +168,6 @@ func main() {
 		for {
 			select {
 			case <-mainSigCh:
-				psLog.I("Shutting down server...")
 				return
 			default:
 				time.Sleep(time.Second * 1)

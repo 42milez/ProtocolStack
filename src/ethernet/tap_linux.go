@@ -151,7 +151,7 @@ func (dev *TapDevice) Poll(isTerminated bool) psErr.E {
 			}
 		} else {
 			packet.Dev = dev
-			RxCh <- packet
+			RxCh <-packet
 		}
 	}
 
@@ -183,13 +183,13 @@ func (dev *TapDevice) Transmit(dest EthAddr, payload []byte, typ EthType) psErr.
 		}
 	}
 
-	psLog.I("Ethernet frame to be sent")
+	psLog.I("Outgoing Ethernet frame")
 	psLog.I(fmt.Sprintf("\tdest:    %s", hdr.Dst))
 	psLog.I(fmt.Sprintf("\tsrc:     %s", hdr.Src))
 	psLog.I(fmt.Sprintf("\ttype:    %s", hdr.Type))
 	s := "\tpayload: "
 	for i, v := range payload {
-		s += fmt.Sprintf("%02x", v)
+		s += fmt.Sprintf("%02x ", v)
 		if (i+1)%10 == 0 {
 			psLog.I(s)
 			s = "\t\t "
