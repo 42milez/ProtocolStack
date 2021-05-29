@@ -93,7 +93,7 @@ func ReadFrame(fd int, addr EthAddr, sc psSyscall.ISyscall) (*Packet, psErr.E) {
 
 	packet := &Packet{
 		Type:    hdr.Type,
-		Payload: buf[EthHeaderSize:],
+		Payload: buf[EthHeaderSize:flen],
 	}
 
 	return packet, psErr.OK

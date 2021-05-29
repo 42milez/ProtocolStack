@@ -19,6 +19,10 @@ import (
 const IpHeaderSizeMin = 20 // bytes
 const IpHeaderSizeMax = 60 // bytes
 
+const ProtoNumICMP = 1
+const ProtoNumTCP = 6
+const ProtoNumUDP = 17
+
 // ASSIGNED INTERNET PROTOCOL NUMBERS
 // https://datatracker.ietf.org/doc/html/rfc790#page-6
 
@@ -56,10 +60,6 @@ var protocolNumbers = map[ProtocolNumber]string{
 	// 80-254: Unassigned
 	// 255: Reserved
 }
-
-const ProtoNumICMP = 1
-const ProtoNumTCP = 6
-const ProtoNumUDP = 17
 
 // Internet Header Format
 // https://datatracker.ietf.org/doc/html/rfc791#section-3.1
@@ -100,8 +100,7 @@ func IpInputHandler(payload []byte, dev ethernet.IDevice) psErr.E {
 		return psErr.InvalidProtocolVersion
 	}
 
-	hdrLen := int(hdr.VHL & 0x0f)
-
+	hdrLen := int(hdr.VHL & 0x0f)*4
 	if packetLen < hdrLen {
 		psLog.E(fmt.Sprintf("IP packet length is too short: IHL = %d, Actual Packet Size = %d", hdrLen, packetLen))
 		return psErr.InvalidPacket
@@ -143,7 +142,7 @@ func IpInputHandler(payload []byte, dev ethernet.IDevice) psErr.E {
 
 	switch hdr.Protocol {
 	case ProtoNumICMP:
-		if err := IcmpInputHandler(payload[hdrLen+1:], dev); err != psErr.OK {
+		if err := IcmpInputHandler(payload[hdrLen:], dev); err != psErr.OK {
 			psLog.E(fmt.Sprintf("IcmpInputHandler() failed: %s", err))
 			return psErr.Error
 		}

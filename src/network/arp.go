@@ -12,7 +12,7 @@ import (
 )
 
 const ArpCacheSize = 32
-const ArpPacketSize = 68
+const ArpPacketSize = 28 // byte
 
 var cache *ArpCache
 
