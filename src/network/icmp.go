@@ -1,11 +1,10 @@
 package network
 
-import (
-	psErr "github.com/42milez/ProtocolStack/src/error"
-	psLog "github.com/42milez/ProtocolStack/src/log"
-)
+const IcmpHeaderSize = 8 // byte
 
-func IcmpInputHandler() psErr.E {
-	psLog.I("ICMP handler was called")
-	return psErr.OK
+type IcmpPacket struct {
+	Type     uint8
+	Code     uint8
+	Checksum uint16
+	Content  uint32
 }

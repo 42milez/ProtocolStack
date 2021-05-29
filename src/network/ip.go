@@ -72,6 +72,20 @@ func (ip IP) ToV4() IP {
 	return ip
 }
 
+// Computing the Internet Checksum
+// https://datatracker.ietf.org/doc/html/rfc1071
+
+func Checksum(b []byte) uint16 {
+	var sum uint32 = 0
+	// sum up all fields of IP header by each 16bits (except Header Checksum and Options)
+	for i := 0; i < len(b); i += 2 {
+		sum += uint32(uint16(b[i])<<8 | uint16(b[i+1]))
+	}
+	//
+	sum = ((sum & 0xffff0000) >> 16) + (sum & 0x0000ffff)
+	return ^(uint16(sum))
+}
+
 // ParseIP parses string as IPv4 or IPv6 address by detecting its format.
 func ParseIP(s string) IP {
 	if strings.Contains(s, ".") {

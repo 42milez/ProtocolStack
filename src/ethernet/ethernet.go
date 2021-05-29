@@ -64,15 +64,15 @@ func ReadFrame(fd int, addr EthAddr, sc psSyscall.ISyscall) (*Packet, psErr.E) {
 	// TODO: make buf static variable to reuse
 	buf := make([]byte, EthFrameSizeMax)
 
-	fsize, err := sc.Read(fd, buf)
+	flen, err := sc.Read(fd, buf)
 	if err != nil {
 		psLog.E(fmt.Sprintf("syscall.Read() failed: %s", err))
 		return nil, psErr.Error
 	}
 
-	if fsize < EthHeaderSize {
+	if flen < EthHeaderSize {
 		psLog.E("Ethernet header length is too short")
-		psLog.E(fmt.Sprintf("\tlength: %v bytes", fsize))
+		psLog.E(fmt.Sprintf("\tlength: %v bytes", flen))
 		return nil, psErr.Error
 	}
 
@@ -116,8 +116,8 @@ func WriteFrame(fd int, dst EthAddr, src EthAddr, typ EthType, payload []byte) p
 		return psErr.Error
 	}
 
-	if fsize := buf.Len(); fsize < EthFrameSizeMin {
-		pad := make([]byte, EthFrameSizeMin-fsize)
+	if flen := buf.Len(); flen < EthFrameSizeMin {
+		pad := make([]byte, EthFrameSizeMin-flen)
 		if err := binary.Write(buf, binary.BigEndian, &pad); err != nil {
 			psLog.E(fmt.Sprintf("binary.Write() failed: %s", err))
 			return psErr.Error

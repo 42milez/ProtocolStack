@@ -122,7 +122,7 @@ func (p *ArpCache) danglingEntry() *ArpCacheEntry {
 
 func ArpInputHandler(payload []byte, dev ethernet.IDevice) psErr.E {
 	if len(payload) < ArpPacketSize {
-		psLog.E(fmt.Sprintf("ARP packet size is too small: %d bytes", len(payload)))
+		psLog.E(fmt.Sprintf("ARP packet length is too short: %d bytes", len(payload)))
 		return psErr.InvalidPacket
 	}
 

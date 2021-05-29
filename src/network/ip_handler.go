@@ -81,10 +81,10 @@ type IpHeader struct {
 }
 
 func IpInputHandler(payload []byte, dev ethernet.IDevice) psErr.E {
-	payloadLen := len(payload)
+	packetLen := len(payload)
 
-	if payloadLen < IpHeaderSizeMin {
-		psLog.E(fmt.Sprintf("IP packet size is too small: %d bytes", payloadLen))
+	if packetLen < IpHeaderSizeMin {
+		psLog.E(fmt.Sprintf("IP packet length is too short: %d bytes", packetLen))
 		return psErr.InvalidPacket
 	}
 
@@ -102,13 +102,13 @@ func IpInputHandler(payload []byte, dev ethernet.IDevice) psErr.E {
 
 	hdrLen := int(hdr.VHL & 0x0f)
 
-	if payloadLen < hdrLen {
-		psLog.E(fmt.Sprintf("IP packet length is too short: IHL = %d, Actual Packet Size = %d", hdrLen, payloadLen))
+	if packetLen < hdrLen {
+		psLog.E(fmt.Sprintf("IP packet length is too short: IHL = %d, Actual Packet Size = %d", hdrLen, packetLen))
 		return psErr.InvalidPacket
 	}
 
-	if totalLen := int(hdr.TotalLen); payloadLen < totalLen {
-		psLog.E(fmt.Sprintf("IP packet length is too short: Total Length = %d, Actual Length = %d", totalLen, payloadLen))
+	if totalLen := int(hdr.TotalLen); packetLen < totalLen {
+		psLog.E(fmt.Sprintf("IP packet length is too short: Total Length = %d, Actual Length = %d", totalLen, packetLen))
 		return psErr.InvalidPacket
 	}
 
@@ -117,8 +117,11 @@ func IpInputHandler(payload []byte, dev ethernet.IDevice) psErr.E {
 		return psErr.TtlExpired
 	}
 
-	if sum := checksum(payload[:20]); sum != hdr.Checksum {
-		psLog.E(fmt.Sprintf("Checksum mismatch: Expect = 0x%04x, Actual = 0x%04x", hdr.Checksum, sum))
+	cs1 := uint16(payload[10])<<8 | uint16(payload[11])
+	payload[10] = 0 // assign 0 to Header Checksum field (16bit)
+	payload[11] = 0
+	if cs2 := Checksum(payload); cs2 != cs1 {
+		psLog.E(fmt.Sprintf("Checksum mismatch: Expect = 0x%04x, Actual = 0x%04x", cs1, cs2))
 		return psErr.ChecksumMismatch
 	}
 
@@ -140,7 +143,7 @@ func IpInputHandler(payload []byte, dev ethernet.IDevice) psErr.E {
 
 	switch hdr.Protocol {
 	case ProtoNumICMP:
-		if err := IcmpInputHandler(); err != psErr.OK {
+		if err := IcmpInputHandler(payload[hdrLen+1:], dev); err != psErr.OK {
 			psLog.E(fmt.Sprintf("IcmpInputHandler() failed: %s", err))
 			return psErr.Error
 		}
@@ -158,24 +161,6 @@ func IpInputHandler(payload []byte, dev ethernet.IDevice) psErr.E {
 	return psErr.OK
 }
 
-// Computing the Internet Checksum
-// https://datatracker.ietf.org/doc/html/rfc1071
-
-func checksum(b []byte) uint16 {
-	var sum uint32 = 0
-	// sum up all fields of IP header by each 16bits (except Header Checksum and Options)
-	for i := 0; i < len(b); i += 2 {
-		// skip checksum field
-		if i == 10 {
-			continue
-		}
-		sum += uint32(uint16(b[i])<<8 | uint16(b[i+1]))
-	}
-	//
-	sum = ((sum & 0xffff0000) >> 16) + (sum & 0x0000ffff)
-	return ^(uint16(sum))
-}
-
 func ipDump(hdr *IpHeader) {
 	psLog.I(fmt.Sprintf("\tversion:             IPv%d", hdr.VHL>>4))
 	psLog.I(fmt.Sprintf("\tihl:                 %d", hdr.VHL&0x0f))
@@ -186,7 +171,7 @@ func ipDump(hdr *IpHeader) {
 	psLog.I(fmt.Sprintf("\tfragment offset:     %d", hdr.Offset&0x1fff))
 	psLog.I(fmt.Sprintf("\tttl:                 %d", hdr.TTL))
 	psLog.I(fmt.Sprintf("\tprotocol:            %d (%s)", hdr.Protocol, protocolNumbers[hdr.Protocol]))
-	psLog.I(fmt.Sprintf("\theader checksum:     0x%04x", hdr.Checksum))
+	psLog.I(fmt.Sprintf("\tchecksum:            0x%04x", hdr.Checksum))
 	psLog.I(fmt.Sprintf("\tsource address:      %d.%d.%d.%d", hdr.Src[0], hdr.Src[1], hdr.Src[2], hdr.Src[3]))
 	psLog.I(fmt.Sprintf("\tdestination address: %d.%d.%d.%d", hdr.Dst[0], hdr.Dst[1], hdr.Dst[2], hdr.Dst[3]))
 }
