@@ -16,6 +16,11 @@ const (
 	V6Family
 )
 
+var addrFamilies = [...]string{
+	0: "IPv4",
+	1: "IPv6",
+}
+
 // IP address expressions
 var (
 	V4Broadcast = V4(255, 255, 255, 255)
@@ -25,15 +30,8 @@ var (
 // AddrFamily is IP address family.
 type AddrFamily int
 
-func (f AddrFamily) String() string {
-	switch f {
-	case V4Family:
-		return "IPv4"
-	case V6Family:
-		return "IPv6"
-	default:
-		return "UNKNOWN"
-	}
+func (v AddrFamily) String() string {
+	return addrFamilies[v]
 }
 
 // An IP is a single IP address.

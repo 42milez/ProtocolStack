@@ -15,11 +15,6 @@ func TestAddrFamily_String(t *testing.T) {
 	if got != "IPv6" {
 		t.Errorf("AddrFamily.String() = %v; want %v", got, "IPv6")
 	}
-
-	got = AddrFamily(999).String()
-	if got != "UNKNOWN" {
-		t.Errorf("AddrFamily.String() = %v; want %v", got, "UNKNOWN")
-	}
 }
 
 func TestIP_String(t *testing.T) {
