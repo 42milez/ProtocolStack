@@ -97,8 +97,7 @@ func ParseIP(s string) IP {
 //	return p
 //}
 
-// TODO: use IPv4-mapped address above
-// V4 creates IP from bytes.
+// V4 creates IP from bytes. TODO: use IPv4-mapped address above
 func V4(a, b, c, d byte) IP {
 	p := make(IP, V4AddrLen)
 	p[0] = a
