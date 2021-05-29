@@ -9,7 +9,7 @@ import (
 // GenIface generates Iface.
 func GenIface(unicast string, netmask string, broadcast string) *Iface {
 	iface := &Iface{
-		Family:    FamilyV4,
+		Family:    V4Family,
 		Unicast:   ParseIP(unicast),
 		Netmask:   ParseIP(netmask),
 		Broadcast: ParseIP(broadcast),

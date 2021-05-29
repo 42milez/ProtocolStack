@@ -4,17 +4,19 @@ import (
 	"strings"
 )
 
-const (
-	FamilyV4 AddrFamily = iota
-	FamilyV6
-)
-
 // IP address lengths (bytes).
 const (
 	V4AddrLen = 4
 	V6AddrLen = 16
 )
 
+// IP address family
+const (
+	V4Family AddrFamily = iota
+	V6Family
+)
+
+// IP address expressions
 var (
 	V4Broadcast = V4(255, 255, 255, 255)
 	V4Zero      = V4(0, 0, 0, 0)
@@ -25,10 +27,10 @@ type AddrFamily int
 
 func (f AddrFamily) String() string {
 	switch f {
-	case FamilyV4:
-		return "FAMILY_V4"
-	case FamilyV6:
-		return "FAMILY_V6"
+	case V4Family:
+		return "IPv4"
+	case V6Family:
+		return "IPv6"
 	default:
 		return "UNKNOWN"
 	}
