@@ -242,6 +242,7 @@ Note: `make` supports the commands below:
   - [History of programming languages](https://en.wikipedia.org/wiki/History_of_programming_languages)
 - Question and answer site
   - [C++ : how to close a tcp socket (server) when receiving SIGKILL](https://stackoverflow.com/questions/21329861/c-how-to-close-a-tcp-socket-server-when-receiving-sigkill)
+  - [What is the difference between AF_INET and PF_INET in socket programming?](https://stackoverflow.com/questions/6729366/what-is-the-difference-between-af-inet-and-pf-inet-in-socket-programming)
 
 ## Memos
 - Use the context types properly acording to the rubric.
