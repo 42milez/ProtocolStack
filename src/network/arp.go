@@ -146,7 +146,7 @@ func ArpInputHandler(payload []byte, dev ethernet.IDevice) psErr.E {
 	psLog.I("Incoming ARP packet")
 	arpDump(&packet)
 
-	iface := IfaceRepo.Get(dev, V4Family)
+	iface := IfaceRepo.Get(dev, V4AddrFamily)
 	if iface == nil {
 		psLog.E(fmt.Sprintf("Interface for %s is not registered", dev.DevName()))
 		return psErr.InterfaceNotFound

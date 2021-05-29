@@ -52,7 +52,7 @@ func TestIfaceRepo_Register_1(t *testing.T) {
 	defer psLog.EnableOutput()
 
 	iface := &Iface{
-		Family:    V4Family,
+		Family:    V4AddrFamily,
 		Unicast:   ParseIP(ethernet.LoopbackIpAddr),
 		Netmask:   ParseIP(ethernet.LoopbackNetmask),
 		Broadcast: make(IP, 0),
@@ -85,7 +85,7 @@ func TestIfaceRepo_Register_2(t *testing.T) {
 	defer psLog.EnableOutput()
 
 	iface := &Iface{
-		Family:    V4Family,
+		Family:    V4AddrFamily,
 		Unicast:   ParseIP(ethernet.LoopbackIpAddr),
 		Netmask:   ParseIP(ethernet.LoopbackNetmask),
 		Broadcast: make(IP, 0),

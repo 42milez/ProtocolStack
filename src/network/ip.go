@@ -13,13 +13,13 @@ const (
 
 // IP address family
 const (
-	V4Family AddrFamily = syscall.AF_INET
-	V6Family AddrFamily = syscall.AF_INET6
+	V4AddrFamily AddrFamily = syscall.AF_INET
+	V6AddrFamily AddrFamily = syscall.AF_INET6
 )
 
 var addrFamilies = map[AddrFamily]string{
-	V4Family: "IPv4",
-	V6Family: "IPv6",
+	V4AddrFamily: "IPv4",
+	V6AddrFamily: "IPv6",
 }
 
 // IP address expressions

@@ -9,7 +9,7 @@ import (
 
 func TestGenIface_SUCCESS(t *testing.T) {
 	want := &Iface{
-		Family:    V4Family,
+		Family:    V4AddrFamily,
 		Unicast:   ParseIP(ethernet.LoopbackIpAddr),
 		Netmask:   ParseIP(ethernet.LoopbackNetmask),
 		Broadcast: ParseIP(ethernet.LoopbackBroadcast),

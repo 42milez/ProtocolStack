@@ -6,12 +6,12 @@ import (
 )
 
 func TestAddrFamily_String(t *testing.T) {
-	got := V4Family.String()
+	got := V4AddrFamily.String()
 	if got != "IPv4" {
 		t.Errorf("AddrFamily.String() = %v; want %v", got, "IPv4")
 	}
 
-	got = V6Family.String()
+	got = V6AddrFamily.String()
 	if got != "IPv6" {
 		t.Errorf("AddrFamily.String() = %v; want %v", got, "IPv6")
 	}
