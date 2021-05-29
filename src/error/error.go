@@ -11,11 +11,12 @@ const (
 	InterfaceNotFound             E = "INTERFACE_NOT_FOUND"
 	Interrupted                   E = "INTERRUPTED"
 	InvalidPacket                 E = "INVALID_PACKET"
+	InvalidProtocolVersion        E = "INVALID_PROTOCOL_VERSION"
 	NoDataToRead                  E = "NO_DATA_TO_READ"
 	NotFound                      E = "NOT_FOUND"
 	Terminated                    E = "TERMINATED"
 	TtlExpired                    E = "TTL_EXPIRED"
-	UnsupportedVersion            E = "UNSUPPORTED_VERSION"
+	UnsupportedProtocol           E = "UNSUPPORTED_PROTOCOL"
 	Error                         E = "ERROR"
 )
 

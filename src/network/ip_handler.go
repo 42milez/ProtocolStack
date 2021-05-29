@@ -97,7 +97,7 @@ func IpInputHandler(payload []byte, dev ethernet.IDevice) psErr.E {
 
 	if version := hdr.VHL >> 4; version != 4 {
 		psLog.E(fmt.Sprintf("IP version %d is not supported", version))
-		return psErr.UnsupportedVersion
+		return psErr.InvalidProtocolVersion
 	}
 
 	hdrLen := int(hdr.VHL & 0x0f)
@@ -140,13 +140,19 @@ func IpInputHandler(payload []byte, dev ethernet.IDevice) psErr.E {
 
 	switch hdr.Protocol {
 	case ProtoNumICMP:
-		// ...
+		if err := IcmpInputHandler(); err != psErr.OK {
+			psLog.E(fmt.Sprintf("IcmpInputHandler() failed: %s", err))
+			return psErr.Error
+		}
 	case ProtoNumTCP:
-		// ...
+		psLog.E("Currently NOT support TCP")
+		return psErr.Error
 	case ProtoNumUDP:
-		// ...
+		psLog.E("Currently NOT support UDP")
+		return psErr.Error
 	default:
-		// ...
+		psLog.E(fmt.Sprintf("Unsupported protocol: %d", hdr.Protocol))
+		return psErr.UnsupportedProtocol
 	}
 
 	return psErr.OK
