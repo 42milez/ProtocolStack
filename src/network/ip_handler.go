@@ -9,8 +9,6 @@ import (
 	psLog "github.com/42milez/ProtocolStack/src/log"
 )
 
-const IpVersionV4 = 0x04
-
 // INTERNET PROTOCOL
 // https://datatracker.ietf.org/doc/html/rfc791#page-13
 // The number 576 is selected to allow a reasonable sized data block to be transmitted in addition to the required
@@ -97,7 +95,7 @@ func IpInputHandler(payload []byte, dev ethernet.IDevice) psErr.E {
 		return psErr.Error
 	}
 
-	if version := hdr.VHL >> 4; version != IpVersionV4 {
+	if version := hdr.VHL >> 4; version != 4 {
 		psLog.E(fmt.Sprintf("IP version %d is not supported", version))
 		return psErr.UnsupportedVersion
 	}

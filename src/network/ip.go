@@ -2,6 +2,7 @@ package network
 
 import (
 	"strings"
+	"syscall"
 )
 
 // IP address lengths (bytes).
@@ -12,13 +13,13 @@ const (
 
 // IP address family
 const (
-	V4Family AddrFamily = iota
-	V6Family
+	V4Family AddrFamily = syscall.AF_INET
+	V6Family AddrFamily = syscall.AF_INET6
 )
 
-var addrFamilies = [...]string{
-	0: "IPv4",
-	1: "IPv6",
+var addrFamilies = map[AddrFamily]string{
+	V4Family: "IPv4",
+	V6Family: "IPv6",
 }
 
 // IP address expressions
