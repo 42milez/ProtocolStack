@@ -4,7 +4,6 @@ import (
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	"github.com/42milez/ProtocolStack/src/ethernet"
 	psLog "github.com/42milez/ProtocolStack/src/log"
-	psSyscall "github.com/42milez/ProtocolStack/src/syscall"
 	"github.com/golang/mock/gomock"
 	"testing"
 )
@@ -67,7 +66,6 @@ func TestIfaceRepo_Register_1(t *testing.T) {
 			Addr:      ethernet.EthAddr{11, 12, 13, 14, 15, 16},
 			Broadcast: ethernet.EthAddrBroadcast,
 			Priv:      ethernet.Privilege{FD: -1, Name: "tap0"},
-			Syscall:   &psSyscall.Syscall{},
 		},
 	}
 
@@ -100,7 +98,6 @@ func TestIfaceRepo_Register_2(t *testing.T) {
 			Addr:      ethernet.EthAddr{11, 12, 13, 14, 15, 16},
 			Broadcast: ethernet.EthAddrBroadcast,
 			Priv:      ethernet.Privilege{FD: -1, Name: "tap0"},
-			Syscall:   &psSyscall.Syscall{},
 		},
 	}
 

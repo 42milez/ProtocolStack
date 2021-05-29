@@ -9,6 +9,7 @@ import (
 	"fmt"
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	psLog "github.com/42milez/ProtocolStack/src/log"
+	psSyscall "github.com/42milez/ProtocolStack/src/syscall"
 	"syscall"
 	"unsafe"
 )
@@ -53,7 +54,7 @@ func (dev *TapDevice) Open() psErr.E {
 	var err error
 	var fd int
 
-	fd, err = dev.Syscall.Open(vnd, syscall.O_RDWR, 0666)
+	fd, err = psSyscall.Syscall.Open(vnd, syscall.O_RDWR, 0666)
 	if err != nil {
 		psLog.E(fmt.Sprintf("syscall.Open() failed: %s", err))
 		return psErr.CantOpenIOResource
@@ -65,8 +66,8 @@ func (dev *TapDevice) Open() psErr.E {
 	ifrFlags.Flags = syscall.IFF_TAP | syscall.IFF_NO_PI
 	copy(ifrFlags.Name[:], dev.Priv.Name)
 
-	if _, _, errno := dev.Syscall.Ioctl(uintptr(fd), uintptr(syscall.TUNSETIFF), uintptr(unsafe.Pointer(&ifrFlags))); errno != 0 {
-		_ = dev.Syscall.Close(fd)
+	if _, _, errno := psSyscall.Syscall.Ioctl(uintptr(fd), uintptr(syscall.TUNSETIFF), uintptr(unsafe.Pointer(&ifrFlags))); errno != 0 {
+		_ = psSyscall.Syscall.Close(fd)
 		psLog.E(fmt.Sprintf("syscall.Syscall(SYS_IOCTL, TUNSETIFF) failed: %s", errno))
 		return psErr.CantModifyIOResourceParameter
 	}
@@ -74,9 +75,9 @@ func (dev *TapDevice) Open() psErr.E {
 	// --------------------------------------------------
 
 	var soc int
-	soc, err = dev.Syscall.Socket(syscall.AF_INET, syscall.SOCK_DGRAM, 0)
+	soc, err = psSyscall.Syscall.Socket(syscall.AF_INET, syscall.SOCK_DGRAM, 0)
 	if err != nil {
-		_ = dev.Syscall.Close(fd)
+		_ = psSyscall.Syscall.Close(fd)
 		psLog.E(fmt.Sprintf("syscall.Socket() failed: %s", err))
 		return psErr.CantCreateEndpoint
 	}
@@ -85,17 +86,17 @@ func (dev *TapDevice) Open() psErr.E {
 	ifrSockAddr.Addr.Family = syscall.AF_INET
 	copy(ifrSockAddr.Name[:], dev.Priv.Name)
 
-	if _, _, errno := dev.Syscall.Ioctl(uintptr(soc), uintptr(syscall.SIOCGIFHWADDR), uintptr(unsafe.Pointer(&ifrSockAddr))); errno != 0 {
-		_ = dev.Syscall.Close(soc)
+	if _, _, errno := psSyscall.Syscall.Ioctl(uintptr(soc), uintptr(syscall.SIOCGIFHWADDR), uintptr(unsafe.Pointer(&ifrSockAddr))); errno != 0 {
+		_ = psSyscall.Syscall.Close(soc)
 		psLog.E(fmt.Sprintf("syscall.Syscall(SYS_IOCTL, SIOCGIFHWADDR) failed: %s", errno))
 		return psErr.CantModifyIOResourceParameter
 	}
 	copy(dev.Addr[:], ifrSockAddr.Addr.Data[:])
-	_ = dev.Syscall.Close(soc)
+	_ = psSyscall.Syscall.Close(soc)
 
 	// --------------------------------------------------
 
-	epfd, err = dev.Syscall.EpollCreate1(0)
+	epfd, err = psSyscall.Syscall.EpollCreate1(0)
 	if err != nil {
 		psLog.E(fmt.Sprintf("syscall.EpollCreate1() failed: %s", err))
 		return psErr.CantCreateEpollInstance
@@ -105,8 +106,8 @@ func (dev *TapDevice) Open() psErr.E {
 	event.Events = syscall.EPOLLIN
 	event.Fd = int32(fd)
 
-	if err := dev.Syscall.EpollCtl(epfd, syscall.EPOLL_CTL_ADD, fd, &event); err != nil {
-		_ = dev.Syscall.Close(epfd)
+	if err := psSyscall.Syscall.EpollCtl(epfd, syscall.EPOLL_CTL_ADD, fd, &event); err != nil {
+		_ = psSyscall.Syscall.Close(epfd)
 		psLog.E(fmt.Sprintf("syscall.EpollCtl() failed: %s", err))
 		return psErr.CantModifyIOResourceParameter
 	}
@@ -117,23 +118,23 @@ func (dev *TapDevice) Open() psErr.E {
 }
 
 func (dev *TapDevice) Close() psErr.E {
-	_ = dev.Syscall.Close(epfd)
+	_ = psSyscall.Syscall.Close(epfd)
 	return psErr.OK
 }
 
 func (dev *TapDevice) Poll(isTerminated bool) psErr.E {
 	if isTerminated {
-		_ = dev.Syscall.Close(epfd)
+		_ = psSyscall.Syscall.Close(epfd)
 		return psErr.Terminated
 	}
 
 	var events [MaxEpollEvents]syscall.EpollEvent
-	nEvents, err := dev.Syscall.EpollWait(epfd, events[:], EpollTimeout)
+	nEvents, err := psSyscall.Syscall.EpollWait(epfd, events[:], EpollTimeout)
 	if err != nil {
 		// https://man7.org/linux/man-pages/man2/epoll_wait.2.html#RETURN_VALUE
 		// ignore EINTR
 		if !errors.Is(err, syscall.EINTR) {
-			_ = dev.Syscall.Close(epfd)
+			_ = psSyscall.Syscall.Close(epfd)
 			return psErr.Error
 		}
 		psLog.I("Syscall.EpollWait() was interrupted")
@@ -144,7 +145,7 @@ func (dev *TapDevice) Poll(isTerminated bool) psErr.E {
 		psLog.I("Event occurred")
 		psLog.I(fmt.Sprintf("\tevents: %v", nEvents))
 		psLog.I(fmt.Sprintf("\tdevice: %v (%v)", dev.Name, dev.Priv.Name))
-		if packet, err := ReadFrame(dev.Priv.FD, dev.Addr, dev.Syscall); err != psErr.OK {
+		if packet, err := ReadFrame(dev.Priv.FD, dev.Addr, psSyscall.Syscall); err != psErr.OK {
 			if err != psErr.NoDataToRead {
 				psLog.E(fmt.Sprintf("ReadFrame() failed: %s", err))
 				return psErr.Error
@@ -196,7 +197,7 @@ func (dev *TapDevice) Transmit(dest EthAddr, payload []byte, typ EthType) psErr.
 		}
 	}
 
-	if n, err := dev.Syscall.Write(dev.Priv.FD, buf.Bytes()); err != nil {
+	if n, err := psSyscall.Syscall.Write(dev.Priv.FD, buf.Bytes()); err != nil {
 		psLog.E(fmt.Sprintf("syscall.Write() failed: %s", err))
 		return psErr.Error
 	} else {

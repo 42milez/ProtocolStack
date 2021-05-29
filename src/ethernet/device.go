@@ -4,7 +4,6 @@ package ethernet
 
 import (
 	psErr "github.com/42milez/ProtocolStack/src/error"
-	psSyscall "github.com/42milez/ProtocolStack/src/syscall"
 )
 
 type DevType int
@@ -63,7 +62,6 @@ type Device struct {
 	HeaderLen uint16
 	MTU       uint16
 	Priv      Privilege
-	Syscall   psSyscall.ISyscall
 }
 
 type Privilege struct {

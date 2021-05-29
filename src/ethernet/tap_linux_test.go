@@ -41,7 +41,9 @@ func TestTapDevice_Open_1(t *testing.T) {
 	m.EXPECT().EpollCreate1(Any).Return(fd3, nil)
 	m.EXPECT().EpollCtl(Any, Any, Any, Any).Return(nil)
 
-	tapDev := TapDevice{Device{Syscall: m}}
+	psSyscall.Syscall = m
+
+	tapDev := TapDevice{}
 
 	got := tapDev.Open()
 	if got != psErr.OK {
@@ -60,7 +62,9 @@ func TestTapDevice_Open_2(t *testing.T) {
 	m := psSyscall.NewMockISyscall(ctrl)
 	m.EXPECT().Open(Any, Any, Any).Return(RetValOnFail, ErrorWithNoMessage)
 
-	tapDev := TapDevice{Device{Syscall: m}}
+	psSyscall.Syscall = m
+
+	tapDev := TapDevice{}
 
 	got := tapDev.Open()
 	if got != psErr.CantOpenIOResource {
@@ -81,7 +85,9 @@ func TestTapDevice_Open_3(t *testing.T) {
 	m.EXPECT().Ioctl(Any, Any, Any).Return(uintptr(RetValOnFail), R2Zero, syscall.EBADF)
 	m.EXPECT().Close(Any).Return(nil)
 
-	tapDev := TapDevice{Device{Syscall: m}}
+	psSyscall.Syscall = m
+
+	tapDev := TapDevice{}
 
 	got := tapDev.Open()
 	if got != psErr.CantModifyIOResourceParameter {
@@ -106,7 +112,9 @@ func TestTapDevice_Open_34(t *testing.T) {
 	m.EXPECT().Socket(Any, Any, Any).Return(RetValOnFail, ErrorWithNoMessage)
 	m.EXPECT().Close(Any).Return(nil)
 
-	tapDev := TapDevice{Device{Syscall: m}}
+	psSyscall.Syscall = m
+
+	tapDev := TapDevice{}
 
 	got := tapDev.Open()
 	if got != psErr.CantCreateEndpoint {
@@ -133,7 +141,9 @@ func TestTapDevice_Open_5(t *testing.T) {
 	m.EXPECT().Ioctl(Any, uintptr(syscall.SIOCGIFHWADDR), Any).Return(uintptr(RetValOnFail), R2Zero, syscall.EBADF)
 	m.EXPECT().Close(Any).Return(nil)
 
-	tapDev := TapDevice{Device{Syscall: m}}
+	psSyscall.Syscall = m
+
+	tapDev := TapDevice{}
 
 	got := tapDev.Open()
 	if got != psErr.CantModifyIOResourceParameter {
@@ -161,7 +171,9 @@ func TestTapDevice_Open_6(t *testing.T) {
 	m.EXPECT().EpollCreate1(Any).Return(RetValOnFail, ErrorWithNoMessage)
 	m.EXPECT().Close(Any).Return(nil)
 
-	tapDev := TapDevice{Device{Syscall: m}}
+	psSyscall.Syscall = m
+
+	tapDev := TapDevice{}
 
 	got := tapDev.Open()
 	if got != psErr.CantCreateEpollInstance {
@@ -186,7 +198,9 @@ func TestTapDevice_Open_7(t *testing.T) {
 	m.EXPECT().EpollCtl(Any, Any, Any, Any).Return(ErrorWithNoMessage)
 	m.EXPECT().Close(Any).Return(nil).AnyTimes()
 
-	tapDev := TapDevice{Device{Syscall: m}}
+	psSyscall.Syscall = m
+
+	tapDev := TapDevice{}
 
 	got := tapDev.Open()
 	if got != psErr.CantModifyIOResourceParameter {
@@ -201,11 +215,9 @@ func TestTapDevice_Close(t *testing.T) {
 	m := psSyscall.NewMockISyscall(ctrl)
 	m.EXPECT().Close(Any).Return(nil)
 
-	tapDev := TapDevice{
-		Device{
-			Syscall: m,
-		},
-	}
+	psSyscall.Syscall = m
+
+	tapDev := TapDevice{}
 
 	got := tapDev.Close()
 	if got != psErr.OK {
@@ -223,11 +235,9 @@ func TestTapDevice_Transmit(t *testing.T) {
 	m := psSyscall.NewMockISyscall(ctrl)
 	m.EXPECT().Write(Any, Any).Return(0, nil)
 
-	tapDev := TapDevice{
-		Device{
-			Syscall: m,
-		},
-	}
+	psSyscall.Syscall = m
+
+	tapDev := TapDevice{}
 
 	got := tapDev.Transmit(EthAddr{}, make([]byte, 0), EthTypeArp)
 	if got != psErr.OK {
@@ -246,7 +256,9 @@ func TestTapDevice_Poll_1(t *testing.T) {
 	m := psSyscall.NewMockISyscall(ctrl)
 	m.EXPECT().EpollWait(Any, Any, Any).Return(0, nil)
 
-	tapDev := TapDevice{Device{Syscall: m}}
+	psSyscall.Syscall = m
+
+	tapDev := TapDevice{}
 
 	got := tapDev.Poll(false)
 	if got != psErr.OK {
@@ -266,7 +278,9 @@ func TestTapDevice_Poll_2(t *testing.T) {
 	m.EXPECT().EpollWait(Any, Any, Any).Return(1, nil)
 	m.EXPECT().Read(Any, Any).Return(150, nil)
 
-	tapDev := TapDevice{Device{Syscall: m}}
+	psSyscall.Syscall = m
+
+	tapDev := TapDevice{}
 
 	got := tapDev.Poll(false)
 	if got != psErr.OK {
@@ -285,7 +299,9 @@ func TestTapDevice_Poll_3(t *testing.T) {
 	m := psSyscall.NewMockISyscall(ctrl)
 	m.EXPECT().Close(Any).Return(nil)
 
-	tapDev := TapDevice{Device{Syscall: m}}
+	psSyscall.Syscall = m
+
+	tapDev := TapDevice{}
 
 	got := tapDev.Poll(true)
 	if got != psErr.Terminated {
@@ -304,7 +320,9 @@ func TestTapDevice_Poll_4(t *testing.T) {
 	m := psSyscall.NewMockISyscall(ctrl)
 	m.EXPECT().EpollWait(Any, Any, Any).Return(RetValOnFail, syscall.EINTR)
 
-	tapDev := TapDevice{Device{Syscall: m}}
+	psSyscall.Syscall = m
+
+	tapDev := TapDevice{}
 
 	got := tapDev.Poll(false)
 	if got != psErr.Interrupted {

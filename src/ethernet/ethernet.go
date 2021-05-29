@@ -98,3 +98,7 @@ func ReadFrame(fd int, addr EthAddr, sc psSyscall.ISyscall) (*Packet, psErr.E) {
 
 	return packet, psErr.OK
 }
+
+func WriteFrame() psErr.E {
+	return psErr.OK
+}

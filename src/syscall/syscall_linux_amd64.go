@@ -6,6 +6,8 @@ import (
 	"syscall"
 )
 
+var Syscall ISyscall
+
 type ISyscall interface {
 	Open(path string, mode int, perm uint32) (fd int, err error)
 	Close(fd int) (err error)
@@ -18,42 +20,46 @@ type ISyscall interface {
 	Write(fd int, p []byte) (n int, err error)
 }
 
-type Syscall struct{}
+type scImpl struct{}
 
-func (Syscall) Open(path string, mode int, perm uint32) (fd int, err error) {
+func (scImpl) Open(path string, mode int, perm uint32) (fd int, err error) {
 	return syscall.Open(path, mode, perm)
 }
 
-func (Syscall) Close(fd int) (err error) {
+func (scImpl) Close(fd int) (err error) {
 	return syscall.Close(fd)
 }
 
-func (Syscall) EpollCreate1(flag int) (fd int, err error) {
+func (scImpl) EpollCreate1(flag int) (fd int, err error) {
 	return syscall.EpollCreate1(flag)
 }
 
-func (Syscall) EpollCtl(epfd int, op int, fd int, event *syscall.EpollEvent) (err error) {
+func (scImpl) EpollCtl(epfd int, op int, fd int, event *syscall.EpollEvent) (err error) {
 	return syscall.EpollCtl(epfd, op, fd, event)
 }
 
-func (Syscall) EpollWait(epfd int, events []syscall.EpollEvent, msec int) (n int, err error) {
+func (scImpl) EpollWait(epfd int, events []syscall.EpollEvent, msec int) (n int, err error) {
 	return syscall.EpollWait(epfd, events, msec)
 }
 
-func (Syscall) Ioctl(a1, a2, a3 uintptr) (r1, r2 uintptr, err syscall.Errno) {
+func (scImpl) Ioctl(a1, a2, a3 uintptr) (r1, r2 uintptr, err syscall.Errno) {
 	// doc: second return value of syscall.Syscall needs to be documented #29842
 	// https://github.com/golang/go/issues/29842
 	return syscall.Syscall(syscall.SYS_IOCTL, a1, a2, a3)
 }
 
-func (Syscall) Socket(domain, typ, proto int) (fd int, err error) {
+func (scImpl) Socket(domain, typ, proto int) (fd int, err error) {
 	return syscall.Socket(domain, typ, proto)
 }
 
-func (Syscall) Read(fd int, p []byte) (n int, err error) {
+func (scImpl) Read(fd int, p []byte) (n int, err error) {
 	return syscall.Read(fd, p)
 }
 
-func (Syscall) Write(fd int, p []byte) (n int, err error) {
+func (scImpl) Write(fd int, p []byte) (n int, err error) {
 	return syscall.Write(fd, p)
+}
+
+func init() {
+	Syscall = &scImpl{}
 }
