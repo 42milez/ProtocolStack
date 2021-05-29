@@ -21,8 +21,52 @@ const IpVersionV4 = 0x04
 const IpHeaderSizeMin = 20 // bytes
 const IpHeaderSizeMax = 60 // bytes
 
+// ASSIGNED INTERNET PROTOCOL NUMBERS
+// https://datatracker.ietf.org/doc/html/rfc790#page-6
+
+var protocolNumbers = map[ProtocolNumber]string{
+	// 0: Reserved
+	1:  "ICMP",
+	3:  "Gateway-to-Gateway",
+	4:  "CMCC Gateway Monitoring Message",
+	5:  "ST",
+	6:  "TCP",
+	7:  "UCL",
+	9:  "Secure",
+	10: "BBN RCC Monitoring",
+	11: "NVP",
+	12: "PUP",
+	13: "Pluribus",
+	14: "Telenet",
+	15: "XNET",
+	16: "Chaos",
+	17: "User Datagram",
+	18: "Multiplexing",
+	19: "DCN",
+	20: "TAC Monitoring",
+	// 21-62: Unassigned
+	63: "any local network",
+	64: "SATNET and Backroom EXPAK",
+	65: "MIT Subnet Support",
+	// 66-68: Unassigned
+	69: "SATNET Monitoring",
+	71: "Internet Packet Core Utility",
+	// 72-75: Unassigned
+	76: "Backroom SATNET Monitoring",
+	78: "WIDEBAND Monitoring",
+	79: "WIDEBAND EXPAK",
+	// 80-254: Unassigned
+	// 255: Reserved
+}
+
+const ProtoNumICMP = 1
+const ProtoNumTCP = 6
+const ProtoNumUDP = 17
+
 // Internet Header Format
 // https://datatracker.ietf.org/doc/html/rfc791#section-3.1
+
+type ProtocolNumber uint8
 
 type IpHeader struct {
 	VHL      uint8
@@ -31,7 +75,7 @@ type IpHeader struct {
 	ID       uint16
 	Offset   uint16
 	TTL      uint8
-	Protocol uint8
+	Protocol ProtocolNumber
 	Checksum uint16
 	Src      [V4AddrLen]byte
 	Dst      [V4AddrLen]byte
@@ -96,6 +140,17 @@ func IpInputHandler(payload []byte, dev ethernet.IDevice) psErr.E {
 	psLog.I("Incoming IP packet")
 	ipDump(&hdr)
 
+	switch hdr.Protocol {
+	case ProtoNumICMP:
+		// ...
+	case ProtoNumTCP:
+		// ...
+	case ProtoNumUDP:
+		// ...
+	default:
+		// ...
+	}
+
 	return psErr.OK
 }
 
@@ -126,40 +181,8 @@ func ipDump(hdr *IpHeader) {
 	psLog.I(fmt.Sprintf("\tflags:               0b%03b", (hdr.Offset&0xefff)>>13))
 	psLog.I(fmt.Sprintf("\tfragment offset:     %d", hdr.Offset&0x1fff))
 	psLog.I(fmt.Sprintf("\tttl:                 %d", hdr.TTL))
-	psLog.I(fmt.Sprintf("\tprotocol:            %d (%s)", hdr.Protocol, protocolNumbers[int(hdr.Protocol)]))
+	psLog.I(fmt.Sprintf("\tprotocol:            %d (%s)", hdr.Protocol, protocolNumbers[hdr.Protocol]))
 	psLog.I(fmt.Sprintf("\theader checksum:     0x%04x", hdr.Checksum))
 	psLog.I(fmt.Sprintf("\tsource address:      %d.%d.%d.%d", hdr.Src[0], hdr.Src[1], hdr.Src[2], hdr.Src[3]))
 	psLog.I(fmt.Sprintf("\tdestination address: %d.%d.%d.%d", hdr.Dst[0], hdr.Dst[1], hdr.Dst[2], hdr.Dst[3]))
-}
-
-// ASSIGNED INTERNET PROTOCOL NUMBERS
-// https://datatracker.ietf.org/doc/html/rfc790#page-6
-
-var protocolNumbers = map[int]string{
-	1:  "ICMP",
-	3:  "Gateway-to-Gateway",
-	4:  "CMCC Gateway Monitoring Message",
-	5:  "ST",
-	6:  "TCP",
-	7:  "UCL",
-	9:  "Secure",
-	10: "BBN RCC Monitoring",
-	11: "NVP",
-	12: "PUP",
-	13: "Pluribus",
-	14: "Telenet",
-	15: "XNET",
-	16: "Chaos",
-	17: "User Datagram",
-	18: "Multiplexing",
-	19: "DCN",
-	20: "TAC Monitoring",
-	63: "any local network",
-	64: "SATNET and Backroom EXPAK",
-	65: "MIT Subnet Support",
-	69: "SATNET Monitoring",
-	71: "Internet Packet Core Utility",
-	76: "Backroom SATNET Monitoring",
-	78: "WIDEBAND Monitoring",
-	79: "WIDEBAND EXPAK",
 }
