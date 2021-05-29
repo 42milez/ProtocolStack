@@ -201,17 +201,17 @@ func (mr *MockIDeviceMockRecorder) PrivDevName() *gomock.Call {
 }
 
 // Transmit mocks base method.
-func (m *MockIDevice) Transmit(dest EthAddr, payload []byte, typ EthType) error.E {
+func (m *MockIDevice) Transmit(dst EthAddr, payload []byte, typ EthType) error.E {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Transmit", dest, payload, typ)
+	ret := m.ctrl.Call(m, "Transmit", dst, payload, typ)
 	ret0, _ := ret[0].(error.E)
 	return ret0
 }
 
 // Transmit indicates an expected call of Transmit.
-func (mr *MockIDeviceMockRecorder) Transmit(dest, payload, typ interface{}) *gomock.Call {
+func (mr *MockIDeviceMockRecorder) Transmit(dst, payload, typ interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Transmit", reflect.TypeOf((*MockIDevice)(nil).Transmit), dest, payload, typ)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Transmit", reflect.TypeOf((*MockIDevice)(nil).Transmit), dst, payload, typ)
 }
 
 // Up mocks base method.

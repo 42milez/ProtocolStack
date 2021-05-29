@@ -3,8 +3,6 @@
 package ethernet
 
 import (
-	"bytes"
-	"encoding/binary"
 	"errors"
 	"fmt"
 	psErr "github.com/42milez/ProtocolStack/src/error"
@@ -159,50 +157,6 @@ func (dev *TapDevice) Poll(isTerminated bool) psErr.E {
 	return psErr.OK
 }
 
-func (dev *TapDevice) Transmit(dest EthAddr, payload []byte, typ EthType) psErr.E {
-	hdr := EthHeader{
-		Dst:  dest,
-		Src:  dev.Addr,
-		Type: typ,
-	}
-
-	buf := new(bytes.Buffer)
-	if err := binary.Write(buf, binary.BigEndian, &hdr); err != nil {
-		psLog.E(fmt.Sprintf("binary.Write() failed: %s", err))
-		return psErr.Error
-	}
-	if err := binary.Write(buf, binary.BigEndian, &payload); err != nil {
-		psLog.E(fmt.Sprintf("binary.Write() failed: %s", err))
-		return psErr.Error
-	}
-
-	if fsize := buf.Len(); fsize < EthFrameSizeMin {
-		pad := make([]byte, EthFrameSizeMin-fsize)
-		if err := binary.Write(buf, binary.BigEndian, &pad); err != nil {
-			psLog.E(fmt.Sprintf("binary.Write() failed: %s", err))
-			return psErr.Error
-		}
-	}
-
-	psLog.I("Outgoing Ethernet frame")
-	psLog.I(fmt.Sprintf("\tdest:    %s", hdr.Dst))
-	psLog.I(fmt.Sprintf("\tsrc:     %s", hdr.Src))
-	psLog.I(fmt.Sprintf("\ttype:    %s", hdr.Type))
-	s := "\tpayload: "
-	for i, v := range payload {
-		s += fmt.Sprintf("%02x ", v)
-		if (i+1)%10 == 0 {
-			psLog.I(s)
-			s = "\t\t "
-		}
-	}
-
-	if n, err := psSyscall.Syscall.Write(dev.Priv.FD, buf.Bytes()); err != nil {
-		psLog.E(fmt.Sprintf("syscall.Write() failed: %s", err))
-		return psErr.Error
-	} else {
-		psLog.I(fmt.Sprintf("Ethernet frame has been written: %d bytes", n))
-	}
-
-	return psErr.OK
+func (dev *TapDevice) Transmit(dst EthAddr, payload []byte, typ EthType) psErr.E {
+	return WriteFrame(dev.Priv.FD, dst, dev.Addr, typ, payload)
 }
