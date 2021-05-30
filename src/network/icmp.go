@@ -24,8 +24,8 @@ var icmpTypes = map[IcmpType]string{
 	5: "Redirect",
 	6: "Alternate Host Address (Deprecated)",
 	// 7: Unassigned
-	8: "Echo",
-	9: "Router Advertisement",
+	8:  "Echo",
+	9:  "Router Advertisement",
 	10: "Router Solicitation",
 	11: "Time Exceeded",
 	12: "Parameter Problem",
@@ -66,7 +66,7 @@ type IcmpHeader struct {
 	Content  uint32
 }
 
-func IcmpInputHandler(payload []byte, dev ethernet.IDevice) psErr.E {
+func IcmpReceive(payload []byte, src [V4AddrLen]byte, dst [V4AddrLen]byte, dev ethernet.IDevice) psErr.E {
 	if len(payload) < IcmpHeaderSize {
 		psLog.E(fmt.Sprintf("ICMP header length is too short: %d bytes", len(payload)))
 		return psErr.InvalidPacket
@@ -92,9 +92,50 @@ func IcmpInputHandler(payload []byte, dev ethernet.IDevice) psErr.E {
 
 	switch hdr.Type {
 	case IcmpTypeEcho:
+		s := IP(src[:])
+		d := IP(dst[:])
 		iface := IfaceRepo.Get(dev, V4AddrFamily)
-		if iface.Unicast.EqualV4()
+		if !iface.Unicast.EqualV4(dst) {
+			d = iface.Unicast
+		}
+		if err := IcmpSend(IcmpTypeEchoReply, hdr.Code, hdr.Content, payload[IcmpHeaderSize:], d, s); err != psErr.OK {
+			psLog.E(fmt.Sprintf("IcmpSend() failed: %s", err))
+			return psErr.Error
+		}
 	}
+
+	return psErr.OK
+}
+
+func IcmpSend(typ IcmpType, code uint8, content uint32, payload []byte, dst IP, src IP) psErr.E {
+	hdr := IcmpHeader{
+		Type:    typ,
+		Code:    code,
+		Content: content,
+	}
+
+	buf := new(bytes.Buffer)
+	if err := binary.Write(buf, binary.BigEndian, &hdr); err != nil {
+		psLog.E(fmt.Sprintf("binary.Write() failed: %s", err))
+		return psErr.Error
+	}
+
+	if err := binary.Write(buf, binary.BigEndian, &payload); err != nil {
+		psLog.E(fmt.Sprintf("binary.Write() failed: %s", err))
+		return psErr.Error
+	}
+
+	b := buf.Bytes()
+	checksum := Checksum(b)
+	b[2] = uint8((checksum & 0xff00) >> 8)
+	b[3] = uint8(checksum & 0x00ff)
+
+	psLog.I("Outgoing ICMP packet")
+	hdr.Checksum = checksum
+	icmpDump(&hdr)
+
+	// TODO: send
+	// ...
 
 	return psErr.OK
 }

@@ -100,7 +100,7 @@ func IpInputHandler(payload []byte, dev ethernet.IDevice) psErr.E {
 		return psErr.InvalidProtocolVersion
 	}
 
-	hdrLen := int(hdr.VHL & 0x0f)*4
+	hdrLen := int(hdr.VHL&0x0f) * 4
 	if packetLen < hdrLen {
 		psLog.E(fmt.Sprintf("IP packet length is too short: IHL = %d, Actual Packet Size = %d", hdrLen, packetLen))
 		return psErr.InvalidPacket
@@ -142,7 +142,7 @@ func IpInputHandler(payload []byte, dev ethernet.IDevice) psErr.E {
 
 	switch hdr.Protocol {
 	case ProtoNumICMP:
-		if err := IcmpInputHandler(payload[hdrLen:], dev); err != psErr.OK {
+		if err := IcmpReceive(payload[hdrLen:], hdr.Src, hdr.Dst, dev); err != psErr.OK {
 			psLog.E(fmt.Sprintf("IcmpInputHandler() failed: %s", err))
 			return psErr.Error
 		}
