@@ -111,6 +111,10 @@ func IpReceive(payload []byte, dev ethernet.IDevice) psErr.E {
 	return psErr.OK
 }
 
+func IpSend(protoNum ProtocolNumber, payload []byte, dst IP, src IP) psErr.E {
+	return psErr.OK
+}
+
 // ParseIP parses string as IPv4 or IPv6 address by detecting its format.
 func ParseIP(s string) IP {
 	if strings.Contains(s, ".") {
