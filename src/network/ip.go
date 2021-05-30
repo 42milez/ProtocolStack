@@ -111,7 +111,9 @@ func IpReceive(payload []byte, dev ethernet.IDevice) psErr.E {
 	return psErr.OK
 }
 
-func IpSend(protoNum ProtocolNumber, payload []byte, dst IP, src IP) psErr.E {
+func IpSend(protoNum ProtocolNumber, packet []byte, dst IP, src IP) psErr.E {
+
+
 	return psErr.OK
 }
 
