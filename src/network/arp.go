@@ -7,118 +7,11 @@ import (
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	"github.com/42milez/ProtocolStack/src/ethernet"
 	psLog "github.com/42milez/ProtocolStack/src/log"
-	"sync"
-	"time"
 )
 
 const ArpCacheSize = 32
-const ArpPacketSize = 28 // byte
 
 var cache *ArpCache
-
-type ArpProtoAddr [V4AddrLen]byte
-
-func (p ArpProtoAddr) String() string {
-	return fmt.Sprintf("%d.%d.%d.%d", p[0], p[1], p[2], p[3])
-}
-
-type ArpHdr struct {
-	HT     ArpHwType        // hardware type
-	PT     ethernet.EthType // protocol type
-	HAL    uint8            // hardware address length
-	PAL    uint8            // protocol address length
-	Opcode ArpOpcode
-}
-
-type ArpPacket struct {
-	ArpHdr
-	SHA ethernet.EthAddr // sender hardware address
-	SPA ArpProtoAddr     // sender protocol address
-	THA ethernet.EthAddr // target hardware address
-	TPA ArpProtoAddr     // target protocol address
-}
-
-type ArpCacheEntry struct {
-	State     ArpCacheState
-	CreatedAt time.Time
-	HA        ethernet.EthAddr
-	PA        ArpProtoAddr
-}
-
-type ArpCache struct {
-	entries [ArpCacheSize]*ArpCacheEntry
-	mtx     sync.Mutex
-}
-
-func (p *ArpCache) Init() {
-	for i := range p.entries {
-		p.entries[i] = &ArpCacheEntry{
-			State:     ArpCacheStateFree,
-			CreatedAt: time.Unix(0, 0),
-		}
-	}
-}
-
-func (p *ArpCache) Clear(idx int) psErr.E {
-	p.entries[idx].State = ArpCacheStateFree
-	p.entries[idx].CreatedAt = time.Unix(0, 0)
-	p.entries[idx].HA = ethernet.EthAddr{}
-	p.entries[idx].PA = ArpProtoAddr{}
-	return psErr.OK
-}
-
-func (p *ArpCache) Add(packet *ArpPacket) psErr.E {
-	if ret := p.Get(packet.SPA); ret != nil {
-		return psErr.Exist
-	}
-	entry := p.danglingEntry()
-	p.mtx.Lock()
-	defer p.mtx.Unlock()
-	entry.State = ArpCacheStateResolved
-	entry.CreatedAt = time.Now()
-	entry.HA = packet.SHA
-	entry.PA = packet.SPA
-	return psErr.OK
-}
-
-func (p *ArpCache) Get(ip [V4AddrLen]byte) *ArpCacheEntry {
-	p.mtx.Lock()
-	defer p.mtx.Unlock()
-	for i, v := range p.entries {
-		if v.PA == ip {
-			return p.entries[i]
-		}
-	}
-	return nil
-}
-
-func (p *ArpCache) Update(packet *ArpPacket) psErr.E {
-	entry := p.Get(packet.SPA)
-	if entry == nil {
-		return psErr.NotFound
-	}
-	p.mtx.Lock()
-	defer p.mtx.Unlock()
-	entry.State = ArpCacheStateResolved
-	entry.HA = packet.SHA
-	entry.CreatedAt = time.Now()
-	return psErr.OK
-}
-
-func (p *ArpCache) danglingEntry() *ArpCacheEntry {
-	p.mtx.Lock()
-	defer p.mtx.Unlock()
-	oldest := p.entries[0]
-	for _, entry := range p.entries {
-		if entry.State == ArpCacheStateFree {
-			return entry
-		}
-		if oldest.CreatedAt.After(entry.CreatedAt) {
-			oldest = entry
-		}
-	}
-	return oldest
-}
 
 func ArpInputHandler(payload []byte, dev ethernet.IDevice) psErr.E {
 	if len(payload) < ArpPacketSize {
@@ -144,7 +37,7 @@ func ArpInputHandler(payload []byte, dev ethernet.IDevice) psErr.E {
 	}
 
 	psLog.I("Incoming ARP packet")
-	arpDump(&packet)
+	arpHdrDump(&packet)
 
 	iface := IfaceRepo.Get(dev, V4AddrFamily)
 	if iface == nil {
@@ -152,7 +45,7 @@ func ArpInputHandler(payload []byte, dev ethernet.IDevice) psErr.E {
 		return psErr.InterfaceNotFound
 	}
 
-	if isSameIP(packet.TPA, iface.Unicast) {
+	if iface.Unicast.EqualV4(packet.TPA) {
 		if err := cache.Update(&packet); err == psErr.NotFound {
 			if err := cache.Add(&packet); err != psErr.OK {
 				psLog.E(fmt.Sprintf("ArpCache.Add() failed: %s", err))
@@ -175,7 +68,7 @@ func ArpInputHandler(payload []byte, dev ethernet.IDevice) psErr.E {
 	return psErr.OK
 }
 
-func arpDump(packet *ArpPacket) {
+func arpHdrDump(packet *ArpPacket) {
 	psLog.I(fmt.Sprintf("\thardware type:           %s", packet.HT))
 	psLog.I(fmt.Sprintf("\tprotocol Type:           %s", packet.PT))
 	psLog.I(fmt.Sprintf("\thardware address length: %d", packet.HAL))
@@ -204,7 +97,7 @@ func arpReply(tha ethernet.EthAddr, tpa ArpProtoAddr, iface *Iface) psErr.E {
 	copy(packet.SPA[:], iface.Unicast[:])
 
 	psLog.I("Outgoing ARP packet (REPLY):")
-	arpDump(&packet)
+	arpHdrDump(&packet)
 
 	psLog.I(fmt.Sprintf("ARP packet (REPLY) will be sent from %s", iface.Unicast))
 
@@ -230,10 +123,6 @@ func arpReply(tha ethernet.EthAddr, tpa ArpProtoAddr, iface *Iface) psErr.E {
 
 // TODO:
 //func arpTimer() {}
-
-func isSameIP(a ArpProtoAddr, b IP) bool {
-	return a[0] == b[0] && a[1] == b[1] && a[2] == b[2] && a[3] == b[3]
-}
 
 func init() {
 	cache = &ArpCache{}
