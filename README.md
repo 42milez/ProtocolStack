@@ -57,6 +57,15 @@ Note: `make` supports the commands below:
 - `resolve` resolve dependencies
 - `test` run all tests
 
+## Supported Protocols
+
+- [x] Ethernet
+- [x] ARP
+- [x] IP
+- [x] ICMP
+- [ ] TCP
+- [ ] UDP
+
 ## Example
 
 <details>
