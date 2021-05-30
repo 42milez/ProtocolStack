@@ -10,63 +10,10 @@ import (
 )
 
 const IcmpHeaderSize = 8 // byte
-const IcmpTypeEchoReply = 0
-const IcmpTypeEcho = 8
+const IcmpTypeEchoReply = 0x00
+const IcmpTypeEcho = 0x08
 
-// ICMP Type Numbers
-// https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml#icmp-parameters-types
-
-var icmpTypes = map[IcmpType]string{
-	0: "Echo Reply",
-	// 1-2: Unassigned
-	3: "Destination Unreachable",
-	4: "Source Quench (Deprecated)",
-	5: "Redirect",
-	6: "Alternate Host Address (Deprecated)",
-	// 7: Unassigned
-	8:  "Echo",
-	9:  "Router Advertisement",
-	10: "Router Solicitation",
-	11: "Time Exceeded",
-	12: "Parameter Problem",
-	13: "Timestamp",
-	14: "Timestamp Reply",
-	15: "Information Request (Deprecated)",
-	16: "Information Reply (Deprecated)",
-	17: "Address Mask Request (Deprecated)",
-	18: "Address Mask Reply (Deprecated)",
-	19: "Reserved (for Security)",
-	// 20-29: Reserved (for Robustness Experiment)
-	30: "Traceroute (Deprecated)",
-	31: "Datagram Conversion Error (Deprecated)",
-	32: "Mobile Host Redirect (Deprecated)",
-	33: "IPv6 Where-Are-You (Deprecated)",
-	34: "IPv6 I-Am-Here (Deprecated)",
-	35: "Mobile Registration Request (Deprecated)",
-	36: "Mobile Registration Reply (Deprecated)",
-	37: "Domain Name Request (Deprecated)",
-	38: "Domain Name Reply (Deprecated)",
-	39: "SKIP (Deprecated)",
-	40: "Photuris",
-	41: "ICMP messages utilized by experimental mobility protocols such as Seamoby",
-	42: "Extended Echo Request",
-	43: "Extended Echo Reply",
-	// 44-252: Unassigned
-	253: "RFC3692-style Experiment 1",
-	254: "RFC3692-style Experiment 2",
-	// 255: Reserved
-}
-
-type IcmpType uint8
-
-type IcmpHeader struct {
-	Type     IcmpType
-	Code     uint8
-	Checksum uint16
-	Content  uint32
-}
-
-func IcmpReceive(payload []byte, src [V4AddrLen]byte, dst [V4AddrLen]byte, dev ethernet.IDevice) psErr.E {
+func IcmpReceive(payload []byte, dst [V4AddrLen]byte, src [V4AddrLen]byte, dev ethernet.IDevice) psErr.E {
 	if len(payload) < IcmpHeaderSize {
 		psLog.E(fmt.Sprintf("ICMP header length is too short: %d bytes", len(payload)))
 		return psErr.InvalidPacket
@@ -80,15 +27,15 @@ func IcmpReceive(payload []byte, src [V4AddrLen]byte, dst [V4AddrLen]byte, dev e
 	}
 
 	cs1 := uint16(payload[2])<<8 | uint16(payload[3])
-	payload[2] = 0 // assign 0 to Checksum field (16bit)
-	payload[3] = 0
+	payload[2] = 0x00 // assign 0 to Checksum field (16bit)
+	payload[3] = 0x00
 	if cs2 := Checksum(payload); cs2 != cs1 {
 		psLog.E(fmt.Sprintf("Checksum mismatch: Expect = 0x%04x, Actual = 0x%04x", cs1, cs2))
 		return psErr.ChecksumMismatch
 	}
 
 	psLog.I("Incoming ICMP packet")
-	icmpDump(&hdr)
+	icmpHdrDump(&hdr)
 
 	switch hdr.Type {
 	case IcmpTypeEcho:
@@ -125,22 +72,24 @@ func IcmpSend(typ IcmpType, code uint8, content uint32, payload []byte, dst IP, 
 		return psErr.Error
 	}
 
-	b := buf.Bytes()
-	checksum := Checksum(b)
-	b[2] = uint8((checksum & 0xff00) >> 8)
-	b[3] = uint8(checksum & 0x00ff)
+	packet := buf.Bytes()
+	checksum := Checksum(packet)
+	packet[2] = uint8((checksum & 0xff00) >> 8)
+	packet[3] = uint8(checksum & 0x00ff)
 
 	psLog.I("Outgoing ICMP packet")
 	hdr.Checksum = checksum
-	icmpDump(&hdr)
+	icmpHdrDump(&hdr)
 
-	// TODO: send
-	// ...
+	if err := IpSend(ProtoNumICMP, packet, dst, src); err != psErr.OK {
+		psLog.E(fmt.Sprintf("IpSend() failed: %s", err))
+		return psErr.Error
+	}
 
 	return psErr.OK
 }
 
-func icmpDump(hdr *IcmpHeader) {
+func icmpHdrDump(hdr *IcmpHeader) {
 	psLog.I(fmt.Sprintf("\ttype:     %d (%s)", hdr.Type, icmpTypes[hdr.Type]))
 	psLog.I(fmt.Sprintf("\tcode:     %d", hdr.Code))
 	psLog.I(fmt.Sprintf("\tchecksum: 0x%04x", hdr.Checksum))

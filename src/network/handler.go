@@ -15,7 +15,7 @@ func InputHandler(packet *ethernet.Packet) psErr.E {
 			return psErr.Error
 		}
 	case ethernet.EthTypeIpv4:
-		if err := IpInputHandler(packet.Payload, packet.Dev); err != psErr.OK {
+		if err := IpReceive(packet.Payload, packet.Dev); err != psErr.OK {
 			psLog.E(fmt.Sprintf("IpInputHandler() failed: %s", err))
 			return psErr.Error
 		}

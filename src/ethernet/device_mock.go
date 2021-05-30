@@ -144,6 +144,20 @@ func (mr *MockIDeviceMockRecorder) IsUp() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsUp", reflect.TypeOf((*MockIDevice)(nil).IsUp))
 }
 
+// MTU mocks base method.
+func (m *MockIDevice) MTU() uint16 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "MTU")
+	ret0, _ := ret[0].(uint16)
+	return ret0
+}
+
+// MTU indicates an expected call of MTU.
+func (mr *MockIDeviceMockRecorder) MTU() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MTU", reflect.TypeOf((*MockIDevice)(nil).MTU))
+}
+
 // Open mocks base method.
 func (m *MockIDevice) Open() error.E {
 	m.ctrl.T.Helper()

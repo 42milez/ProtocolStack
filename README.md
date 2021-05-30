@@ -62,6 +62,8 @@ Note: `make` supports the commands below:
 - [x] Ethernet
 - [x] ARP
 - [x] IP
+  - [x] v4
+  - [ ] v6
 - [x] ICMP
 - [ ] TCP
 - [ ] UDP
@@ -205,6 +207,7 @@ Note: `make` supports the commands below:
     - [net / ipv4](https://github.com/torvalds/linux/tree/master/net/ipv4)
 - Wikipedia
   - Computer Network
+      - [0.0.0.0](https://en.wikipedia.org/wiki/0.0.0.0)
       - [Address Resolution Protocol](https://en.wikipedia.org/wiki/Address_Resolution_Protocol)
       - [Data link layer](https://en.wikipedia.org/wiki/Data_link_layer)
       - [Ethernet frame](https://en.wikipedia.org/wiki/Ethernet_frame)
@@ -251,6 +254,7 @@ Note: `make` supports the commands below:
   - [History of programming languages](https://en.wikipedia.org/wiki/History_of_programming_languages)
 - Question and answer site
   - [C++ : how to close a tcp socket (server) when receiving SIGKILL](https://stackoverflow.com/questions/21329861/c-how-to-close-a-tcp-socket-server-when-receiving-sigkill)
+  - [Understanding INADDR_ANY for socket programming](https://stackoverflow.com/questions/16508685/understanding-inaddr-any-for-socket-programming)
   - [What is the difference between AF_INET and PF_INET in socket programming?](https://stackoverflow.com/questions/6729366/what-is-the-difference-between-af-inet-and-pf-inet-in-socket-programming)
 
 ## Memos

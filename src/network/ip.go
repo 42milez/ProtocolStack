@@ -1,82 +1,46 @@
 package network
 
 import (
+	"bytes"
+	"encoding/binary"
+	"fmt"
+	psErr "github.com/42milez/ProtocolStack/src/error"
+	"github.com/42milez/ProtocolStack/src/ethernet"
+	psLog "github.com/42milez/ProtocolStack/src/log"
 	"strings"
-	"syscall"
+	"sync"
 )
 
-// IP address lengths (bytes).
-const (
-	V4AddrLen = 4
-	V6AddrLen = 16
-)
+const IpHeaderSizeMin = 20 // bytes
+const IpHeaderSizeMax = 60 // bytes
 
-// IP address family
-const (
-	V4AddrFamily AddrFamily = syscall.AF_INET
-	V6AddrFamily AddrFamily = syscall.AF_INET6
-)
+const ProtoNumICMP = 1
+const ProtoNumTCP = 6
+const ProtoNumUDP = 17
 
-var addrFamilies = map[AddrFamily]string{
-	V4AddrFamily: "IPv4",
-	V6AddrFamily: "IPv6",
+const ipv4 = 4
+const ipv6 = 6
+
+var id *PacketID
+
+type PacketID struct {
+	id uint16
+	mtx sync.Mutex
 }
 
-// IP address expressions
-var (
-	V4Broadcast = V4(255, 255, 255, 255)
-	V4Zero      = V4(0, 0, 0, 0)
-)
-
-// AddrFamily is IP address family.
-type AddrFamily int
-
-func (v AddrFamily) String() string {
-	return addrFamilies[v]
-}
-
-// An IP is a single IP address.
-type IP []byte
-
-func (ip IP) EqualV4(v4 [V4AddrLen]byte) bool {
-	return ip[0] == v4[0] && ip[1] == v4[1] && ip[2] == v4[2] && ip[3] == v4[3]
-}
-
-// String returns the string form of IP.
-func (ip IP) String() string {
-	const maxIPv4StringLen = len("255.255.255.255")
-	b := make(IP, maxIPv4StringLen)
-
-	n := ubtoa(b, 0, ip[0])
-	b[n] = '.'
-	n++
-
-	n += ubtoa(b, n, ip[1])
-	b[n] = '.'
-	n++
-
-	n += ubtoa(b, n, ip[2])
-	b[n] = '.'
-	n++
-
-	n += ubtoa(b, n, ip[3])
-
-	return string(b[:n])
-}
-
-// ToV4 converts IP to 4 bytes representation.
-func (ip IP) ToV4() IP {
-	if len(ip) == V6AddrLen && isZeros(ip[0:10]) && ip[10] == 0xff && ip[11] == 0xff {
-		return ip[12:16]
-	}
-	return ip
+func (p *PacketID) Next() (id uint16) {
+	p.mtx.Lock()
+	defer p.mtx.Unlock()
+	id = p.id
+	p.id += 1
+	return
 }
 
 // Computing the Internet Checksum
 // https://datatracker.ietf.org/doc/html/rfc1071
 
 func Checksum(b []byte) uint16 {
-	var sum uint32 = 0
+	var sum uint32
 	// sum up all fields of IP header by each 16bits (except Header Checksum and Options)
 	for i := 0; i < len(b); i += 2 {
 		sum += uint32(uint16(b[i])<<8 | uint16(b[i+1]))
@@ -84,6 +48,152 @@ func Checksum(b []byte) uint16 {
 	//
 	sum = ((sum & 0xffff0000) >> 16) + (sum & 0x0000ffff)
 	return ^(uint16(sum))
+}
+
+func IpReceive(payload []byte, dev ethernet.IDevice) psErr.E {
+	packetLen := len(payload)
+
+	if packetLen < IpHeaderSizeMin {
+		psLog.E(fmt.Sprintf("IP packet length is too short: %d bytes", packetLen))
+		return psErr.InvalidPacket
+	}
+
+	buf := bytes.NewBuffer(payload)
+	hdr := IpHeader{}
+	if err := binary.Read(buf, binary.BigEndian, &hdr); err != nil {
+		psLog.E(fmt.Sprintf("binary.Read() failed: %s", err))
+		return psErr.Error
+	}
+
+	if version := hdr.VHL >> 4; version != ipv4 {
+		psLog.E(fmt.Sprintf("IP version %d is not supported", version))
+		return psErr.InvalidProtocolVersion
+	}
+
+	hdrLen := int(hdr.VHL&0x0f) * 4
+	if packetLen < hdrLen {
+		psLog.E(fmt.Sprintf("IP packet length is too short: IHL = %d, Actual Packet Size = %d", hdrLen, packetLen))
+		return psErr.InvalidPacket
+	}
+
+	if totalLen := int(hdr.TotalLen); packetLen < totalLen {
+		psLog.E(fmt.Sprintf("IP packet length is too short: Total Length = %d, Actual Length = %d", totalLen, packetLen))
+		return psErr.InvalidPacket
+	}
+
+	if hdr.TTL == 0 {
+		psLog.E("TTL expired")
+		return psErr.TtlExpired
+	}
+
+	cs1 := uint16(payload[10])<<8 | uint16(payload[11])
+	payload[10] = 0x00 // assign 0 to Header Checksum field (16bit)
+	payload[11] = 0x00
+	if cs2 := Checksum(payload); cs2 != cs1 {
+		psLog.E(fmt.Sprintf("Checksum mismatch: Expect = 0x%04x, Actual = 0x%04x", cs1, cs2))
+		return psErr.ChecksumMismatch
+	}
+
+	iface := IfaceRepo.Lookup(dev, V4AddrFamily)
+	if iface == nil {
+		psLog.E(fmt.Sprintf("Interface for %s is not registered", dev.Name()))
+		return psErr.InterfaceNotFound
+	}
+
+	if !iface.Unicast.EqualV4(hdr.Dst) {
+		if !iface.Broadcast.EqualV4(hdr.Dst) && V4Broadcast.EqualV4(hdr.Dst) {
+			psLog.I("Ignored IP packet (It was sent to different address)")
+			return psErr.OK
+		}
+	}
+
+	psLog.I("Incoming IP packet")
+	ipHdrDump(&hdr)
+
+	switch hdr.Protocol {
+	case ProtoNumICMP:
+		if err := IcmpReceive(payload[hdrLen:], hdr.Dst, hdr.Src, dev); err != psErr.OK {
+			psLog.E(fmt.Sprintf("IcmpInputHandler() failed: %s", err))
+			return psErr.Error
+		}
+	case ProtoNumTCP:
+		psLog.E("Currently NOT support TCP")
+		return psErr.Error
+	case ProtoNumUDP:
+		psLog.E("Currently NOT support UDP")
+		return psErr.Error
+	default:
+		psLog.E(fmt.Sprintf("Unsupported protocol: %d", hdr.Protocol))
+		return psErr.UnsupportedProtocol
+	}
+
+	return psErr.OK
+}
+
+func IpSend(protoNum ProtocolNumber, payload []byte, dst IP, src IP) psErr.E {
+	var iface *Iface
+	var nextHop IP
+
+	if src.Equal(V4Zero) {
+		// Note: Lookup appropriate interface to send IP packet because 0.0.0.0 is a non-routable meta-address.
+		route := RouteRepo.Get(dst)
+		if route == nil {
+			psLog.E("Route to destination was not found")
+			return psErr.RouteNotFound
+		}
+		iface = route.Iface
+		if route.NextHop.Equal(V4Zero) {
+			nextHop = dst
+		} else {
+			nextHop = route.NextHop
+		}
+	} else {
+		iface = IfaceRepo.Get(src)
+		if iface == nil {
+			psLog.E("Interface was not found")
+			return psErr.InterfaceNotFound
+		}
+		// Don't send IP packet when network address of both destination and iface is not matched each other or
+		// destination address is not matched to the broadcast address.
+		if !dst.Mask(iface.Netmask).Equal(iface.Unicast.Mask(iface.Netmask)) && !dst.Equal(V4Broadcast){
+			psLog.E(fmt.Sprintf("IP packet can't reach %s (Network address is not matched)", dst.String()))
+			return psErr.NetworkAddressNotMatch
+		}
+		nextHop = dst
+	}
+
+	if packetLen := IpHeaderSizeMin + len(payload); int(iface.Dev.MTU()) < packetLen {
+		psLog.E(fmt.Sprintf("IP packet length is too long: %d", packetLen))
+		return psErr.IpPacketTooLong
+	}
+
+	hdr := IpHeader{}
+	hdr.VHL = uint8(ipv4 << 4) | uint8(IpHeaderSizeMin/4)
+	hdr.TotalLen = uint16(IpHeaderSizeMin + len(payload))
+	hdr.ID = id.Next()
+	hdr.TTL = 0xff
+	hdr.Protocol = protoNum
+	copy(hdr.Src[:], src[:])
+	copy(hdr.Dst[:], dst[:])
+
+	buf := new(bytes.Buffer)
+	if err := binary.Write(buf, binary.BigEndian, &hdr); err != nil {
+		psLog.E(fmt.Sprintf("binary.Write() failed: %s", err))
+		return psErr.Error
+	}
+
+	packet := buf.Bytes()
+	hdr.Checksum = Checksum(packet)
+	packet[10] = uint8((hdr.Checksum&0xff00)>>8)
+	packet[11] = uint8(hdr.Checksum&0x00ff)
+
+	psLog.I("Outgoing IP packet")
+	ipHdrDump(&hdr)
+
+	// TODO: write to device
+	// ...
+
+	return psErr.OK
 }
 
 // ParseIP parses string as IPv4 or IPv6 address by detecting its format.
@@ -121,6 +231,30 @@ func V4(a, b, c, d byte) IP {
 	return p
 }
 
+func allFF(b []byte) bool {
+	for _, c := range b {
+		if c != 0xff {
+			return false
+		}
+	}
+	return true
+}
+
+func ipHdrDump(hdr *IpHeader) {
+	psLog.I(fmt.Sprintf("\tversion:             IPv%d", hdr.VHL>>4))
+	psLog.I(fmt.Sprintf("\tihl:                 %d", hdr.VHL&0x0f))
+	psLog.I(fmt.Sprintf("\ttype of service:     0b%08b", hdr.TOS))
+	psLog.I(fmt.Sprintf("\ttotal length:        %d bytes (payload: %d bytes)", hdr.TotalLen, hdr.TotalLen-uint16(4*(hdr.VHL&0x0f))))
+	psLog.I(fmt.Sprintf("\tid:                  %d", hdr.ID))
+	psLog.I(fmt.Sprintf("\tflags:               0b%03b", (hdr.Offset&0xefff)>>13))
+	psLog.I(fmt.Sprintf("\tfragment offset:     %d", hdr.Offset&0x1fff))
+	psLog.I(fmt.Sprintf("\tttl:                 %d", hdr.TTL))
+	psLog.I(fmt.Sprintf("\tprotocol:            %d (%s)", hdr.Protocol, protocolNumbers[hdr.Protocol]))
+	psLog.I(fmt.Sprintf("\tchecksum:            0x%04x", hdr.Checksum))
+	psLog.I(fmt.Sprintf("\tsource address:      %d.%d.%d.%d", hdr.Src[0], hdr.Src[1], hdr.Src[2], hdr.Src[3]))
+	psLog.I(fmt.Sprintf("\tdestination address: %d.%d.%d.%d", hdr.Dst[0], hdr.Dst[1], hdr.Dst[2], hdr.Dst[3]))
+}
+
 // isZeros checks if ip all zeros.
 func isZeros(ip IP) bool {
 	for i := 0; i < len(ip); i++ {
@@ -129,6 +263,18 @@ func isZeros(ip IP) bool {
 		}
 	}
 	return true
+}
+
+func longestIP(ip1 IP, ip2 IP) IP {
+	if len(ip1) != len(ip2) {
+		return nil
+	}
+	for i, v := range ip1 {
+		if v < ip2[i] {
+			return ip2
+		}
+	}
+	return ip1
 }
 
 // parseV4 parses string as IPv4 address.
@@ -185,4 +331,8 @@ func ubtoa(dst []byte, start int, v byte) int {
 	dst[start+1] = ((v / 10) % 10) + '0'
 	dst[start] = (v / 100) + '0'
 	return 3
+}
+
+func init() {
+	id = &PacketID{}
 }

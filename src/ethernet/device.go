@@ -44,24 +44,27 @@ type IDevice interface {
 	Down()
 	Equal(dev IDevice) bool
 	IsUp() bool
-	DevType() DevType
-	DevName() string
-	PrivDevName() string
-	EthAddr() EthAddr
-	BroadcastEthAddr() EthAddr
-	PeerEthAddr() EthAddr
+	Type() DevType
+	Name() string
+	Addr() EthAddr
+	Broadcast() EthAddr
+	Peer() EthAddr
+	Flag() DevFlag
+	HeaderLen() uint16
+	MTU() uint16
+	Priv() Privilege
 }
 
 type Device struct {
-	Type      DevType
-	Name      string
-	Addr      EthAddr
-	Broadcast EthAddr
-	Peer      EthAddr
-	FLAG      DevFlag
-	HeaderLen uint16
-	MTU       uint16
-	Priv      Privilege
+	_Type      DevType
+	_Name      string
+	_Addr      EthAddr
+	_Broadcast EthAddr
+	_Peer      EthAddr
+	_Flag      DevFlag
+	_HeaderLen uint16
+	_MTU       uint16
+	_Priv      Privilege
 }
 
 type Privilege struct {
@@ -70,41 +73,53 @@ type Privilege struct {
 }
 
 func (p *Device) Up() {
-	p.FLAG |= DevFlagUp
+	p._Flag |= DevFlagUp
 }
 
 func (p *Device) Down() {
-	p.FLAG &= ^DevFlagUp
+	p._Flag &= ^DevFlagUp
 }
 
 func (p *Device) Equal(pp IDevice) bool {
-	return p.Name == pp.DevName()
+	return p._Name == pp.Name()
 }
 
 func (p *Device) IsUp() bool {
-	return p.FLAG&DevFlagUp == 1
+	return p._Flag&DevFlagUp == 1
 }
 
-func (p *Device) DevType() DevType {
-	return p.Type
+func (p *Device) Type() DevType {
+	return p._Type
 }
 
-func (p *Device) DevName() string {
-	return p.Name
+func (p *Device) Name() string {
+	return p._Name
 }
 
-func (p *Device) PrivDevName() string {
-	return p.Priv.Name
+func (p *Device) Addr() EthAddr {
+	return p._Addr
 }
 
-func (p *Device) EthAddr() EthAddr {
-	return p.Addr
+func (p *Device) Broadcast() EthAddr {
+	return p._Broadcast
 }
 
-func (p *Device) BroadcastEthAddr() EthAddr {
-	return p.Addr
+func (p *Device) Peer() EthAddr {
+	return p._Peer
 }
 
-func (p *Device) PeerEthAddr() EthAddr {
-	return p.Addr
+func (p *Device) Flag() DevFlag {
+	return p._Flag
+}
+
+func (p *Device) HeaderLen() uint16 {
+	return p._HeaderLen
+}
+
+func (p *Device) MTU() uint16 {
+	return p._MTU
+}
+
+func (p *Device) Priv() Privilege {
+	return p._Priv
 }
