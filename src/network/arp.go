@@ -12,7 +12,7 @@ import (
 )
 
 const ArpCacheSize = 32
-const ArpPacketSize = 68
+const ArpPacketSize = 28 // byte
 
 var cache *ArpCache
 
@@ -122,7 +122,7 @@ func (p *ArpCache) danglingEntry() *ArpCacheEntry {
 
 func ArpInputHandler(payload []byte, dev ethernet.IDevice) psErr.E {
 	if len(payload) < ArpPacketSize {
-		psLog.E(fmt.Sprintf("ARP packet size is too small: %d bytes", len(payload)))
+		psLog.E(fmt.Sprintf("ARP packet length is too short: %d bytes", len(payload)))
 		return psErr.InvalidPacket
 	}
 
@@ -146,7 +146,7 @@ func ArpInputHandler(payload []byte, dev ethernet.IDevice) psErr.E {
 	psLog.I("Incoming ARP packet")
 	arpDump(&packet)
 
-	iface := IfaceRepo.Get(dev, FamilyV4)
+	iface := IfaceRepo.Get(dev, V4AddrFamily)
 	if iface == nil {
 		psLog.E(fmt.Sprintf("Interface for %s is not registered", dev.DevName()))
 		return psErr.InterfaceNotFound
@@ -169,7 +169,7 @@ func ArpInputHandler(payload []byte, dev ethernet.IDevice) psErr.E {
 			}
 		}
 	} else {
-		psLog.I("Ignored arp packet (It was sent to different address)")
+		psLog.I("Ignored ARP packet (It was sent to different address)")
 	}
 
 	return psErr.OK

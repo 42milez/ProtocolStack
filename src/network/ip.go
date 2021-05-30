@@ -1,30 +1,8 @@
 package network
 
 import (
-	"bytes"
-	"encoding/binary"
-	"fmt"
-	psErr "github.com/42milez/ProtocolStack/src/error"
-	"github.com/42milez/ProtocolStack/src/ethernet"
-	psLog "github.com/42milez/ProtocolStack/src/log"
 	"strings"
-)
-
-const IpVersionV4 = 0x04
-
-// IpHeaderSizeMin
-// IpHeaderSizeMax
-// The number 576 is selected to allow a reasonable sized data block to be transmitted in addition to the required
-// header information. For example, this size allows a data block of 512 octets plus 64 header octets to fit in a
-// datagram. The maximal internet header is 60 octets, and a typical internet header is 20 octets, allowing a margin for
-// headers of higher level protocols.
-// see: https://datatracker.ietf.org/doc/html/rfc791
-const IpHeaderSizeMin = 20
-const IpHeaderSizeMax = 60
-
-const (
-	FamilyV4 AddrFamily = iota
-	FamilyV6
+	"syscall"
 )
 
 // IP address lengths (bytes).
@@ -33,6 +11,18 @@ const (
 	V6AddrLen = 16
 )
 
+// IP address family
+const (
+	V4AddrFamily AddrFamily = syscall.AF_INET
+	V6AddrFamily AddrFamily = syscall.AF_INET6
+)
+
+var addrFamilies = map[AddrFamily]string{
+	V4AddrFamily: "IPv4",
+	V6AddrFamily: "IPv6",
+}
+
+// IP address expressions
 var (
 	V4Broadcast = V4(255, 255, 255, 255)
 	V4Zero      = V4(0, 0, 0, 0)
@@ -41,15 +31,8 @@ var (
 // AddrFamily is IP address family.
 type AddrFamily int
 
-func (f AddrFamily) String() string {
-	switch f {
-	case FamilyV4:
-		return "FAMILY_V4"
-	case FamilyV6:
-		return "FAMILY_V6"
-	default:
-		return "UNKNOWN"
-	}
+func (v AddrFamily) String() string {
+	return addrFamilies[v]
 }
 
 // An IP is a single IP address.
@@ -89,72 +72,18 @@ func (ip IP) ToV4() IP {
 	return ip
 }
 
-// Internet Header Format
-// https://datatracker.ietf.org/doc/html/rfc791#section-3.1
+// Computing the Internet Checksum
+// https://datatracker.ietf.org/doc/html/rfc1071
 
-type IpHeader struct {
-	VHL      uint8
-	TOS      uint8
-	TotalLen uint16
-	ID       uint16
-	Offset   uint16
-	TTL      uint8
-	Protocol uint8
-	Checksum uint16
-	Src      [V4AddrLen]byte
-	Dst      [V4AddrLen]byte
-	Options  [0]byte
-}
-
-func IpInputHandler(payload []byte, dev ethernet.IDevice) psErr.E {
-	payloadLen := len(payload)
-
-	if payloadLen < IpHeaderSizeMin {
-		psLog.E(fmt.Sprintf("IP packet size is too small: %d bytes", payloadLen))
-		return psErr.InvalidPacket
+func Checksum(b []byte) uint16 {
+	var sum uint32 = 0
+	// sum up all fields of IP header by each 16bits (except Header Checksum and Options)
+	for i := 0; i < len(b); i += 2 {
+		sum += uint32(uint16(b[i])<<8 | uint16(b[i+1]))
 	}
-
-	buf := bytes.NewBuffer(payload)
-	hdr := IpHeader{}
-	if err := binary.Read(buf, binary.BigEndian, &hdr); err != nil {
-		psLog.E(fmt.Sprintf("binary.Read() failed: %s", err))
-		return psErr.Error
-	}
-
-	if version := hdr.VHL >> 4; version != IpVersionV4 {
-		psLog.E(fmt.Sprintf("IP version %d is not supported", version))
-		return psErr.UnsupportedVersion
-	}
-
-	hdrLen := int(hdr.VHL & 0x0f)
-
-	if payloadLen < hdrLen {
-		psLog.E(fmt.Sprintf("IP packet length is too short: IHL = %d, Actual Packet Size = %d", hdrLen, payloadLen))
-		return psErr.InvalidPacket
-	}
-
-	if totalLen := int(hdr.TotalLen); payloadLen < totalLen {
-		psLog.E(fmt.Sprintf("IP packet length is too short: Total Length = %d, Actual Length = %d", totalLen, payloadLen))
-		return psErr.InvalidPacket
-	}
-
-	if hdr.TTL == 0 {
-		psLog.E("TTL expired")
-		return psErr.TtlExpired
-	}
-
-	if sum := checksum(payload[:20]); sum != hdr.Checksum {
-		psLog.E(fmt.Sprintf("Checksum mismatch: Expect = 0x%04x, Actual = 0x%04x", hdr.Checksum, sum))
-		return psErr.ChecksumMismatch
-	}
-
-	iface := IfaceRepo.Get(dev, FamilyV4)
-	if iface == nil {
-		psLog.E(fmt.Sprintf("Interface for %s is not registered", dev.DevName()))
-		return psErr.InterfaceNotFound
-	}
-
-	return psErr.OK
+	//
+	sum = ((sum & 0xffff0000) >> 16) + (sum & 0x0000ffff)
+	return ^(uint16(sum))
 }
 
 // ParseIP parses string as IPv4 or IPv6 address by detecting its format.
@@ -182,8 +111,7 @@ func ParseIP(s string) IP {
 //	return p
 //}
 
-// TODO: use IPv4-mapped address above
-// V4 creates IP from bytes.
+// V4 creates IP from bytes. TODO: use IPv4-mapped address above
 func V4(a, b, c, d byte) IP {
 	p := make(IP, V4AddrLen)
 	p[0] = a
@@ -191,18 +119,6 @@ func V4(a, b, c, d byte) IP {
 	p[2] = c
 	p[3] = d
 	return p
-}
-
-func checksum(b []byte) uint16 {
-	var sum uint32 = 0
-	for i := 0; i < len(b); i += 2 {
-		if i == 10 {
-			continue
-		}
-		sum += uint32(uint16(b[i])<<8 | uint16(b[i+1]))
-	}
-	sum = ((sum & 0xffff0000)>>16) + (sum & 0x0000ffff)
-	return ^(uint16(sum))
 }
 
 // isZeros checks if ip all zeros.

@@ -6,19 +6,14 @@ import (
 )
 
 func TestAddrFamily_String(t *testing.T) {
-	got := FamilyV4.String()
-	if got != "FAMILY_V4" {
-		t.Errorf("AddrFamily.String() = %v; want %v", got, "FAMILY_V4")
+	got := V4AddrFamily.String()
+	if got != "IPv4" {
+		t.Errorf("AddrFamily.String() = %v; want %v", got, "IPv4")
 	}
 
-	got = FamilyV6.String()
-	if got != "FAMILY_V6" {
-		t.Errorf("AddrFamily.String() = %v; want %v", got, "FAMILY_V6")
-	}
-
-	got = AddrFamily(999).String()
-	if got != "UNKNOWN" {
-		t.Errorf("AddrFamily.String() = %v; want %v", got, "UNKNOWN")
+	got = V6AddrFamily.String()
+	if got != "IPv6" {
+		t.Errorf("AddrFamily.String() = %v; want %v", got, "IPv6")
 	}
 }
 

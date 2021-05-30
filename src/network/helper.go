@@ -2,14 +2,13 @@ package network
 
 import (
 	"github.com/42milez/ProtocolStack/src/ethernet"
-	psSyscall "github.com/42milez/ProtocolStack/src/syscall"
 	"strconv"
 )
 
 // GenIface generates Iface.
 func GenIface(unicast string, netmask string, broadcast string) *Iface {
 	iface := &Iface{
-		Family:    FamilyV4,
+		Family:    V4AddrFamily,
 		Unicast:   ParseIP(unicast),
 		Netmask:   ParseIP(netmask),
 		Broadcast: ParseIP(broadcast),
@@ -26,7 +25,6 @@ func GenLoopbackDevice() *ethernet.LoopbackDevice {
 			MTU:       ethernet.LoopbackMTU,
 			HeaderLen: 0,
 			FLAG:      ethernet.DevFlagLoopback,
-			Syscall:   &psSyscall.Syscall{},
 		},
 	}
 	return dev
@@ -47,7 +45,6 @@ func GenTapDevice(index uint8, addr ethernet.EthAddr) *ethernet.TapDevice {
 				FD:   -1,
 				Name: "tap" + strconv.Itoa(int(index)),
 			},
-			Syscall: &psSyscall.Syscall{},
 		},
 	}
 }

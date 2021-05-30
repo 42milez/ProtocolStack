@@ -64,15 +64,15 @@ func ReadFrame(fd int, addr EthAddr, sc psSyscall.ISyscall) (*Packet, psErr.E) {
 	// TODO: make buf static variable to reuse
 	buf := make([]byte, EthFrameSizeMax)
 
-	fsize, err := sc.Read(fd, buf)
+	flen, err := sc.Read(fd, buf)
 	if err != nil {
 		psLog.E(fmt.Sprintf("syscall.Read() failed: %s", err))
 		return nil, psErr.Error
 	}
 
-	if fsize < EthHeaderSize {
+	if flen < EthHeaderSize {
 		psLog.E("Ethernet header length is too short")
-		psLog.E(fmt.Sprintf("\tlength: %v bytes", fsize))
+		psLog.E(fmt.Sprintf("\tlength: %v bytes", flen))
 		return nil, psErr.Error
 	}
 
@@ -93,8 +93,56 @@ func ReadFrame(fd int, addr EthAddr, sc psSyscall.ISyscall) (*Packet, psErr.E) {
 
 	packet := &Packet{
 		Type:    hdr.Type,
-		Payload: buf[EthHeaderSize:],
+		Payload: buf[EthHeaderSize:flen],
 	}
 
 	return packet, psErr.OK
+}
+
+func WriteFrame(fd int, dst EthAddr, src EthAddr, typ EthType, payload []byte) psErr.E {
+	hdr := EthHeader{
+		Dst:  dst,
+		Src:  src,
+		Type: typ,
+	}
+
+	buf := new(bytes.Buffer)
+	if err := binary.Write(buf, binary.BigEndian, &hdr); err != nil {
+		psLog.E(fmt.Sprintf("binary.Write() failed: %s", err))
+		return psErr.Error
+	}
+	if err := binary.Write(buf, binary.BigEndian, &payload); err != nil {
+		psLog.E(fmt.Sprintf("binary.Write() failed: %s", err))
+		return psErr.Error
+	}
+
+	if flen := buf.Len(); flen < EthFrameSizeMin {
+		pad := make([]byte, EthFrameSizeMin-flen)
+		if err := binary.Write(buf, binary.BigEndian, &pad); err != nil {
+			psLog.E(fmt.Sprintf("binary.Write() failed: %s", err))
+			return psErr.Error
+		}
+	}
+
+	psLog.I("Outgoing Ethernet frame")
+	psLog.I(fmt.Sprintf("\tdst:     %s", hdr.Dst))
+	psLog.I(fmt.Sprintf("\tsrc:     %s", hdr.Src))
+	psLog.I(fmt.Sprintf("\ttype:    %s", hdr.Type))
+	s := "\tpayload: "
+	for i, v := range payload {
+		s += fmt.Sprintf("%02x ", v)
+		if (i+1)%10 == 0 {
+			psLog.I(s)
+			s = "\t\t "
+		}
+	}
+
+	if n, err := psSyscall.Syscall.Write(fd, buf.Bytes()); err != nil {
+		psLog.E(fmt.Sprintf("syscall.Write() failed: %s", err))
+		return psErr.Error
+	} else {
+		psLog.I(fmt.Sprintf("Ethernet frame has been written: %d bytes", n))
+	}
+
+	return psErr.OK
 }

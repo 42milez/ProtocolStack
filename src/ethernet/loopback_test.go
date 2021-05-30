@@ -15,7 +15,9 @@ func TestLoopbackDevice_Open_SUCCESS(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	loopbackDev := LoopbackDevice{Device{Syscall: psSyscall.NewMockISyscall(ctrl)}}
+	psSyscall.Syscall = psSyscall.NewMockISyscall(ctrl)
+
+	loopbackDev := LoopbackDevice{}
 
 	got := loopbackDev.Open()
 	if got != psErr.OK {
@@ -30,7 +32,9 @@ func TestLoopbackDevice_Close_SUCCESS(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	loopbackDev := LoopbackDevice{Device{Syscall: psSyscall.NewMockISyscall(ctrl)}}
+	psSyscall.Syscall = psSyscall.NewMockISyscall(ctrl)
+
+	loopbackDev := LoopbackDevice{}
 
 	got := loopbackDev.Close()
 	if got != psErr.OK {
@@ -45,7 +49,9 @@ func TestLoopbackDevice_Poll_SUCCESS(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	loopbackDev := LoopbackDevice{Device{Syscall: psSyscall.NewMockISyscall(ctrl)}}
+	psSyscall.Syscall = psSyscall.NewMockISyscall(ctrl)
+
+	loopbackDev := LoopbackDevice{}
 
 	got := loopbackDev.Poll(false)
 	if got != psErr.OK {
@@ -60,7 +66,9 @@ func TestLoopbackDevice_Transmit_SUCCESS(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	loopbackDev := LoopbackDevice{Device{Syscall: psSyscall.NewMockISyscall(ctrl)}}
+	psSyscall.Syscall = psSyscall.NewMockISyscall(ctrl)
+
+	loopbackDev := LoopbackDevice{}
 
 	got := loopbackDev.Transmit(EthAddr{}, make([]byte, 0), EthTypeArp)
 	if got != psErr.OK {

@@ -2,14 +2,13 @@ package network
 
 import (
 	"github.com/42milez/ProtocolStack/src/ethernet"
-	psSyscall "github.com/42milez/ProtocolStack/src/syscall"
 	"github.com/google/go-cmp/cmp"
 	"testing"
 )
 
 func TestGenIface_SUCCESS(t *testing.T) {
 	want := &Iface{
-		Family:    FamilyV4,
+		Family:    V4AddrFamily,
 		Unicast:   ParseIP(ethernet.LoopbackIpAddr),
 		Netmask:   ParseIP(ethernet.LoopbackNetmask),
 		Broadcast: ParseIP(ethernet.LoopbackBroadcast),
@@ -28,7 +27,6 @@ func TestGenLoopbackDevice_SUCCESS(t *testing.T) {
 			MTU:       ethernet.LoopbackMTU,
 			HeaderLen: 0,
 			FLAG:      ethernet.DevFlagLoopback,
-			Syscall:   &psSyscall.Syscall{},
 		},
 	}
 	got := GenLoopbackDevice()
@@ -50,7 +48,6 @@ func TestGenTapDevice_SUCCESS(t *testing.T) {
 			Addr:      devEthAddr,
 			Broadcast: ethernet.EthAddrBroadcast,
 			Priv:      ethernet.Privilege{FD: -1, Name: devName},
-			Syscall:   &psSyscall.Syscall{},
 		},
 	}
 	got := GenTapDevice(0, devEthAddr)
