@@ -9,8 +9,6 @@ import (
 	psLog "github.com/42milez/ProtocolStack/src/log"
 )
 
-const ArpCacheSize = 32
-
 var cache *ArpCache
 
 func ArpInputHandler(payload []byte, dev ethernet.IDevice) psErr.E {

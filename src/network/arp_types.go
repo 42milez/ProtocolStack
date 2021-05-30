@@ -17,6 +17,7 @@ import (
 // Notes:
 //  - Protocol Type is same as EtherType.
 
+const ArpCacheSize = 32 // number of cache entries
 const (
 	ArpCacheStateFree ArpCacheState = iota
 	ArpCacheStateIncomplete
