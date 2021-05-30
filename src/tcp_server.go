@@ -8,6 +8,7 @@ import (
 	"github.com/42milez/ProtocolStack/src/network"
 	"os"
 	"os/signal"
+	"strconv"
 	"sync"
 	"syscall"
 	"time"
@@ -28,22 +29,25 @@ func setup() psErr.E {
 	psLog.I("--------------------------------------------------")
 
 	// Create a loopback device and its iface, then link them.
-	loopbackDev := network.GenLoopbackDevice()
+	loopbackDev := ethernet.GenLoopbackDevice("net" + strconv.Itoa(network.DeviceRepo.NextNumber()))
 	if err := network.DeviceRepo.Register(loopbackDev); err != psErr.OK {
 		psLog.E(fmt.Sprintf("network.DeviceRepo.Register() failed: %s", err))
 		return psErr.Error
 	}
 
-	iface1 := network.GenIface(ethernet.LoopbackIpAddr, ethernet.LoopbackNetmask, ethernet.LoopbackBroadcast)
+	iface1 := network.GenIface(network.LoopbackIpAddr, network.LoopbackNetmask, network.LoopbackBroadcast)
 	if err := network.IfaceRepo.Register(iface1, loopbackDev); err != psErr.OK {
 		psLog.E(fmt.Sprintf("network.IfaceRepo.Register() failed: %s", err))
 		return psErr.Error
 	}
 
-	network.RouteRepo.Register(network.ParseIP(ethernet.LoopbackNetwork), network.V4Zero, iface1)
+	network.RouteRepo.Register(network.ParseIP(network.LoopbackNetwork), network.V4Zero, iface1)
 
 	// Create a TAP device and its interface, then link them.
-	tapDev := network.GenTapDevice(0, ethernet.EthAddr{11, 22, 33, 44, 55, 66})
+	tapDev := ethernet.GenTapDevice(
+		"net"+strconv.Itoa(network.DeviceRepo.NextNumber()),
+		"tap0",
+		ethernet.EthAddr{11, 22, 33, 44, 55, 66})
 	if err := network.DeviceRepo.Register(tapDev); err != psErr.OK {
 		psLog.E(fmt.Sprintf("network.DeviceRepo.Register() failed: %s", err))
 		return psErr.Error

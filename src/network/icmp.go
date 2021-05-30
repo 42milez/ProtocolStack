@@ -41,7 +41,7 @@ func IcmpReceive(payload []byte, dst [V4AddrLen]byte, src [V4AddrLen]byte, dev e
 	case IcmpTypeEcho:
 		s := IP(src[:])
 		d := IP(dst[:])
-		iface := IfaceRepo.Get(dev, V4AddrFamily)
+		iface := IfaceRepo.Lookup(dev, V4AddrFamily)
 		if !iface.Unicast.EqualV4(dst) {
 			d = iface.Unicast
 		}

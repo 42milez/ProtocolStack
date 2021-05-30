@@ -62,7 +62,7 @@ func (dev *TapDevice) Open() psErr.E {
 
 	ifrFlags := IfreqFlags{}
 	ifrFlags.Flags = syscall.IFF_TAP | syscall.IFF_NO_PI
-	copy(ifrFlags.Name[:], dev.Priv.Name)
+	copy(ifrFlags.Name[:], dev.Priv().Name)
 
 	if _, _, errno := psSyscall.Syscall.Ioctl(uintptr(fd), uintptr(syscall.TUNSETIFF), uintptr(unsafe.Pointer(&ifrFlags))); errno != 0 {
 		_ = psSyscall.Syscall.Close(fd)
@@ -82,14 +82,14 @@ func (dev *TapDevice) Open() psErr.E {
 
 	ifrSockAddr := IfreqSockAddr{}
 	ifrSockAddr.Addr.Family = syscall.AF_INET
-	copy(ifrSockAddr.Name[:], dev.Priv.Name)
+	copy(ifrSockAddr.Name[:], dev.Priv().Name)
 
 	if _, _, errno := psSyscall.Syscall.Ioctl(uintptr(soc), uintptr(syscall.SIOCGIFHWADDR), uintptr(unsafe.Pointer(&ifrSockAddr))); errno != 0 {
 		_ = psSyscall.Syscall.Close(soc)
 		psLog.E(fmt.Sprintf("syscall.Syscall(SYS_IOCTL, SIOCGIFHWADDR) failed: %s", errno))
 		return psErr.CantModifyIOResourceParameter
 	}
-	copy(dev.Addr[:], ifrSockAddr.Addr.Data[:])
+	copy(dev.Addr_[:], ifrSockAddr.Addr.Data[:])
 	_ = psSyscall.Syscall.Close(soc)
 
 	// --------------------------------------------------
@@ -110,7 +110,7 @@ func (dev *TapDevice) Open() psErr.E {
 		return psErr.CantModifyIOResourceParameter
 	}
 
-	dev.Priv.FD = fd
+	dev.Priv_.FD = fd
 
 	return psErr.OK
 }
@@ -142,8 +142,8 @@ func (dev *TapDevice) Poll(isTerminated bool) psErr.E {
 	if nEvents > 0 {
 		psLog.I("Event occurred")
 		psLog.I(fmt.Sprintf("\tevents: %v", nEvents))
-		psLog.I(fmt.Sprintf("\tdevice: %v (%v)", dev.Name, dev.Priv.Name))
-		if packet, err := ReadFrame(dev.Priv.FD, dev.Addr, psSyscall.Syscall); err != psErr.OK {
+		psLog.I(fmt.Sprintf("\tdevice: %v (%v)", dev.Name_, dev.Priv_.Name))
+		if packet, err := ReadFrame(dev.Priv_.FD, dev.Addr_, psSyscall.Syscall); err != psErr.OK {
 			if err != psErr.NoDataToRead {
 				psLog.E(fmt.Sprintf("ReadFrame() failed: %s", err))
 				return psErr.Error
@@ -158,5 +158,5 @@ func (dev *TapDevice) Poll(isTerminated bool) psErr.E {
 }
 
 func (dev *TapDevice) Transmit(dst EthAddr, payload []byte, typ EthType) psErr.E {
-	return WriteFrame(dev.Priv.FD, dst, dev.Addr, typ, payload)
+	return WriteFrame(dev.Priv_.FD, dst, dev.Addr_, typ, payload)
 }

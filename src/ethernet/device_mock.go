@@ -34,18 +34,32 @@ func (m *MockIDevice) EXPECT() *MockIDeviceMockRecorder {
 	return m.recorder
 }
 
-// BroadcastEthAddr mocks base method.
-func (m *MockIDevice) BroadcastEthAddr() EthAddr {
+// Addr mocks base method.
+func (m *MockIDevice) Addr() EthAddr {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "BroadcastEthAddr")
+	ret := m.ctrl.Call(m, "Addr")
 	ret0, _ := ret[0].(EthAddr)
 	return ret0
 }
 
-// BroadcastEthAddr indicates an expected call of BroadcastEthAddr.
-func (mr *MockIDeviceMockRecorder) BroadcastEthAddr() *gomock.Call {
+// Addr indicates an expected call of Addr.
+func (mr *MockIDeviceMockRecorder) Addr() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BroadcastEthAddr", reflect.TypeOf((*MockIDevice)(nil).BroadcastEthAddr))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Addr", reflect.TypeOf((*MockIDevice)(nil).Addr))
+}
+
+// Broadcast mocks base method.
+func (m *MockIDevice) Broadcast() EthAddr {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Broadcast")
+	ret0, _ := ret[0].(EthAddr)
+	return ret0
+}
+
+// Broadcast indicates an expected call of Broadcast.
+func (mr *MockIDeviceMockRecorder) Broadcast() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Broadcast", reflect.TypeOf((*MockIDevice)(nil).Broadcast))
 }
 
 // Close mocks base method.
@@ -60,34 +74,6 @@ func (m *MockIDevice) Close() error.E {
 func (mr *MockIDeviceMockRecorder) Close() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockIDevice)(nil).Close))
-}
-
-// DevName mocks base method.
-func (m *MockIDevice) DevName() string {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DevName")
-	ret0, _ := ret[0].(string)
-	return ret0
-}
-
-// DevName indicates an expected call of DevName.
-func (mr *MockIDeviceMockRecorder) DevName() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DevName", reflect.TypeOf((*MockIDevice)(nil).DevName))
-}
-
-// DevType mocks base method.
-func (m *MockIDevice) DevType() DevType {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DevType")
-	ret0, _ := ret[0].(DevType)
-	return ret0
-}
-
-// DevType indicates an expected call of DevType.
-func (mr *MockIDeviceMockRecorder) DevType() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DevType", reflect.TypeOf((*MockIDevice)(nil).DevType))
 }
 
 // Down mocks base method.
@@ -116,18 +102,32 @@ func (mr *MockIDeviceMockRecorder) Equal(dev interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Equal", reflect.TypeOf((*MockIDevice)(nil).Equal), dev)
 }
 
-// EthAddr mocks base method.
-func (m *MockIDevice) EthAddr() EthAddr {
+// Flag mocks base method.
+func (m *MockIDevice) Flag() DevFlag {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "EthAddr")
-	ret0, _ := ret[0].(EthAddr)
+	ret := m.ctrl.Call(m, "Flag")
+	ret0, _ := ret[0].(DevFlag)
 	return ret0
 }
 
-// EthAddr indicates an expected call of EthAddr.
-func (mr *MockIDeviceMockRecorder) EthAddr() *gomock.Call {
+// Flag indicates an expected call of Flag.
+func (mr *MockIDeviceMockRecorder) Flag() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EthAddr", reflect.TypeOf((*MockIDevice)(nil).EthAddr))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Flag", reflect.TypeOf((*MockIDevice)(nil).Flag))
+}
+
+// HeaderLen mocks base method.
+func (m *MockIDevice) HeaderLen() uint16 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "HeaderLen")
+	ret0, _ := ret[0].(uint16)
+	return ret0
+}
+
+// HeaderLen indicates an expected call of HeaderLen.
+func (mr *MockIDeviceMockRecorder) HeaderLen() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HeaderLen", reflect.TypeOf((*MockIDevice)(nil).HeaderLen))
 }
 
 // IsUp mocks base method.
@@ -158,6 +158,20 @@ func (mr *MockIDeviceMockRecorder) MTU() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MTU", reflect.TypeOf((*MockIDevice)(nil).MTU))
 }
 
+// Name mocks base method.
+func (m *MockIDevice) Name() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Name")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// Name indicates an expected call of Name.
+func (mr *MockIDeviceMockRecorder) Name() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Name", reflect.TypeOf((*MockIDevice)(nil).Name))
+}
+
 // Open mocks base method.
 func (m *MockIDevice) Open() error.E {
 	m.ctrl.T.Helper()
@@ -172,18 +186,18 @@ func (mr *MockIDeviceMockRecorder) Open() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Open", reflect.TypeOf((*MockIDevice)(nil).Open))
 }
 
-// PeerEthAddr mocks base method.
-func (m *MockIDevice) PeerEthAddr() EthAddr {
+// Peer mocks base method.
+func (m *MockIDevice) Peer() EthAddr {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "PeerEthAddr")
+	ret := m.ctrl.Call(m, "Peer")
 	ret0, _ := ret[0].(EthAddr)
 	return ret0
 }
 
-// PeerEthAddr indicates an expected call of PeerEthAddr.
-func (mr *MockIDeviceMockRecorder) PeerEthAddr() *gomock.Call {
+// Peer indicates an expected call of Peer.
+func (mr *MockIDeviceMockRecorder) Peer() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PeerEthAddr", reflect.TypeOf((*MockIDevice)(nil).PeerEthAddr))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Peer", reflect.TypeOf((*MockIDevice)(nil).Peer))
 }
 
 // Poll mocks base method.
@@ -200,18 +214,18 @@ func (mr *MockIDeviceMockRecorder) Poll(terminate interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Poll", reflect.TypeOf((*MockIDevice)(nil).Poll), terminate)
 }
 
-// PrivDevName mocks base method.
-func (m *MockIDevice) PrivDevName() string {
+// Priv mocks base method.
+func (m *MockIDevice) Priv() Privilege {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "PrivDevName")
-	ret0, _ := ret[0].(string)
+	ret := m.ctrl.Call(m, "Priv")
+	ret0, _ := ret[0].(Privilege)
 	return ret0
 }
 
-// PrivDevName indicates an expected call of PrivDevName.
-func (mr *MockIDeviceMockRecorder) PrivDevName() *gomock.Call {
+// Priv indicates an expected call of Priv.
+func (mr *MockIDeviceMockRecorder) Priv() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PrivDevName", reflect.TypeOf((*MockIDevice)(nil).PrivDevName))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Priv", reflect.TypeOf((*MockIDevice)(nil).Priv))
 }
 
 // Transmit mocks base method.
@@ -226,6 +240,20 @@ func (m *MockIDevice) Transmit(dst EthAddr, payload []byte, typ EthType) error.E
 func (mr *MockIDeviceMockRecorder) Transmit(dst, payload, typ interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Transmit", reflect.TypeOf((*MockIDevice)(nil).Transmit), dst, payload, typ)
+}
+
+// Type mocks base method.
+func (m *MockIDevice) Type() DevType {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Type")
+	ret0, _ := ret[0].(DevType)
+	return ret0
+}
+
+// Type indicates an expected call of Type.
+func (mr *MockIDeviceMockRecorder) Type() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Type", reflect.TypeOf((*MockIDevice)(nil).Type))
 }
 
 // Up mocks base method.

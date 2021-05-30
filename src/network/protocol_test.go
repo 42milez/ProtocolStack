@@ -2,7 +2,7 @@ package network
 
 import "testing"
 
-func TestProtocolType_String_SUCCESS(t *testing.T) {
+func TestProtocolType_String(t *testing.T) {
 	want := "ARP"
 	got := ProtocolTypeArp.String()
 	if got != want {

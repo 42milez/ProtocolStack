@@ -40,14 +40,14 @@ func TestDevice_Up_Down(t *testing.T) {
 
 	dev.Up()
 	want := DevFlagUp
-	got := dev.FLAG & DevFlagUp
+	got := dev.Flag()
 	if got != want {
 		t.Errorf("Device.Up() = %v; want %v", got, want)
 	}
 
 	dev.Down()
 	want = DevFlag(0)
-	got = dev.FLAG & DevFlagUp
+	got = dev.Flag()
 	if got != want {
 		t.Errorf("Device.Down() = %v; want %v", got, want)
 	}
@@ -58,15 +58,15 @@ func TestDevice_Equal(t *testing.T) {
 	defer ctrl.Finish()
 
 	m := NewMockIDevice(ctrl)
-	m.EXPECT().DevName().Return("net0").AnyTimes()
+	m.EXPECT().Name().Return("net0").AnyTimes()
 
-	dev := Device{Name: "net0"}
+	dev := Device{Name_: "net0"}
 	got := dev.Equal(m)
 	if !got {
 		t.Errorf("Device.Equal() = %t; want %t", got, true)
 	}
 
-	dev = Device{Name: "net1"}
+	dev = Device{Name_: "net1"}
 	got = dev.Equal(m)
 	if got {
 		t.Errorf("Device.Equal() = %t; want %t", got, false)

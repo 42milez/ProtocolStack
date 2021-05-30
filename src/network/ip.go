@@ -19,12 +19,11 @@ const ProtoNumTCP = 6
 const ProtoNumUDP = 17
 
 const ipv4 = 4
-const ipv6 = 6
 
 var id *PacketID
 
 type PacketID struct {
-	id uint16
+	id  uint16
 	mtx sync.Mutex
 }
 
@@ -155,7 +154,7 @@ func IpSend(protoNum ProtocolNumber, payload []byte, dst IP, src IP) psErr.E {
 		}
 		// Don't send IP packet when network address of both destination and iface is not matched each other or
 		// destination address is not matched to the broadcast address.
-		if !dst.Mask(iface.Netmask).Equal(iface.Unicast.Mask(iface.Netmask)) && !dst.Equal(V4Broadcast){
+		if !dst.Mask(iface.Netmask).Equal(iface.Unicast.Mask(iface.Netmask)) && !dst.Equal(V4Broadcast) {
 			psLog.E(fmt.Sprintf("IP packet can't reach %s (Network address is not matched)", dst.String()))
 			return psErr.NetworkAddressNotMatch
 		}
@@ -168,7 +167,7 @@ func IpSend(protoNum ProtocolNumber, payload []byte, dst IP, src IP) psErr.E {
 	}
 
 	hdr := IpHeader{}
-	hdr.VHL = uint8(ipv4 << 4) | uint8(IpHeaderSizeMin/4)
+	hdr.VHL = uint8(ipv4<<4) | uint8(IpHeaderSizeMin/4)
 	hdr.TotalLen = uint16(IpHeaderSizeMin + len(payload))
 	hdr.ID = id.Next()
 	hdr.TTL = 0xff
@@ -184,14 +183,14 @@ func IpSend(protoNum ProtocolNumber, payload []byte, dst IP, src IP) psErr.E {
 
 	packet := buf.Bytes()
 	hdr.Checksum = Checksum(packet)
-	packet[10] = uint8((hdr.Checksum&0xff00)>>8)
-	packet[11] = uint8(hdr.Checksum&0x00ff)
+	packet[10] = uint8((hdr.Checksum & 0xff00) >> 8)
+	packet[11] = uint8(hdr.Checksum & 0x00ff)
 
 	psLog.I("Outgoing IP packet")
 	ipHdrDump(&hdr)
 
 	// TODO: write to device
-	// ...
+	_ = nextHop.String()
 
 	return psErr.OK
 }
