@@ -1,6 +1,7 @@
 package network
 
 import (
+	"github.com/google/go-cmp/cmp"
 	"syscall"
 )
 
@@ -21,6 +22,8 @@ var (
 	V4Broadcast = V4(255, 255, 255, 255)
 	V4Zero      = V4(0, 0, 0, 0)
 )
+
+var v4InV6Prefix = []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff}
 
 // AddrFamily is IP address family.
 type AddrFamily int
@@ -60,38 +63,71 @@ func (v AddrFamily) String() string {
 	return addrFamilies[v]
 }
 
-func (ip IP) EqualV4(v4 [V4AddrLen]byte) bool {
-	return ip[0] == v4[0] && ip[1] == v4[1] && ip[2] == v4[2] && ip[3] == v4[3]
+func (v IP) Equal(x IP) bool {
+	if len(v) == len(x) {
+		return cmp.Equal(v, x)
+	}
+	if len(v) == V4AddrLen && len(x) == V6AddrLen {
+		return cmp.Equal(x[0:12], v4InV6Prefix) && cmp.Equal(v, x[12:])
+	}
+	if len(v) == V6AddrLen && len(x) == V4AddrLen {
+		return cmp.Equal(v[0:12], v4InV6Prefix) && cmp.Equal(v[12:], x)
+	}
+	return false
+
+}
+
+func (v IP) EqualV4(v4 [V4AddrLen]byte) bool {
+	return v[0] == v4[0] && v[1] == v4[1] && v[2] == v4[2] && v[3] == v4[3]
+}
+
+func (v IP) Mask(mask IP) IP {
+	if len(mask) == V6AddrLen && len(v) == V4AddrLen && allFF(mask[:12]) {
+		mask = mask[12:]
+	}
+	if len(mask) == V4AddrLen && len(v) == V6AddrLen && cmp.Equal(v[:12], v4InV6Prefix) {
+		v = v[12:]
+	}
+	n := len(v)
+	if n != len(mask) {
+		return nil
+	}
+	ret := make(IP, n)
+	for i := 0; i < n; i++ {
+		ret[i] = v[i] & mask[i]
+	}
+	return ret
+
 }
 
 // String returns the string form of IP.
-func (ip IP) String() string {
+func (v IP) String() string {
 	const maxIPv4StringLen = len("255.255.255.255")
 	b := make(IP, maxIPv4StringLen)
 
-	n := ubtoa(b, 0, ip[0])
+	n := ubtoa(b, 0, v[0])
 	b[n] = '.'
 	n++
 
-	n += ubtoa(b, n, ip[1])
+	n += ubtoa(b, n, v[1])
 	b[n] = '.'
 	n++
 
-	n += ubtoa(b, n, ip[2])
+	n += ubtoa(b, n, v[2])
 	b[n] = '.'
 	n++
 
-	n += ubtoa(b, n, ip[3])
+	n += ubtoa(b, n, v[3])
 
 	return string(b[:n])
 }
 
 // ToV4 converts IP to 4 bytes representation.
-func (ip IP) ToV4() IP {
-	if len(ip) == V6AddrLen && isZeros(ip[0:10]) && ip[10] == 0xff && ip[11] == 0xff {
-		return ip[12:16]
+func (v IP) ToV4() IP {
+	if len(v) == V6AddrLen && isZeros(v[0:10]) && v[10] == 0xff && v[11] == 0xff {
+		return v[12:16]
 	}
-	return ip
+	return v
 }
 
 var addrFamilies = map[AddrFamily]string{

@@ -8,6 +8,7 @@ import (
 	"github.com/42milez/ProtocolStack/src/ethernet"
 	psLog "github.com/42milez/ProtocolStack/src/log"
 	"strings"
+	"sync"
 )
 
 const IpHeaderSizeMin = 20 // bytes
@@ -17,11 +18,29 @@ const ProtoNumICMP = 1
 const ProtoNumTCP = 6
 const ProtoNumUDP = 17
 
+const ipv4 = 4
+const ipv6 = 6
+
+var id *PacketID
+
+type PacketID struct {
+	id uint16
+	mtx sync.Mutex
+}
+
+func (p *PacketID) Next() (id uint16) {
+	p.mtx.Lock()
+	defer p.mtx.Unlock()
+	id = p.id
+	p.id += 1
+	return
+}
+
 // Computing the Internet Checksum
 // https://datatracker.ietf.org/doc/html/rfc1071
 
 func Checksum(b []byte) uint16 {
-	var sum uint32 = 0
+	var sum uint32
 	// sum up all fields of IP header by each 16bits (except Header Checksum and Options)
 	for i := 0; i < len(b); i += 2 {
 		sum += uint32(uint16(b[i])<<8 | uint16(b[i+1]))
@@ -46,7 +65,7 @@ func IpReceive(payload []byte, dev ethernet.IDevice) psErr.E {
 		return psErr.Error
 	}
 
-	if version := hdr.VHL >> 4; version != 4 {
+	if version := hdr.VHL >> 4; version != ipv4 {
 		psLog.E(fmt.Sprintf("IP version %d is not supported", version))
 		return psErr.InvalidProtocolVersion
 	}
@@ -68,16 +87,16 @@ func IpReceive(payload []byte, dev ethernet.IDevice) psErr.E {
 	}
 
 	cs1 := uint16(payload[10])<<8 | uint16(payload[11])
-	payload[10] = 0 // assign 0 to Header Checksum field (16bit)
-	payload[11] = 0
+	payload[10] = 0x00 // assign 0 to Header Checksum field (16bit)
+	payload[11] = 0x00
 	if cs2 := Checksum(payload); cs2 != cs1 {
 		psLog.E(fmt.Sprintf("Checksum mismatch: Expect = 0x%04x, Actual = 0x%04x", cs1, cs2))
 		return psErr.ChecksumMismatch
 	}
 
-	iface := IfaceRepo.Get(dev, V4AddrFamily)
+	iface := IfaceRepo.Lookup(dev, V4AddrFamily)
 	if iface == nil {
-		psLog.E(fmt.Sprintf("Interface for %s is not registered", dev.DevName()))
+		psLog.E(fmt.Sprintf("Interface for %s is not registered", dev.Name()))
 		return psErr.InterfaceNotFound
 	}
 
@@ -93,7 +112,7 @@ func IpReceive(payload []byte, dev ethernet.IDevice) psErr.E {
 
 	switch hdr.Protocol {
 	case ProtoNumICMP:
-		if err := IcmpReceive(payload[hdrLen:], hdr.Src, hdr.Dst, dev); err != psErr.OK {
+		if err := IcmpReceive(payload[hdrLen:], hdr.Dst, hdr.Src, dev); err != psErr.OK {
 			psLog.E(fmt.Sprintf("IcmpInputHandler() failed: %s", err))
 			return psErr.Error
 		}
@@ -111,8 +130,68 @@ func IpReceive(payload []byte, dev ethernet.IDevice) psErr.E {
 	return psErr.OK
 }
 
-func IpSend(protoNum ProtocolNumber, packet []byte, dst IP, src IP) psErr.E {
+func IpSend(protoNum ProtocolNumber, payload []byte, dst IP, src IP) psErr.E {
+	var iface *Iface
+	var nextHop IP
 
+	if src.Equal(V4Zero) {
+		// Note: Lookup appropriate interface to send IP packet because 0.0.0.0 is a non-routable meta-address.
+		route := RouteRepo.Get(dst)
+		if route == nil {
+			psLog.E("Route to destination was not found")
+			return psErr.RouteNotFound
+		}
+		iface = route.Iface
+		if route.NextHop.Equal(V4Zero) {
+			nextHop = dst
+		} else {
+			nextHop = route.NextHop
+		}
+	} else {
+		iface = IfaceRepo.Get(src)
+		if iface == nil {
+			psLog.E("Interface was not found")
+			return psErr.InterfaceNotFound
+		}
+		// Don't send IP packet when network address of both destination and iface is not matched each other or
+		// destination address is not matched to the broadcast address.
+		if !dst.Mask(iface.Netmask).Equal(iface.Unicast.Mask(iface.Netmask)) && !dst.Equal(V4Broadcast){
+			psLog.E(fmt.Sprintf("IP packet can't reach %s (Network address is not matched)", dst.String()))
+			return psErr.NetworkAddressNotMatch
+		}
+		nextHop = dst
+	}
+
+	if packetLen := IpHeaderSizeMin + len(payload); int(iface.Dev.MTU()) < packetLen {
+		psLog.E(fmt.Sprintf("IP packet length is too long: %d", packetLen))
+		return psErr.IpPacketTooLong
+	}
+
+	hdr := IpHeader{}
+	hdr.VHL = uint8(ipv4 << 4) | uint8(IpHeaderSizeMin/4)
+	hdr.TotalLen = uint16(IpHeaderSizeMin + len(payload))
+	hdr.ID = id.Next()
+	hdr.TTL = 0xff
+	hdr.Protocol = protoNum
+	copy(hdr.Src[:], src[:])
+	copy(hdr.Dst[:], dst[:])
+
+	buf := new(bytes.Buffer)
+	if err := binary.Write(buf, binary.BigEndian, &hdr); err != nil {
+		psLog.E(fmt.Sprintf("binary.Write() failed: %s", err))
+		return psErr.Error
+	}
+
+	packet := buf.Bytes()
+	hdr.Checksum = Checksum(packet)
+	packet[10] = uint8((hdr.Checksum&0xff00)>>8)
+	packet[11] = uint8(hdr.Checksum&0x00ff)
+
+	psLog.I("Outgoing IP packet")
+	ipHdrDump(&hdr)
+
+	// TODO: write to device
+	// ...
 
 	return psErr.OK
 }
@@ -152,6 +231,15 @@ func V4(a, b, c, d byte) IP {
 	return p
 }
 
+func allFF(b []byte) bool {
+	for _, c := range b {
+		if c != 0xff {
+			return false
+		}
+	}
+	return true
+}
+
 func ipHdrDump(hdr *IpHeader) {
 	psLog.I(fmt.Sprintf("\tversion:             IPv%d", hdr.VHL>>4))
 	psLog.I(fmt.Sprintf("\tihl:                 %d", hdr.VHL&0x0f))
@@ -175,6 +263,18 @@ func isZeros(ip IP) bool {
 		}
 	}
 	return true
+}
+
+func longestIP(ip1 IP, ip2 IP) IP {
+	if len(ip1) != len(ip2) {
+		return nil
+	}
+	for i, v := range ip1 {
+		if v < ip2[i] {
+			return ip2
+		}
+	}
+	return ip1
 }
 
 // parseV4 parses string as IPv4 address.
@@ -231,4 +331,8 @@ func ubtoa(dst []byte, start int, v byte) int {
 	dst[start+1] = ((v / 10) % 10) + '0'
 	dst[start] = (v / 100) + '0'
 	return 3
+}
+
+func init() {
+	id = &PacketID{}
 }

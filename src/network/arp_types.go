@@ -24,9 +24,9 @@ const (
 	ArpCacheStateResolved
 	ArpCacheStateStatic
 )
-const ArpHwTypeEthernet ArpHwType = 1
-const ArpOpRequest ArpOpcode = 1
-const ArpOpReply ArpOpcode = 2
+const ArpHwTypeEthernet ArpHwType = 0x0001
+const ArpOpRequest ArpOpcode = 0x0001
+const ArpOpReply ArpOpcode = 0x0002
 const ArpPacketSize = 28 // byte
 
 type ArpCache struct {

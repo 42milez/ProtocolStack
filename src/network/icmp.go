@@ -10,10 +10,10 @@ import (
 )
 
 const IcmpHeaderSize = 8 // byte
-const IcmpTypeEchoReply = 0
-const IcmpTypeEcho = 8
+const IcmpTypeEchoReply = 0x00
+const IcmpTypeEcho = 0x08
 
-func IcmpReceive(payload []byte, src [V4AddrLen]byte, dst [V4AddrLen]byte, dev ethernet.IDevice) psErr.E {
+func IcmpReceive(payload []byte, dst [V4AddrLen]byte, src [V4AddrLen]byte, dev ethernet.IDevice) psErr.E {
 	if len(payload) < IcmpHeaderSize {
 		psLog.E(fmt.Sprintf("ICMP header length is too short: %d bytes", len(payload)))
 		return psErr.InvalidPacket
@@ -27,8 +27,8 @@ func IcmpReceive(payload []byte, src [V4AddrLen]byte, dst [V4AddrLen]byte, dev e
 	}
 
 	cs1 := uint16(payload[2])<<8 | uint16(payload[3])
-	payload[2] = 0 // assign 0 to Checksum field (16bit)
-	payload[3] = 0
+	payload[2] = 0x00 // assign 0 to Checksum field (16bit)
+	payload[3] = 0x00
 	if cs2 := Checksum(payload); cs2 != cs1 {
 		psLog.E(fmt.Sprintf("Checksum mismatch: Expect = 0x%04x, Actual = 0x%04x", cs1, cs2))
 		return psErr.ChecksumMismatch

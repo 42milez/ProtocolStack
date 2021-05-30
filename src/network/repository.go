@@ -90,7 +90,16 @@ type ifaceRepo struct {
 	ifaces []*Iface
 }
 
-func (p *ifaceRepo) Get(dev ethernet.IDevice, family AddrFamily) *Iface {
+func (p *ifaceRepo) Get(ip IP) *Iface {
+	for _, v := range p.ifaces {
+		if v.Unicast.Equal(ip) {
+			return v
+		}
+	}
+	return nil
+}
+
+func (p *ifaceRepo) Lookup(dev ethernet.IDevice, family AddrFamily) *Iface {
 	for _, v := range p.ifaces {
 		if v.Dev.Equal(dev) && v.Family == family {
 			return v
@@ -117,23 +126,37 @@ func (p *ifaceRepo) Register(iface *Iface, dev ethernet.IDevice) psErr.E {
 	return psErr.OK
 }
 
-type route struct {
+type Route struct {
 	Network IP
 	Netmask IP
 	NextHop IP
-	iface   *Iface
+	Iface   *Iface
 }
 
 type routeRepo struct {
-	routes []*route
+	routes []*Route
+}
+
+func (p *routeRepo) Get(ip IP) *Route {
+	var ret *Route
+	for _, route := range p.routes {
+		if ip.Mask(route.Netmask).Equal(route.Network) {
+			// Longest prefix match
+			// https://en.wikipedia.org/wiki/Longest_prefix_match
+			if ret == nil || longestIP(ret.Netmask, route.Netmask).Equal(route.Netmask) {
+				ret = route
+			}
+		}
+	}
+	return ret
 }
 
 func (p *routeRepo) Register(network IP, nextHop IP, iface *Iface) {
-	route := &route{
+	route := &Route{
 		Network: network,
 		Netmask: iface.Netmask,
 		NextHop: nextHop,
-		iface:   iface,
+		Iface:   iface,
 	}
 	p.routes = append(p.routes, route)
 	psLog.I("Route was registered")
@@ -145,11 +168,11 @@ func (p *routeRepo) Register(network IP, nextHop IP, iface *Iface) {
 }
 
 func (p *routeRepo) RegisterDefaultGateway(iface *Iface, nextHop IP) {
-	route := &route{
+	route := &Route{
 		Network: V4Zero,
 		Netmask: V4Zero,
 		NextHop: nextHop,
-		iface:   iface,
+		Iface:   iface,
 	}
 	p.routes = append(p.routes, route)
 	psLog.I("Default gateway was registered")
