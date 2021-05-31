@@ -149,7 +149,7 @@ func IpSend(protoNum ProtocolNumber, payload []byte, dst IP, src IP) psErr.E {
 	} else {
 		iface = IfaceRepo.Get(src)
 		if iface == nil {
-			psLog.E("Interface was not found")
+			psLog.E(fmt.Sprintf("Interface for %s was not found", src))
 			return psErr.InterfaceNotFound
 		}
 		// Don't send IP packet when network address of both destination and iface is not matched each other or
