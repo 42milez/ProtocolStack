@@ -2,6 +2,7 @@ package network
 
 import (
 	"github.com/google/go-cmp/cmp"
+	"reflect"
 	"syscall"
 )
 
@@ -65,13 +66,13 @@ func (v AddrFamily) String() string {
 
 func (v IP) Equal(x IP) bool {
 	if len(v) == len(x) {
-		return cmp.Equal(v, x)
+		return reflect.DeepEqual(v, x)
 	}
 	if len(v) == V4AddrLen && len(x) == V6AddrLen {
-		return cmp.Equal(x[0:12], v4InV6Prefix) && cmp.Equal(v, x[12:])
+		return reflect.DeepEqual(x[0:12], v4InV6Prefix) && reflect.DeepEqual(v, x[12:])
 	}
 	if len(v) == V6AddrLen && len(x) == V4AddrLen {
-		return cmp.Equal(v[0:12], v4InV6Prefix) && cmp.Equal(v[12:], x)
+		return reflect.DeepEqual(v[0:12], v4InV6Prefix) && cmp.Equal(v[12:], x)
 	}
 	return false
 

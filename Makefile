@@ -63,7 +63,7 @@ resolve: go-mod
 ## test: run all tests
 .PHONY: test
 test:
-	@go test -race -covermode=atomic -coverprofile=coverage.out -v \
+	@go test -race -covermode=atomic -coverprofile=coverage.out \
 		$(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/error \
 		$(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/ethernet \
 		$(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/log \
