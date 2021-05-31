@@ -10,11 +10,11 @@ import (
 )
 
 const EthAddrLen = 6
-const EthHeaderSize = 14
+const EthHdrSize = 14
 const EthFrameSizeMin = 60
 const EthFrameSizeMax = 1514
-const EthPayloadSizeMin = EthFrameSizeMin - EthHeaderSize
-const EthPayloadSizeMax = EthFrameSizeMax - EthHeaderSize
+const EthPayloadSizeMin = EthFrameSizeMin - EthHdrSize
+const EthPayloadSizeMax = EthFrameSizeMax - EthHdrSize
 
 const EthTypeArp EthType = 0x0806
 const EthTypeIpv4 EthType = 0x0800
@@ -48,13 +48,13 @@ func (v EthType) String() string {
 	}
 }
 
-type EthHeader struct {
+type EthHdr struct {
 	Dst  EthAddr
 	Src  EthAddr
 	Type EthType
 }
 
-func EthDump(hdr *EthHeader) {
+func EthDump(hdr *EthHdr) {
 	psLog.I(fmt.Sprintf("\tdst:  %s", hdr.Dst))
 	psLog.I(fmt.Sprintf("\tsrc:  %s", hdr.Src))
 	psLog.I(fmt.Sprintf("\ttype: 0x%04x (%s)", uint16(hdr.Type), hdr.Type))
@@ -70,13 +70,13 @@ func ReadFrame(fd int, addr EthAddr, sc psSyscall.ISyscall) (*Packet, psErr.E) {
 		return nil, psErr.Error
 	}
 
-	if flen < EthHeaderSize {
+	if flen < EthHdrSize {
 		psLog.E("Ethernet header length is too short")
 		psLog.E(fmt.Sprintf("\tlength: %v bytes", flen))
 		return nil, psErr.Error
 	}
 
-	hdr := EthHeader{}
+	hdr := EthHdr{}
 	if err := binary.Read(bytes.NewBuffer(buf), binary.BigEndian, &hdr); err != nil {
 		psLog.E(fmt.Sprintf("binary.Read() failed: %s", err))
 		return nil, psErr.Error
@@ -93,14 +93,14 @@ func ReadFrame(fd int, addr EthAddr, sc psSyscall.ISyscall) (*Packet, psErr.E) {
 
 	packet := &Packet{
 		Type:    hdr.Type,
-		Payload: buf[EthHeaderSize:flen],
+		Payload: buf[EthHdrSize:flen],
 	}
 
 	return packet, psErr.OK
 }
 
 func WriteFrame(fd int, dst EthAddr, src EthAddr, typ EthType, payload []byte) psErr.E {
-	hdr := EthHeader{
+	hdr := EthHdr{
 		Dst:  dst,
 		Src:  src,
 		Type: typ,

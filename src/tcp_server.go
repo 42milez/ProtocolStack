@@ -60,6 +60,7 @@ func setup() psErr.E {
 	}
 
 	network.RouteRepo.Register(network.ParseIP("192.0.0.0"), network.V4Zero, iface2)
+
 	network.RouteRepo.RegisterDefaultGateway(iface2, network.ParseIP("192.0.2.1"))
 
 	psLog.I("--------------------------------------------------")

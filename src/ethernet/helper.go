@@ -4,11 +4,11 @@ package ethernet
 func GenLoopbackDevice(name string) *LoopbackDevice {
 	return &LoopbackDevice{
 		Device: Device{
-			Type_:      DevTypeLoopback,
-			Name_:      name,
-			Flag_:      DevFlagLoopback,
-			HeaderLen_: 0,
-			MTU_:       LoopbackMTU,
+			Type_:   DevTypeLoopback,
+			Name_:   name,
+			Flag_:   DevFlagLoopback,
+			HdrLen_: 0,
+			MTU_:    LoopbackMTU,
 		},
 	}
 }
@@ -22,7 +22,7 @@ func GenTapDevice(devName string, privName string, addr EthAddr) *TapDevice {
 			Addr_:      addr,
 			Broadcast_: EthAddrBroadcast,
 			Flag_:      DevFlagBroadcast | DevFlagNeedArp,
-			HeaderLen_: EthHeaderSize,
+			HdrLen_:    EthHdrSize,
 			MTU_:       EthPayloadSizeMax,
 			Priv_: Privilege{
 				FD:   -1,

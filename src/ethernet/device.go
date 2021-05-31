@@ -50,7 +50,7 @@ type IDevice interface {
 	Broadcast() EthAddr
 	Peer() EthAddr
 	Flag() DevFlag
-	HeaderLen() uint16
+	HdrLen() uint16
 	MTU() uint16
 	Priv() Privilege
 }
@@ -62,7 +62,7 @@ type Device struct {
 	Broadcast_ EthAddr
 	Peer_      EthAddr
 	Flag_      DevFlag
-	HeaderLen_ uint16
+	HdrLen_    uint16
 	MTU_       uint16
 	Priv_      Privilege
 }
@@ -112,8 +112,8 @@ func (p *Device) Flag() DevFlag {
 	return p.Flag_
 }
 
-func (p *Device) HeaderLen() uint16 {
-	return p.HeaderLen_
+func (p *Device) HdrLen() uint16 {
+	return p.HdrLen_
 }
 
 func (p *Device) MTU() uint16 {

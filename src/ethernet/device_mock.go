@@ -116,18 +116,18 @@ func (mr *MockIDeviceMockRecorder) Flag() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Flag", reflect.TypeOf((*MockIDevice)(nil).Flag))
 }
 
-// HeaderLen mocks base method.
-func (m *MockIDevice) HeaderLen() uint16 {
+// HdrLen mocks base method.
+func (m *MockIDevice) HdrLen() uint16 {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "HeaderLen")
+	ret := m.ctrl.Call(m, "HdrLen")
 	ret0, _ := ret[0].(uint16)
 	return ret0
 }
 
-// HeaderLen indicates an expected call of HeaderLen.
-func (mr *MockIDeviceMockRecorder) HeaderLen() *gomock.Call {
+// HdrLen indicates an expected call of HdrLen.
+func (mr *MockIDeviceMockRecorder) HdrLen() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HeaderLen", reflect.TypeOf((*MockIDevice)(nil).HeaderLen))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HdrLen", reflect.TypeOf((*MockIDevice)(nil).HdrLen))
 }
 
 // IsUp mocks base method.

@@ -11,8 +11,8 @@ import (
 	"sync"
 )
 
-const IpHeaderSizeMin = 20 // bytes
-const IpHeaderSizeMax = 60 // bytes
+const IpHdrSizeMin = 20 // bytes
+const IpHdrSizeMax = 60 // bytes
 
 const ProtoNumICMP = 1
 const ProtoNumTCP = 6
@@ -52,13 +52,13 @@ func Checksum(b []byte) uint16 {
 func IpReceive(payload []byte, dev ethernet.IDevice) psErr.E {
 	packetLen := len(payload)
 
-	if packetLen < IpHeaderSizeMin {
+	if packetLen < IpHdrSizeMin {
 		psLog.E(fmt.Sprintf("IP packet length is too short: %d bytes", packetLen))
 		return psErr.InvalidPacket
 	}
 
 	buf := bytes.NewBuffer(payload)
-	hdr := IpHeader{}
+	hdr := IpHdr{}
 	if err := binary.Read(buf, binary.BigEndian, &hdr); err != nil {
 		psLog.E(fmt.Sprintf("binary.Read() failed: %s", err))
 		return psErr.Error
@@ -161,14 +161,14 @@ func IpSend(protoNum ProtocolNumber, payload []byte, dst IP, src IP) psErr.E {
 		nextHop = dst
 	}
 
-	if packetLen := IpHeaderSizeMin + len(payload); int(iface.Dev.MTU()) < packetLen {
+	if packetLen := IpHdrSizeMin + len(payload); int(iface.Dev.MTU()) < packetLen {
 		psLog.E(fmt.Sprintf("IP packet length is too long: %d", packetLen))
 		return psErr.IpPacketTooLong
 	}
 
-	hdr := IpHeader{}
-	hdr.VHL = uint8(ipv4<<4) | uint8(IpHeaderSizeMin/4)
-	hdr.TotalLen = uint16(IpHeaderSizeMin + len(payload))
+	hdr := IpHdr{}
+	hdr.VHL = uint8(ipv4<<4) | uint8(IpHdrSizeMin/4)
+	hdr.TotalLen = uint16(IpHdrSizeMin + len(payload))
 	hdr.ID = id.Next()
 	hdr.TTL = 0xff
 	hdr.Protocol = protoNum
@@ -239,7 +239,7 @@ func allFF(b []byte) bool {
 	return true
 }
 
-func ipHdrDump(hdr *IpHeader) {
+func ipHdrDump(hdr *IpHdr) {
 	psLog.I(fmt.Sprintf("\tversion:             IPv%d", hdr.VHL>>4))
 	psLog.I(fmt.Sprintf("\tihl:                 %d", hdr.VHL&0x0f))
 	psLog.I(fmt.Sprintf("\ttype of service:     0b%08b", hdr.TOS))

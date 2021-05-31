@@ -43,7 +43,7 @@ type IP []byte
 // https://datatracker.ietf.org/doc/html/rfc791#section-3.1
 
 // IpHeader is an internet protocol header
-type IpHeader struct {
+type IpHdr struct {
 	VHL      uint8
 	TOS      uint8
 	TotalLen uint16

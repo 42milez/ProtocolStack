@@ -76,7 +76,7 @@ func TestEthDump(t *testing.T) {
 		uint16(ethType),
 		ethType.String()))
 	got := psLog.CaptureLogOutput(func() {
-		hdr := EthHeader{Dst: macDst, Src: macSrc, Type: ethType}
+		hdr := EthHdr{Dst: macDst, Src: macSrc, Type: ethType}
 		EthDump(&hdr)
 	})
 	got = trim(got)
@@ -96,7 +96,7 @@ func TestReadFrame_1(t *testing.T) {
 	m.EXPECT().
 		Read(gomock.Any(), gomock.Any()).
 		Do(func(_ int, buf []byte) {
-			hdr := EthHeader{
+			hdr := EthHdr{
 				Dst:  EthAddr{11, 12, 13, 14, 15, 16},
 				Src:  EthAddr{21, 22, 23, 24, 25, 26},
 				Type: EthType(0x0800),

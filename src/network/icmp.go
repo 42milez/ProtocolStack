@@ -9,18 +9,18 @@ import (
 	psLog "github.com/42milez/ProtocolStack/src/log"
 )
 
-const IcmpHeaderSize = 8 // byte
+const IcmpHdrSize = 8 // byte
 const IcmpTypeEchoReply = 0x00
 const IcmpTypeEcho = 0x08
 
 func IcmpReceive(payload []byte, dst [V4AddrLen]byte, src [V4AddrLen]byte, dev ethernet.IDevice) psErr.E {
-	if len(payload) < IcmpHeaderSize {
+	if len(payload) < IcmpHdrSize {
 		psLog.E(fmt.Sprintf("ICMP header length is too short: %d bytes", len(payload)))
 		return psErr.InvalidPacket
 	}
 
 	buf := bytes.NewBuffer(payload)
-	hdr := IcmpHeader{}
+	hdr := IcmpHdr{}
 	if err := binary.Read(buf, binary.BigEndian, &hdr); err != nil {
 		psLog.E(fmt.Sprintf("binary.Read() failed: %s", err))
 		return psErr.Error
@@ -45,7 +45,7 @@ func IcmpReceive(payload []byte, dst [V4AddrLen]byte, src [V4AddrLen]byte, dev e
 		if !iface.Unicast.EqualV4(dst) {
 			d = iface.Unicast
 		}
-		if err := IcmpSend(IcmpTypeEchoReply, hdr.Code, hdr.Content, payload[IcmpHeaderSize:], d, s); err != psErr.OK {
+		if err := IcmpSend(IcmpTypeEchoReply, hdr.Code, hdr.Content, payload[IcmpHdrSize:], d, s); err != psErr.OK {
 			psLog.E(fmt.Sprintf("IcmpSend() failed: %s", err))
 			return psErr.Error
 		}
@@ -55,7 +55,7 @@ func IcmpReceive(payload []byte, dst [V4AddrLen]byte, src [V4AddrLen]byte, dev e
 }
 
 func IcmpSend(typ IcmpType, code uint8, content uint32, payload []byte, dst IP, src IP) psErr.E {
-	hdr := IcmpHeader{
+	hdr := IcmpHdr{
 		Type:    typ,
 		Code:    code,
 		Content: content,
@@ -81,7 +81,7 @@ func IcmpSend(typ IcmpType, code uint8, content uint32, payload []byte, dst IP, 
 	hdr.Checksum = checksum
 	icmpHdrDump(&hdr)
 
-	if err := IpSend(ProtoNumICMP, packet, dst, src); err != psErr.OK {
+	if err := IpSend(ProtoNumICMP, packet, src, dst); err != psErr.OK {
 		psLog.E(fmt.Sprintf("IpSend() failed: %s", err))
 		return psErr.Error
 	}
@@ -89,7 +89,7 @@ func IcmpSend(typ IcmpType, code uint8, content uint32, payload []byte, dst IP, 
 	return psErr.OK
 }
 
-func icmpHdrDump(hdr *IcmpHeader) {
+func icmpHdrDump(hdr *IcmpHdr) {
 	psLog.I(fmt.Sprintf("\ttype:     %d (%s)", hdr.Type, icmpTypes[hdr.Type]))
 	psLog.I(fmt.Sprintf("\tcode:     %d", hdr.Code))
 	psLog.I(fmt.Sprintf("\tchecksum: 0x%04x", hdr.Checksum))
