@@ -108,25 +108,3 @@ func TestDevice_Name(t *testing.T) {
 		t.Errorf("Name() = %s; want %s", got, want)
 	}
 }
-
-func TestDevice_AddrLen(t *testing.T) {
-	dev := Device{
-		AddrLen_: 0,
-	}
-	want := uint16(0)
-	got := dev.AddrLen()
-	if got != want {
-		t.Errorf("Name() = %d; want %d", got, want)
-	}
-}
-
-func TestDevice_HdrLen(t *testing.T) {
-	dev := Device{
-		HdrLen_: EthFrameSizeMin,
-	}
-	want := uint16(EthFrameSizeMin)
-	got := dev.HdrLen()
-	if got != want {
-		t.Errorf("Name() = %d; want %d", got, want)
-	}
-}

@@ -6,8 +6,8 @@ func GenLoopbackDevice(name string) *LoopbackDevice {
 		Device: Device{
 			Type_:   DevTypeLoopback,
 			Name_:   name,
+			Addr_:   EthAddrAny,
 			Flag_:   DevFlagLoopback,
-			HdrLen_: 0,
 			MTU_:    LoopbackMTU,
 		},
 	}
@@ -21,8 +21,7 @@ func GenTapDevice(devName string, privName string, addr EthAddr) *TapDevice {
 			Name_:   devName,
 			Addr_:   addr,
 			Flag_:   DevFlagBroadcast | DevFlagNeedArp,
-			HdrLen_: EthHdrSize,
-			MTU_:    EthPayloadSizeMax,
+			MTU_:    EthPayloadLenMax,
 			Priv_: Privilege{
 				FD:   -1,
 				Name: privName,

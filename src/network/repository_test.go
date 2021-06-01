@@ -60,9 +60,8 @@ func TestIfaceRepo_Register_1(t *testing.T) {
 	dev := &ethernet.TapDevice{
 		Device: ethernet.Device{
 			Type_:   ethernet.DevTypeEthernet,
-			MTU_:    ethernet.EthPayloadSizeMax,
+			MTU_:    ethernet.EthPayloadLenMax,
 			Flag_:   ethernet.DevFlagBroadcast | ethernet.DevFlagNeedArp,
-			HdrLen_: ethernet.EthHdrSize,
 			Addr_:   ethernet.EthAddr{11, 12, 13, 14, 15, 16},
 			Priv_:   ethernet.Privilege{FD: -1, Name: "tap0"},
 		},
@@ -91,9 +90,8 @@ func TestIfaceRepo_Register_2(t *testing.T) {
 	dev := &ethernet.TapDevice{
 		Device: ethernet.Device{
 			Type_:   ethernet.DevTypeEthernet,
-			MTU_:    ethernet.EthPayloadSizeMax,
+			MTU_:    ethernet.EthPayloadLenMax,
 			Flag_:   ethernet.DevFlagBroadcast | ethernet.DevFlagNeedArp,
-			HdrLen_: ethernet.EthHdrSize,
 			Addr_:   ethernet.EthAddr{11, 12, 13, 14, 15, 16},
 			Priv_:   ethernet.Privilege{FD: -1, Name: "tap0"},
 		},

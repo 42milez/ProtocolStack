@@ -11,7 +11,6 @@ func TestGenLoopbackDevice(t *testing.T) {
 			Type_:   DevTypeLoopback,
 			Name_:   "net0",
 			MTU_:    LoopbackMTU,
-			HdrLen_: 0,
 			Flag_:   DevFlagLoopback,
 		},
 	}
@@ -29,9 +28,8 @@ func TestGenTapDevice(t *testing.T) {
 		Device: Device{
 			Type_:   DevTypeEthernet,
 			Name_:   devName,
-			MTU_:    EthPayloadSizeMax,
+			MTU_:    EthPayloadLenMax,
 			Flag_:   DevFlagBroadcast | DevFlagNeedArp,
-			HdrLen_: EthHdrSize,
 			Addr_:   devEthAddr,
 			Priv_: Privilege{
 				FD:   -1,
