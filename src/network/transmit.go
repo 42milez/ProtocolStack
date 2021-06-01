@@ -7,7 +7,7 @@ import (
 	psLog "github.com/42milez/ProtocolStack/src/log"
 )
 
-func Transmit(dst ethernet.EthAddr, payload []byte, iface *Iface) psErr.E {
+func Transmit(dst ethernet.EthAddr, payload []byte, typ ethernet.EthType, iface *Iface) psErr.E {
 	if !iface.Dev.IsUp() {
 		psLog.E(fmt.Sprintf("Device %s is down", iface.Dev.Name()))
 		return psErr.DeviceNotOpened
@@ -18,7 +18,7 @@ func Transmit(dst ethernet.EthAddr, payload []byte, iface *Iface) psErr.E {
 		return psErr.PacketTooLong
 	}
 
-	if err := iface.Dev.Transmit(dst, payload, ethernet.EthTypeArp); err != psErr.OK {
+	if err := iface.Dev.Transmit(dst, payload, typ); err != psErr.OK {
 		psLog.E(fmt.Sprintf("Transmit() failed: %s", err))
 		return psErr.Error
 	}

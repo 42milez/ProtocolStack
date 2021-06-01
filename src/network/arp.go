@@ -136,7 +136,7 @@ func arpRequest(iface *Iface, ip IP) psErr.E {
 	psLog.I("Outgoing ARP packet")
 	arpPacketDump(&packet)
 
-	if err := Transmit(iface.Dev.Broadcast(), payload, iface); err != psErr.OK {
+	if err := Transmit(iface.Dev.Broadcast(), payload, ethernet.EthTypeArp, iface); err != psErr.OK {
 		psLog.E(fmt.Sprintf("Transmit() failed: %s", err))
 		return psErr.Error
 	}

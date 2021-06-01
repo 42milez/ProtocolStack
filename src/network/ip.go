@@ -164,7 +164,7 @@ func IpSend(protoNum ProtocolNumber, payload []byte, dst IP, src IP) psErr.E {
 	}
 
 	// send ip packet
-	if err = Transmit(ethAddr, payload, iface); err != psErr.OK {
+	if err = Transmit(ethAddr, payload, ethernet.EthTypeIpv4, iface); err != psErr.OK {
 		psLog.E(fmt.Sprintf("Transmit() failed: %s", err))
 		return psErr.Error
 	}
