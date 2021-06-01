@@ -141,7 +141,7 @@ func WriteFrame(fd int, dst EthAddr, src EthAddr, typ EthType, payload []byte) p
 		psLog.E(fmt.Sprintf("syscall.Write() failed: %s", err))
 		return psErr.Error
 	} else {
-		psLog.I(fmt.Sprintf("Ethernet frame was sent: %d/%d bytes", n, len(payload)))
+		psLog.I(fmt.Sprintf("Ethernet frame was sent: %d bytes (payload: %d bytes)", n, len(payload)))
 	}
 
 	return psErr.OK

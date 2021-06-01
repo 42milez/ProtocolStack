@@ -93,7 +93,7 @@ func IpReceive(payload []byte, dev ethernet.IDevice) psErr.E {
 	}
 
 	psLog.I("Incoming IP packet")
-	ipHdrDump(&hdr)
+	ipPacketDump(payload)
 
 	switch hdr.Protocol {
 	case ProtoNumICMP:
@@ -131,16 +131,14 @@ func IpSend(protoNum ProtocolNumber, payload []byte, dst IP, src IP) psErr.E {
 		return psErr.PacketTooLong
 	}
 
-	hdr := ipCreateHeader(protoNum, len(payload), dst, src)
-	packet, checksum := ipCreatePacket(hdr)
+	packet := ipCreatePacket(protoNum, src, dst, payload)
 	if packet == nil {
 		psLog.E("IP packet was not created")
 		return psErr.Error
 	}
 
-	hdr.Checksum = checksum
 	psLog.I("Outgoing IP packet")
-	ipHdrDump(hdr)
+	ipPacketDump(packet)
 
 	// get ethernet address from ip address
 	var ethAddr ethernet.EthAddr
@@ -150,7 +148,7 @@ func IpSend(protoNum ProtocolNumber, payload []byte, dst IP, src IP) psErr.E {
 	}
 
 	// send ip packet
-	if err = Transmit(ethAddr, payload, ethernet.EthTypeIpv4, iface); err != psErr.OK {
+	if err = Transmit(ethAddr, packet, ethernet.EthTypeIpv4, iface); err != psErr.OK {
 		psLog.E(fmt.Sprintf("Transmit() failed: %s", err))
 		return psErr.Error
 	}
@@ -216,44 +214,50 @@ func checksum(b []byte) uint16 {
 	return ^(uint16(sum))
 }
 
-func ipCreateHeader(protoNum ProtocolNumber, payloadLen int, dst IP, src IP) *IpHdr {
-	hdr := &IpHdr{}
+func ipCreatePacket(protoNum ProtocolNumber, src IP, dst IP, payload []byte) []byte {
+	hdr := IpHdr{}
 	hdr.VHL = uint8(ipv4<<4) | uint8(IpHdrSizeMin/4)
-	hdr.TotalLen = uint16(IpHdrSizeMin + payloadLen)
+	hdr.TotalLen = uint16(IpHdrSizeMin + len(payload))
 	hdr.ID = id.Next()
 	hdr.TTL = 0xff
 	hdr.Protocol = protoNum
 	copy(hdr.Src[:], src[:])
 	copy(hdr.Dst[:], dst[:])
-	return hdr
-}
 
-func ipCreatePacket(hdr *IpHdr) (packet []byte, csum uint16) {
 	buf := new(bytes.Buffer)
-	if err := binary.Write(buf, binary.BigEndian, hdr); err != nil {
+	if err := binary.Write(buf, binary.BigEndian, &hdr); err != nil {
 		psLog.E(fmt.Sprintf("binary.Write() failed: %s", err))
-		return nil, 0
+		return nil
 	}
-	packet = buf.Bytes()
-	csum = checksum(packet)
+	if err := binary.Write(buf, binary.BigEndian, payload); err != nil {
+		psLog.E(fmt.Sprintf("binary.Write() failed: %s", err))
+		return nil
+	}
+	packet := buf.Bytes()
+
+	csum := checksum(packet)
 	packet[10] = uint8((csum & 0xff00) >> 8)
 	packet[11] = uint8(csum & 0x00ff)
-	return
+
+	return packet
 }
 
-func ipHdrDump(hdr *IpHdr) {
-	psLog.I(fmt.Sprintf("\tversion:             IPv%d", hdr.VHL>>4))
-	psLog.I(fmt.Sprintf("\tihl:                 %d", hdr.VHL&0x0f))
-	psLog.I(fmt.Sprintf("\ttype of service:     0b%08b", hdr.TOS))
-	psLog.I(fmt.Sprintf("\ttotal length:        %d bytes (payload: %d bytes)", hdr.TotalLen, hdr.TotalLen-uint16(4*(hdr.VHL&0x0f))))
-	psLog.I(fmt.Sprintf("\tid:                  %d", hdr.ID))
-	psLog.I(fmt.Sprintf("\tflags:               0b%03b", (hdr.Offset&0xefff)>>13))
-	psLog.I(fmt.Sprintf("\tfragment offset:     %d", hdr.Offset&0x1fff))
-	psLog.I(fmt.Sprintf("\tttl:                 %d", hdr.TTL))
-	psLog.I(fmt.Sprintf("\tprotocol:            %d (%s)", hdr.Protocol, protocolNumbers[hdr.Protocol]))
-	psLog.I(fmt.Sprintf("\tchecksum:            0x%04x", hdr.Checksum))
-	psLog.I(fmt.Sprintf("\tsource address:      %d.%d.%d.%d", hdr.Src[0], hdr.Src[1], hdr.Src[2], hdr.Src[3]))
-	psLog.I(fmt.Sprintf("\tdestination address: %d.%d.%d.%d", hdr.Dst[0], hdr.Dst[1], hdr.Dst[2], hdr.Dst[3]))
+func ipPacketDump(packet []byte) {
+	ihl := packet[0] & 0x0f
+	totalLen := uint16(packet[2])<<8 | uint16(packet[3])
+	payloadLen := totalLen - uint16(4*ihl)
+	psLog.I(fmt.Sprintf("\tversion:             IPv%d", packet[0]>>4))
+	psLog.I(fmt.Sprintf("\tihl:                 %d", ihl))
+	psLog.I(fmt.Sprintf("\ttype of service:     0b%08b", packet[1]))
+	psLog.I(fmt.Sprintf("\ttotal length:        %d bytes (payload: %d bytes)", totalLen, payloadLen))
+	psLog.I(fmt.Sprintf("\tid:                  %d", uint16(packet[4])<<8|uint16(packet[5])))
+	psLog.I(fmt.Sprintf("\tflags:               0b%03b", (packet[6]&0xe0)>>5))
+	psLog.I(fmt.Sprintf("\tfragment offset:     %d", uint16(packet[6]&0x1f)<<8|uint16(packet[7])))
+	psLog.I(fmt.Sprintf("\tttl:                 %d", packet[8]))
+	psLog.I(fmt.Sprintf("\tprotocol:            %d (%s)", packet[9], protocolNumbers[ProtocolNumber(packet[9])]))
+	psLog.I(fmt.Sprintf("\tchecksum:            0x%04x", uint16(packet[10])<<8|uint16(packet[11])))
+	psLog.I(fmt.Sprintf("\tsource address:      %d.%d.%d.%d", packet[12], packet[13], packet[14], packet[15]))
+	psLog.I(fmt.Sprintf("\tdestination address: %d.%d.%d.%d", packet[16], packet[17], packet[18], packet[19]))
 }
 
 func ipLookupEthAddr(iface *Iface, nextHop IP) (ethernet.EthAddr, psErr.E) {
