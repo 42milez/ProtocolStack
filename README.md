@@ -424,6 +424,7 @@ Note: `make` supports the commands below:
   - Articles
     - [A Closer Look at Golang From an Architect’s Perspective](https://thenewstack.io/a-closer-look-at-golang-from-an-architects-perspective)
     - [Go at Google: Language Design in the Service of Software Engineering](https://talks.golang.org/2012/splash.article)
+    - [Go talks](https://talks.golang.org/)
   - Docs
       - [Command compile](https://golang.org/cmd/compile/)
       - [Command vet](https://golang.org/cmd/vet)
