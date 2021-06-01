@@ -73,12 +73,11 @@ func IcmpSend(typ IcmpType, code uint8, content uint32, payload []byte, dst IP, 
 	}
 
 	packet := buf.Bytes()
-	checksum := checksum(packet)
-	packet[2] = uint8((checksum & 0xff00) >> 8)
-	packet[3] = uint8(checksum & 0x00ff)
+	hdr.Checksum = checksum(packet)
+	packet[2] = uint8((hdr.Checksum & 0xff00) >> 8)
+	packet[3] = uint8(hdr.Checksum & 0x00ff)
 
 	psLog.I("Outgoing ICMP packet")
-	hdr.Checksum = checksum
 	icmpHdrDump(&hdr)
 
 	if err := IpSend(ProtoNumICMP, packet, src, dst); err != psErr.OK {

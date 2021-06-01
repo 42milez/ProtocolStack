@@ -76,6 +76,8 @@ func ReadFrame(fd int, addr EthAddr, sc psSyscall.ISyscall) (*Packet, psErr.E) {
 		return nil, psErr.Error
 	}
 
+	psLog.I(fmt.Sprintf("Ethernet frame was received: %d bytes", flen))
+
 	hdr := EthHdr{}
 	if err := binary.Read(bytes.NewBuffer(buf), binary.BigEndian, &hdr); err != nil {
 		psLog.E(fmt.Sprintf("binary.Read() failed: %s", err))
@@ -125,9 +127,7 @@ func WriteFrame(fd int, dst EthAddr, src EthAddr, typ EthType, payload []byte) p
 	}
 
 	psLog.I("Outgoing Ethernet frame")
-	psLog.I(fmt.Sprintf("\tdst:     %s", hdr.Dst))
-	psLog.I(fmt.Sprintf("\tsrc:     %s", hdr.Src))
-	psLog.I(fmt.Sprintf("\ttype:    %s", hdr.Type))
+	EthDump(&hdr)
 	s := "\tpayload: "
 	for i, v := range payload {
 		s += fmt.Sprintf("%02x ", v)
@@ -141,7 +141,7 @@ func WriteFrame(fd int, dst EthAddr, src EthAddr, typ EthType, payload []byte) p
 		psLog.E(fmt.Sprintf("syscall.Write() failed: %s", err))
 		return psErr.Error
 	} else {
-		psLog.I(fmt.Sprintf("Ethernet frame has been written: %d bytes", n))
+		psLog.I(fmt.Sprintf("Ethernet frame was sent: %d/%d bytes", n, len(payload)))
 	}
 
 	return psErr.OK
