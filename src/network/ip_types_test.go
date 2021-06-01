@@ -27,7 +27,7 @@ func TestIP_String(t *testing.T) {
 
 func TestIP_ToV4(t *testing.T) {
 	want := [V4AddrLen]byte{0xc0, 0xa8, 0x00, 0x01} // 192.168.0.1
-	got := IP{192, 168, 0, 1}.ToV4() // 192.168.0.1
+	got := IP{192, 168, 0, 1}.ToV4()                // 192.168.0.1
 	if d := cmp.Diff(got, want); d != "" {
 		t.Errorf("IP.ToV4() differs: (-got +want)\n%s", d)
 	}

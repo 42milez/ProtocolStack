@@ -35,20 +35,6 @@ func (p *PacketID) Next() (id uint16) {
 	return
 }
 
-// Computing the Internet Checksum
-// https://datatracker.ietf.org/doc/html/rfc1071
-
-func Checksum(b []byte) uint16 {
-	var sum uint32
-	// sum up all fields of IP header by each 16bits (except Header Checksum and Options)
-	for i := 0; i < len(b); i += 2 {
-		sum += uint32(uint16(b[i])<<8 | uint16(b[i+1]))
-	}
-	//
-	sum = ((sum & 0xffff0000) >> 16) + (sum & 0x0000ffff)
-	return ^(uint16(sum))
-}
-
 func IpReceive(payload []byte, dev ethernet.IDevice) psErr.E {
 	packetLen := len(payload)
 
@@ -88,7 +74,7 @@ func IpReceive(payload []byte, dev ethernet.IDevice) psErr.E {
 	cs1 := uint16(payload[10])<<8 | uint16(payload[11])
 	payload[10] = 0x00 // assign 0 to Header Checksum field (16bit)
 	payload[11] = 0x00
-	if cs2 := Checksum(payload); cs2 != cs1 {
+	if cs2 := checksum(payload); cs2 != cs1 {
 		psLog.E(fmt.Sprintf("Checksum mismatch: Expect = 0x%04x, Actual = 0x%04x", cs1, cs2))
 		return psErr.ChecksumMismatch
 	}
@@ -216,6 +202,20 @@ func allFF(b []byte) bool {
 	return true
 }
 
+// Computing the Internet Checksum
+// https://datatracker.ietf.org/doc/html/rfc1071
+
+func checksum(b []byte) uint16 {
+	var sum uint32
+	// sum up all fields of IP header by each 16bits (except Header Checksum and Options)
+	for i := 0; i < len(b); i += 2 {
+		sum += uint32(uint16(b[i])<<8 | uint16(b[i+1]))
+	}
+	//
+	sum = ((sum & 0xffff0000) >> 16) + (sum & 0x0000ffff)
+	return ^(uint16(sum))
+}
+
 func ipCreateHeader(protoNum ProtocolNumber, payloadLen int, dst IP, src IP) *IpHdr {
 	hdr := &IpHdr{}
 	hdr.VHL = uint8(ipv4<<4) | uint8(IpHdrSizeMin/4)
@@ -228,16 +228,16 @@ func ipCreateHeader(protoNum ProtocolNumber, payloadLen int, dst IP, src IP) *Ip
 	return hdr
 }
 
-func ipCreatePacket(hdr *IpHdr) (packet []byte, checksum uint16) {
+func ipCreatePacket(hdr *IpHdr) (packet []byte, csum uint16) {
 	buf := new(bytes.Buffer)
 	if err := binary.Write(buf, binary.BigEndian, hdr); err != nil {
 		psLog.E(fmt.Sprintf("binary.Write() failed: %s", err))
 		return nil, 0
 	}
 	packet = buf.Bytes()
-	checksum = Checksum(packet)
-	packet[10] = uint8((hdr.Checksum & 0xff00) >> 8)
-	packet[11] = uint8(hdr.Checksum & 0x00ff)
+	csum = checksum(packet)
+	packet[10] = uint8((csum & 0xff00) >> 8)
+	packet[11] = uint8(csum & 0x00ff)
 	return
 }
 

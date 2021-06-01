@@ -29,7 +29,7 @@ func IcmpReceive(payload []byte, dst [V4AddrLen]byte, src [V4AddrLen]byte, dev e
 	cs1 := uint16(payload[2])<<8 | uint16(payload[3])
 	payload[2] = 0x00 // assign 0 to Checksum field (16bit)
 	payload[3] = 0x00
-	if cs2 := Checksum(payload); cs2 != cs1 {
+	if cs2 := checksum(payload); cs2 != cs1 {
 		psLog.E(fmt.Sprintf("Checksum mismatch: Expect = 0x%04x, Actual = 0x%04x", cs1, cs2))
 		return psErr.ChecksumMismatch
 	}
@@ -73,7 +73,7 @@ func IcmpSend(typ IcmpType, code uint8, content uint32, payload []byte, dst IP, 
 	}
 
 	packet := buf.Bytes()
-	checksum := Checksum(packet)
+	checksum := checksum(packet)
 	packet[2] = uint8((checksum & 0xff00) >> 8)
 	packet[3] = uint8(checksum & 0x00ff)
 
