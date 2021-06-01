@@ -351,7 +351,7 @@ func TestTapDevice_Poll_5(t *testing.T) {
 	}
 }
 
-// Fail when ReadFrame() failed.
+// Fail when ReadEthFrame() failed.
 func TestTapDevice_Poll_6(t *testing.T) {
 	psLog.DisableOutput()
 	defer psLog.EnableOutput()

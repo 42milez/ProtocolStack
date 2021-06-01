@@ -105,9 +105,9 @@ func TestReadFrame_1(t *testing.T) {
 
 	dev := &Device{Addr_: EthAddr{11, 12, 13, 14, 15, 16}}
 
-	_, got := ReadFrame(dev.Priv().FD, dev.Addr(), m)
+	_, got := ReadEthFrame(dev.Priv().FD, dev.Addr(), m)
 	if got != psErr.OK {
-		t.Errorf("ReadFrame() = %v; want %v", got, psErr.OK)
+		t.Errorf("ReadEthFrame() = %v; want %v", got, psErr.OK)
 	}
 }
 
@@ -123,9 +123,9 @@ func TestReadFrame_2(t *testing.T) {
 	m := psSyscall.NewMockISyscall(ctrl)
 	m.EXPECT().Read(gomock.Any(), gomock.Any()).Return(-1, errors.New(""))
 
-	_, got := ReadFrame(dev.Priv().FD, dev.Addr(), m)
+	_, got := ReadEthFrame(dev.Priv().FD, dev.Addr(), m)
 	if got != psErr.Error {
-		t.Errorf("ReadFrame() = %v; want %v", got, psErr.Error)
+		t.Errorf("ReadEthFrame() = %v; want %v", got, psErr.Error)
 	}
 }
 
@@ -141,9 +141,9 @@ func TestReadFrame_3(t *testing.T) {
 	m := psSyscall.NewMockISyscall(ctrl)
 	m.EXPECT().Read(gomock.Any(), gomock.Any()).Return(10, nil)
 
-	_, got := ReadFrame(dev.Priv().FD, dev.Addr(), m)
+	_, got := ReadEthFrame(dev.Priv().FD, dev.Addr(), m)
 	if got != psErr.Error {
-		t.Errorf("ReadFrame() = %v; want %v", got, psErr.Error)
+		t.Errorf("ReadEthFrame() = %v; want %v", got, psErr.Error)
 	}
 }
 
@@ -159,8 +159,8 @@ func TestReadFrame_4(t *testing.T) {
 	m := psSyscall.NewMockISyscall(ctrl)
 	m.EXPECT().Read(gomock.Any(), gomock.Any()).Return(150, nil)
 
-	_, got := ReadFrame(dev.Priv().FD, dev.Addr(), m)
+	_, got := ReadEthFrame(dev.Priv().FD, dev.Addr(), m)
 	if got != psErr.NoDataToRead {
-		t.Errorf("ReadFrame() = %v; want %v", got, psErr.NoDataToRead)
+		t.Errorf("ReadEthFrame() = %v; want %v", got, psErr.NoDataToRead)
 	}
 }

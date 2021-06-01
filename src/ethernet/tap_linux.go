@@ -141,9 +141,9 @@ func (dev *TapDevice) Poll(isTerminated bool) psErr.E {
 		psLog.I("Event occurred")
 		psLog.I(fmt.Sprintf("\tevents: %v", nEvents))
 		psLog.I(fmt.Sprintf("\tdevice: %v (%v)", dev.Name_, dev.Priv_.Name))
-		if packet, err := ReadFrame(dev.Priv_.FD, dev.Addr_, psSyscall.Syscall); err != psErr.OK {
+		if packet, err := ReadEthFrame(dev.Priv_.FD, dev.Addr_, psSyscall.Syscall); err != psErr.OK {
 			if err != psErr.NoDataToRead {
-				psLog.E(fmt.Sprintf("ReadFrame() failed: %s", err))
+				psLog.E(fmt.Sprintf("ReadEthFrame() failed: %s", err))
 				return psErr.Error
 			}
 		} else {

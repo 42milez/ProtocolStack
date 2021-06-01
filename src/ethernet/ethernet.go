@@ -60,7 +60,7 @@ func EthFrameDump(f []byte) {
 	psLog.I(fmt.Sprintf("\ttype: 0x%04x (%s)", typ, ethTypes[EthType(typ)]))
 }
 
-func ReadFrame(fd int, addr EthAddr, sc psSyscall.ISyscall) (*Packet, psErr.E) {
+func ReadEthFrame(fd int, addr EthAddr, sc psSyscall.ISyscall) (*Packet, psErr.E) {
 	// TODO: make buf static variable to reuse
 	buf := make([]byte, EthFrameLenMax)
 
