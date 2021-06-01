@@ -10,18 +10,26 @@ import (
 )
 
 const EthAddrLen = 6
-const EthHdrLen = 14
-const EthFrameLenMin = 60
 const EthFrameLenMax = 1514
-const EthPayloadLenMin = EthFrameLenMin - EthHdrLen
+const EthFrameLenMin = 60
+const EthHdrLen = 14
 const EthPayloadLenMax = EthFrameLenMax - EthHdrLen
-
+const EthPayloadLenMin = EthFrameLenMin - EthHdrLen
 const EthTypeArp EthType = 0x0806
 const EthTypeIpv4 EthType = 0x0800
 const EthTypeIpv6 EthType = 0x86dd
 
 var EthAddrAny = EthAddr{0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 var EthAddrBroadcast = EthAddr{0xff, 0xff, 0xff, 0xff, 0xff, 0xff}
+
+// Ethertypes
+// https://www.iana.org/assignments/ieee-802-numbers/ieee-802-numbers.xhtml#ieee-802-numbers-1
+
+var ethTypes = map[EthType]string{
+	0x0800: "IPv4",
+	0x0806: "ARP",
+	0x86dd: "IPv6",
+}
 
 type EthAddr [EthAddrLen]byte
 
@@ -36,16 +44,7 @@ func (v EthAddr) String() string {
 type EthType uint16
 
 func (v EthType) String() string {
-	switch v {
-	case EthTypeArp:
-		return "ARP"
-	case EthTypeIpv4:
-		return "IPv4"
-	case EthTypeIpv6:
-		return "IPv6"
-	default:
-		return "UNKNOWN"
-	}
+	return ethTypes[v]
 }
 
 type EthHdr struct {
