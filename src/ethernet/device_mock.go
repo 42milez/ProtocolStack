@@ -48,6 +48,20 @@ func (mr *MockIDeviceMockRecorder) Addr() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Addr", reflect.TypeOf((*MockIDevice)(nil).Addr))
 }
 
+// AddrLen mocks base method.
+func (m *MockIDevice) AddrLen() uint16 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddrLen")
+	ret0, _ := ret[0].(uint16)
+	return ret0
+}
+
+// AddrLen indicates an expected call of AddrLen.
+func (mr *MockIDeviceMockRecorder) AddrLen() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddrLen", reflect.TypeOf((*MockIDevice)(nil).AddrLen))
+}
+
 // Close mocks base method.
 func (m *MockIDevice) Close() error.E {
 	m.ctrl.T.Helper()

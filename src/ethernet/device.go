@@ -46,6 +46,7 @@ type IDevice interface {
 	Type() DevType
 	Name() string
 	Addr() EthAddr
+	AddrLen() uint16
 	Flag() DevFlag
 	HdrLen() uint16
 	MTU() uint16
@@ -53,13 +54,14 @@ type IDevice interface {
 }
 
 type Device struct {
-	Type_   DevType
-	Name_   string
-	Addr_   EthAddr
-	Flag_   DevFlag
-	HdrLen_ uint16
-	MTU_    uint16
-	Priv_   Privilege
+	Type_    DevType
+	Name_    string
+	Addr_    EthAddr
+	AddrLen_ uint16
+	Flag_    DevFlag
+	HdrLen_  uint16
+	MTU_     uint16
+	Priv_    Privilege
 }
 
 type Privilege struct {
@@ -93,6 +95,10 @@ func (p *Device) Name() string {
 
 func (p *Device) Addr() EthAddr {
 	return p.Addr_
+}
+
+func (p *Device) AddrLen() uint16 {
+	return p.AddrLen_
 }
 
 func (p *Device) Flag() DevFlag {
