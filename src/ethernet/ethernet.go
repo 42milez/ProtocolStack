@@ -53,10 +53,11 @@ type EthHdr struct {
 	Type EthType
 }
 
-func EthDump(hdr *EthHdr) {
-	psLog.I(fmt.Sprintf("\tdst:  %s", hdr.Dst))
-	psLog.I(fmt.Sprintf("\tsrc:  %s", hdr.Src))
-	psLog.I(fmt.Sprintf("\ttype: 0x%04x (%s)", uint16(hdr.Type), hdr.Type))
+func EthFrameDump(f []byte) {
+	psLog.I(fmt.Sprintf("\tdst:  %02x:%02x:%02x:%02x:%02x:%02x", f[0], f[1], f[2], f[3], f[4], f[5]))
+	psLog.I(fmt.Sprintf("\tsrc:  %02x:%02x:%02x:%02x:%02x:%02x", f[6], f[7], f[8], f[9], f[10], f[11]))
+	typ := uint16(f[12])<<8 | uint16(f[13])
+	psLog.I(fmt.Sprintf("\ttype: 0x%04x (%s)", typ, ethTypes[EthType(typ)]))
 }
 
 func ReadFrame(fd int, addr EthAddr, sc psSyscall.ISyscall) (*Packet, psErr.E) {
@@ -90,7 +91,7 @@ func ReadFrame(fd int, addr EthAddr, sc psSyscall.ISyscall) (*Packet, psErr.E) {
 	}
 
 	psLog.I("Incoming ethernet frame")
-	EthDump(&hdr)
+	EthFrameDump(buf)
 
 	packet := &Packet{
 		Type:    hdr.Type,
@@ -116,6 +117,7 @@ func WriteFrame(fd int, dst EthAddr, src EthAddr, typ EthType, payload []byte) p
 		psLog.E(fmt.Sprintf("binary.Write() failed: %s", err))
 		return psErr.Error
 	}
+	frame := buf.Bytes()
 
 	if flen := buf.Len(); flen < EthFrameLenMin {
 		pad := make([]byte, EthFrameLenMin-flen)
@@ -126,7 +128,7 @@ func WriteFrame(fd int, dst EthAddr, src EthAddr, typ EthType, payload []byte) p
 	}
 
 	psLog.I("Outgoing Ethernet frame")
-	EthDump(&hdr)
+	EthFrameDump(frame)
 	s := "\tpayload: "
 	for i, v := range payload {
 		s += fmt.Sprintf("%02x ", v)
@@ -136,7 +138,7 @@ func WriteFrame(fd int, dst EthAddr, src EthAddr, typ EthType, payload []byte) p
 		}
 	}
 
-	if n, err := psSyscall.Syscall.Write(fd, buf.Bytes()); err != nil {
+	if n, err := psSyscall.Syscall.Write(fd, frame); err != nil {
 		psLog.E(fmt.Sprintf("syscall.Write() failed: %s", err))
 		return psErr.Error
 	} else {
