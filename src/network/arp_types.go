@@ -28,6 +28,11 @@ const ArpHwTypeEthernet ArpHwType = 0x0001
 const ArpOpRequest ArpOpcode = 0x0001
 const ArpOpReply ArpOpcode = 0x0002
 const ArpPacketSize = 28 // byte
+const (
+	ArpStatusComplete ArpStatus = iota
+	ArpStatusIncomplete
+	ArpStatusError
+)
 
 type ArpCache struct {
 	entries [ArpCacheSize]*ArpCacheEntry
@@ -57,18 +62,20 @@ type ArpPacket struct {
 	TPA ArpProtoAddr     // target protocol address
 }
 type ArpProtoAddr [V4AddrLen]byte
+type ArpStatus int
 
-func (p *ArpCache) Add(packet *ArpPacket) psErr.E {
-	if ret := p.Get(packet.SPA); ret != nil {
+func (p *ArpCache) Add(ha ethernet.EthAddr, pa ArpProtoAddr, state ArpCacheState) psErr.E {
+	var entry *ArpCacheEntry
+	if entry = p.get(pa); entry != nil {
 		return psErr.Exist
 	}
-	entry := p.danglingEntry()
+	entry = p.danglingEntry()
 	p.mtx.Lock()
 	defer p.mtx.Unlock()
-	entry.State = ArpCacheStateResolved
+	entry.State = state
 	entry.CreatedAt = time.Now()
-	entry.HA = packet.SHA
-	entry.PA = packet.SPA
+	entry.HA = ha
+	entry.PA = pa
 	return psErr.OK
 }
 
@@ -80,15 +87,12 @@ func (p *ArpCache) Clear(idx int) psErr.E {
 	return psErr.OK
 }
 
-func (p *ArpCache) Get(ip [V4AddrLen]byte) *ArpCacheEntry {
-	p.mtx.Lock()
-	defer p.mtx.Unlock()
-	for i, v := range p.entries {
-		if v.PA == ip {
-			return p.entries[i]
-		}
+func (p *ArpCache) EthAddr(pa ArpProtoAddr) (ethernet.EthAddr, bool) {
+	if entry := p.get(pa); entry != nil {
+		return entry.HA, true
+	} else {
+		return ethernet.EthAddr{}, false
 	}
-	return nil
 }
 
 func (p *ArpCache) Init() {
@@ -100,15 +104,15 @@ func (p *ArpCache) Init() {
 	}
 }
 
-func (p *ArpCache) Update(packet *ArpPacket) psErr.E {
-	entry := p.Get(packet.SPA)
+func (p *ArpCache) Renew(ha ethernet.EthAddr, pa ArpProtoAddr, state ArpCacheState) psErr.E {
+	entry := p.get(pa)
 	if entry == nil {
 		return psErr.NotFound
 	}
 	p.mtx.Lock()
 	defer p.mtx.Unlock()
-	entry.State = ArpCacheStateResolved
-	entry.HA = packet.SHA
+	entry.State = state
+	entry.HA = ha
 	entry.CreatedAt = time.Now()
 	return psErr.OK
 }
@@ -126,6 +130,17 @@ func (p *ArpCache) danglingEntry() *ArpCacheEntry {
 		}
 	}
 	return oldest
+}
+
+func (p *ArpCache) get(ip [V4AddrLen]byte) *ArpCacheEntry {
+	p.mtx.Lock()
+	defer p.mtx.Unlock()
+	for i, v := range p.entries {
+		if v.PA == ip {
+			return p.entries[i]
+		}
+	}
+	return nil
 }
 
 func (v ArpHwType) String() string {

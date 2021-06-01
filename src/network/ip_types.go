@@ -124,11 +124,13 @@ func (v IP) String() string {
 }
 
 // ToV4 converts IP to 4 bytes representation.
-func (v IP) ToV4() IP {
+func (v IP) ToV4() (ip [V4AddrLen]byte) {
 	if len(v) == V6AddrLen && isZeros(v[0:10]) && v[10] == 0xff && v[11] == 0xff {
-		return v[12:16]
+		copy(ip[:], v[12:16])
+		return
 	}
-	return v
+	copy(ip[:], v)
+	return
 }
 
 var addrFamilies = map[AddrFamily]string{

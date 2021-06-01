@@ -132,65 +132,42 @@ func IpReceive(payload []byte, dev ethernet.IDevice) psErr.E {
 func IpSend(protoNum ProtocolNumber, payload []byte, dst IP, src IP) psErr.E {
 	var iface *Iface
 	var nextHop IP
+	var err psErr.E
 
-	if src.Equal(V4Zero) {
-		// Note: Lookup appropriate interface to send IP packet because 0.0.0.0 is a non-routable meta-address.
-		route := RouteRepo.Get(dst)
-		if route == nil {
-			psLog.E("Route to destination was not found")
-			return psErr.RouteNotFound
-		}
-		iface = route.Iface
-		if route.NextHop.Equal(V4Zero) {
-			nextHop = dst
-		} else {
-			nextHop = route.NextHop
-		}
-	} else {
-		iface = IfaceRepo.Get(src)
-		if iface == nil {
-			psLog.E(fmt.Sprintf("Interface for %s was not found", src))
-			return psErr.InterfaceNotFound
-		}
-		// Don't send IP packet when network address of both destination and iface is not matched each other or
-		// destination address is not matched to the broadcast address.
-		if !dst.Mask(iface.Netmask).Equal(iface.Unicast.Mask(iface.Netmask)) && !dst.Equal(V4Broadcast) {
-			psLog.E(fmt.Sprintf("IP packet can't reach %s (Network address is not matched)", dst.String()))
-			return psErr.NetworkAddressNotMatch
-		}
-		nextHop = dst
+	// get a next hop
+	if iface, nextHop, err = ipRouting(dst, src); err != psErr.OK {
+		psLog.E(fmt.Sprintf("Route was not found: %s", err))
+		return psErr.Error
 	}
 
 	if packetLen := IpHdrSizeMin + len(payload); int(iface.Dev.MTU()) < packetLen {
 		psLog.E(fmt.Sprintf("IP packet length is too long: %d", packetLen))
-		return psErr.IpPacketTooLong
+		return psErr.PacketTooLong
 	}
 
-	hdr := IpHdr{}
-	hdr.VHL = uint8(ipv4<<4) | uint8(IpHdrSizeMin/4)
-	hdr.TotalLen = uint16(IpHdrSizeMin + len(payload))
-	hdr.ID = id.Next()
-	hdr.TTL = 0xff
-	hdr.Protocol = protoNum
-	copy(hdr.Src[:], src[:])
-	copy(hdr.Dst[:], dst[:])
-
-	buf := new(bytes.Buffer)
-	if err := binary.Write(buf, binary.BigEndian, &hdr); err != nil {
-		psLog.E(fmt.Sprintf("binary.Write() failed: %s", err))
+	hdr := ipCreateHeader(protoNum, len(payload), dst, src)
+	packet, checksum := ipCreatePacket(hdr)
+	if packet == nil {
+		psLog.E("IP packet was not created")
 		return psErr.Error
 	}
 
-	packet := buf.Bytes()
-	hdr.Checksum = Checksum(packet)
-	packet[10] = uint8((hdr.Checksum & 0xff00) >> 8)
-	packet[11] = uint8(hdr.Checksum & 0x00ff)
-
+	hdr.Checksum = checksum
 	psLog.I("Outgoing IP packet")
-	ipHdrDump(&hdr)
+	ipHdrDump(hdr)
 
-	// TODO: write to device
-	_ = nextHop.String()
+	// get ethernet address from ip address
+	var ethAddr ethernet.EthAddr
+	if ethAddr, err = ipLookupEthAddr(iface, nextHop); err != psErr.OK {
+		psLog.E(fmt.Sprintf("Ethernet address was not found: %s", err))
+		return psErr.Error
+	}
+
+	// send ip packet
+	if err = Transmit(ethAddr, payload, iface); err != psErr.OK {
+		psLog.E(fmt.Sprintf("Transmit() failed: %s", err))
+		return psErr.Error
+	}
 
 	return psErr.OK
 }
@@ -239,6 +216,31 @@ func allFF(b []byte) bool {
 	return true
 }
 
+func ipCreateHeader(protoNum ProtocolNumber, payloadLen int, dst IP, src IP) *IpHdr {
+	hdr := &IpHdr{}
+	hdr.VHL = uint8(ipv4<<4) | uint8(IpHdrSizeMin/4)
+	hdr.TotalLen = uint16(IpHdrSizeMin + payloadLen)
+	hdr.ID = id.Next()
+	hdr.TTL = 0xff
+	hdr.Protocol = protoNum
+	copy(hdr.Src[:], src[:])
+	copy(hdr.Dst[:], dst[:])
+	return hdr
+}
+
+func ipCreatePacket(hdr *IpHdr) (packet []byte, checksum uint16) {
+	buf := new(bytes.Buffer)
+	if err := binary.Write(buf, binary.BigEndian, hdr); err != nil {
+		psLog.E(fmt.Sprintf("binary.Write() failed: %s", err))
+		return nil, 0
+	}
+	packet = buf.Bytes()
+	checksum = Checksum(packet)
+	packet[10] = uint8((hdr.Checksum & 0xff00) >> 8)
+	packet[11] = uint8(hdr.Checksum & 0x00ff)
+	return
+}
+
 func ipHdrDump(hdr *IpHdr) {
 	psLog.I(fmt.Sprintf("\tversion:             IPv%d", hdr.VHL>>4))
 	psLog.I(fmt.Sprintf("\tihl:                 %d", hdr.VHL&0x0f))
@@ -252,6 +254,58 @@ func ipHdrDump(hdr *IpHdr) {
 	psLog.I(fmt.Sprintf("\tchecksum:            0x%04x", hdr.Checksum))
 	psLog.I(fmt.Sprintf("\tsource address:      %d.%d.%d.%d", hdr.Src[0], hdr.Src[1], hdr.Src[2], hdr.Src[3]))
 	psLog.I(fmt.Sprintf("\tdestination address: %d.%d.%d.%d", hdr.Dst[0], hdr.Dst[1], hdr.Dst[2], hdr.Dst[3]))
+}
+
+func ipLookupEthAddr(iface *Iface, nextHop IP) (ethernet.EthAddr, psErr.E) {
+	var addr ethernet.EthAddr
+	if iface.Dev.Flag()&ethernet.DevFlagNeedArp != 0 {
+		if nextHop.Equal(iface.Broadcast) || nextHop.Equal(V4Broadcast) {
+			addr = iface.Dev.Broadcast()
+		} else {
+			var status ArpStatus
+			if addr, status = arpResolve(iface, nextHop); status != ArpStatusComplete {
+				return ethernet.EthAddr{}, psErr.ArpIncomplete
+			}
+		}
+	}
+	return addr, psErr.OK
+}
+
+func ipRouting(dst IP, src IP) (*Iface, IP, psErr.E) {
+	var iface *Iface
+	var nextHop IP
+
+	if src.Equal(V4Zero) {
+		// Can't determine network address (0.0.0.0 is a non-routable meta-address), so lookup appropriate interface to
+		// send IP packet.
+		route := RouteRepo.Get(dst)
+		if route == nil {
+			psLog.E("Route to destination was not found")
+			return nil, IP{}, psErr.RouteNotFound
+		}
+		iface = route.Iface
+		if route.NextHop.Equal(V4Zero) {
+			nextHop = dst
+		} else {
+			nextHop = route.NextHop
+		}
+	} else {
+		// Source address isn't equal to V4Zero means it can determine network address.
+		iface = IfaceRepo.Get(src)
+		if iface == nil {
+			psLog.E(fmt.Sprintf("Interface for %s was not found", src))
+			return nil, IP{}, psErr.InterfaceNotFound
+		}
+		// Don't send IP packet when network address of both destination and iface is not matched each other or
+		// destination address is not matched to the broadcast address.
+		if !dst.Mask(iface.Netmask).Equal(iface.Unicast.Mask(iface.Netmask)) && !dst.Equal(V4Broadcast) {
+			psLog.E(fmt.Sprintf("IP packet can't reach %s (Network address is not matched)", dst.String()))
+			return nil, IP{}, psErr.NetworkAddressNotMatch
+		}
+		nextHop = dst
+	}
+
+	return iface, nextHop, psErr.OK
 }
 
 // isZeros checks if ip all zeros.
