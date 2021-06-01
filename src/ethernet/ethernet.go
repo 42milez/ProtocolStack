@@ -131,7 +131,7 @@ func WriteFrame(fd int, dst EthAddr, src EthAddr, typ EthType, payload []byte) p
 	s := "\tpayload: "
 	for i, v := range payload {
 		s += fmt.Sprintf("%02x ", v)
-		if (i+1)%10 == 0 {
+		if (i+1)%20 == 0 {
 			psLog.I(s)
 			s = "\t\t "
 		}
