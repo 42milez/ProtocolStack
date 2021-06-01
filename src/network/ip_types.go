@@ -2,6 +2,7 @@ package network
 
 import (
 	"github.com/google/go-cmp/cmp"
+	"reflect"
 	"syscall"
 )
 
@@ -42,7 +43,7 @@ type IP []byte
 // https://datatracker.ietf.org/doc/html/rfc791#section-3.1
 
 // IpHeader is an internet protocol header
-type IpHeader struct {
+type IpHdr struct {
 	VHL      uint8
 	TOS      uint8
 	TotalLen uint16
@@ -65,13 +66,13 @@ func (v AddrFamily) String() string {
 
 func (v IP) Equal(x IP) bool {
 	if len(v) == len(x) {
-		return cmp.Equal(v, x)
+		return reflect.DeepEqual(v, x)
 	}
 	if len(v) == V4AddrLen && len(x) == V6AddrLen {
-		return cmp.Equal(x[0:12], v4InV6Prefix) && cmp.Equal(v, x[12:])
+		return reflect.DeepEqual(x[0:12], v4InV6Prefix) && reflect.DeepEqual(v, x[12:])
 	}
 	if len(v) == V6AddrLen && len(x) == V4AddrLen {
-		return cmp.Equal(v[0:12], v4InV6Prefix) && cmp.Equal(v[12:], x)
+		return reflect.DeepEqual(v[0:12], v4InV6Prefix) && cmp.Equal(v[12:], x)
 	}
 	return false
 
@@ -123,11 +124,13 @@ func (v IP) String() string {
 }
 
 // ToV4 converts IP to 4 bytes representation.
-func (v IP) ToV4() IP {
+func (v IP) ToV4() (ip [V4AddrLen]byte) {
 	if len(v) == V6AddrLen && isZeros(v[0:10]) && v[10] == 0xff && v[11] == 0xff {
-		return v[12:16]
+		copy(ip[:], v[12:16])
+		return
 	}
-	return v
+	copy(ip[:], v)
+	return
 }
 
 var addrFamilies = map[AddrFamily]string{

@@ -11,20 +11,19 @@ import (
 	"sync"
 )
 
-const IpHeaderSizeMin = 20 // bytes
-const IpHeaderSizeMax = 60 // bytes
+const IpHdrSizeMin = 20 // bytes
+const IpHdrSizeMax = 60 // bytes
 
 const ProtoNumICMP = 1
 const ProtoNumTCP = 6
 const ProtoNumUDP = 17
 
 const ipv4 = 4
-const ipv6 = 6
 
 var id *PacketID
 
 type PacketID struct {
-	id uint16
+	id  uint16
 	mtx sync.Mutex
 }
 
@@ -36,30 +35,16 @@ func (p *PacketID) Next() (id uint16) {
 	return
 }
 
-// Computing the Internet Checksum
-// https://datatracker.ietf.org/doc/html/rfc1071
-
-func Checksum(b []byte) uint16 {
-	var sum uint32
-	// sum up all fields of IP header by each 16bits (except Header Checksum and Options)
-	for i := 0; i < len(b); i += 2 {
-		sum += uint32(uint16(b[i])<<8 | uint16(b[i+1]))
-	}
-	//
-	sum = ((sum & 0xffff0000) >> 16) + (sum & 0x0000ffff)
-	return ^(uint16(sum))
-}
-
 func IpReceive(payload []byte, dev ethernet.IDevice) psErr.E {
 	packetLen := len(payload)
 
-	if packetLen < IpHeaderSizeMin {
+	if packetLen < IpHdrSizeMin {
 		psLog.E(fmt.Sprintf("IP packet length is too short: %d bytes", packetLen))
 		return psErr.InvalidPacket
 	}
 
 	buf := bytes.NewBuffer(payload)
-	hdr := IpHeader{}
+	hdr := IpHdr{}
 	if err := binary.Read(buf, binary.BigEndian, &hdr); err != nil {
 		psLog.E(fmt.Sprintf("binary.Read() failed: %s", err))
 		return psErr.Error
@@ -89,7 +74,7 @@ func IpReceive(payload []byte, dev ethernet.IDevice) psErr.E {
 	cs1 := uint16(payload[10])<<8 | uint16(payload[11])
 	payload[10] = 0x00 // assign 0 to Header Checksum field (16bit)
 	payload[11] = 0x00
-	if cs2 := Checksum(payload); cs2 != cs1 {
+	if cs2 := checksum(payload); cs2 != cs1 {
 		psLog.E(fmt.Sprintf("Checksum mismatch: Expect = 0x%04x, Actual = 0x%04x", cs1, cs2))
 		return psErr.ChecksumMismatch
 	}
@@ -108,7 +93,7 @@ func IpReceive(payload []byte, dev ethernet.IDevice) psErr.E {
 	}
 
 	psLog.I("Incoming IP packet")
-	ipHdrDump(&hdr)
+	ipPacketDump(payload)
 
 	switch hdr.Protocol {
 	case ProtoNumICMP:
@@ -133,65 +118,40 @@ func IpReceive(payload []byte, dev ethernet.IDevice) psErr.E {
 func IpSend(protoNum ProtocolNumber, payload []byte, dst IP, src IP) psErr.E {
 	var iface *Iface
 	var nextHop IP
+	var err psErr.E
 
-	if src.Equal(V4Zero) {
-		// Note: Lookup appropriate interface to send IP packet because 0.0.0.0 is a non-routable meta-address.
-		route := RouteRepo.Get(dst)
-		if route == nil {
-			psLog.E("Route to destination was not found")
-			return psErr.RouteNotFound
-		}
-		iface = route.Iface
-		if route.NextHop.Equal(V4Zero) {
-			nextHop = dst
-		} else {
-			nextHop = route.NextHop
-		}
-	} else {
-		iface = IfaceRepo.Get(src)
-		if iface == nil {
-			psLog.E("Interface was not found")
-			return psErr.InterfaceNotFound
-		}
-		// Don't send IP packet when network address of both destination and iface is not matched each other or
-		// destination address is not matched to the broadcast address.
-		if !dst.Mask(iface.Netmask).Equal(iface.Unicast.Mask(iface.Netmask)) && !dst.Equal(V4Broadcast){
-			psLog.E(fmt.Sprintf("IP packet can't reach %s (Network address is not matched)", dst.String()))
-			return psErr.NetworkAddressNotMatch
-		}
-		nextHop = dst
-	}
-
-	if packetLen := IpHeaderSizeMin + len(payload); int(iface.Dev.MTU()) < packetLen {
-		psLog.E(fmt.Sprintf("IP packet length is too long: %d", packetLen))
-		return psErr.IpPacketTooLong
-	}
-
-	hdr := IpHeader{}
-	hdr.VHL = uint8(ipv4 << 4) | uint8(IpHeaderSizeMin/4)
-	hdr.TotalLen = uint16(IpHeaderSizeMin + len(payload))
-	hdr.ID = id.Next()
-	hdr.TTL = 0xff
-	hdr.Protocol = protoNum
-	copy(hdr.Src[:], src[:])
-	copy(hdr.Dst[:], dst[:])
-
-	buf := new(bytes.Buffer)
-	if err := binary.Write(buf, binary.BigEndian, &hdr); err != nil {
-		psLog.E(fmt.Sprintf("binary.Write() failed: %s", err))
+	// get a next hop
+	if iface, nextHop, err = ipRouting(dst, src); err != psErr.OK {
+		psLog.E(fmt.Sprintf("Route was not found: %s", err))
 		return psErr.Error
 	}
 
-	packet := buf.Bytes()
-	hdr.Checksum = Checksum(packet)
-	packet[10] = uint8((hdr.Checksum&0xff00)>>8)
-	packet[11] = uint8(hdr.Checksum&0x00ff)
+	if packetLen := IpHdrSizeMin + len(payload); int(iface.Dev.MTU()) < packetLen {
+		psLog.E(fmt.Sprintf("IP packet length is too long: %d", packetLen))
+		return psErr.PacketTooLong
+	}
+
+	packet := ipCreatePacket(protoNum, src, dst, payload)
+	if packet == nil {
+		psLog.E("IP packet was not created")
+		return psErr.Error
+	}
 
 	psLog.I("Outgoing IP packet")
-	ipHdrDump(&hdr)
+	ipPacketDump(packet)
 
-	// TODO: write to device
-	// ...
+	// get ethernet address from ip address
+	var ethAddr ethernet.EthAddr
+	if ethAddr, err = ipLookupEthAddr(iface, nextHop); err != psErr.OK {
+		psLog.E(fmt.Sprintf("Ethernet address was not found: %s", err))
+		return psErr.Error
+	}
+
+	// send ip packet
+	if err = Transmit(ethAddr, packet, ethernet.EthTypeIpv4, iface); err != psErr.OK {
+		psLog.E(fmt.Sprintf("Transmit() failed: %s", err))
+		return psErr.Error
+	}
 
 	return psErr.OK
 }
@@ -240,19 +200,116 @@ func allFF(b []byte) bool {
 	return true
 }
 
-func ipHdrDump(hdr *IpHeader) {
-	psLog.I(fmt.Sprintf("\tversion:             IPv%d", hdr.VHL>>4))
-	psLog.I(fmt.Sprintf("\tihl:                 %d", hdr.VHL&0x0f))
-	psLog.I(fmt.Sprintf("\ttype of service:     0b%08b", hdr.TOS))
-	psLog.I(fmt.Sprintf("\ttotal length:        %d bytes (payload: %d bytes)", hdr.TotalLen, hdr.TotalLen-uint16(4*(hdr.VHL&0x0f))))
-	psLog.I(fmt.Sprintf("\tid:                  %d", hdr.ID))
-	psLog.I(fmt.Sprintf("\tflags:               0b%03b", (hdr.Offset&0xefff)>>13))
-	psLog.I(fmt.Sprintf("\tfragment offset:     %d", hdr.Offset&0x1fff))
-	psLog.I(fmt.Sprintf("\tttl:                 %d", hdr.TTL))
-	psLog.I(fmt.Sprintf("\tprotocol:            %d (%s)", hdr.Protocol, protocolNumbers[hdr.Protocol]))
-	psLog.I(fmt.Sprintf("\tchecksum:            0x%04x", hdr.Checksum))
-	psLog.I(fmt.Sprintf("\tsource address:      %d.%d.%d.%d", hdr.Src[0], hdr.Src[1], hdr.Src[2], hdr.Src[3]))
-	psLog.I(fmt.Sprintf("\tdestination address: %d.%d.%d.%d", hdr.Dst[0], hdr.Dst[1], hdr.Dst[2], hdr.Dst[3]))
+// Computing the Internet Checksum
+// https://datatracker.ietf.org/doc/html/rfc1071
+
+func checksum(b []byte) uint16 {
+	var sum uint32
+	// sum up all fields of IP header by each 16bits (except Header Checksum and Options)
+	for i := 0; i < len(b); i += 2 {
+		sum += uint32(uint16(b[i])<<8 | uint16(b[i+1]))
+	}
+	//
+	sum = ((sum & 0xffff0000) >> 16) + (sum & 0x0000ffff)
+	return ^(uint16(sum))
+}
+
+func ipCreatePacket(protoNum ProtocolNumber, src IP, dst IP, payload []byte) []byte {
+	hdr := IpHdr{}
+	hdr.VHL = uint8(ipv4<<4) | uint8(IpHdrSizeMin/4)
+	hdr.TotalLen = uint16(IpHdrSizeMin + len(payload))
+	hdr.ID = id.Next()
+	hdr.TTL = 0xff
+	hdr.Protocol = protoNum
+	copy(hdr.Src[:], src[:])
+	copy(hdr.Dst[:], dst[:])
+
+	buf := new(bytes.Buffer)
+	if err := binary.Write(buf, binary.BigEndian, &hdr); err != nil {
+		psLog.E(fmt.Sprintf("binary.Write() failed: %s", err))
+		return nil
+	}
+	if err := binary.Write(buf, binary.BigEndian, payload); err != nil {
+		psLog.E(fmt.Sprintf("binary.Write() failed: %s", err))
+		return nil
+	}
+	packet := buf.Bytes()
+
+	csum := checksum(packet)
+	packet[10] = uint8((csum & 0xff00) >> 8)
+	packet[11] = uint8(csum & 0x00ff)
+
+	return packet
+}
+
+func ipPacketDump(packet []byte) {
+	ihl := packet[0] & 0x0f
+	totalLen := uint16(packet[2])<<8 | uint16(packet[3])
+	payloadLen := totalLen - uint16(4*ihl)
+	psLog.I(fmt.Sprintf("\tversion:             IPv%d", packet[0]>>4))
+	psLog.I(fmt.Sprintf("\tihl:                 %d", ihl))
+	psLog.I(fmt.Sprintf("\ttype of service:     0b%08b", packet[1]))
+	psLog.I(fmt.Sprintf("\ttotal length:        %d bytes (payload: %d bytes)", totalLen, payloadLen))
+	psLog.I(fmt.Sprintf("\tid:                  %d", uint16(packet[4])<<8|uint16(packet[5])))
+	psLog.I(fmt.Sprintf("\tflags:               0b%03b", (packet[6]&0xe0)>>5))
+	psLog.I(fmt.Sprintf("\tfragment offset:     %d", uint16(packet[6]&0x1f)<<8|uint16(packet[7])))
+	psLog.I(fmt.Sprintf("\tttl:                 %d", packet[8]))
+	psLog.I(fmt.Sprintf("\tprotocol:            %d (%s)", packet[9], protocolNumbers[ProtocolNumber(packet[9])]))
+	psLog.I(fmt.Sprintf("\tchecksum:            0x%04x", uint16(packet[10])<<8|uint16(packet[11])))
+	psLog.I(fmt.Sprintf("\tsource address:      %d.%d.%d.%d", packet[12], packet[13], packet[14], packet[15]))
+	psLog.I(fmt.Sprintf("\tdestination address: %d.%d.%d.%d", packet[16], packet[17], packet[18], packet[19]))
+}
+
+func ipLookupEthAddr(iface *Iface, nextHop IP) (ethernet.EthAddr, psErr.E) {
+	var addr ethernet.EthAddr
+	if iface.Dev.Flag()&ethernet.DevFlagNeedArp != 0 {
+		if nextHop.Equal(iface.Broadcast) || nextHop.Equal(V4Broadcast) {
+			addr = iface.Dev.Broadcast()
+		} else {
+			var status ArpStatus
+			if addr, status = arpResolve(iface, nextHop); status != ArpStatusComplete {
+				return ethernet.EthAddr{}, psErr.ArpIncomplete
+			}
+		}
+	}
+	return addr, psErr.OK
+}
+
+func ipRouting(dst IP, src IP) (*Iface, IP, psErr.E) {
+	var iface *Iface
+	var nextHop IP
+
+	if src.Equal(V4Zero) {
+		// Can't determine network address (0.0.0.0 is a non-routable meta-address), so lookup appropriate interface to
+		// send IP packet.
+		route := RouteRepo.Get(dst)
+		if route == nil {
+			psLog.E("Route to destination was not found")
+			return nil, IP{}, psErr.RouteNotFound
+		}
+		iface = route.Iface
+		if route.NextHop.Equal(V4Zero) {
+			nextHop = dst
+		} else {
+			nextHop = route.NextHop
+		}
+	} else {
+		// Source address isn't equal to V4Zero means it can determine network address.
+		iface = IfaceRepo.Get(src)
+		if iface == nil {
+			psLog.E(fmt.Sprintf("Interface for %s was not found", src))
+			return nil, IP{}, psErr.InterfaceNotFound
+		}
+		// Don't send IP packet when network address of both destination and iface is not matched each other or
+		// destination address is not matched to the broadcast address.
+		if !dst.Mask(iface.Netmask).Equal(iface.Unicast.Mask(iface.Netmask)) && !dst.Equal(V4Broadcast) {
+			psLog.E(fmt.Sprintf("IP packet can't reach %s (Network address is not matched)", dst.String()))
+			return nil, IP{}, psErr.NetworkAddressNotMatch
+		}
+		nextHop = dst
+	}
+
+	return iface, nextHop, psErr.OK
 }
 
 // isZeros checks if ip all zeros.

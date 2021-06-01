@@ -2,6 +2,7 @@
 
 dnf -y update
 dnf -y group install "Development Tools"
+dnf -y install tcpdump
 
 systemctl disable firewalld
 

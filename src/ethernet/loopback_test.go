@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestLoopbackDevice_Open_SUCCESS(t *testing.T) {
+func TestLoopbackDevice_Open(t *testing.T) {
 	psLog.DisableOutput()
 	defer psLog.EnableOutput()
 
@@ -25,7 +25,7 @@ func TestLoopbackDevice_Open_SUCCESS(t *testing.T) {
 	}
 }
 
-func TestLoopbackDevice_Close_SUCCESS(t *testing.T) {
+func TestLoopbackDevice_Close(t *testing.T) {
 	psLog.DisableOutput()
 	defer psLog.EnableOutput()
 
@@ -42,7 +42,7 @@ func TestLoopbackDevice_Close_SUCCESS(t *testing.T) {
 	}
 }
 
-func TestLoopbackDevice_Poll_SUCCESS(t *testing.T) {
+func TestLoopbackDevice_Poll(t *testing.T) {
 	psLog.DisableOutput()
 	defer psLog.EnableOutput()
 
@@ -59,7 +59,7 @@ func TestLoopbackDevice_Poll_SUCCESS(t *testing.T) {
 	}
 }
 
-func TestLoopbackDevice_Transmit_SUCCESS(t *testing.T) {
+func TestLoopbackDevice_Transmit(t *testing.T) {
 	psLog.DisableOutput()
 	defer psLog.EnableOutput()
 

@@ -39,13 +39,13 @@ func ArpInputHandler(packet []byte, dev ethernet.IDevice) psErr.E {
 
 	iface := IfaceRepo.Lookup(dev, V4AddrFamily)
 	if iface == nil {
-		psLog.E(fmt.Sprintf("Interface for %s is not registered", dev.DevName()))
+		psLog.E(fmt.Sprintf("Interface for %s is not registered", dev.Name()))
 		return psErr.InterfaceNotFound
 	}
 
 	if iface.Unicast.EqualV4(arpPacket.TPA) {
-		if err := cache.Update(&arpPacket); err == psErr.NotFound {
-			if err := cache.Add(&arpPacket); err != psErr.OK {
+		if err := cache.Renew(arpPacket.SHA, arpPacket.SPA, ArpCacheStateResolved); err == psErr.NotFound {
+			if err := cache.Add(arpPacket.SHA, arpPacket.SPA, ArpCacheStateResolved); err != psErr.OK {
 				psLog.E(fmt.Sprintf("ArpCache.Add() failed: %s", err))
 			}
 		} else {
@@ -90,7 +90,7 @@ func arpReply(tha ethernet.EthAddr, tpa ArpProtoAddr, iface *Iface) psErr.E {
 		THA: tha,
 		TPA: tpa,
 	}
-	addr := iface.Dev.EthAddr()
+	addr := iface.Dev.Addr()
 	copy(packet.SHA[:], addr[:])
 	copy(packet.SPA[:], iface.Unicast[:])
 
@@ -111,11 +111,65 @@ func arpReply(tha ethernet.EthAddr, tpa ArpProtoAddr, iface *Iface) psErr.E {
 	return psErr.OK
 }
 
-// TODO:
-//func arpRequest() {}
+func arpRequest(iface *Iface, ip IP) psErr.E {
+	packet := ArpPacket{
+		ArpHdr: ArpHdr{
+			HT:     ArpHwTypeEthernet,
+			PT:     ethernet.EthTypeIpv4,
+			HAL:    ethernet.EthAddrLen,
+			PAL:    V4AddrLen,
+			Opcode: ArpOpRequest,
+		},
+		SHA: iface.Dev.Addr(),
+		SPA: iface.Unicast.ToV4(),
+		THA: ethernet.EthAddr{},
+		TPA: ip.ToV4(),
+	}
 
-// TODO:
-//func arpResolve() {}
+	buf := new(bytes.Buffer)
+	if err := binary.Write(buf, binary.BigEndian, &packet); err != nil {
+		psLog.E("binary.Write() failed")
+		return psErr.Error
+	}
+	payload := buf.Bytes()
+
+	psLog.I("Outgoing ARP packet")
+	arpPacketDump(&packet)
+
+	if err := Transmit(iface.Dev.Broadcast(), payload, ethernet.EthTypeArp, iface); err != psErr.OK {
+		psLog.E(fmt.Sprintf("Transmit() failed: %s", err))
+		return psErr.Error
+	}
+
+	return psErr.OK
+}
+
+func arpResolve(iface *Iface, ip IP) (ethernet.EthAddr, ArpStatus) {
+	if iface.Dev.Type() != ethernet.DevTypeEthernet {
+		psLog.E(fmt.Sprintf("Unsupported device type: %s", iface.Dev.Type()))
+		return ethernet.EthAddr{}, ArpStatusError
+	}
+
+	if iface.Family != V4AddrFamily {
+		psLog.E(fmt.Sprintf("Unsupported address family: %s", iface.Family))
+		return ethernet.EthAddr{}, ArpStatusError
+	}
+
+	ethAddr, found := cache.EthAddr(ip.ToV4())
+	if !found {
+		if err := cache.Add(ethernet.EthAddr{}, ip.ToV4(), ArpCacheStateIncomplete); err != psErr.OK {
+			psLog.E(fmt.Sprintf("ArpCache.Add() failed: %s", err))
+			return ethernet.EthAddr{}, ArpStatusError
+		}
+		if err := arpRequest(iface, ip); err != psErr.OK {
+			psLog.E(fmt.Sprintf("arpRequest() failed: %s", err))
+			return ethernet.EthAddr{}, ArpStatusError
+		}
+		return ethernet.EthAddr{}, ArpStatusIncomplete
+	}
+
+	return ethAddr, ArpStatusComplete
+}
 
 // TODO:
 //func arpTimer() {}

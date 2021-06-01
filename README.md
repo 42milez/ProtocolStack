@@ -68,7 +68,7 @@ Note: `make` supports the commands below:
 - [ ] TCP
 - [ ] UDP
 
-## Example
+## Examples
 
 <details>
 <summary>Log</summary>

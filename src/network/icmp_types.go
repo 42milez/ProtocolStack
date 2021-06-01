@@ -1,6 +1,6 @@
 package network
 
-type IcmpHeader struct {
+type IcmpHdr struct {
 	Type     IcmpType
 	Code     uint8
 	Checksum uint16

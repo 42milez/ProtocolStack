@@ -49,18 +49,18 @@ func (p *deviceRepo) Register(dev ethernet.IDevice) psErr.E {
 	for _, d := range p.devices {
 		if d.Equal(dev) {
 			psLog.W("Device is already registered")
-			psLog.W(fmt.Sprintf("\ttype: %s", d.DevType()))
-			psLog.W(fmt.Sprintf("\tname: %s (%s)", d.DevName(), d.PrivDevName()))
+			psLog.W(fmt.Sprintf("\ttype: %s", d.Type()))
+			psLog.W(fmt.Sprintf("\tname: %s (%s)", d.Name(), d.Priv().Name))
 			return psErr.Error
 		}
 	}
 	p.devices = append(p.devices, dev)
 	psLog.I("Device was registered")
-	psLog.I(fmt.Sprintf("\ttype:      %s", dev.DevType()))
-	psLog.I(fmt.Sprintf("\tname:      %s (%s)", dev.DevName(), dev.PrivDevName()))
-	psLog.I(fmt.Sprintf("\taddr:      %s", dev.EthAddr()))
-	psLog.I(fmt.Sprintf("\tbroadcast: %s", dev.BroadcastEthAddr()))
-	psLog.I(fmt.Sprintf("\tpeer:      %s", dev.PeerEthAddr()))
+	psLog.I(fmt.Sprintf("\ttype:      %s", dev.Type()))
+	psLog.I(fmt.Sprintf("\tname:      %s (%s)", dev.Name(), dev.Priv().Name))
+	psLog.I(fmt.Sprintf("\taddr:      %s", dev.Addr()))
+	psLog.I(fmt.Sprintf("\tbroadcast: %s", dev.Broadcast()))
+	psLog.I(fmt.Sprintf("\tpeer:      %s", dev.Peer()))
 	return psErr.OK
 }
 
@@ -68,20 +68,20 @@ func (p *deviceRepo) Up() psErr.E {
 	for _, dev := range p.devices {
 		if dev.IsUp() {
 			psLog.W("Device is already opened")
-			psLog.W(fmt.Sprintf("\ttype: %s", dev.DevType()))
-			psLog.W(fmt.Sprintf("\tname: %s (%s)", dev.DevName(), dev.PrivDevName()))
+			psLog.W(fmt.Sprintf("\ttype: %s", dev.Type()))
+			psLog.W(fmt.Sprintf("\tname: %s (%s)", dev.Name(), dev.Priv().Name))
 			return psErr.Error
 		}
 		if err := dev.Open(); err != psErr.OK {
 			psLog.E(fmt.Sprintf("IDevice.Open() failed: %s", err))
-			psLog.E(fmt.Sprintf("\ttype: %s", dev.DevType()))
-			psLog.E(fmt.Sprintf("\tname: %s (%s)", dev.DevName(), dev.PrivDevName()))
+			psLog.E(fmt.Sprintf("\ttype: %s", dev.Type()))
+			psLog.E(fmt.Sprintf("\tname: %s (%s)", dev.Name(), dev.Priv().Name))
 			return psErr.Error
 		}
 		dev.Up()
 		psLog.I("Device was opened")
-		psLog.I(fmt.Sprintf("\ttype: %s", dev.DevType()))
-		psLog.I(fmt.Sprintf("\tname: %s (%s)", dev.DevName(), dev.PrivDevName()))
+		psLog.I(fmt.Sprintf("\ttype: %s", dev.Type()))
+		psLog.I(fmt.Sprintf("\tname: %s (%s)", dev.Name(), dev.Priv().Name))
 	}
 	return psErr.OK
 }
@@ -121,7 +121,7 @@ func (p *ifaceRepo) Register(iface *Iface, dev ethernet.IDevice) psErr.E {
 
 	psLog.I("Interface was attached")
 	psLog.I(fmt.Sprintf("\tip:     %s", iface.Unicast))
-	psLog.I(fmt.Sprintf("\tdevice: %s (%s)", dev.DevName(), dev.PrivDevName()))
+	psLog.I(fmt.Sprintf("\tdevice: %s (%s)", dev.Name(), dev.Priv().Name))
 
 	return psErr.OK
 }
@@ -164,7 +164,7 @@ func (p *routeRepo) Register(network IP, nextHop IP, iface *Iface) {
 	psLog.I(fmt.Sprintf("\tnetmask:  %s", route.Netmask))
 	psLog.I(fmt.Sprintf("\tunicast:  %s", iface.Unicast))
 	psLog.I(fmt.Sprintf("\tnext hop: %s", nextHop))
-	psLog.I(fmt.Sprintf("\tdevice:   %s (%s)", iface.Dev.DevName(), iface.Dev.PrivDevName()))
+	psLog.I(fmt.Sprintf("\tdevice:   %s (%s)", iface.Dev.Name(), iface.Dev.Priv().Name))
 }
 
 func (p *routeRepo) RegisterDefaultGateway(iface *Iface, nextHop IP) {
@@ -180,7 +180,7 @@ func (p *routeRepo) RegisterDefaultGateway(iface *Iface, nextHop IP) {
 	psLog.I(fmt.Sprintf("\tnetmask:  %s", route.Netmask))
 	psLog.I(fmt.Sprintf("\tunicast:  %s", iface.Unicast))
 	psLog.I(fmt.Sprintf("\tnext hop: %s", nextHop))
-	psLog.I(fmt.Sprintf("\tdevice:   %s (%s)", iface.Dev.DevName(), iface.Dev.PrivDevName()))
+	psLog.I(fmt.Sprintf("\tdevice:   %s (%s)", iface.Dev.Name(), iface.Dev.Priv().Name))
 }
 
 func init() {

@@ -50,21 +50,21 @@ type IDevice interface {
 	Broadcast() EthAddr
 	Peer() EthAddr
 	Flag() DevFlag
-	HeaderLen() uint16
+	HdrLen() uint16
 	MTU() uint16
 	Priv() Privilege
 }
 
 type Device struct {
-	_Type      DevType
-	_Name      string
-	_Addr      EthAddr
-	_Broadcast EthAddr
-	_Peer      EthAddr
-	_Flag      DevFlag
-	_HeaderLen uint16
-	_MTU       uint16
-	_Priv      Privilege
+	Type_      DevType
+	Name_      string
+	Addr_      EthAddr
+	Broadcast_ EthAddr
+	Peer_      EthAddr
+	Flag_      DevFlag
+	HdrLen_    uint16
+	MTU_       uint16
+	Priv_      Privilege
 }
 
 type Privilege struct {
@@ -73,53 +73,53 @@ type Privilege struct {
 }
 
 func (p *Device) Up() {
-	p._Flag |= DevFlagUp
+	p.Flag_ |= DevFlagUp
 }
 
 func (p *Device) Down() {
-	p._Flag &= ^DevFlagUp
+	p.Flag_ &= ^DevFlagUp
 }
 
 func (p *Device) Equal(pp IDevice) bool {
-	return p._Name == pp.Name()
+	return p.Name_ == pp.Name()
 }
 
 func (p *Device) IsUp() bool {
-	return p._Flag&DevFlagUp == 1
+	return p.Flag_&DevFlagUp == 1
 }
 
 func (p *Device) Type() DevType {
-	return p._Type
+	return p.Type_
 }
 
 func (p *Device) Name() string {
-	return p._Name
+	return p.Name_
 }
 
 func (p *Device) Addr() EthAddr {
-	return p._Addr
+	return p.Addr_
 }
 
 func (p *Device) Broadcast() EthAddr {
-	return p._Broadcast
+	return p.Broadcast_
 }
 
 func (p *Device) Peer() EthAddr {
-	return p._Peer
+	return p.Peer_
 }
 
 func (p *Device) Flag() DevFlag {
-	return p._Flag
+	return p.Flag_
 }
 
-func (p *Device) HeaderLen() uint16 {
-	return p._HeaderLen
+func (p *Device) HdrLen() uint16 {
+	return p.HdrLen_
 }
 
 func (p *Device) MTU() uint16 {
-	return p._MTU
+	return p.MTU_
 }
 
 func (p *Device) Priv() Privilege {
-	return p._Priv
+	return p.Priv_
 }
