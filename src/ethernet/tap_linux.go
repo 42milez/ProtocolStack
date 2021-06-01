@@ -132,7 +132,6 @@ func (dev *TapDevice) Poll(isTerminated bool) psErr.E {
 		// https://man7.org/linux/man-pages/man2/epoll_wait.2.html#RETURN_VALUE
 		// ignore EINTR
 		if !errors.Is(err, syscall.EINTR) {
-			_ = psSyscall.Syscall.Close(epfd)
 			return psErr.Error
 		}
 		return psErr.Interrupted

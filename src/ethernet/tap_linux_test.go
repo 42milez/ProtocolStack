@@ -330,6 +330,49 @@ func TestTapDevice_Poll_4(t *testing.T) {
 	}
 }
 
+// Fail when EpollWait() returns EFAULT.
+func TestTapDevice_Poll_5(t *testing.T) {
+	psLog.DisableOutput()
+	defer psLog.EnableOutput()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	m := psSyscall.NewMockISyscall(ctrl)
+	m.EXPECT().EpollWait(Any, Any, Any).Return(RetValOnFail, syscall.EFAULT)
+
+	psSyscall.Syscall = m
+
+	tapDev := TapDevice{}
+
+	got := tapDev.Poll(false)
+	if got != psErr.Error {
+		t.Errorf("TapDevice.Poll() = %v; want %v", got, psErr.Error)
+	}
+}
+
+// Fail when ReadFrame() failed.
+func TestTapDevice_Poll_6(t *testing.T) {
+	psLog.DisableOutput()
+	defer psLog.EnableOutput()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	m := psSyscall.NewMockISyscall(ctrl)
+	m.EXPECT().EpollWait(Any, Any, Any).Return(1, nil)
+	m.EXPECT().Read(Any, Any).Return(RetValOnFail, syscall.EIO)
+
+	psSyscall.Syscall = m
+
+	tapDev := TapDevice{}
+
+	got := tapDev.Poll(false)
+	if got != psErr.Error {
+		t.Errorf("TapDevice.Poll() = %v; want %v", got, psErr.Error)
+	}
+}
+
 func init() {
 	ErrorWithNoMessage = errors.New("")
 }
