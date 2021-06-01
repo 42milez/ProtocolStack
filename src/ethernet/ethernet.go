@@ -101,7 +101,7 @@ func ReadEthFrame(fd int, addr EthAddr, sc psSyscall.ISyscall) (*Packet, psErr.E
 	return packet, psErr.OK
 }
 
-func WriteFrame(fd int, dst EthAddr, src EthAddr, typ EthType, payload []byte) psErr.E {
+func WriteEthFrame(fd int, dst EthAddr, src EthAddr, typ EthType, payload []byte) psErr.E {
 	hdr := EthHdr{
 		Dst:  dst,
 		Src:  src,

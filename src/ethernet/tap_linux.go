@@ -156,5 +156,5 @@ func (dev *TapDevice) Poll(isTerminated bool) psErr.E {
 }
 
 func (dev *TapDevice) Transmit(dst EthAddr, payload []byte, typ EthType) psErr.E {
-	return WriteFrame(dev.Priv_.FD, dst, dev.Addr_, typ, payload)
+	return WriteEthFrame(dev.Priv_.FD, dst, dev.Addr_, typ, payload)
 }
