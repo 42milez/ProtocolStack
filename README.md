@@ -1,6 +1,6 @@
 ## ProtocolStack
 [![CI](https://github.com/42milez/ProtocolStack/actions/workflows/ci.yml/badge.svg)](https://github.com/42milez/ProtocolStack/actions/workflows/ci.yml) [![codecov](https://codecov.io/gh/42milez/ProtocolStack/branch/main/graph/badge.svg?token=ALHDIWP6KH)](https://codecov.io/gh/42milez/ProtocolStack)  
-This repository is for learning network programming in Go.
+This repository is for learning network programming in Go and mainly aims to implement TCP/IP stack.
 
 ## Requirements
 - OS: Linux
