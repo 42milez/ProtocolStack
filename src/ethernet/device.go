@@ -32,7 +32,6 @@ type DevFlag uint16
 const DevFlagUp DevFlag = 0x0001
 const DevFlagLoopback DevFlag = 0x0010
 const DevFlagBroadcast DevFlag = 0x0020
-const DevFlagP2P DevFlag = 0x0040
 const DevFlagNeedArp DevFlag = 0x0100
 
 type IDevice interface {
@@ -47,8 +46,6 @@ type IDevice interface {
 	Type() DevType
 	Name() string
 	Addr() EthAddr
-	Broadcast() EthAddr
-	Peer() EthAddr
 	Flag() DevFlag
 	HdrLen() uint16
 	MTU() uint16
@@ -56,15 +53,13 @@ type IDevice interface {
 }
 
 type Device struct {
-	Type_      DevType
-	Name_      string
-	Addr_      EthAddr
-	Broadcast_ EthAddr
-	Peer_      EthAddr
-	Flag_      DevFlag
-	HdrLen_    uint16
-	MTU_       uint16
-	Priv_      Privilege
+	Type_   DevType
+	Name_   string
+	Addr_   EthAddr
+	Flag_   DevFlag
+	HdrLen_ uint16
+	MTU_    uint16
+	Priv_   Privilege
 }
 
 type Privilege struct {
@@ -98,14 +93,6 @@ func (p *Device) Name() string {
 
 func (p *Device) Addr() EthAddr {
 	return p.Addr_
-}
-
-func (p *Device) Broadcast() EthAddr {
-	return p.Broadcast_
-}
-
-func (p *Device) Peer() EthAddr {
-	return p.Peer_
 }
 
 func (p *Device) Flag() DevFlag {

@@ -86,3 +86,25 @@ func TestDevice_IsUp(t *testing.T) {
 		t.Errorf("Device.IsUp() = %t; want %t", got, false)
 	}
 }
+
+func TestDevice_Type(t *testing.T) {
+	dev := Device{
+		Type_: DevTypeEthernet,
+	}
+	want := DevTypeEthernet
+	got := dev.Type()
+	if got != want {
+		t.Errorf("Type() = %d; want %d", got, want)
+	}
+}
+
+func TestDevice_Name(t *testing.T) {
+	dev := Device{
+		Name_: "net0",
+	}
+	want := "net0"
+	got := dev.Name()
+	if got != want {
+		t.Errorf("Name() = %s; want %s", got, want)
+	}
+}

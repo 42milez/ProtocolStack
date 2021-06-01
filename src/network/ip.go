@@ -264,7 +264,7 @@ func ipLookupEthAddr(iface *Iface, nextHop IP) (ethernet.EthAddr, psErr.E) {
 	var addr ethernet.EthAddr
 	if iface.Dev.Flag()&ethernet.DevFlagNeedArp != 0 {
 		if nextHop.Equal(iface.Broadcast) || nextHop.Equal(V4Broadcast) {
-			addr = iface.Dev.Broadcast()
+			addr = ethernet.EthAddrBroadcast
 		} else {
 			var status ArpStatus
 			if addr, status = arpResolve(iface, nextHop); status != ArpStatusComplete {

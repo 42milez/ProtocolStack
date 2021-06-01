@@ -17,13 +17,12 @@ func GenLoopbackDevice(name string) *LoopbackDevice {
 func GenTapDevice(devName string, privName string, addr EthAddr) *TapDevice {
 	return &TapDevice{
 		Device: Device{
-			Type_:      DevTypeEthernet,
-			Name_:      devName,
-			Addr_:      addr,
-			Broadcast_: EthAddrBroadcast,
-			Flag_:      DevFlagBroadcast | DevFlagNeedArp,
-			HdrLen_:    EthHdrSize,
-			MTU_:       EthPayloadSizeMax,
+			Type_:   DevTypeEthernet,
+			Name_:   devName,
+			Addr_:   addr,
+			Flag_:   DevFlagBroadcast | DevFlagNeedArp,
+			HdrLen_: EthHdrSize,
+			MTU_:    EthPayloadSizeMax,
 			Priv_: Privilege{
 				FD:   -1,
 				Name: privName,

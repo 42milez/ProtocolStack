@@ -48,20 +48,6 @@ func (mr *MockIDeviceMockRecorder) Addr() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Addr", reflect.TypeOf((*MockIDevice)(nil).Addr))
 }
 
-// Broadcast mocks base method.
-func (m *MockIDevice) Broadcast() EthAddr {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Broadcast")
-	ret0, _ := ret[0].(EthAddr)
-	return ret0
-}
-
-// Broadcast indicates an expected call of Broadcast.
-func (mr *MockIDeviceMockRecorder) Broadcast() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Broadcast", reflect.TypeOf((*MockIDevice)(nil).Broadcast))
-}
-
 // Close mocks base method.
 func (m *MockIDevice) Close() error.E {
 	m.ctrl.T.Helper()
@@ -184,20 +170,6 @@ func (m *MockIDevice) Open() error.E {
 func (mr *MockIDeviceMockRecorder) Open() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Open", reflect.TypeOf((*MockIDevice)(nil).Open))
-}
-
-// Peer mocks base method.
-func (m *MockIDevice) Peer() EthAddr {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Peer")
-	ret0, _ := ret[0].(EthAddr)
-	return ret0
-}
-
-// Peer indicates an expected call of Peer.
-func (mr *MockIDeviceMockRecorder) Peer() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Peer", reflect.TypeOf((*MockIDevice)(nil).Peer))
 }
 
 // Poll mocks base method.

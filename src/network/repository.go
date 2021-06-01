@@ -59,8 +59,6 @@ func (p *deviceRepo) Register(dev ethernet.IDevice) psErr.E {
 	psLog.I(fmt.Sprintf("\ttype:      %s", dev.Type()))
 	psLog.I(fmt.Sprintf("\tname:      %s (%s)", dev.Name(), dev.Priv().Name))
 	psLog.I(fmt.Sprintf("\taddr:      %s", dev.Addr()))
-	psLog.I(fmt.Sprintf("\tbroadcast: %s", dev.Broadcast()))
-	psLog.I(fmt.Sprintf("\tpeer:      %s", dev.Peer()))
 	return psErr.OK
 }
 
