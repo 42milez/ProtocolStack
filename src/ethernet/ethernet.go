@@ -31,6 +31,8 @@ var ethTypes = map[EthType]string{
 	0x86dd: "IPv6",
 }
 
+var rxBuf []byte
+
 type EthAddr [EthAddrLen]byte
 
 func (v EthAddr) Equal(vv EthAddr) bool {
@@ -60,11 +62,8 @@ func EthFrameDump(f []byte) {
 	psLog.I(fmt.Sprintf("\ttype: 0x%04x (%s)", typ, ethTypes[EthType(typ)]))
 }
 
-func ReadEthFrame(fd int, addr EthAddr, sc psSyscall.ISyscall) (*Packet, psErr.E) {
-	// TODO: make buf static variable to reuse
-	buf := make([]byte, EthFrameLenMax)
-
-	flen, err := sc.Read(fd, buf)
+func ReadEthFrame(fd int, addr EthAddr) (*Packet, psErr.E) {
+	flen, err := psSyscall.Syscall.Read(fd, rxBuf)
 	if err != nil {
 		psLog.E(fmt.Sprintf("syscall.Read() failed: %s", err))
 		return nil, psErr.Error
@@ -79,7 +78,7 @@ func ReadEthFrame(fd int, addr EthAddr, sc psSyscall.ISyscall) (*Packet, psErr.E
 	psLog.I(fmt.Sprintf("Ethernet frame was received: %d bytes", flen))
 
 	hdr := EthHdr{}
-	if err := binary.Read(bytes.NewBuffer(buf), binary.BigEndian, &hdr); err != nil {
+	if err := binary.Read(bytes.NewBuffer(rxBuf), binary.BigEndian, &hdr); err != nil {
 		psLog.E(fmt.Sprintf("binary.Read() failed: %s", err))
 		return nil, psErr.Error
 	}
@@ -91,14 +90,12 @@ func ReadEthFrame(fd int, addr EthAddr, sc psSyscall.ISyscall) (*Packet, psErr.E
 	}
 
 	psLog.I("Incoming ethernet frame")
-	EthFrameDump(buf)
+	EthFrameDump(rxBuf)
 
-	packet := &Packet{
+	return &Packet{
 		Type:    hdr.Type,
-		Payload: buf[EthHdrLen:flen],
-	}
-
-	return packet, psErr.OK
+		Content: rxBuf[EthHdrLen:flen],
+	}, psErr.OK
 }
 
 func WriteEthFrame(fd int, dst EthAddr, src EthAddr, typ EthType, payload []byte) psErr.E {
@@ -146,4 +143,8 @@ func WriteEthFrame(fd int, dst EthAddr, src EthAddr, typ EthType, payload []byte
 	}
 
 	return psErr.OK
+}
+
+func init() {
+	rxBuf = make([]byte, EthFrameLenMax)
 }
