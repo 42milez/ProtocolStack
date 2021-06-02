@@ -56,16 +56,16 @@ type EthHdr struct {
 }
 
 func EthFrameDump(hdr *EthHdr, payload []byte) {
-	psLog.I(fmt.Sprintf("\tdst:           %s", hdr.Dst))
-	psLog.I(fmt.Sprintf("\tsrc:           %s", hdr.Src))
-	psLog.I(fmt.Sprintf("\ttype:          0x%04x (%s)", uint16(hdr.Type), hdr.Type))
+	psLog.I(fmt.Sprintf("\tdst:     %s", hdr.Dst))
+	psLog.I(fmt.Sprintf("\tsrc:     %s", hdr.Src))
+	psLog.I(fmt.Sprintf("\ttype:    0x%04x (%s)", uint16(hdr.Type), hdr.Type))
 
-	s := "\tpayload (nbo): "
+	s := "\tpayload: "
 	for i, v := range payload {
 		s += fmt.Sprintf("%02x ", v)
 		if (i+1)%20 == 0 {
 			psLog.I(s)
-			s = "\t\t       "
+			s = "\t\t "
 		}
 	}
 }

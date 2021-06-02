@@ -25,16 +25,16 @@ func IcmpReceive(payload []byte, dst [V4AddrLen]byte, src [V4AddrLen]byte, dev e
 		return psErr.Error
 	}
 
-	cs1 := uint16(payload[2])<<8 | uint16(payload[3])
+	checksum1 := uint16(payload[2])<<8 | uint16(payload[3])
 	payload[2] = 0x00 // assign 0 to Checksum field (16bit)
 	payload[3] = 0x00
-	if cs2 := checksum(payload); cs2 != cs1 {
-		psLog.E(fmt.Sprintf("Checksum mismatch: Expect = 0x%04x, Actual = 0x%04x", cs1, cs2))
+	if checksum2 := checksum(payload); checksum2 != checksum1 {
+		psLog.E(fmt.Sprintf("Checksum mismatch: Expect = 0x%04x, Actual = 0x%04x", checksum1, checksum2))
 		return psErr.ChecksumMismatch
 	}
 
 	psLog.I("Incoming ICMP packet")
-	icmpHdrDump(&hdr)
+	icmpHdrDump(&hdr, payload[IcmpHdrLen:])
 
 	switch hdr.Type {
 	case IcmpTypeEcho:
@@ -74,7 +74,7 @@ func IcmpSend(typ IcmpType, code uint8, content uint32, payload []byte, dst IP, 
 	packet[3] = uint8(hdr.Checksum & 0x00ff)
 
 	psLog.I("Outgoing ICMP packet")
-	icmpHdrDump(&hdr)
+	icmpHdrDump(&hdr, payload)
 
 	if err := IpSend(ProtoNumICMP, packet, src, dst); err != psErr.OK {
 		return psErr.Error
@@ -83,10 +83,11 @@ func IcmpSend(typ IcmpType, code uint8, content uint32, payload []byte, dst IP, 
 	return psErr.OK
 }
 
-func icmpHdrDump(hdr *IcmpHdr) {
+func icmpHdrDump(hdr *IcmpHdr, payload []byte) {
 	psLog.I(fmt.Sprintf("\ttype:     %d (%s)", hdr.Type, icmpTypes[hdr.Type]))
 	psLog.I(fmt.Sprintf("\tcode:     %d", hdr.Code))
 	psLog.I(fmt.Sprintf("\tchecksum: 0x%04x", hdr.Checksum))
+
 	switch hdr.Type {
 	case IcmpTypeEchoReply:
 	case IcmpTypeEcho:
@@ -98,5 +99,14 @@ func icmpHdrDump(hdr *IcmpHdr) {
 			uint8((hdr.Content&0x0f00)>>16),
 			uint8((hdr.Content&0x00f0)>>8),
 			uint8(hdr.Content&0x000f)))
+	}
+
+	s := "\tpayload:  "
+	for i, v := range payload {
+		s += fmt.Sprintf("%02x ", v)
+		if (i+1)%20 == 0 {
+			psLog.I(s)
+			s = "\t\t  "
+		}
 	}
 }
