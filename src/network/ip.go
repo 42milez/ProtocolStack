@@ -13,14 +13,9 @@ import (
 
 const IpHdrLenMin = 20 // bytes
 const IpHdrLenMax = 60 // bytes
-
 const ProtoNumICMP = 1
 const ProtoNumTCP = 6
 const ProtoNumUDP = 17
-
-const ipv4 = 4
-
-var id *PacketID
 
 type PacketID struct {
 	id  uint16
@@ -92,7 +87,7 @@ func IpReceive(payload []byte, dev ethernet.IDevice) psErr.E {
 	}
 
 	psLog.I("Incoming IP packet")
-	ipPacketDump(payload)
+	dumpIpPacket(payload)
 
 	switch hdr.Protocol {
 	case ProtoNumICMP:
@@ -119,7 +114,7 @@ func IpSend(protoNum ProtocolNumber, payload []byte, dst IP, src IP) psErr.E {
 	var err psErr.E
 
 	// get a next hop
-	if iface, nextHop, err = ipRouting(dst, src); err != psErr.OK {
+	if iface, nextHop, err = lookupRouting(dst, src); err != psErr.OK {
 		psLog.E(fmt.Sprintf("Route was not found: %s", err))
 		return psErr.Error
 	}
@@ -129,18 +124,18 @@ func IpSend(protoNum ProtocolNumber, payload []byte, dst IP, src IP) psErr.E {
 		return psErr.PacketTooLong
 	}
 
-	packet := ipCreatePacket(protoNum, src, dst, payload)
+	packet := createIpPacket(protoNum, src, dst, payload)
 	if packet == nil {
 		psLog.E("IP packet was not created")
 		return psErr.Error
 	}
 
 	psLog.I("Outgoing IP packet")
-	ipPacketDump(packet)
+	dumpIpPacket(packet)
 
 	// get ethernet address from ip address
 	var ethAddr ethernet.EthAddr
-	if ethAddr, err = ipLookupEthAddr(iface, nextHop); err != psErr.OK {
+	if ethAddr, err = lookupEthAddr(iface, nextHop); err != psErr.OK {
 		psLog.E(fmt.Sprintf("Ethernet address was not found: %s", err))
 		return psErr.Error
 	}
@@ -188,6 +183,10 @@ func V4(a, b, c, d byte) IP {
 	return p
 }
 
+const ipv4 = 4
+
+var id *PacketID
+
 func allFF(b []byte) bool {
 	for _, c := range b {
 		if c != 0xff {
@@ -211,7 +210,7 @@ func checksum(b []byte) uint16 {
 	return ^(uint16(sum))
 }
 
-func ipCreatePacket(protoNum ProtocolNumber, src IP, dst IP, payload []byte) []byte {
+func createIpPacket(protoNum ProtocolNumber, src IP, dst IP, payload []byte) []byte {
 	hdr := IpHdr{}
 	hdr.VHL = uint8(ipv4<<4) | uint8(IpHdrLenMin/4)
 	hdr.TotalLen = uint16(IpHdrLenMin + len(payload))
@@ -237,7 +236,7 @@ func ipCreatePacket(protoNum ProtocolNumber, src IP, dst IP, payload []byte) []b
 	return packet
 }
 
-func ipPacketDump(packet []byte) {
+func dumpIpPacket(packet []byte) {
 	ihl := packet[0] & 0x0f
 	totalLen := uint16(packet[2])<<8 | uint16(packet[3])
 	payloadLen := totalLen - uint16(4*ihl)
@@ -255,7 +254,7 @@ func ipPacketDump(packet []byte) {
 	psLog.I(fmt.Sprintf("\tdestination address: %d.%d.%d.%d", packet[16], packet[17], packet[18], packet[19]))
 }
 
-func ipLookupEthAddr(iface *Iface, nextHop IP) (ethernet.EthAddr, psErr.E) {
+func lookupEthAddr(iface *Iface, nextHop IP) (ethernet.EthAddr, psErr.E) {
 	var addr ethernet.EthAddr
 	if iface.Dev.Flag()&ethernet.DevFlagNeedArp != 0 {
 		if nextHop.Equal(iface.Broadcast) || nextHop.Equal(V4Broadcast) {
@@ -270,7 +269,7 @@ func ipLookupEthAddr(iface *Iface, nextHop IP) (ethernet.EthAddr, psErr.E) {
 	return addr, psErr.OK
 }
 
-func ipRouting(dst IP, src IP) (*Iface, IP, psErr.E) {
+func lookupRouting(dst IP, src IP) (*Iface, IP, psErr.E) {
 	var iface *Iface
 	var nextHop IP
 
