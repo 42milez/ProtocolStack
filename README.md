@@ -112,6 +112,7 @@ Note: `make` supports the commands below:
     - [A Closer Look at Golang From an Architect’s Perspective](https://thenewstack.io/a-closer-look-at-golang-from-an-architects-perspective)
     - [Go at Google: Language Design in the Service of Software Engineering](https://talks.golang.org/2012/splash.article)
     - [Go talks](https://talks.golang.org/)
+    - [Golang tips: why pointers to slices are useful and how ignoring them can lead to tricky bugs](https://medium.com/swlh/golang-tips-why-pointers-to-slices-are-useful-and-how-ignoring-them-can-lead-to-tricky-bugs-cac90f72e77b)
   - Docs
       - [Command compile](https://golang.org/cmd/compile/)
       - [Command vet](https://golang.org/cmd/vet)
