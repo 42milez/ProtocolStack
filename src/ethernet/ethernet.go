@@ -75,15 +75,14 @@ func EthFrameDump(hdr []byte, payload []byte) {
 func ReadEthFrame(fd int, addr EthAddr) (*Packet, psErr.E) {
 	flen, err := psSyscall.Syscall.Read(fd, rxBuf)
 	if err != nil {
-		psLog.E(fmt.Sprintf("binary.Read() failed: %s", err))
+		psLog.E(fmt.Sprintf("syscall.Syscall.Read() failed: %s", err))
 		return nil, psErr.Error
 	}
 
 	psLog.I(fmt.Sprintf("flen: %d", flen))
 
 	if flen < EthHdrLen {
-		psLog.E("Ethernet header length is too short")
-		psLog.E(fmt.Sprintf("\tlength: %v bytes", flen))
+		psLog.E(fmt.Sprintf("Ethernet header length is too short: %d bytes", flen))
 		return nil, psErr.Error
 	}
 
@@ -129,15 +128,10 @@ func WriteEthFrame(fd int, dst EthAddr, src EthAddr, typ EthType, payload []byte
 		psLog.E(fmt.Sprintf("binary.Write() failed: %s", err))
 		return psErr.Error
 	}
-	frame := buf.Bytes()
-
-	if flen := len(frame); flen < EthFrameLenMin {
-		pad := makePad(EthFrameLenMin - flen)
-		if err := binary.Write(buf, binary.BigEndian, &pad); err != nil {
-			psLog.E(fmt.Sprintf("binary.Write() failed: %s", err))
-			return psErr.Error
-		}
+	if err := pad(buf); err != psErr.OK {
+		return err
 	}
+	frame := buf.Bytes()
 
 	psLog.I("Outgoing Ethernet frame")
 	EthFrameDump(frame[:EthHdrLen], frame[EthHdrLen:])
@@ -152,12 +146,15 @@ func WriteEthFrame(fd int, dst EthAddr, src EthAddr, typ EthType, payload []byte
 	return psErr.OK
 }
 
-func makePad(len int) (buf []byte) {
-	buf = make([]byte, len)
-	for i := 0; i < len; i++ {
-		buf[i] = 0
+func pad(buf *bytes.Buffer) psErr.E {
+	if flen := buf.Len(); flen < EthFrameLenMin {
+		padLen := EthFrameLenMin - flen
+		pad := make([]byte, padLen)
+		if err := binary.Write(buf, binary.BigEndian, &pad); err != nil {
+			return psErr.Error
+		}
 	}
-	return
+	return psErr.OK
 }
 
 func init() {
