@@ -183,10 +183,6 @@ func V4(a, b, c, d byte) IP {
 	return p
 }
 
-const ipv4 = 4
-
-var id *PacketID
-
 func allFF(b []byte) bool {
 	for _, c := range b {
 		if c != 0xff {
@@ -306,16 +302,6 @@ func lookupRouting(dst IP, src IP) (*Iface, IP, psErr.E) {
 	return iface, nextHop, psErr.OK
 }
 
-// isZeros checks if ip all zeros.
-func isZeros(ip IP) bool {
-	for i := 0; i < len(ip); i++ {
-		if ip[i] != 0 {
-			return false
-		}
-	}
-	return true
-}
-
 func longestIP(ip1 IP, ip2 IP) IP {
 	if len(ip1) != len(ip2) {
 		return nil
@@ -328,60 +314,51 @@ func longestIP(ip1 IP, ip2 IP) IP {
 	return ip1
 }
 
-// parseV4 parses string as IPv4 address.
-func parseV4(s string) IP {
-	var p [V4AddrLen]byte
-	for i := 0; i < V4AddrLen; i++ {
-		if i > 0 {
-			if s[0] != '.' {
-				return nil
-			}
-			s = s[1:]
-		}
-		n, c, ok := stoi(s)
-		if !ok || n > 0xff {
-			return nil
-		}
-		s = s[c:]
-		p[i] = byte(n)
-	}
-	return V4(p[0], p[1], p[2], p[3])
+const ipv4 = 4
+
+var addrFamilies = map[AddrFamily]string{
+	V4AddrFamily: "IPv4",
+	V6AddrFamily: "IPv6",
 }
 
-// parseV6 parses string as IPv6 address.
-func parseV6(s string) IP {
-	// TODO: parse the string as IPv6 address
-	return nil
-}
+var id *PacketID
 
-// stoi converts string to integer and returns number, characters consumed, and success.
-func stoi(s string) (n int, c int, ok bool) {
-	n = 0
-	for c = 0; c < len(s) && '0' <= s[c] && s[c] <= '9'; c++ {
-		n = n*10 + int(s[c]-'0')
-	}
-	if c == 0 {
-		return 0, 0, false
-	}
-	return n, c, true
-}
+// ASSIGNED INTERNET PROTOCOL NUMBERS
+// https://datatracker.ietf.org/doc/html/rfc790#page-6
 
-// ubtoa encodes the string form of the integer v to dst[start:] and
-// returns the number of bytes written to dst.
-func ubtoa(dst []byte, start int, v byte) int {
-	if v < 10 {
-		dst[start] = v + '0' // convert a decimal number into ASCII code
-		return 1
-	}
-	if v < 100 {
-		dst[start+1] = v%10 + '0'
-		dst[start] = v/10 + '0'
-		return 2
-	}
-	dst[start+2] = (v % 10) + '0'
-	dst[start+1] = ((v / 10) % 10) + '0'
-	dst[start] = (v / 100) + '0'
-	return 3
+var protocolNumbers = map[ProtocolNumber]string{
+	// 0: Reserved
+	1:  "ICMP",
+	3:  "Gateway-to-Gateway",
+	4:  "CMCC Gateway Monitoring Message",
+	5:  "ST",
+	6:  "TCP",
+	7:  "UCL",
+	9:  "Secure",
+	10: "BBN RCC Monitoring",
+	11: "NVP",
+	12: "PUP",
+	13: "Pluribus",
+	14: "Telenet",
+	15: "XNET",
+	16: "Chaos",
+	17: "User Datagram",
+	18: "Multiplexing",
+	19: "DCN",
+	20: "TAC Monitoring",
+	// 21-62: Unassigned
+	63: "any local network",
+	64: "SATNET and Backroom EXPAK",
+	65: "MIT Subnet Support",
+	// 66-68: Unassigned
+	69: "SATNET Monitoring",
+	71: "Internet Packet Core Utility",
+	// 72-75: Unassigned
+	76: "Backroom SATNET Monitoring",
+	78: "WIDEBAND Monitoring",
+	79: "WIDEBAND EXPAK",
+	// 80-254: Unassigned
+	// 255: Reserved
 }
 
 func init() {

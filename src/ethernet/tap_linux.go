@@ -14,9 +14,6 @@ import (
 
 const EpollTimeout = 1000
 const MaxEpollEvents = 32
-const virtualNetworkDevice = "/dev/net/tun"
-
-var epfd int
 
 // src/syscall/zerrors_linux_amd64.go
 // https://golang.org/src/syscall/zerrors_linux_amd64.go
@@ -151,3 +148,7 @@ func (p *TapDevice) Poll(isTerminated bool) psErr.E {
 func (p *TapDevice) Transmit(dst EthAddr, payload []byte, typ EthType) psErr.E {
 	return WriteEthFrame(p.Priv_.FD, dst, p.Addr_, typ, payload)
 }
+
+const virtualNetworkDevice = "/dev/net/tun"
+
+var epfd int

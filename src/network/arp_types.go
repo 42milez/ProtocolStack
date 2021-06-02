@@ -38,31 +38,6 @@ type ArpCache struct {
 	entries [ArpCacheSize]*ArpCacheEntry
 	mtx     sync.Mutex
 }
-type ArpCacheEntry struct {
-	State     ArpCacheState
-	CreatedAt time.Time
-	HA        ethernet.EthAddr
-	PA        ArpProtoAddr
-}
-type ArpCacheState uint8
-type ArpHdr struct {
-	HT     ArpHwType        // hardware type
-	PT     ethernet.EthType // protocol type
-	HAL    uint8            // hardware address length
-	PAL    uint8            // protocol address length
-	Opcode ArpOpcode
-}
-type ArpHwType uint16
-type ArpOpcode uint16
-type ArpPacket struct {
-	ArpHdr
-	SHA ethernet.EthAddr // sender hardware address
-	SPA ArpProtoAddr     // sender protocol address
-	THA ethernet.EthAddr // target hardware address
-	TPA ArpProtoAddr     // target protocol address
-}
-type ArpProtoAddr [V4AddrLen]byte
-type ArpStatus int
 
 func (p *ArpCache) Add(ha ethernet.EthAddr, pa ArpProtoAddr, state ArpCacheState) psErr.E {
 	var entry *ArpCacheEntry
@@ -142,17 +117,46 @@ func (p *ArpCache) get(ip [V4AddrLen]byte) *ArpCacheEntry {
 	return nil
 }
 
+type ArpCacheEntry struct {
+	State     ArpCacheState
+	CreatedAt time.Time
+	HA        ethernet.EthAddr
+	PA        ArpProtoAddr
+}
+type ArpCacheState uint8
+type ArpHdr struct {
+	HT     ArpHwType        // hardware type
+	PT     ethernet.EthType // protocol type
+	HAL    uint8            // hardware address length
+	PAL    uint8            // protocol address length
+	Opcode ArpOpcode
+}
+type ArpHwType uint16
+
 func (v ArpHwType) String() string {
 	return arpHwTypes[v]
 }
+
+type ArpOpcode uint16
 
 func (v ArpOpcode) String() string {
 	return arpOpCodes[v]
 }
 
+type ArpPacket struct {
+	ArpHdr
+	SHA ethernet.EthAddr // sender hardware address
+	SPA ArpProtoAddr     // sender protocol address
+	THA ethernet.EthAddr // target hardware address
+	TPA ArpProtoAddr     // target protocol address
+}
+type ArpProtoAddr [V4AddrLen]byte
+
 func (p ArpProtoAddr) String() string {
 	return fmt.Sprintf("%d.%d.%d.%d", p[0], p[1], p[2], p[3])
 }
+
+type ArpStatus int
 
 // Hardware Types
 // https://www.iana.org/assignments/arp-parameters/arp-parameters.xhtml#arp-parameters-2
