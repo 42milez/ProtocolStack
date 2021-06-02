@@ -11,8 +11,8 @@ import (
 	"sync"
 )
 
-const IpHdrSizeMin = 20 // bytes
-const IpHdrSizeMax = 60 // bytes
+const IpHdrLenMin = 20 // bytes
+const IpHdrLenMax = 60 // bytes
 
 const ProtoNumICMP = 1
 const ProtoNumTCP = 6
@@ -38,7 +38,7 @@ func (p *PacketID) Next() (id uint16) {
 func IpReceive(payload []byte, dev ethernet.IDevice) psErr.E {
 	packetLen := len(payload)
 
-	if packetLen < IpHdrSizeMin {
+	if packetLen < IpHdrLenMin {
 		psLog.E(fmt.Sprintf("IP packet length is too short: %d bytes", packetLen))
 		return psErr.InvalidPacket
 	}
@@ -46,7 +46,6 @@ func IpReceive(payload []byte, dev ethernet.IDevice) psErr.E {
 	buf := bytes.NewBuffer(payload)
 	hdr := IpHdr{}
 	if err := binary.Read(buf, binary.BigEndian, &hdr); err != nil {
-		psLog.E(fmt.Sprintf("binary.Read() failed: %s", err))
 		return psErr.Error
 	}
 
@@ -57,7 +56,7 @@ func IpReceive(payload []byte, dev ethernet.IDevice) psErr.E {
 
 	hdrLen := int(hdr.VHL&0x0f) * 4
 	if packetLen < hdrLen {
-		psLog.E(fmt.Sprintf("IP packet length is too short: IHL = %d, Actual Packet Size = %d", hdrLen, packetLen))
+		psLog.E(fmt.Sprintf("IP packet length is too short: ihl = %d, actual = %d", hdrLen, packetLen))
 		return psErr.InvalidPacket
 	}
 
@@ -98,7 +97,6 @@ func IpReceive(payload []byte, dev ethernet.IDevice) psErr.E {
 	switch hdr.Protocol {
 	case ProtoNumICMP:
 		if err := IcmpReceive(payload[hdrLen:], hdr.Dst, hdr.Src, dev); err != psErr.OK {
-			psLog.E(fmt.Sprintf("IcmpInputHandler() failed: %s", err))
 			return psErr.Error
 		}
 	case ProtoNumTCP:
@@ -126,7 +124,7 @@ func IpSend(protoNum ProtocolNumber, payload []byte, dst IP, src IP) psErr.E {
 		return psErr.Error
 	}
 
-	if packetLen := IpHdrSizeMin + len(payload); int(iface.Dev.MTU()) < packetLen {
+	if packetLen := IpHdrLenMin + len(payload); int(iface.Dev.MTU()) < packetLen {
 		psLog.E(fmt.Sprintf("IP packet length is too long: %d", packetLen))
 		return psErr.PacketTooLong
 	}
@@ -149,7 +147,6 @@ func IpSend(protoNum ProtocolNumber, payload []byte, dst IP, src IP) psErr.E {
 
 	// send ip packet
 	if err = Transmit(ethAddr, packet, ethernet.EthTypeIpv4, iface); err != psErr.OK {
-		psLog.E(fmt.Sprintf("Transmit() failed: %s", err))
 		return psErr.Error
 	}
 
@@ -216,8 +213,8 @@ func checksum(b []byte) uint16 {
 
 func ipCreatePacket(protoNum ProtocolNumber, src IP, dst IP, payload []byte) []byte {
 	hdr := IpHdr{}
-	hdr.VHL = uint8(ipv4<<4) | uint8(IpHdrSizeMin/4)
-	hdr.TotalLen = uint16(IpHdrSizeMin + len(payload))
+	hdr.VHL = uint8(ipv4<<4) | uint8(IpHdrLenMin/4)
+	hdr.TotalLen = uint16(IpHdrLenMin + len(payload))
 	hdr.ID = id.Next()
 	hdr.TTL = 0xff
 	hdr.Protocol = protoNum
@@ -226,11 +223,9 @@ func ipCreatePacket(protoNum ProtocolNumber, src IP, dst IP, payload []byte) []b
 
 	buf := new(bytes.Buffer)
 	if err := binary.Write(buf, binary.BigEndian, &hdr); err != nil {
-		psLog.E(fmt.Sprintf("binary.Write() failed: %s", err))
 		return nil
 	}
-	if err := binary.Write(buf, binary.BigEndian, payload); err != nil {
-		psLog.E(fmt.Sprintf("binary.Write() failed: %s", err))
+	if err := binary.Write(buf, binary.BigEndian, &payload); err != nil {
 		return nil
 	}
 	packet := buf.Bytes()
@@ -264,7 +259,7 @@ func ipLookupEthAddr(iface *Iface, nextHop IP) (ethernet.EthAddr, psErr.E) {
 	var addr ethernet.EthAddr
 	if iface.Dev.Flag()&ethernet.DevFlagNeedArp != 0 {
 		if nextHop.Equal(iface.Broadcast) || nextHop.Equal(V4Broadcast) {
-			addr = iface.Dev.Broadcast()
+			addr = ethernet.EthAddrBroadcast
 		} else {
 			var status ArpStatus
 			if addr, status = arpResolve(iface, nextHop); status != ArpStatusComplete {

@@ -7,6 +7,7 @@ package syscall
 import (
 	reflect "reflect"
 	syscall "syscall"
+	unsafe "unsafe"
 
 	gomock "github.com/golang/mock/gomock"
 )
@@ -93,19 +94,17 @@ func (mr *MockISyscallMockRecorder) EpollWait(epfd, events, msec interface{}) *g
 }
 
 // Ioctl mocks base method.
-func (m *MockISyscall) Ioctl(a1, a2, a3 uintptr) (uintptr, uintptr, syscall.Errno) {
+func (m *MockISyscall) Ioctl(fd, code int, data unsafe.Pointer) syscall.Errno {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Ioctl", a1, a2, a3)
-	ret0, _ := ret[0].(uintptr)
-	ret1, _ := ret[1].(uintptr)
-	ret2, _ := ret[2].(syscall.Errno)
-	return ret0, ret1, ret2
+	ret := m.ctrl.Call(m, "Ioctl", fd, code, data)
+	ret0, _ := ret[0].(syscall.Errno)
+	return ret0
 }
 
 // Ioctl indicates an expected call of Ioctl.
-func (mr *MockISyscallMockRecorder) Ioctl(a1, a2, a3 interface{}) *gomock.Call {
+func (mr *MockISyscallMockRecorder) Ioctl(fd, code, data interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Ioctl", reflect.TypeOf((*MockISyscall)(nil).Ioctl), a1, a2, a3)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Ioctl", reflect.TypeOf((*MockISyscall)(nil).Ioctl), fd, code, data)
 }
 
 // Open mocks base method.

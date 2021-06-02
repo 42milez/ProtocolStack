@@ -12,7 +12,7 @@ import (
 var cache *ArpCache
 
 func ArpInputHandler(packet []byte, dev ethernet.IDevice) psErr.E {
-	if len(packet) < ArpPacketSize {
+	if len(packet) < ArpPacketLen {
 		psLog.E(fmt.Sprintf("ARP packet length is too short: %d bytes", len(packet)))
 		return psErr.InvalidPacket
 	}
@@ -20,7 +20,6 @@ func ArpInputHandler(packet []byte, dev ethernet.IDevice) psErr.E {
 	buf := bytes.NewBuffer(packet)
 	arpPacket := ArpPacket{}
 	if err := binary.Read(buf, binary.BigEndian, &arpPacket); err != nil {
-		psLog.E(fmt.Sprintf("binary.Read() failed: %s", err))
 		return psErr.Error
 	}
 
@@ -45,17 +44,16 @@ func ArpInputHandler(packet []byte, dev ethernet.IDevice) psErr.E {
 
 	if iface.Unicast.EqualV4(arpPacket.TPA) {
 		if err := cache.Renew(arpPacket.SHA, arpPacket.SPA, ArpCacheStateResolved); err == psErr.NotFound {
-			if err := cache.Add(arpPacket.SHA, arpPacket.SPA, ArpCacheStateResolved); err != psErr.OK {
-				psLog.E(fmt.Sprintf("ArpCache.Add() failed: %s", err))
+			if err := cache.Add(arpPacket.SHA, arpPacket.SPA, ArpCacheStateResolved); err != psErr.Exist {
+				psLog.W(fmt.Sprintf("Cache entry already exists: %s", arpPacket.SPA))
 			}
 		} else {
-			psLog.I("ARP entry was updated")
-			psLog.I(fmt.Sprintf("\tSPA: %v", arpPacket.SPA.String()))
-			psLog.I(fmt.Sprintf("\tSHA: %v", arpPacket.SHA.String()))
+			psLog.I("ARP entry was renewed")
+			psLog.I(fmt.Sprintf("\tSPA: %s", arpPacket.SPA))
+			psLog.I(fmt.Sprintf("\tSHA: %s", arpPacket.SHA))
 		}
 		if arpPacket.Opcode == ArpOpRequest {
 			if err := arpReply(arpPacket.SHA, arpPacket.SPA, iface); err != psErr.OK {
-				psLog.E(fmt.Sprintf("arpReply() failed: %s", err))
 				return psErr.Error
 			}
 		}
@@ -99,12 +97,10 @@ func arpReply(tha ethernet.EthAddr, tpa ArpProtoAddr, iface *Iface) psErr.E {
 
 	buf := new(bytes.Buffer)
 	if err := binary.Write(buf, binary.BigEndian, &packet); err != nil {
-		psLog.E(fmt.Sprintf("binary.Write() failed: %s", err))
 		return psErr.Error
 	}
 
 	if err := iface.Dev.Transmit(tha, buf.Bytes(), ethernet.EthTypeArp); err != psErr.OK {
-		psLog.E(fmt.Sprintf("IDevice.Transmit() failed: %s", err))
 		return psErr.Error
 	}
 
@@ -128,7 +124,6 @@ func arpRequest(iface *Iface, ip IP) psErr.E {
 
 	buf := new(bytes.Buffer)
 	if err := binary.Write(buf, binary.BigEndian, &packet); err != nil {
-		psLog.E("binary.Write() failed")
 		return psErr.Error
 	}
 	payload := buf.Bytes()
@@ -136,8 +131,7 @@ func arpRequest(iface *Iface, ip IP) psErr.E {
 	psLog.I("Outgoing ARP packet")
 	arpPacketDump(&packet)
 
-	if err := Transmit(iface.Dev.Broadcast(), payload, ethernet.EthTypeArp, iface); err != psErr.OK {
-		psLog.E(fmt.Sprintf("Transmit() failed: %s", err))
+	if err := Transmit(ethernet.EthAddrBroadcast, payload, ethernet.EthTypeArp, iface); err != psErr.OK {
 		return psErr.Error
 	}
 
@@ -158,11 +152,9 @@ func arpResolve(iface *Iface, ip IP) (ethernet.EthAddr, ArpStatus) {
 	ethAddr, found := cache.EthAddr(ip.ToV4())
 	if !found {
 		if err := cache.Add(ethernet.EthAddr{}, ip.ToV4(), ArpCacheStateIncomplete); err != psErr.OK {
-			psLog.E(fmt.Sprintf("ArpCache.Add() failed: %s", err))
 			return ethernet.EthAddr{}, ArpStatusError
 		}
 		if err := arpRequest(iface, ip); err != psErr.OK {
-			psLog.E(fmt.Sprintf("arpRequest() failed: %s", err))
 			return ethernet.EthAddr{}, ArpStatusError
 		}
 		return ethernet.EthAddr{}, ArpStatusIncomplete

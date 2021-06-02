@@ -10,13 +10,11 @@ import (
 func InputHandler(packet *ethernet.Packet) psErr.E {
 	switch packet.Type {
 	case ethernet.EthTypeArp:
-		if err := ArpInputHandler(packet.Payload, packet.Dev); err != psErr.OK {
-			psLog.E(fmt.Sprintf("ArpInputHandler() failed: %s", err))
+		if err := ArpInputHandler(packet.Content, packet.Dev); err != psErr.OK {
 			return psErr.Error
 		}
 	case ethernet.EthTypeIpv4:
-		if err := IpReceive(packet.Payload, packet.Dev); err != psErr.OK {
-			psLog.E(fmt.Sprintf("IpInputHandler() failed: %s", err))
+		if err := IpReceive(packet.Content, packet.Dev); err != psErr.OK {
 			return psErr.Error
 		}
 		return psErr.OK

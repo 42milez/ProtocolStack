@@ -38,7 +38,6 @@ func (p *deviceRepo) Poll(terminate bool) psErr.E {
 			if err == psErr.Interrupted {
 				return psErr.OK
 			}
-			psLog.E(fmt.Sprintf("IDevice.Poll() failed: %s", err))
 			return psErr.Error
 		}
 	}
@@ -59,21 +58,19 @@ func (p *deviceRepo) Register(dev ethernet.IDevice) psErr.E {
 	psLog.I(fmt.Sprintf("\ttype:      %s", dev.Type()))
 	psLog.I(fmt.Sprintf("\tname:      %s (%s)", dev.Name(), dev.Priv().Name))
 	psLog.I(fmt.Sprintf("\taddr:      %s", dev.Addr()))
-	psLog.I(fmt.Sprintf("\tbroadcast: %s", dev.Broadcast()))
-	psLog.I(fmt.Sprintf("\tpeer:      %s", dev.Peer()))
 	return psErr.OK
 }
 
 func (p *deviceRepo) Up() psErr.E {
 	for _, dev := range p.devices {
 		if dev.IsUp() {
-			psLog.W("Device is already opened")
+			psLog.W("Device is already up")
 			psLog.W(fmt.Sprintf("\ttype: %s", dev.Type()))
 			psLog.W(fmt.Sprintf("\tname: %s (%s)", dev.Name(), dev.Priv().Name))
 			return psErr.Error
 		}
 		if err := dev.Open(); err != psErr.OK {
-			psLog.E(fmt.Sprintf("IDevice.Open() failed: %s", err))
+			psLog.E(fmt.Sprintf("Can't open device: %s", err))
 			psLog.E(fmt.Sprintf("\ttype: %s", dev.Type()))
 			psLog.E(fmt.Sprintf("\tname: %s (%s)", dev.Name(), dev.Priv().Name))
 			return psErr.Error

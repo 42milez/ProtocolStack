@@ -19,7 +19,6 @@ func Transmit(dst ethernet.EthAddr, payload []byte, typ ethernet.EthType, iface 
 	}
 
 	if err := iface.Dev.Transmit(dst, payload, typ); err != psErr.OK {
-		psLog.E(fmt.Sprintf("Transmit() failed: %s", err))
 		return psErr.Error
 	}
 

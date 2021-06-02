@@ -36,14 +36,14 @@ func TestEthAddr_Equal(t *testing.T) {
 }
 
 func TestEthType_String(t *testing.T) {
-	want := "ARP"
-	got := EthType(0x0806).String()
+	want := "IPv4"
+	got := EthType(0x0800).String()
 	if got != want {
 		t.Errorf("EthType.String() = %s; want %s", got, want)
 	}
 
-	want = "IPv4"
-	got = EthType(0x0800).String()
+	want = "ARP"
+	got = EthType(0x0806).String()
 	if got != want {
 		t.Errorf("EthType.String() = %s; want %s", got, want)
 	}
@@ -53,35 +53,37 @@ func TestEthType_String(t *testing.T) {
 	if got != want {
 		t.Errorf("EthType.String() = %s; want %s", got, want)
 	}
-
-	want = "UNKNOWN"
-	got = EthType(0x0000).String()
-	if got != want {
-		t.Errorf("EthType.String() = %s; want %s", got, want)
-	}
 }
 
-func TestEthDump(t *testing.T) {
+func TestEthFrameDump(t *testing.T) {
 	regexpDatetime := "[0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}"
 	macDst := EthAddr{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}
 	macSrc := EthAddr{0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f}
 	ethType := EthType(0x0800)
 	want, _ := regexp.Compile(fmt.Sprintf(
-		"^.+ %v dst:  %v.+ %v src:  %v.+ %v type: 0x%04x \\(%v\\)$",
+		"^.+ %s dst:           %s.+ %s src:           %s.+ %s type:          0x%04x \\(%s\\).+ %s payload \\(nbo\\): 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 .+ %s        15 16 17 18 19 1a 1b 1c 1d 1e 1f 20 21 22 23 24 25 26 27 28 $",
 		regexpDatetime,
-		macDst.String(),
+		macDst,
 		regexpDatetime,
-		macSrc.String(),
+		macSrc,
 		regexpDatetime,
 		uint16(ethType),
-		ethType.String()))
+		ethType.String(),
+		regexpDatetime,
+		regexpDatetime))
 	got := psLog.CaptureLogOutput(func() {
 		hdr := EthHdr{Dst: macDst, Src: macSrc, Type: ethType}
-		EthDump(&hdr)
+		payload := []byte{
+			0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a,
+			0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14,
+			0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e,
+			0x1f, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28,
+		}
+		EthFrameDump(&hdr, payload)
 	})
 	got = trim(got)
 	if !want.MatchString(got) {
-		t.Errorf("EthDump() = %v; want %v", got, want)
+		t.Errorf("EthFrameDump() = %v; want %v", got, want)
 	}
 }
 
@@ -102,16 +104,17 @@ func TestReadFrame_1(t *testing.T) {
 				Type: EthType(0x0800),
 			}
 			b := new(bytes.Buffer)
-			_ = binary.Write(b, binary.BigEndian, hdr)
+			_ = binary.Write(b, binary.BigEndian, &hdr)
 			copy(buf, b.Bytes())
 		}).
 		Return(150, nil)
+	psSyscall.Syscall = m
 
 	dev := &Device{Addr_: EthAddr{11, 12, 13, 14, 15, 16}}
 
-	_, got := ReadFrame(dev.Priv().FD, dev.Addr(), m)
+	_, got := ReadEthFrame(dev.Priv().FD, dev.Addr())
 	if got != psErr.OK {
-		t.Errorf("ReadFrame() = %v; want %v", got, psErr.OK)
+		t.Errorf("ReadEthFrame() = %v; want %v", got, psErr.OK)
 	}
 }
 
@@ -126,10 +129,11 @@ func TestReadFrame_2(t *testing.T) {
 	dev := &Device{Addr_: EthAddr{11, 12, 13, 14, 15, 16}}
 	m := psSyscall.NewMockISyscall(ctrl)
 	m.EXPECT().Read(gomock.Any(), gomock.Any()).Return(-1, errors.New(""))
+	psSyscall.Syscall = m
 
-	_, got := ReadFrame(dev.Priv().FD, dev.Addr(), m)
+	_, got := ReadEthFrame(dev.Priv().FD, dev.Addr())
 	if got != psErr.Error {
-		t.Errorf("ReadFrame() = %v; want %v", got, psErr.Error)
+		t.Errorf("ReadEthFrame() = %v; want %v", got, psErr.Error)
 	}
 }
 
@@ -141,13 +145,15 @@ func TestReadFrame_3(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	dev := &Device{Addr_: EthAddr{11, 12, 13, 14, 15, 16}}
 	m := psSyscall.NewMockISyscall(ctrl)
 	m.EXPECT().Read(gomock.Any(), gomock.Any()).Return(10, nil)
+	psSyscall.Syscall = m
 
-	_, got := ReadFrame(dev.Priv().FD, dev.Addr(), m)
+	dev := &Device{Addr_: EthAddr{11, 12, 13, 14, 15, 16}}
+
+	_, got := ReadEthFrame(dev.Priv().FD, dev.Addr())
 	if got != psErr.Error {
-		t.Errorf("ReadFrame() = %v; want %v", got, psErr.Error)
+		t.Errorf("ReadEthFrame() = %v; want %v", got, psErr.Error)
 	}
 }
 
@@ -159,12 +165,14 @@ func TestReadFrame_4(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	dev := &Device{Addr_: EthAddr{33, 44, 55, 66, 77, 88}}
 	m := psSyscall.NewMockISyscall(ctrl)
 	m.EXPECT().Read(gomock.Any(), gomock.Any()).Return(150, nil)
+	psSyscall.Syscall = m
 
-	_, got := ReadFrame(dev.Priv().FD, dev.Addr(), m)
+	dev := &Device{Addr_: EthAddr{33, 44, 55, 66, 77, 88}}
+
+	_, got := ReadEthFrame(dev.Priv().FD, dev.Addr())
 	if got != psErr.NoDataToRead {
-		t.Errorf("ReadFrame() = %v; want %v", got, psErr.NoDataToRead)
+		t.Errorf("ReadEthFrame() = %v; want %v", got, psErr.NoDataToRead)
 	}
 }

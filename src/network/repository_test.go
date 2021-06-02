@@ -59,13 +59,11 @@ func TestIfaceRepo_Register_1(t *testing.T) {
 
 	dev := &ethernet.TapDevice{
 		Device: ethernet.Device{
-			Type_:      ethernet.DevTypeEthernet,
-			MTU_:       ethernet.EthPayloadSizeMax,
-			Flag_:      ethernet.DevFlagBroadcast | ethernet.DevFlagNeedArp,
-			HdrLen_:    ethernet.EthHdrSize,
-			Addr_:      ethernet.EthAddr{11, 12, 13, 14, 15, 16},
-			Broadcast_: ethernet.EthAddrBroadcast,
-			Priv_:      ethernet.Privilege{FD: -1, Name: "tap0"},
+			Type_: ethernet.DevTypeEthernet,
+			MTU_:  ethernet.EthPayloadLenMax,
+			Flag_: ethernet.DevFlagBroadcast | ethernet.DevFlagNeedArp,
+			Addr_: ethernet.EthAddr{11, 12, 13, 14, 15, 16},
+			Priv_: ethernet.Privilege{FD: -1, Name: "tap0"},
 		},
 	}
 
@@ -91,13 +89,11 @@ func TestIfaceRepo_Register_2(t *testing.T) {
 
 	dev := &ethernet.TapDevice{
 		Device: ethernet.Device{
-			Type_:      ethernet.DevTypeEthernet,
-			MTU_:       ethernet.EthPayloadSizeMax,
-			Flag_:      ethernet.DevFlagBroadcast | ethernet.DevFlagNeedArp,
-			HdrLen_:    ethernet.EthHdrSize,
-			Addr_:      ethernet.EthAddr{11, 12, 13, 14, 15, 16},
-			Broadcast_: ethernet.EthAddrBroadcast,
-			Priv_:      ethernet.Privilege{FD: -1, Name: "tap0"},
+			Type_: ethernet.DevTypeEthernet,
+			MTU_:  ethernet.EthPayloadLenMax,
+			Flag_: ethernet.DevFlagBroadcast | ethernet.DevFlagNeedArp,
+			Addr_: ethernet.EthAddr{11, 12, 13, 14, 15, 16},
+			Priv_: ethernet.Privilege{FD: -1, Name: "tap0"},
 		},
 	}
 
@@ -123,8 +119,6 @@ func TestUp_1(t *testing.T) {
 	m.EXPECT().Up()
 	m.EXPECT().IsUp().Return(false)
 	m.EXPECT().Addr().Return(ethernet.EthAddr{})
-	m.EXPECT().Broadcast().Return(ethernet.EthAddr{})
-	m.EXPECT().Peer().Return(ethernet.EthAddr{})
 	m.EXPECT().Type().Return(ethernet.DevTypeEthernet).AnyTimes()
 	m.EXPECT().Name().Return("net0").AnyTimes()
 	m.EXPECT().Priv().Return(ethernet.Privilege{Name: "tap0"}).AnyTimes()
@@ -153,8 +147,6 @@ func TestUp_2(t *testing.T) {
 	m.EXPECT().Name().Return("net0").AnyTimes()
 	m.EXPECT().Priv().Return(ethernet.Privilege{Name: "tap0"}).AnyTimes()
 	m.EXPECT().Addr().Return(ethernet.EthAddr{})
-	m.EXPECT().Broadcast().Return(ethernet.EthAddr{})
-	m.EXPECT().Peer().Return(ethernet.EthAddr{})
 
 	_ = DeviceRepo.Register(m)
 
@@ -181,8 +173,6 @@ func TestUp_3(t *testing.T) {
 	m.EXPECT().Name().Return("net0").AnyTimes()
 	m.EXPECT().Priv().Return(ethernet.Privilege{Name: "tap0"}).AnyTimes()
 	m.EXPECT().Addr().Return(ethernet.EthAddr{})
-	m.EXPECT().Broadcast().Return(ethernet.EthAddr{})
-	m.EXPECT().Peer().Return(ethernet.EthAddr{})
 
 	_ = DeviceRepo.Register(m)
 

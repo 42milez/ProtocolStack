@@ -9,12 +9,12 @@ import (
 	psLog "github.com/42milez/ProtocolStack/src/log"
 )
 
-const IcmpHdrSize = 8 // byte
+const IcmpHdrLen = 8 // byte
 const IcmpTypeEchoReply = 0x00
 const IcmpTypeEcho = 0x08
 
 func IcmpReceive(payload []byte, dst [V4AddrLen]byte, src [V4AddrLen]byte, dev ethernet.IDevice) psErr.E {
-	if len(payload) < IcmpHdrSize {
+	if len(payload) < IcmpHdrLen {
 		psLog.E(fmt.Sprintf("ICMP header length is too short: %d bytes", len(payload)))
 		return psErr.InvalidPacket
 	}
@@ -22,7 +22,6 @@ func IcmpReceive(payload []byte, dst [V4AddrLen]byte, src [V4AddrLen]byte, dev e
 	buf := bytes.NewBuffer(payload)
 	hdr := IcmpHdr{}
 	if err := binary.Read(buf, binary.BigEndian, &hdr); err != nil {
-		psLog.E(fmt.Sprintf("binary.Read() failed: %s", err))
 		return psErr.Error
 	}
 
@@ -45,8 +44,7 @@ func IcmpReceive(payload []byte, dst [V4AddrLen]byte, src [V4AddrLen]byte, dev e
 		if !iface.Unicast.EqualV4(dst) {
 			d = iface.Unicast
 		}
-		if err := IcmpSend(IcmpTypeEchoReply, hdr.Code, hdr.Content, payload[IcmpHdrSize:], d, s); err != psErr.OK {
-			psLog.E(fmt.Sprintf("IcmpSend() failed: %s", err))
+		if err := IcmpSend(IcmpTypeEchoReply, hdr.Code, hdr.Content, payload[IcmpHdrLen:], d, s); err != psErr.OK {
 			return psErr.Error
 		}
 	}
@@ -63,12 +61,10 @@ func IcmpSend(typ IcmpType, code uint8, content uint32, payload []byte, dst IP, 
 
 	buf := new(bytes.Buffer)
 	if err := binary.Write(buf, binary.BigEndian, &hdr); err != nil {
-		psLog.E(fmt.Sprintf("binary.Write() failed: %s", err))
 		return psErr.Error
 	}
 
 	if err := binary.Write(buf, binary.BigEndian, &payload); err != nil {
-		psLog.E(fmt.Sprintf("binary.Write() failed: %s", err))
 		return psErr.Error
 	}
 
@@ -81,7 +77,6 @@ func IcmpSend(typ IcmpType, code uint8, content uint32, payload []byte, dst IP, 
 	icmpHdrDump(&hdr)
 
 	if err := IpSend(ProtoNumICMP, packet, src, dst); err != psErr.OK {
-		psLog.E(fmt.Sprintf("IpSend() failed: %s", err))
 		return psErr.Error
 	}
 

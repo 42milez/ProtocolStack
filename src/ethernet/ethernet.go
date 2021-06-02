@@ -10,18 +10,28 @@ import (
 )
 
 const EthAddrLen = 6
-const EthHdrSize = 14
-const EthFrameSizeMin = 60
-const EthFrameSizeMax = 1514
-const EthPayloadSizeMin = EthFrameSizeMin - EthHdrSize
-const EthPayloadSizeMax = EthFrameSizeMax - EthHdrSize
-
+const EthFrameLenMax = 1514
+const EthFrameLenMin = 60
+const EthHdrLen = 14
+const EthPayloadLenMax = EthFrameLenMax - EthHdrLen
+const EthPayloadLenMin = EthFrameLenMin - EthHdrLen
 const EthTypeArp EthType = 0x0806
 const EthTypeIpv4 EthType = 0x0800
 const EthTypeIpv6 EthType = 0x86dd
 
 var EthAddrAny = EthAddr{0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 var EthAddrBroadcast = EthAddr{0xff, 0xff, 0xff, 0xff, 0xff, 0xff}
+
+// Ethertypes
+// https://www.iana.org/assignments/ieee-802-numbers/ieee-802-numbers.xhtml#ieee-802-numbers-1
+
+var ethTypes = map[EthType]string{
+	0x0800: "IPv4",
+	0x0806: "ARP",
+	0x86dd: "IPv6",
+}
+
+var rxBuf []byte
 
 type EthAddr [EthAddrLen]byte
 
@@ -36,16 +46,7 @@ func (v EthAddr) String() string {
 type EthType uint16
 
 func (v EthType) String() string {
-	switch v {
-	case EthTypeArp:
-		return "ARP"
-	case EthTypeIpv4:
-		return "IPv4"
-	case EthTypeIpv6:
-		return "IPv6"
-	default:
-		return "UNKNOWN"
-	}
+	return ethTypes[v]
 }
 
 type EthHdr struct {
@@ -54,33 +55,37 @@ type EthHdr struct {
 	Type EthType
 }
 
-func EthDump(hdr *EthHdr) {
-	psLog.I(fmt.Sprintf("\tdst:  %s", hdr.Dst))
-	psLog.I(fmt.Sprintf("\tsrc:  %s", hdr.Src))
-	psLog.I(fmt.Sprintf("\ttype: 0x%04x (%s)", uint16(hdr.Type), hdr.Type))
+func EthFrameDump(hdr *EthHdr, payload []byte) {
+	psLog.I(fmt.Sprintf("\tdst:           %s", hdr.Dst))
+	psLog.I(fmt.Sprintf("\tsrc:           %s", hdr.Src))
+	psLog.I(fmt.Sprintf("\ttype:          0x%04x (%s)", uint16(hdr.Type), hdr.Type))
+
+	s := "\tpayload (nbo): "
+	for i, v := range payload {
+		s += fmt.Sprintf("%02x ", v)
+		if (i+1)%20 == 0 {
+			psLog.I(s)
+			s = "\t\t       "
+		}
+	}
 }
 
-func ReadFrame(fd int, addr EthAddr, sc psSyscall.ISyscall) (*Packet, psErr.E) {
-	// TODO: make buf static variable to reuse
-	buf := make([]byte, EthFrameSizeMax)
-
-	flen, err := sc.Read(fd, buf)
+func ReadEthFrame(fd int, addr EthAddr) (*Packet, psErr.E) {
+	flen, err := psSyscall.Syscall.Read(fd, rxBuf)
 	if err != nil {
-		psLog.E(fmt.Sprintf("syscall.Read() failed: %s", err))
 		return nil, psErr.Error
 	}
 
-	if flen < EthHdrSize {
-		psLog.E("Ethernet header length is too short")
-		psLog.E(fmt.Sprintf("\tlength: %v bytes", flen))
+	if flen < EthHdrLen {
+		psLog.E(fmt.Sprintf("Ethernet header length is too short: %d bytes", flen))
 		return nil, psErr.Error
 	}
 
 	psLog.I(fmt.Sprintf("Ethernet frame was received: %d bytes", flen))
 
+	buf := bytes.NewBuffer(rxBuf)
 	hdr := EthHdr{}
-	if err := binary.Read(bytes.NewBuffer(buf), binary.BigEndian, &hdr); err != nil {
-		psLog.E(fmt.Sprintf("binary.Read() failed: %s", err))
+	if err := binary.Read(buf, binary.BigEndian, &hdr); err != nil {
 		return nil, psErr.Error
 	}
 
@@ -90,18 +95,21 @@ func ReadFrame(fd int, addr EthAddr, sc psSyscall.ISyscall) (*Packet, psErr.E) {
 		}
 	}
 
-	psLog.I("Incoming ethernet frame")
-	EthDump(&hdr)
-
-	packet := &Packet{
-		Type:    hdr.Type,
-		Payload: buf[EthHdrSize:flen],
+	payload := make([]byte, flen)
+	if err := binary.Read(buf, binary.BigEndian, &payload); err != nil {
+		return nil, psErr.Error
 	}
 
-	return packet, psErr.OK
+	psLog.I("Incoming ethernet frame")
+	EthFrameDump(&hdr, payload)
+
+	return &Packet{
+		Type:    hdr.Type,
+		Content: payload,
+	}, psErr.OK
 }
 
-func WriteFrame(fd int, dst EthAddr, src EthAddr, typ EthType, payload []byte) psErr.E {
+func WriteEthFrame(fd int, dst EthAddr, src EthAddr, typ EthType, payload []byte) psErr.E {
 	hdr := EthHdr{
 		Dst:  dst,
 		Src:  src,
@@ -110,39 +118,39 @@ func WriteFrame(fd int, dst EthAddr, src EthAddr, typ EthType, payload []byte) p
 
 	buf := new(bytes.Buffer)
 	if err := binary.Write(buf, binary.BigEndian, &hdr); err != nil {
-		psLog.E(fmt.Sprintf("binary.Write() failed: %s", err))
 		return psErr.Error
 	}
 	if err := binary.Write(buf, binary.BigEndian, &payload); err != nil {
-		psLog.E(fmt.Sprintf("binary.Write() failed: %s", err))
 		return psErr.Error
 	}
-
-	if flen := buf.Len(); flen < EthFrameSizeMin {
-		pad := make([]byte, EthFrameSizeMin-flen)
-		if err := binary.Write(buf, binary.BigEndian, &pad); err != nil {
-			psLog.E(fmt.Sprintf("binary.Write() failed: %s", err))
-			return psErr.Error
-		}
+	if err := pad(buf); err != psErr.OK {
+		return psErr.Error
 	}
+	frame := buf.Bytes()
 
 	psLog.I("Outgoing Ethernet frame")
-	EthDump(&hdr)
-	s := "\tpayload: "
-	for i, v := range payload {
-		s += fmt.Sprintf("%02x ", v)
-		if (i+1)%10 == 0 {
-			psLog.I(s)
-			s = "\t\t "
-		}
-	}
+	EthFrameDump(&hdr, payload)
 
-	if n, err := psSyscall.Syscall.Write(fd, buf.Bytes()); err != nil {
-		psLog.E(fmt.Sprintf("syscall.Write() failed: %s", err))
-		return psErr.Error
+	if n, err := psSyscall.Syscall.Write(fd, frame); err != nil {
+		return psErr.SyscallError
 	} else {
 		psLog.I(fmt.Sprintf("Ethernet frame was sent: %d bytes (payload: %d bytes)", n, len(payload)))
 	}
 
 	return psErr.OK
+}
+
+func pad(buf *bytes.Buffer) psErr.E {
+	if flen := buf.Len(); flen < EthFrameLenMin {
+		padLen := EthFrameLenMin - flen
+		pad := make([]byte, padLen)
+		if err := binary.Write(buf, binary.BigEndian, &pad); err != nil {
+			return psErr.Error
+		}
+	}
+	return psErr.OK
+}
+
+func init() {
+	rxBuf = make([]byte, EthFrameLenMax)
 }

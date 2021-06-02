@@ -4,6 +4,7 @@ package syscall
 
 import (
 	"syscall"
+	"unsafe"
 )
 
 var Syscall ISyscall
@@ -14,7 +15,7 @@ type ISyscall interface {
 	EpollCreate1(flag int) (fd int, err error)
 	EpollCtl(epfd int, op int, fd int, event *syscall.EpollEvent) (err error)
 	EpollWait(epfd int, events []syscall.EpollEvent, msec int) (n int, err error)
-	Ioctl(a1, a2, a3 uintptr) (r1, r2 uintptr, err syscall.Errno)
+	Ioctl(fd int, code int, data unsafe.Pointer) (err syscall.Errno)
 	Socket(domain, typ, proto int) (fd int, err error)
 	Read(fd int, p []byte) (n int, err error)
 	Write(fd int, p []byte) (n int, err error)
@@ -42,10 +43,11 @@ func (scImpl) EpollWait(epfd int, events []syscall.EpollEvent, msec int) (n int,
 	return syscall.EpollWait(epfd, events, msec)
 }
 
-func (scImpl) Ioctl(a1, a2, a3 uintptr) (r1, r2 uintptr, err syscall.Errno) {
+func (scImpl) Ioctl(fd int, code int, data unsafe.Pointer) (err syscall.Errno) {
 	// doc: second return value of syscall.Syscall needs to be documented #29842
 	// https://github.com/golang/go/issues/29842
-	return syscall.Syscall(syscall.SYS_IOCTL, a1, a2, a3)
+	_, _, err = syscall.Syscall(syscall.SYS_IOCTL, uintptr(fd), uintptr(code), uintptr(data))
+	return
 }
 
 func (scImpl) Socket(domain, typ, proto int) (fd int, err error) {
