@@ -63,7 +63,6 @@ func IcmpSend(typ IcmpType, code uint8, content uint32, payload []byte, dst IP, 
 	if err := binary.Write(buf, binary.BigEndian, &hdr); err != nil {
 		return psErr.Error
 	}
-
 	if err := binary.Write(buf, binary.BigEndian, &payload); err != nil {
 		return psErr.Error
 	}
