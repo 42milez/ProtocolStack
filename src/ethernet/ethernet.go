@@ -116,7 +116,7 @@ func WriteEthFrame(fd int, dst EthAddr, src EthAddr, typ EthType, payload []byte
 	}
 	frame := buf.Bytes()
 
-	if flen := buf.Len(); flen < EthFrameLenMin {
+	if flen := len(frame); flen < EthFrameLenMin {
 		pad := make([]byte, EthFrameLenMin-flen)
 		if err := binary.Write(buf, binary.BigEndian, &pad); err != nil {
 			psLog.E(fmt.Sprintf("binary.Write() failed: %s", err))
