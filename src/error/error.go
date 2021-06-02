@@ -22,6 +22,7 @@ const (
 	PacketTooLong                 E = "PACKET_TOO_LONG"
 	ReadFromBufError              E = "READ_FROM_BUFFER_ERROR"
 	RouteNotFound                 E = "ROUTE_NOT_FOUND"
+	SyscallError                  E = "SYSTEM_CALL_ERROR"
 	Terminated                    E = "TERMINATED"
 	TtlExpired                    E = "TTL_EXPIRED"
 	UnsupportedProtocol           E = "UNSUPPORTED_PROTOCOL"

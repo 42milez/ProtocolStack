@@ -109,7 +109,7 @@ func (p *TapDevice) Open() psErr.E {
 
 func (p *TapDevice) Close() psErr.E {
 	if err := psSyscall.Syscall.Close(epfd); err != nil {
-		return psErr.Error
+		return psErr.SyscallError
 	}
 	return psErr.OK
 }
@@ -126,7 +126,7 @@ func (p *TapDevice) Poll(isTerminated bool) psErr.E {
 		// https://man7.org/linux/man-pages/man2/epoll_wait.2.html#RETURN_VALUE
 		// ignore EINTR
 		if !errors.Is(err, syscall.EINTR) {
-			return psErr.Error
+			return psErr.SyscallError
 		}
 		return psErr.Interrupted
 	}

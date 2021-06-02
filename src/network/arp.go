@@ -48,7 +48,7 @@ func ArpInputHandler(packet []byte, dev ethernet.IDevice) psErr.E {
 				psLog.W(fmt.Sprintf("Cache entry already exists: %s", arpPacket.SPA))
 			}
 		} else {
-			psLog.I("ARP entry was updated")
+			psLog.I("ARP entry was renewed")
 			psLog.I(fmt.Sprintf("\tSPA: %s", arpPacket.SPA))
 			psLog.I(fmt.Sprintf("\tSHA: %s", arpPacket.SHA))
 		}

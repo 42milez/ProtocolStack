@@ -133,7 +133,7 @@ func WriteEthFrame(fd int, dst EthAddr, src EthAddr, typ EthType, payload []byte
 	EthFrameDump(frame[:EthHdrLen], frame[EthHdrLen:])
 
 	if n, err := psSyscall.Syscall.Write(fd, frame); err != nil {
-		return psErr.Error
+		return psErr.SyscallError
 	} else {
 		psLog.I(fmt.Sprintf("Ethernet frame was sent: %d bytes (payload: %d bytes)", n, len(payload)))
 	}

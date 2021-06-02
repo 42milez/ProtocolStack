@@ -64,7 +64,7 @@ func (p *deviceRepo) Register(dev ethernet.IDevice) psErr.E {
 func (p *deviceRepo) Up() psErr.E {
 	for _, dev := range p.devices {
 		if dev.IsUp() {
-			psLog.W("Device is already opened")
+			psLog.W("Device is already up")
 			psLog.W(fmt.Sprintf("\ttype: %s", dev.Type()))
 			psLog.W(fmt.Sprintf("\tname: %s (%s)", dev.Name(), dev.Priv().Name))
 			return psErr.Error
