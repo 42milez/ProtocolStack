@@ -109,7 +109,7 @@ func ReadEthFrame(fd int, addr EthAddr) (*Packet, psErr.E) {
 
 	return &Packet{
 		Type:    hdr.Type,
-		Content: payload, // network byte order
+		Content: payload,
 	}, psErr.OK
 }
 
