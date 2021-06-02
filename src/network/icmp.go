@@ -34,7 +34,7 @@ func IcmpReceive(payload []byte, dst [V4AddrLen]byte, src [V4AddrLen]byte, dev e
 	}
 
 	psLog.I("Incoming ICMP packet")
-	icmpHdrDump(&hdr, payload[IcmpHdrLen:])
+	dumpIcmpPacket(&hdr, payload[IcmpHdrLen:])
 
 	switch hdr.Type {
 	case IcmpTypeEcho:
@@ -73,7 +73,7 @@ func IcmpSend(typ IcmpType, code uint8, content uint32, payload []byte, dst IP, 
 	packet[3] = uint8(hdr.Checksum & 0x00ff)
 
 	psLog.I("Outgoing ICMP packet")
-	icmpHdrDump(&hdr, payload)
+	dumpIcmpPacket(&hdr, payload)
 
 	if err := IpSend(ProtoNumICMP, packet, src, dst); err != psErr.OK {
 		return psErr.Error
@@ -82,7 +82,7 @@ func IcmpSend(typ IcmpType, code uint8, content uint32, payload []byte, dst IP, 
 	return psErr.OK
 }
 
-func icmpHdrDump(hdr *IcmpHdr, payload []byte) {
+func dumpIcmpPacket(hdr *IcmpHdr, payload []byte) {
 	psLog.I(fmt.Sprintf("\ttype:     %d (%s)", hdr.Type, icmpTypes[hdr.Type]))
 	psLog.I(fmt.Sprintf("\tcode:     %d", hdr.Code))
 	psLog.I(fmt.Sprintf("\tchecksum: 0x%04x", hdr.Checksum))

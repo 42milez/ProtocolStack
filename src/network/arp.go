@@ -34,7 +34,7 @@ func ArpInputHandler(packet []byte, dev ethernet.IDevice) psErr.E {
 	}
 
 	psLog.I("Incoming ARP packet")
-	arpPacketDump(&arpPacket)
+	dumpArpPacket(&arpPacket)
 
 	iface := IfaceRepo.Lookup(dev, V4AddrFamily)
 	if iface == nil {
@@ -64,18 +64,6 @@ func ArpInputHandler(packet []byte, dev ethernet.IDevice) psErr.E {
 	return psErr.OK
 }
 
-func arpPacketDump(packet *ArpPacket) {
-	psLog.I(fmt.Sprintf("\thardware type:           %s", packet.HT))
-	psLog.I(fmt.Sprintf("\tprotocol Type:           %s", packet.PT))
-	psLog.I(fmt.Sprintf("\thardware address length: %d", packet.HAL))
-	psLog.I(fmt.Sprintf("\tprotocol address length: %d", packet.PAL))
-	psLog.I(fmt.Sprintf("\topcode:                  %s (%d)", packet.Opcode, uint16(packet.Opcode)))
-	psLog.I(fmt.Sprintf("\tsender hardware address: %s", packet.SHA))
-	psLog.I(fmt.Sprintf("\tsender protocol address: %v", packet.SPA))
-	psLog.I(fmt.Sprintf("\ttarget hardware address: %s", packet.THA))
-	psLog.I(fmt.Sprintf("\ttarget protocol address: %v", packet.TPA))
-}
-
 func arpReply(tha ethernet.EthAddr, tpa ArpProtoAddr, iface *Iface) psErr.E {
 	packet := ArpPacket{
 		ArpHdr: ArpHdr{
@@ -93,7 +81,7 @@ func arpReply(tha ethernet.EthAddr, tpa ArpProtoAddr, iface *Iface) psErr.E {
 	copy(packet.SPA[:], iface.Unicast[:])
 
 	psLog.I("Outgoing ARP packet (REPLY):")
-	arpPacketDump(&packet)
+	dumpArpPacket(&packet)
 
 	buf := new(bytes.Buffer)
 	if err := binary.Write(buf, binary.BigEndian, &packet); err != nil {
@@ -129,7 +117,7 @@ func arpRequest(iface *Iface, ip IP) psErr.E {
 	payload := buf.Bytes()
 
 	psLog.I("Outgoing ARP packet")
-	arpPacketDump(&packet)
+	dumpArpPacket(&packet)
 
 	if err := Transmit(ethernet.EthAddrBroadcast, payload, ethernet.EthTypeArp, iface); err != psErr.OK {
 		return psErr.Error
@@ -165,6 +153,18 @@ func arpResolve(iface *Iface, ip IP) (ethernet.EthAddr, ArpStatus) {
 
 // TODO:
 //func arpTimer() {}
+
+func dumpArpPacket(packet *ArpPacket) {
+	psLog.I(fmt.Sprintf("\thardware type:           %s", packet.HT))
+	psLog.I(fmt.Sprintf("\tprotocol Type:           %s", packet.PT))
+	psLog.I(fmt.Sprintf("\thardware address length: %d", packet.HAL))
+	psLog.I(fmt.Sprintf("\tprotocol address length: %d", packet.PAL))
+	psLog.I(fmt.Sprintf("\topcode:                  %s (%d)", packet.Opcode, uint16(packet.Opcode)))
+	psLog.I(fmt.Sprintf("\tsender hardware address: %s", packet.SHA))
+	psLog.I(fmt.Sprintf("\tsender protocol address: %v", packet.SPA))
+	psLog.I(fmt.Sprintf("\ttarget hardware address: %s", packet.THA))
+	psLog.I(fmt.Sprintf("\ttarget protocol address: %v", packet.TPA))
+}
 
 func init() {
 	cache = &ArpCache{}
