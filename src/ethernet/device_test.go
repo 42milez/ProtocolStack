@@ -101,3 +101,14 @@ func TestDevice_Name(t *testing.T) {
 		t.Errorf("Name() = %s; want %s", got, want)
 	}
 }
+
+func TestDevice_MTU(t *testing.T) {
+	dev := Device{
+		MTU_: 1514,
+	}
+	var want uint16 = 1514
+	got := dev.MTU()
+	if got != want {
+		t.Errorf("MTU() = %d; want %d", got, want)
+	}
+}
