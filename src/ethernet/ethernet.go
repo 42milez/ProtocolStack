@@ -101,7 +101,8 @@ func ReadEthFrame(fd int, addr EthAddr) (*Packet, psErr.E) {
 		}
 	}
 
-	payload := rxBuf[EthHdrLen:flen]
+	payload := make([]byte, flen)
+	copy(payload, rxBuf[EthHdrLen:flen])
 
 	psLog.I("Incoming ethernet frame")
 	EthFrameDump(rxBuf[:EthHdrLen], payload)
