@@ -80,8 +80,6 @@ func ReadEthFrame(fd int, addr EthAddr) (*Packet, psErr.E) {
 		return nil, psErr.Error
 	}
 
-	psLog.I(fmt.Sprintf("flen: %d", flen))
-
 	if flen < EthHdrLen {
 		psLog.E(fmt.Sprintf("Ethernet header length is too short: %d bytes", flen))
 		return nil, psErr.Error
@@ -110,7 +108,7 @@ func ReadEthFrame(fd int, addr EthAddr) (*Packet, psErr.E) {
 	}
 
 	return &Packet{
-		Type:    (hdr.Type&0xff00)>>8 | (hdr.Type&0x00ff)<<8,
+		Type:    hdr.Type,
 		Content: payload, // network byte order
 	}, psErr.OK
 }
