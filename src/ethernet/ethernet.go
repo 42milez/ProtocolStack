@@ -61,7 +61,7 @@ func EthFrameDump(hdr []byte, payload []byte) {
 	psLog.I(fmt.Sprintf("\tsrc:           %02x:%02x:%02x:%02x:%02x:%02x",
 		hdr[6], hdr[7], hdr[8], hdr[9], hdr[10], hdr[11]))
 
-	typ := uint16(hdr[12]) | uint16(hdr[13])<<8
+	typ := uint16(hdr[12])<<8 | uint16(hdr[13])
 	psLog.I(fmt.Sprintf("\ttype:          0x%04x (%s)", typ, ethTypes[EthType(typ)]))
 
 	s := "\tpayload (nbo): "
@@ -69,7 +69,7 @@ func EthFrameDump(hdr []byte, payload []byte) {
 		s += fmt.Sprintf("%02x ", v)
 		if (i+1)%20 == 0 {
 			psLog.I(s)
-			s = "\t\t "
+			s = "\t\t       "
 		}
 	}
 }
