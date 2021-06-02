@@ -10,6 +10,7 @@ const DevFlagUp DevFlag = 0x0001
 const DevFlagLoopback DevFlag = 0x0010
 const DevFlagBroadcast DevFlag = 0x0020
 const DevFlagNeedArp DevFlag = 0x0100
+
 const (
 	DevTypeEthernet DevType = iota
 	DevTypeLoopback
