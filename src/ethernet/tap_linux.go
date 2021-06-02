@@ -57,12 +57,9 @@ func (p *TapDevice) Open() psErr.E {
 		return psErr.CantOpenIOResource
 	}
 
-	// --------------------------------------------------
-
 	ifrFlags := IfreqFlags{}
 	ifrFlags.Flags = syscall.IFF_TAP | syscall.IFF_NO_PI
 	copy(ifrFlags.Name[:], p.Priv().Name)
-
 	if _, _, errno := psSyscall.Syscall.Ioctl(uintptr(fd), uintptr(syscall.TUNSETIFF), uintptr(unsafe.Pointer(&ifrFlags))); errno != 0 {
 		_ = psSyscall.Syscall.Close(fd)
 		psLog.E(fmt.Sprintf("syscall.Syscall(SYS_IOCTL, TUNSETIFF) failed: %s", errno))
