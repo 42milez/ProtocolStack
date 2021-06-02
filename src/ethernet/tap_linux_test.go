@@ -340,8 +340,8 @@ func TestTapDevice_Poll_5(t *testing.T) {
 	tapDev := TapDevice{}
 
 	got := tapDev.Poll(false)
-	if got != psErr.Error {
-		t.Errorf("TapDevice.Poll() = %v; want %v", got, psErr.Error)
+	if got != psErr.SyscallError {
+		t.Errorf("TapDevice.Poll() = %v; want %v", got, psErr.SyscallError)
 	}
 }
 
