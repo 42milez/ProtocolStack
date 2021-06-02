@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	psBinary "github.com/42milez/ProtocolStack/src/binary"
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	psLog "github.com/42milez/ProtocolStack/src/log"
 	psSyscall "github.com/42milez/ProtocolStack/src/syscall"
@@ -61,7 +62,12 @@ func EthFrameDump(hdr []byte, payload []byte) {
 	psLog.I(fmt.Sprintf("\tsrc:           %02x:%02x:%02x:%02x:%02x:%02x",
 		hdr[6], hdr[7], hdr[8], hdr[9], hdr[10], hdr[11]))
 
-	typ := uint16(hdr[12])<<8 | uint16(hdr[13])
+	var typ uint16
+	if psBinary.Endian == binary.BigEndian {
+		typ = uint16(hdr[12])<<8 | uint16(hdr[13])
+	} else {
+		typ = uint16(hdr[12]) | uint16(hdr[13])<<8
+	}
 	psLog.I(fmt.Sprintf("\ttype:          0x%04x (%s)", typ, ethTypes[EthType(typ)]))
 
 	s := "\tpayload (nbo): "
