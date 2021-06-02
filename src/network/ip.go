@@ -46,7 +46,7 @@ func IpReceive(payload []byte, dev ethernet.IDevice) psErr.E {
 	buf := bytes.NewBuffer(payload)
 	hdr := IpHdr{}
 	if err := binary.Read(buf, binary.BigEndian, &hdr); err != nil {
-		return psErr.ReadFromBufError
+		return psErr.Error
 	}
 
 	if version := hdr.VHL >> 4; version != ipv4 {

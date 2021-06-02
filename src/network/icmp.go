@@ -22,7 +22,7 @@ func IcmpReceive(payload []byte, dst [V4AddrLen]byte, src [V4AddrLen]byte, dev e
 	buf := bytes.NewBuffer(payload)
 	hdr := IcmpHdr{}
 	if err := binary.Read(buf, binary.BigEndian, &hdr); err != nil {
-		return psErr.ReadFromBufError
+		return psErr.Error
 	}
 
 	cs1 := uint16(payload[2])<<8 | uint16(payload[3])
@@ -61,11 +61,11 @@ func IcmpSend(typ IcmpType, code uint8, content uint32, payload []byte, dst IP, 
 
 	buf := new(bytes.Buffer)
 	if err := binary.Write(buf, binary.BigEndian, &hdr); err != nil {
-		return psErr.WriteToBufError
+		return psErr.Error
 	}
 
 	if err := binary.Write(buf, binary.BigEndian, &payload); err != nil {
-		return psErr.WriteToBufError
+		return psErr.Error
 	}
 
 	packet := buf.Bytes()

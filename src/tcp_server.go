@@ -88,7 +88,7 @@ func start(wg *sync.WaitGroup) psErr.E {
 				if err := network.DeviceRepo.Poll(terminate); err != psErr.OK {
 					// TODO: notify error to main goroutine
 					// ...
-					psLog.F(fmt.Sprintf("%s", err))
+					psLog.F(err.Error())
 				}
 			}
 			if terminate {
@@ -108,13 +108,13 @@ func start(wg *sync.WaitGroup) psErr.E {
 				return
 			case packet := <-ethernet.RxCh:
 				if err := network.InputHandler(packet); err != psErr.OK {
-					psLog.F(fmt.Sprintf("%s", err))
+					psLog.F(err.Error())
 					// TODO: notify error to main goroutine
 					// ...
 				}
 			case packet := <-ethernet.TxCh:
 				if err := network.OutputHandler(packet); err != psErr.OK {
-					psLog.F(fmt.Sprintf("%s", err))
+					psLog.F(err.Error())
 					// TODO: notify error to main goroutine
 					// ...
 				}
