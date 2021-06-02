@@ -14,6 +14,7 @@ import (
 
 const EpollTimeout = 1000
 const MaxEpollEvents = 32
+const virtualNetworkDevice = "/dev/net/tun"
 
 var epfd int
 
@@ -42,17 +43,15 @@ type IfreqSockAddr struct {
 	}
 }
 
-const vnd = "/dev/net/tun"
-
 type TapDevice struct {
 	Device
 }
 
-func (dev *TapDevice) Open() psErr.E {
-	var err error
+func (p *TapDevice) Open() psErr.E {
 	var fd int
+	var err error
 
-	fd, err = psSyscall.Syscall.Open(vnd, syscall.O_RDWR, 0666)
+	fd, err = psSyscall.Syscall.Open(virtualNetworkDevice, syscall.O_RDWR, 0666)
 	if err != nil {
 		psLog.E(fmt.Sprintf("syscall.Open() failed: %s", err))
 		return psErr.CantOpenIOResource
@@ -62,7 +61,7 @@ func (dev *TapDevice) Open() psErr.E {
 
 	ifrFlags := IfreqFlags{}
 	ifrFlags.Flags = syscall.IFF_TAP | syscall.IFF_NO_PI
-	copy(ifrFlags.Name[:], dev.Priv().Name)
+	copy(ifrFlags.Name[:], p.Priv().Name)
 
 	if _, _, errno := psSyscall.Syscall.Ioctl(uintptr(fd), uintptr(syscall.TUNSETIFF), uintptr(unsafe.Pointer(&ifrFlags))); errno != 0 {
 		_ = psSyscall.Syscall.Close(fd)
@@ -82,15 +81,18 @@ func (dev *TapDevice) Open() psErr.E {
 
 	ifrSockAddr := IfreqSockAddr{}
 	ifrSockAddr.Addr.Family = syscall.AF_INET
-	copy(ifrSockAddr.Name[:], dev.Priv().Name)
+	copy(ifrSockAddr.Name[:], p.Priv().Name)
 
 	if _, _, errno := psSyscall.Syscall.Ioctl(uintptr(soc), uintptr(syscall.SIOCGIFHWADDR), uintptr(unsafe.Pointer(&ifrSockAddr))); errno != 0 {
-		_ = psSyscall.Syscall.Close(soc)
 		psLog.E(fmt.Sprintf("syscall.Syscall(SYS_IOCTL, SIOCGIFHWADDR) failed: %s", errno))
+		_ = psSyscall.Syscall.Close(soc)
 		return psErr.CantModifyIOResourceParameter
 	}
-	copy(dev.Addr_[:], ifrSockAddr.Addr.Data[:])
-	_ = psSyscall.Syscall.Close(soc)
+	copy(p.Addr_[:], ifrSockAddr.Addr.Data[:])
+	if err = psSyscall.Syscall.Close(soc); err != psErr.OK {
+		psLog.E(fmt.Sprintf("Close() failed: %s", err))
+		return psErr.CantCloseIOResource
+	}
 
 	// --------------------------------------------------
 
@@ -110,17 +112,19 @@ func (dev *TapDevice) Open() psErr.E {
 		return psErr.CantModifyIOResourceParameter
 	}
 
-	dev.Priv_.FD = fd
+	p.Priv_.FD = fd
 
 	return psErr.OK
 }
 
-func (dev *TapDevice) Close() psErr.E {
-	_ = psSyscall.Syscall.Close(epfd)
+func (p *TapDevice) Close() psErr.E {
+	if err := psSyscall.Syscall.Close(epfd); err != nil {
+		return psErr.Error
+	}
 	return psErr.OK
 }
 
-func (dev *TapDevice) Poll(isTerminated bool) psErr.E {
+func (p *TapDevice) Poll(isTerminated bool) psErr.E {
 	if isTerminated {
 		_ = psSyscall.Syscall.Close(epfd)
 		return psErr.Terminated
@@ -140,14 +144,14 @@ func (dev *TapDevice) Poll(isTerminated bool) psErr.E {
 	if nEvents > 0 {
 		psLog.I("Event occurred")
 		psLog.I(fmt.Sprintf("\tevents: %v", nEvents))
-		psLog.I(fmt.Sprintf("\tdevice: %v (%v)", dev.Name_, dev.Priv_.Name))
-		if packet, err := ReadEthFrame(dev.Priv_.FD, dev.Addr_); err != psErr.OK {
+		psLog.I(fmt.Sprintf("\tdevice: %v (%v)", p.Name_, p.Priv_.Name))
+		if packet, err := ReadEthFrame(p.Priv_.FD, p.Addr_); err != psErr.OK {
 			if err != psErr.NoDataToRead {
 				psLog.E(fmt.Sprintf("ReadEthFrame() failed: %s", err))
 				return psErr.Error
 			}
 		} else {
-			packet.Dev = dev
+			packet.Dev = p
 			RxCh <- packet
 		}
 	}
@@ -155,6 +159,6 @@ func (dev *TapDevice) Poll(isTerminated bool) psErr.E {
 	return psErr.OK
 }
 
-func (dev *TapDevice) Transmit(dst EthAddr, payload []byte, typ EthType) psErr.E {
-	return WriteEthFrame(dev.Priv_.FD, dst, dev.Addr_, typ, payload)
+func (p *TapDevice) Transmit(dst EthAddr, payload []byte, typ EthType) psErr.E {
+	return WriteEthFrame(p.Priv_.FD, dst, p.Addr_, typ, payload)
 }

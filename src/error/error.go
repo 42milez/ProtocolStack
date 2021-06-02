@@ -2,6 +2,7 @@ package error
 
 const (
 	ArpIncomplete                 E = "ARP_INCOMPLETE"
+	CantCloseIOResource           E = "CANT_CLOSE_IO_RESOURCE"
 	CantCreateEndpoint            E = "CANT_CREATE_ENDPOINT"
 	CantCreateEpollInstance       E = "CANT_CREATE_EPOLL_INSTANCE"
 	CantModifyIOResourceParameter E = "CANT_MODIFY_IO_RESOURCE_PARAMETER"
