@@ -89,7 +89,7 @@ func ReadEthFrame(fd int, addr EthAddr) (*Packet, psErr.E) {
 
 	hdr := EthHdr{}
 	if err := binary.Read(bytes.NewBuffer(rxBuf), binary.BigEndian, &hdr); err != nil {
-		return nil, psErr.ReadFromBufError
+		return nil, psErr.Error
 	}
 
 	if !hdr.Dst.Equal(addr) {
@@ -119,10 +119,10 @@ func WriteEthFrame(fd int, dst EthAddr, src EthAddr, typ EthType, payload []byte
 
 	buf := new(bytes.Buffer)
 	if err := binary.Write(buf, binary.BigEndian, &hdr); err != nil {
-		return psErr.WriteToBufError
+		return psErr.Error
 	}
 	if err := binary.Write(buf, binary.BigEndian, &payload); err != nil {
-		return psErr.WriteToBufError
+		return psErr.Error
 	}
 	if err := pad(buf); err != psErr.OK {
 		return psErr.Error
