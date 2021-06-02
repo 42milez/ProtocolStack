@@ -56,13 +56,15 @@ type EthHdr struct {
 }
 
 func EthFrameDump(hdr []byte, payload []byte) {
-	psLog.I(fmt.Sprintf("\tdst:  %02x:%02x:%02x:%02x:%02x:%02x", hdr[0], hdr[1], hdr[2], hdr[3], hdr[4], hdr[5]))
-	psLog.I(fmt.Sprintf("\tsrc:  %02x:%02x:%02x:%02x:%02x:%02x", hdr[6], hdr[7], hdr[8], hdr[9], hdr[10], hdr[11]))
+	psLog.I(fmt.Sprintf("\tdst:           %02x:%02x:%02x:%02x:%02x:%02x",
+		hdr[0], hdr[1], hdr[2], hdr[3], hdr[4], hdr[5]))
+	psLog.I(fmt.Sprintf("\tsrc:           %02x:%02x:%02x:%02x:%02x:%02x",
+		hdr[6], hdr[7], hdr[8], hdr[9], hdr[10], hdr[11]))
 
-	typ := uint16(hdr[12])<<8 | uint16(hdr[13])
-	psLog.I(fmt.Sprintf("\ttype: 0x%04x (%s)", typ, ethTypes[EthType(typ)]))
+	typ := uint16(hdr[12]) | uint16(hdr[13])<<8
+	psLog.I(fmt.Sprintf("\ttype:          0x%04x (%s)", typ, ethTypes[EthType(typ)]))
 
-	s := "\tpayload: "
+	s := "\tpayload (nbo): "
 	for i, v := range payload {
 		s += fmt.Sprintf("%02x ", v)
 		if (i+1)%20 == 0 {
@@ -87,8 +89,9 @@ func ReadEthFrame(fd int, addr EthAddr) (*Packet, psErr.E) {
 
 	psLog.I(fmt.Sprintf("Ethernet frame was received: %d bytes", flen))
 
+	buf := bytes.NewBuffer(rxBuf)
 	hdr := EthHdr{}
-	if err := binary.Read(bytes.NewBuffer(rxBuf), binary.BigEndian, &hdr); err != nil {
+	if err := binary.Read(buf, binary.BigEndian, &hdr); err != nil {
 		return nil, psErr.Error
 	}
 
@@ -98,15 +101,17 @@ func ReadEthFrame(fd int, addr EthAddr) (*Packet, psErr.E) {
 		}
 	}
 
-	payload := make([]byte, flen)
-	copy(payload, rxBuf[EthHdrLen:flen])
-
 	psLog.I("Incoming ethernet frame")
-	EthFrameDump(rxBuf[:EthHdrLen], payload)
+	EthFrameDump(rxBuf[:EthHdrLen], rxBuf[EthHdrLen:flen])
+
+	payload := make([]byte, flen)
+	if err := binary.Read(buf, binary.BigEndian, &payload); err != nil {
+		return nil, psErr.Error
+	}
 
 	return &Packet{
-		Type:    hdr.Type,
-		Content: payload,
+		Type:    (hdr.Type&0xff00)>>8 | (hdr.Type&0x00ff)<<8,
+		Content: payload, // network byte order
 	}, psErr.OK
 }
 

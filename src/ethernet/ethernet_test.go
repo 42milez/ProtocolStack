@@ -59,18 +59,17 @@ func TestEthFrameDump(t *testing.T) {
 	regexpDatetime := "[0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}"
 	macDst := EthAddr{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}
 	macSrc := EthAddr{0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f}
-	ethType := EthType(0x0008) // IPv4 (big endian)
 	want, _ := regexp.Compile(fmt.Sprintf(
-		"^.+ %v dst:  %v.+ %v src:  %v.+ %v type: 0x%04x \\(%v\\)$",
+		"^.+ %s dst:           %s.+ %s src:           %s.+ %s type:          0x%04x \\(%s\\)$",
 		regexpDatetime,
-		macDst.String(),
+		macDst,
 		regexpDatetime,
-		macSrc.String(),
+		macSrc,
 		regexpDatetime,
-		uint16(ethType),
-		ethType.String()))
+		0x0800,
+		EthType(0x0800).String()))
 	got := psLog.CaptureLogOutput(func() {
-		hdr := EthHdr{Dst: macDst, Src: macSrc, Type: ethType}
+		hdr := EthHdr{Dst: macDst, Src: macSrc, Type: EthType(0x0008)}
 		buf := new(bytes.Buffer)
 		_ = binary.Write(buf, binary.BigEndian, &hdr)
 		frame := buf.Bytes()
@@ -78,7 +77,7 @@ func TestEthFrameDump(t *testing.T) {
 	})
 	got = trim(got)
 	if !want.MatchString(got) {
-		t.Errorf("EthDump() = %v; want %v", got, want)
+		t.Errorf("EthFrameDump() = %v; want %v", got, want)
 	}
 }
 
