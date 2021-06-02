@@ -229,7 +229,7 @@ func ipCreatePacket(protoNum ProtocolNumber, src IP, dst IP, payload []byte) []b
 		psLog.E(fmt.Sprintf("binary.Write() failed: %s", err))
 		return nil
 	}
-	if err := binary.Write(buf, binary.BigEndian, payload); err != nil {
+	if err := binary.Write(buf, binary.BigEndian, &payload); err != nil {
 		psLog.E(fmt.Sprintf("binary.Write() failed: %s", err))
 		return nil
 	}

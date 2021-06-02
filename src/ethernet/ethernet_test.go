@@ -73,7 +73,8 @@ func TestEthFrameDump(t *testing.T) {
 		hdr := EthHdr{Dst: macDst, Src: macSrc, Type: ethType}
 		buf := new(bytes.Buffer)
 		_ = binary.Write(buf, binary.BigEndian, &hdr)
-		EthFrameDump(buf.Bytes())
+		frame := buf.Bytes()
+		EthFrameDump(frame[:EthHdrLen], frame[EthHdrLen:])
 	})
 	got = trim(got)
 	if !want.MatchString(got) {
@@ -98,7 +99,7 @@ func TestReadFrame_1(t *testing.T) {
 				Type: EthType(0x0800),
 			}
 			b := new(bytes.Buffer)
-			_ = binary.Write(b, binary.BigEndian, hdr)
+			_ = binary.Write(b, binary.BigEndian, &hdr)
 			copy(buf, b.Bytes())
 		}).
 		Return(150, nil)
