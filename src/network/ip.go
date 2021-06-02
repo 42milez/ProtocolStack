@@ -11,8 +11,8 @@ import (
 	"sync"
 )
 
-const IpHdrSizeMin = 20 // bytes
-const IpHdrSizeMax = 60 // bytes
+const IpHdrLenMin = 20 // bytes
+const IpHdrLenMax = 60 // bytes
 
 const ProtoNumICMP = 1
 const ProtoNumTCP = 6
@@ -38,7 +38,7 @@ func (p *PacketID) Next() (id uint16) {
 func IpReceive(payload []byte, dev ethernet.IDevice) psErr.E {
 	packetLen := len(payload)
 
-	if packetLen < IpHdrSizeMin {
+	if packetLen < IpHdrLenMin {
 		psLog.E(fmt.Sprintf("IP packet length is too short: %d bytes", packetLen))
 		return psErr.InvalidPacket
 	}
@@ -56,7 +56,7 @@ func IpReceive(payload []byte, dev ethernet.IDevice) psErr.E {
 
 	hdrLen := int(hdr.VHL&0x0f) * 4
 	if packetLen < hdrLen {
-		psLog.E(fmt.Sprintf("IP packet length is too short: IHL = %d, Actual Packet Size = %d", hdrLen, packetLen))
+		psLog.E(fmt.Sprintf("IP packet length is too short: ihl = %d, actual = %d", hdrLen, packetLen))
 		return psErr.InvalidPacket
 	}
 
@@ -124,7 +124,7 @@ func IpSend(protoNum ProtocolNumber, payload []byte, dst IP, src IP) psErr.E {
 		return psErr.Error
 	}
 
-	if packetLen := IpHdrSizeMin + len(payload); int(iface.Dev.MTU()) < packetLen {
+	if packetLen := IpHdrLenMin + len(payload); int(iface.Dev.MTU()) < packetLen {
 		psLog.E(fmt.Sprintf("IP packet length is too long: %d", packetLen))
 		return psErr.PacketTooLong
 	}
@@ -213,8 +213,8 @@ func checksum(b []byte) uint16 {
 
 func ipCreatePacket(protoNum ProtocolNumber, src IP, dst IP, payload []byte) []byte {
 	hdr := IpHdr{}
-	hdr.VHL = uint8(ipv4<<4) | uint8(IpHdrSizeMin/4)
-	hdr.TotalLen = uint16(IpHdrSizeMin + len(payload))
+	hdr.VHL = uint8(ipv4<<4) | uint8(IpHdrLenMin/4)
+	hdr.TotalLen = uint16(IpHdrLenMin + len(payload))
 	hdr.ID = id.Next()
 	hdr.TTL = 0xff
 	hdr.Protocol = protoNum

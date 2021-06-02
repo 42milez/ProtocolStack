@@ -9,12 +9,12 @@ import (
 	psLog "github.com/42milez/ProtocolStack/src/log"
 )
 
-const IcmpHdrSize = 8 // byte
+const IcmpHdrLen = 8 // byte
 const IcmpTypeEchoReply = 0x00
 const IcmpTypeEcho = 0x08
 
 func IcmpReceive(payload []byte, dst [V4AddrLen]byte, src [V4AddrLen]byte, dev ethernet.IDevice) psErr.E {
-	if len(payload) < IcmpHdrSize {
+	if len(payload) < IcmpHdrLen {
 		psLog.E(fmt.Sprintf("ICMP header length is too short: %d bytes", len(payload)))
 		return psErr.InvalidPacket
 	}
@@ -44,7 +44,7 @@ func IcmpReceive(payload []byte, dst [V4AddrLen]byte, src [V4AddrLen]byte, dev e
 		if !iface.Unicast.EqualV4(dst) {
 			d = iface.Unicast
 		}
-		if err := IcmpSend(IcmpTypeEchoReply, hdr.Code, hdr.Content, payload[IcmpHdrSize:], d, s); err != psErr.OK {
+		if err := IcmpSend(IcmpTypeEchoReply, hdr.Code, hdr.Content, payload[IcmpHdrLen:], d, s); err != psErr.OK {
 			return psErr.Error
 		}
 	}

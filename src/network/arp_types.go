@@ -27,7 +27,7 @@ const (
 const ArpHwTypeEthernet ArpHwType = 0x0001
 const ArpOpRequest ArpOpcode = 0x0001
 const ArpOpReply ArpOpcode = 0x0002
-const ArpPacketSize = 28 // byte
+const ArpPacketLen = 28 // byte
 const (
 	ArpStatusComplete ArpStatus = iota
 	ArpStatusIncomplete

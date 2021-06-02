@@ -12,7 +12,7 @@ import (
 var cache *ArpCache
 
 func ArpInputHandler(packet []byte, dev ethernet.IDevice) psErr.E {
-	if len(packet) < ArpPacketSize {
+	if len(packet) < ArpPacketLen {
 		psLog.E(fmt.Sprintf("ARP packet length is too short: %d bytes", len(packet)))
 		return psErr.InvalidPacket
 	}
