@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	psBinary "github.com/42milez/ProtocolStack/src/binary"
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	psLog "github.com/42milez/ProtocolStack/src/log"
 	psSyscall "github.com/42milez/ProtocolStack/src/syscall"
@@ -56,19 +55,10 @@ type EthHdr struct {
 	Type EthType
 }
 
-func EthFrameDump(hdr []byte, payload []byte) {
-	psLog.I(fmt.Sprintf("\tdst:           %02x:%02x:%02x:%02x:%02x:%02x",
-		hdr[0], hdr[1], hdr[2], hdr[3], hdr[4], hdr[5]))
-	psLog.I(fmt.Sprintf("\tsrc:           %02x:%02x:%02x:%02x:%02x:%02x",
-		hdr[6], hdr[7], hdr[8], hdr[9], hdr[10], hdr[11]))
-
-	var typ uint16
-	if psBinary.Endian == binary.BigEndian {
-		typ = uint16(hdr[12])<<8 | uint16(hdr[13])
-	} else {
-		typ = uint16(hdr[12]) | uint16(hdr[13])<<8
-	}
-	psLog.I(fmt.Sprintf("\ttype:          0x%04x (%s)", typ, ethTypes[EthType(typ)]))
+func EthFrameDump(hdr *EthHdr, payload []byte) {
+	psLog.I(fmt.Sprintf("\tdst:           %s", hdr.Dst))
+	psLog.I(fmt.Sprintf("\tsrc:           %s", hdr.Src))
+	psLog.I(fmt.Sprintf("\ttype:          0x%04x (%s)", uint16(hdr.Type), hdr.Type))
 
 	s := "\tpayload (nbo): "
 	for i, v := range payload {
@@ -105,13 +95,13 @@ func ReadEthFrame(fd int, addr EthAddr) (*Packet, psErr.E) {
 		}
 	}
 
-	psLog.I("Incoming ethernet frame")
-	EthFrameDump(rxBuf[:EthHdrLen], rxBuf[EthHdrLen:flen])
-
 	payload := make([]byte, flen)
 	if err := binary.Read(buf, binary.BigEndian, &payload); err != nil {
 		return nil, psErr.Error
 	}
+
+	psLog.I("Incoming ethernet frame")
+	EthFrameDump(&hdr, payload)
 
 	return &Packet{
 		Type:    hdr.Type,
@@ -139,7 +129,7 @@ func WriteEthFrame(fd int, dst EthAddr, src EthAddr, typ EthType, payload []byte
 	frame := buf.Bytes()
 
 	psLog.I("Outgoing Ethernet frame")
-	EthFrameDump(frame[:EthHdrLen], frame[EthHdrLen:])
+	EthFrameDump(&hdr, payload)
 
 	if n, err := psSyscall.Syscall.Write(fd, frame); err != nil {
 		return psErr.SyscallError
