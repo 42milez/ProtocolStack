@@ -46,7 +46,7 @@ func IcmpReceive(payload []byte, dst [V4AddrLen]byte, src [V4AddrLen]byte, dev e
 			d = iface.Unicast
 		}
 		if err := IcmpSend(IcmpTypeEchoReply, hdr.Code, hdr.Content, payload[IcmpHdrSize:], d, s); err != psErr.OK {
-			psLog.E(fmt.Sprintf("IcmpSend() failed: %s", err))
+			psLog.E(fmt.Sprintf("network.IcmpSend() failed: %s", err))
 			return psErr.Error
 		}
 	}
@@ -81,7 +81,7 @@ func IcmpSend(typ IcmpType, code uint8, content uint32, payload []byte, dst IP, 
 	icmpHdrDump(&hdr)
 
 	if err := IpSend(ProtoNumICMP, packet, src, dst); err != psErr.OK {
-		psLog.E(fmt.Sprintf("IpSend() failed: %s", err))
+		psLog.E(fmt.Sprintf("network.IpSend() failed: %s", err))
 		return psErr.Error
 	}
 

@@ -98,7 +98,7 @@ func IpReceive(payload []byte, dev ethernet.IDevice) psErr.E {
 	switch hdr.Protocol {
 	case ProtoNumICMP:
 		if err := IcmpReceive(payload[hdrLen:], hdr.Dst, hdr.Src, dev); err != psErr.OK {
-			psLog.E(fmt.Sprintf("IcmpInputHandler() failed: %s", err))
+			psLog.E(fmt.Sprintf("network.IcmpInputHandler() failed: %s", err))
 			return psErr.Error
 		}
 	case ProtoNumTCP:
@@ -149,7 +149,7 @@ func IpSend(protoNum ProtocolNumber, payload []byte, dst IP, src IP) psErr.E {
 
 	// send ip packet
 	if err = Transmit(ethAddr, packet, ethernet.EthTypeIpv4, iface); err != psErr.OK {
-		psLog.E(fmt.Sprintf("Transmit() failed: %s", err))
+		psLog.E(fmt.Sprintf("ethernet.IDevice.Transmit() failed: %s", err))
 		return psErr.Error
 	}
 

@@ -68,7 +68,7 @@ func setup() psErr.E {
 	psLog.I("--------------------------------------------------")
 
 	if err := start(&wg); err != psErr.OK {
-		psLog.E(fmt.Sprintf("start() failed: %s", err))
+		psLog.E(fmt.Sprintf("main.start() failed: %s", err))
 		return psErr.Error
 	}
 

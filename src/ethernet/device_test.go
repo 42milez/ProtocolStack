@@ -7,28 +7,21 @@ import (
 
 func TestDevType_String(t *testing.T) {
 	devType := DevTypeEthernet
-	want := "ETHERNET"
+	want := "Ethernet"
 	got := devType.String()
 	if got != want {
 		t.Errorf("DevType.String() = %v; want %v", got, want)
 	}
 
 	devType = DevTypeLoopback
-	want = "LOOPBACK"
+	want = "Loopback"
 	got = devType.String()
 	if got != want {
 		t.Errorf("DevType.String() = %v; want %v", got, want)
 	}
 
 	devType = DevTypeNull
-	want = "NULL"
-	got = devType.String()
-	if got != want {
-		t.Errorf("DevType.String() = %v; want %v", got, want)
-	}
-
-	devType = DevType(99)
-	want = "UNKNOWN"
+	want = "Null"
 	got = devType.String()
 	if got != want {
 		t.Errorf("DevType.String() = %v; want %v", got, want)
