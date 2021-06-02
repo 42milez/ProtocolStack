@@ -6,33 +6,24 @@ import (
 	psErr "github.com/42milez/ProtocolStack/src/error"
 )
 
-type DevType int
-
+const DevFlagUp DevFlag = 0x0001
+const DevFlagLoopback DevFlag = 0x0010
+const DevFlagBroadcast DevFlag = 0x0020
+const DevFlagNeedArp DevFlag = 0x0100
 const (
 	DevTypeEthernet DevType = iota
 	DevTypeLoopback
 	DevTypeNull
 )
 
-func (t DevType) String() string {
-	switch t {
-	case DevTypeEthernet:
-		return "ETHERNET"
-	case DevTypeLoopback:
-		return "LOOPBACK"
-	case DevTypeNull:
-		return "NULL"
-	default:
-		return "UNKNOWN"
-	}
+var devTypes = [...]string{
+	0: "Ethernet",
+	1: "Loopback",
+	2: "Null",
 }
 
 type DevFlag uint16
-
-const DevFlagUp DevFlag = 0x0001
-const DevFlagLoopback DevFlag = 0x0010
-const DevFlagBroadcast DevFlag = 0x0020
-const DevFlagNeedArp DevFlag = 0x0100
+type DevType int
 
 type IDevice interface {
 	Open() psErr.E
@@ -63,6 +54,10 @@ type Device struct {
 type Privilege struct {
 	Name string
 	FD   int
+}
+
+func (v DevType) String() string {
+	return devTypes[v]
 }
 
 func (p *Device) Up() {
