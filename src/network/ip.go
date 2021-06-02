@@ -46,7 +46,7 @@ func IpReceive(payload []byte, dev ethernet.IDevice) psErr.E {
 	buf := bytes.NewBuffer(payload)
 	hdr := IpHdr{}
 	if err := binary.Read(buf, binary.BigEndian, &hdr); err != nil {
-		return psErr.Error
+		return psErr.ReadFromBufError
 	}
 
 	if version := hdr.VHL >> 4; version != ipv4 {
@@ -147,7 +147,6 @@ func IpSend(protoNum ProtocolNumber, payload []byte, dst IP, src IP) psErr.E {
 
 	// send ip packet
 	if err = Transmit(ethAddr, packet, ethernet.EthTypeIpv4, iface); err != psErr.OK {
-		psLog.E(fmt.Sprintf("ethernet.IDevice.Transmit() failed: %s", err))
 		return psErr.Error
 	}
 

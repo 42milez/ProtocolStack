@@ -36,7 +36,6 @@ func setup() psErr.E {
 
 	iface1 := network.GenIface(network.LoopbackIpAddr, network.LoopbackNetmask, network.LoopbackBroadcast)
 	if err := network.IfaceRepo.Register(iface1, loopbackDev); err != psErr.OK {
-		psLog.E(fmt.Sprintf("network.IfaceRepo.Register() failed: %s", err))
 		return psErr.Error
 	}
 
@@ -65,7 +64,6 @@ func setup() psErr.E {
 	psLog.I("--------------------------------------------------")
 
 	if err := start(&wg); err != psErr.OK {
-		psLog.E(fmt.Sprintf("main.start() failed: %s", err))
 		return psErr.Error
 	}
 
@@ -90,7 +88,7 @@ func start(wg *sync.WaitGroup) psErr.E {
 				if err := network.DeviceRepo.Poll(terminate); err != psErr.OK {
 					// TODO: notify error to main goroutine
 					// ...
-					psLog.F(fmt.Sprintf("network.DeviceRepo.Poll() failed: %s", err))
+					psLog.F(fmt.Sprintf("%s", err))
 				}
 			}
 			if terminate {

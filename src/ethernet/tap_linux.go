@@ -78,7 +78,6 @@ func (p *TapDevice) Open() psErr.E {
 	copy(ifrSockAddr.Name[:], p.Priv().Name)
 
 	if errno := psSyscall.Syscall.Ioctl(soc, syscall.SIOCGIFHWADDR, unsafe.Pointer(&ifrSockAddr)); errno != 0 {
-		psLog.E(fmt.Sprintf("syscall.Syscall.Ioctl() failed: %s", errno))
 		_ = psSyscall.Syscall.Close(soc)
 		return psErr.CantModifyIOResourceParameter
 	}
@@ -138,7 +137,6 @@ func (p *TapDevice) Poll(isTerminated bool) psErr.E {
 		psLog.I(fmt.Sprintf("\tdevice: %v (%v)", p.Name_, p.Priv_.Name))
 		if packet, err := ReadEthFrame(p.Priv_.FD, p.Addr_); err != psErr.OK {
 			if err != psErr.NoDataToRead {
-				psLog.E(fmt.Sprintf("ethernet.ReadEthFrame() failed: %s", err))
 				return psErr.Error
 			}
 		} else {

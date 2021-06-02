@@ -20,7 +20,7 @@ func ArpInputHandler(packet []byte, dev ethernet.IDevice) psErr.E {
 	buf := bytes.NewBuffer(packet)
 	arpPacket := ArpPacket{}
 	if err := binary.Read(buf, binary.BigEndian, &arpPacket); err != nil {
-		return psErr.Error
+		return psErr.ReadFromBufError
 	}
 
 	if arpPacket.HT != ArpHwTypeEthernet || arpPacket.HAL != ethernet.EthAddrLen {
@@ -97,7 +97,7 @@ func arpReply(tha ethernet.EthAddr, tpa ArpProtoAddr, iface *Iface) psErr.E {
 
 	buf := new(bytes.Buffer)
 	if err := binary.Write(buf, binary.BigEndian, &packet); err != nil {
-		return psErr.Error
+		return psErr.WriteToBufError
 	}
 
 	if err := iface.Dev.Transmit(tha, buf.Bytes(), ethernet.EthTypeArp); err != psErr.OK {
@@ -124,8 +124,7 @@ func arpRequest(iface *Iface, ip IP) psErr.E {
 
 	buf := new(bytes.Buffer)
 	if err := binary.Write(buf, binary.BigEndian, &packet); err != nil {
-		psLog.E("Write() failed")
-		return psErr.Error
+		return psErr.WriteToBufError
 	}
 	payload := buf.Bytes()
 
@@ -133,7 +132,6 @@ func arpRequest(iface *Iface, ip IP) psErr.E {
 	arpPacketDump(&packet)
 
 	if err := Transmit(ethernet.EthAddrBroadcast, payload, ethernet.EthTypeArp, iface); err != psErr.OK {
-		psLog.E(fmt.Sprintf("ethernet.IDevice.Transmit() failed: %s", err))
 		return psErr.Error
 	}
 
