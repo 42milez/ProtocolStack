@@ -31,7 +31,6 @@ func setup() psErr.E {
 	// Create a loopback device and its iface, then link them.
 	loopbackDev := ethernet.GenLoopbackDevice("net" + strconv.Itoa(network.DeviceRepo.NextNumber()))
 	if err := network.DeviceRepo.Register(loopbackDev); err != psErr.OK {
-		psLog.E(fmt.Sprintf("network.DeviceRepo.Register() failed: %s", err))
 		return psErr.Error
 	}
 
@@ -49,13 +48,11 @@ func setup() psErr.E {
 		"tap0",
 		ethernet.EthAddr{11, 22, 33, 44, 55, 66})
 	if err := network.DeviceRepo.Register(tapDev); err != psErr.OK {
-		psLog.E(fmt.Sprintf("network.DeviceRepo.Register() failed: %s", err))
 		return psErr.Error
 	}
 
 	iface2 := network.GenIface("192.0.2.2", "255.255.255.0", "192.0.2.255")
 	if err := network.IfaceRepo.Register(iface2, tapDev); err != psErr.OK {
-		psLog.E(fmt.Sprintf("network.IfaceRepo.Register() failed: %s", err))
 		return psErr.Error
 	}
 
@@ -77,7 +74,6 @@ func setup() psErr.E {
 
 func start(wg *sync.WaitGroup) psErr.E {
 	if err := network.DeviceRepo.Up(); err != psErr.OK {
-		psLog.E(fmt.Sprintf("network.DeviceRepo.Up() failed: %s", err))
 		return psErr.Error
 	}
 
@@ -114,13 +110,13 @@ func start(wg *sync.WaitGroup) psErr.E {
 				return
 			case packet := <-ethernet.RxCh:
 				if err := network.InputHandler(packet); err != psErr.OK {
-					psLog.F(fmt.Sprintf("network.InputHandler() failed: %s", err))
+					psLog.F(fmt.Sprintf("%s", err))
 					// TODO: notify error to main goroutine
 					// ...
 				}
 			case packet := <-ethernet.TxCh:
 				if err := network.OutputHandler(packet); err != psErr.OK {
-					psLog.F(fmt.Sprintf("network.OutputHandler() failed: %s", err))
+					psLog.F(fmt.Sprintf("%s", err))
 					// TODO: notify error to main goroutine
 					// ...
 				}

@@ -53,7 +53,6 @@ func (p *TapDevice) Open() psErr.E {
 
 	fd, err = psSyscall.Syscall.Open(virtualNetworkDevice, syscall.O_RDWR, 0666)
 	if err != nil {
-		psLog.E(fmt.Sprintf("ethernet.TapDevice.Open() failed: %s", err))
 		return psErr.CantOpenIOResource
 	}
 
@@ -62,7 +61,6 @@ func (p *TapDevice) Open() psErr.E {
 	copy(ifrFlags.Name[:], p.Priv().Name)
 	if errno := psSyscall.Syscall.Ioctl(fd, syscall.TUNSETIFF, unsafe.Pointer(&ifrFlags)); errno != 0 {
 		_ = psSyscall.Syscall.Close(fd)
-		psLog.E(fmt.Sprintf("syscall.Syscall.Ioctl() failed: %s", errno))
 		return psErr.CantModifyIOResourceParameter
 	}
 
@@ -72,7 +70,6 @@ func (p *TapDevice) Open() psErr.E {
 	soc, err = psSyscall.Syscall.Socket(syscall.AF_INET, syscall.SOCK_DGRAM, 0)
 	if err != nil {
 		_ = psSyscall.Syscall.Close(fd)
-		psLog.E(fmt.Sprintf("syscall.Syscall.Socket() failed: %s", err))
 		return psErr.CantCreateEndpoint
 	}
 
@@ -87,7 +84,6 @@ func (p *TapDevice) Open() psErr.E {
 	}
 	copy(p.Addr_[:], ifrSockAddr.Addr.Data[:])
 	if err = psSyscall.Syscall.Close(soc); err != nil {
-		psLog.E(fmt.Sprintf("syscall.Syscall.Close() failed: %s", err))
 		return psErr.CantCloseIOResource
 	}
 
@@ -95,7 +91,6 @@ func (p *TapDevice) Open() psErr.E {
 
 	epfd, err = psSyscall.Syscall.EpollCreate1(0)
 	if err != nil {
-		psLog.E(fmt.Sprintf("syscall.Syscall.EpollCreate1() failed: %s", err))
 		return psErr.CantCreateEpollInstance
 	}
 
@@ -105,7 +100,6 @@ func (p *TapDevice) Open() psErr.E {
 
 	if err := psSyscall.Syscall.EpollCtl(epfd, syscall.EPOLL_CTL_ADD, fd, &event); err != nil {
 		_ = psSyscall.Syscall.Close(epfd)
-		psLog.E(fmt.Sprintf("syscall.Syscall.EpollCtl() failed: %s", err))
 		return psErr.CantModifyIOResourceParameter
 	}
 

@@ -38,7 +38,6 @@ func (p *deviceRepo) Poll(terminate bool) psErr.E {
 			if err == psErr.Interrupted {
 				return psErr.OK
 			}
-			psLog.E(fmt.Sprintf("ethernet.IDevice.Poll() failed: %s", err))
 			return psErr.Error
 		}
 	}
@@ -71,7 +70,7 @@ func (p *deviceRepo) Up() psErr.E {
 			return psErr.Error
 		}
 		if err := dev.Open(); err != psErr.OK {
-			psLog.E(fmt.Sprintf("ethernet.IDevice.Open() failed: %s", err))
+			psLog.E(fmt.Sprintf("Can't open device: %s", err))
 			psLog.E(fmt.Sprintf("\ttype: %s", dev.Type()))
 			psLog.E(fmt.Sprintf("\tname: %s (%s)", dev.Name(), dev.Priv().Name))
 			return psErr.Error

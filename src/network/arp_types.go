@@ -79,12 +79,11 @@ func (p *ArpCache) Add(ha ethernet.EthAddr, pa ArpProtoAddr, state ArpCacheState
 	return psErr.OK
 }
 
-func (p *ArpCache) Clear(idx int) psErr.E {
+func (p *ArpCache) Clear(idx int) {
 	p.entries[idx].State = ArpCacheStateFree
 	p.entries[idx].CreatedAt = time.Unix(0, 0)
 	p.entries[idx].HA = ethernet.EthAddr{}
 	p.entries[idx].PA = ArpProtoAddr{}
-	return psErr.OK
 }
 
 func (p *ArpCache) EthAddr(pa ArpProtoAddr) (ethernet.EthAddr, bool) {

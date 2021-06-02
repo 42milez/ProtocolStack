@@ -22,7 +22,6 @@ func IcmpReceive(payload []byte, dst [V4AddrLen]byte, src [V4AddrLen]byte, dev e
 	buf := bytes.NewBuffer(payload)
 	hdr := IcmpHdr{}
 	if err := binary.Read(buf, binary.BigEndian, &hdr); err != nil {
-		psLog.E(fmt.Sprintf("binary.Read() failed: %s", err))
 		return psErr.Error
 	}
 
@@ -46,7 +45,6 @@ func IcmpReceive(payload []byte, dst [V4AddrLen]byte, src [V4AddrLen]byte, dev e
 			d = iface.Unicast
 		}
 		if err := IcmpSend(IcmpTypeEchoReply, hdr.Code, hdr.Content, payload[IcmpHdrSize:], d, s); err != psErr.OK {
-			psLog.E(fmt.Sprintf("network.IcmpSend() failed: %s", err))
 			return psErr.Error
 		}
 	}
@@ -63,12 +61,10 @@ func IcmpSend(typ IcmpType, code uint8, content uint32, payload []byte, dst IP, 
 
 	buf := new(bytes.Buffer)
 	if err := binary.Write(buf, binary.BigEndian, &hdr); err != nil {
-		psLog.E(fmt.Sprintf("binary.Write() failed: %s", err))
 		return psErr.Error
 	}
 
 	if err := binary.Write(buf, binary.BigEndian, &payload); err != nil {
-		psLog.E(fmt.Sprintf("binary.Write() failed: %s", err))
 		return psErr.Error
 	}
 

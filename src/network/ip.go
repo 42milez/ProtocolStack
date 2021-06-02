@@ -46,7 +46,6 @@ func IpReceive(payload []byte, dev ethernet.IDevice) psErr.E {
 	buf := bytes.NewBuffer(payload)
 	hdr := IpHdr{}
 	if err := binary.Read(buf, binary.BigEndian, &hdr); err != nil {
-		psLog.E(fmt.Sprintf("binary.Read() failed: %s", err))
 		return psErr.Error
 	}
 
@@ -98,7 +97,6 @@ func IpReceive(payload []byte, dev ethernet.IDevice) psErr.E {
 	switch hdr.Protocol {
 	case ProtoNumICMP:
 		if err := IcmpReceive(payload[hdrLen:], hdr.Dst, hdr.Src, dev); err != psErr.OK {
-			psLog.E(fmt.Sprintf("network.IcmpInputHandler() failed: %s", err))
 			return psErr.Error
 		}
 	case ProtoNumTCP:
@@ -226,11 +224,9 @@ func ipCreatePacket(protoNum ProtocolNumber, src IP, dst IP, payload []byte) []b
 
 	buf := new(bytes.Buffer)
 	if err := binary.Write(buf, binary.BigEndian, &hdr); err != nil {
-		psLog.E(fmt.Sprintf("binary.Write() failed: %s", err))
 		return nil
 	}
 	if err := binary.Write(buf, binary.BigEndian, &payload); err != nil {
-		psLog.E(fmt.Sprintf("binary.Write() failed: %s", err))
 		return nil
 	}
 	packet := buf.Bytes()
