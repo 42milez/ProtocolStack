@@ -126,7 +126,7 @@ func IpSend(protoNum ProtocolNumber, payload []byte, dst IP, src IP) psErr.E {
 
 	packet := createIpPacket(protoNum, src, dst, payload)
 	if packet == nil {
-		psLog.E("IP packet was not created")
+		psLog.E("Can't create IP packet")
 		return psErr.Error
 	}
 
