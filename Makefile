@@ -85,13 +85,13 @@ test:
 # --------------------------------------------------
 .PHONY: go-build
 go-build:
-	@echo "> Building binary..."
+	@echo "▶ building binary: BUILD_TYPE = $(BUILD_TYPE), BUILD_FLAGS = $(BUILD_FLAGS)"
 	@mkdir -p $(GOBIN)
 	@go build $(BUILD_FLAGS) -tags $(BUILD_TYPE) -o $(GOBIN)/$(BIN_NAME) $(SOURCE_FILE)
 
 .PHONY: go-clean
 go-clean:
-	@echo "> cleaning up build caches..."
+	@echo "▶ cleaning up caches"
 	@go clean -cache -testcache
 
 .PHONY: go-compile
@@ -99,25 +99,25 @@ go-compile: go-mod go-vet go-build
 
 .PHONY: go-fmt
 go-fmt:
-	@echo "> reformatting code..."
+	@echo "▶ reformatting code"
 	@go fmt $(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/...
 
 .PHONY: go-generate
 go-generate:
-	@echo "> generating code..."
+	@echo "▶ generating code"
 	@go generate $(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/...
 
 .PHONY: go-lint
 go-lint:
-	@echo "> running linters..."
+	@echo "▶ running linters"
 	@golangci-lint run
 
 .PHONY: go-mod
 go-mod:
-	@echo "> checking if there is any missing dependencies..."
+	@echo "▶ checking if there is any missing dependencies"
 	@go mod tidy
 
 .PHONY: go-vet
 go-vet:
-	@echo "> vetting source code..."
+	@echo "▶ vetting source code"
 	@go vet $(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/...
