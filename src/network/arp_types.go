@@ -4,6 +4,7 @@ import (
 	"fmt"
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	"github.com/42milez/ProtocolStack/src/ethernet"
+	psTime "github.com/42milez/ProtocolStack/src/time"
 	"sync"
 	"time"
 )
@@ -48,17 +49,10 @@ func (p *ArpCache) Add(ha ethernet.EthAddr, pa ArpProtoAddr, state ArpCacheState
 	p.mtx.Lock()
 	defer p.mtx.Unlock()
 	entry.State = state
-	entry.CreatedAt = time.Now()
+	entry.CreatedAt = psTime.Time.Now()
 	entry.HA = ha
 	entry.PA = pa
 	return psErr.OK
-}
-
-func (p *ArpCache) Clear(idx int) {
-	p.entries[idx].State = ArpCacheStateFree
-	p.entries[idx].CreatedAt = time.Unix(0, 0)
-	p.entries[idx].HA = ethernet.EthAddr{}
-	p.entries[idx].PA = ArpProtoAddr{}
 }
 
 func (p *ArpCache) EthAddr(pa ArpProtoAddr) (ethernet.EthAddr, bool) {
@@ -74,11 +68,13 @@ func (p *ArpCache) Init() {
 		p.entries[i] = &ArpCacheEntry{
 			State:     ArpCacheStateFree,
 			CreatedAt: time.Unix(0, 0),
+			HA:        ethernet.EthAddr{},
+			PA:        ArpProtoAddr{},
 		}
 	}
 }
 
-func (p *ArpCache) Renew(ha ethernet.EthAddr, pa ArpProtoAddr, state ArpCacheState) psErr.E {
+func (p *ArpCache) Renew(pa ArpProtoAddr, ha ethernet.EthAddr, state ArpCacheState) psErr.E {
 	entry := p.get(pa)
 	if entry == nil {
 		return psErr.NotFound
@@ -86,8 +82,8 @@ func (p *ArpCache) Renew(ha ethernet.EthAddr, pa ArpProtoAddr, state ArpCacheSta
 	p.mtx.Lock()
 	defer p.mtx.Unlock()
 	entry.State = state
+	entry.CreatedAt = psTime.Time.Now()
 	entry.HA = ha
-	entry.CreatedAt = time.Now()
 	return psErr.OK
 }
 
@@ -106,7 +102,7 @@ func (p *ArpCache) danglingEntry() *ArpCacheEntry {
 	return oldest
 }
 
-func (p *ArpCache) get(ip [V4AddrLen]byte) *ArpCacheEntry {
+func (p *ArpCache) get(ip ArpProtoAddr) *ArpCacheEntry {
 	p.mtx.Lock()
 	defer p.mtx.Unlock()
 	for i, v := range p.entries {
