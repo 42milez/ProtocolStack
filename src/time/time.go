@@ -10,7 +10,7 @@ type ITime interface {
 	Now() time.Time
 }
 
-type timeProvider struct {}
+type timeProvider struct{}
 
 func (timeProvider) Now() time.Time {
 	return time.Now()
