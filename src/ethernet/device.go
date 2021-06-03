@@ -17,14 +17,12 @@ const (
 	DevTypeNull
 )
 
-var devTypes = [...]string{
-	0: "Ethernet",
-	1: "Loopback",
-	2: "Null",
-}
-
 type DevFlag uint16
 type DevType int
+
+func (v DevType) String() string {
+	return devTypes[v]
+}
 
 type IDevice interface {
 	Open() psErr.E
@@ -50,15 +48,6 @@ type Device struct {
 	Flag_ DevFlag
 	MTU_  uint16
 	Priv_ Privilege
-}
-
-type Privilege struct {
-	Name string
-	FD   int
-}
-
-func (v DevType) String() string {
-	return devTypes[v]
 }
 
 func (p *Device) Up() {
@@ -99,4 +88,15 @@ func (p *Device) MTU() uint16 {
 
 func (p *Device) Priv() Privilege {
 	return p.Priv_
+}
+
+type Privilege struct {
+	Name string
+	FD   int
+}
+
+var devTypes = [...]string{
+	0: "Ethernet",
+	1: "Loopback",
+	2: "Null",
 }

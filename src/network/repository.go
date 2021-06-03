@@ -14,6 +14,13 @@ var RouteRepo *routeRepo
 
 type Handler func(data []byte, dev ethernet.IDevice) psErr.E
 
+type Route struct {
+	Network IP
+	Netmask IP
+	NextHop IP
+	Iface   *Iface
+}
+
 type Timer struct {
 	Name     string
 	Interval syscall.Timeval
@@ -121,13 +128,6 @@ func (p *ifaceRepo) Register(iface *Iface, dev ethernet.IDevice) psErr.E {
 	psLog.I(fmt.Sprintf("\tdevice: %s (%s)", dev.Name(), dev.Priv().Name))
 
 	return psErr.OK
-}
-
-type Route struct {
-	Network IP
-	Netmask IP
-	NextHop IP
-	Iface   *Iface
 }
 
 type routeRepo struct {

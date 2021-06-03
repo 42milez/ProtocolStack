@@ -22,17 +22,6 @@ const EthTypeIpv6 EthType = 0x86dd
 var EthAddrAny = EthAddr{0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 var EthAddrBroadcast = EthAddr{0xff, 0xff, 0xff, 0xff, 0xff, 0xff}
 
-// Ethertypes
-// https://www.iana.org/assignments/ieee-802-numbers/ieee-802-numbers.xhtml#ieee-802-numbers-1
-
-var ethTypes = map[EthType]string{
-	0x0800: "IPv4",
-	0x0806: "ARP",
-	0x86dd: "IPv6",
-}
-
-var rxBuf []byte
-
 type EthAddr [EthAddrLen]byte
 
 func (v EthAddr) Equal(vv EthAddr) bool {
@@ -43,29 +32,28 @@ func (v EthAddr) String() string {
 	return fmt.Sprintf("%02x:%02x:%02x:%02x:%02x:%02x", v[0], v[1], v[2], v[3], v[4], v[5])
 }
 
+type EthHdr struct {
+	Dst  EthAddr
+	Src  EthAddr
+	Type EthType
+}
 type EthType uint16
 
 func (v EthType) String() string {
 	return ethTypes[v]
 }
 
-type EthHdr struct {
-	Dst  EthAddr
-	Src  EthAddr
-	Type EthType
-}
-
 func EthFrameDump(hdr *EthHdr, payload []byte) {
-	psLog.I(fmt.Sprintf("\tdst:           %s", hdr.Dst))
-	psLog.I(fmt.Sprintf("\tsrc:           %s", hdr.Src))
-	psLog.I(fmt.Sprintf("\ttype:          0x%04x (%s)", uint16(hdr.Type), hdr.Type))
+	psLog.I(fmt.Sprintf("\tdst:     %s", hdr.Dst))
+	psLog.I(fmt.Sprintf("\tsrc:     %s", hdr.Src))
+	psLog.I(fmt.Sprintf("\ttype:    0x%04x (%s)", uint16(hdr.Type), hdr.Type))
 
-	s := "\tpayload (nbo): "
+	s := "\tpayload: "
 	for i, v := range payload {
 		s += fmt.Sprintf("%02x ", v)
 		if (i+1)%20 == 0 {
 			psLog.I(s)
-			s = "\t\t       "
+			s = "\t\t "
 		}
 	}
 }
@@ -150,6 +138,17 @@ func pad(buf *bytes.Buffer) psErr.E {
 	}
 	return psErr.OK
 }
+
+// Ethertypes
+// https://www.iana.org/assignments/ieee-802-numbers/ieee-802-numbers.xhtml#ieee-802-numbers-1
+
+var ethTypes = map[EthType]string{
+	0x0800: "IPv4",
+	0x0806: "ARP",
+	0x86dd: "IPv6",
+}
+
+var rxBuf []byte
 
 func init() {
 	rxBuf = make([]byte, EthFrameLenMax)

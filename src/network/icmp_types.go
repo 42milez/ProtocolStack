@@ -6,6 +6,7 @@ type IcmpHdr struct {
 	Checksum uint16
 	Content  uint32
 }
+
 type IcmpType uint8
 
 // ICMP Type Numbers

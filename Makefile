@@ -80,7 +80,7 @@ go-build:
 .PHONY: go-clean
 go-clean:
 	@echo "> cleaning up build caches..."
-	@go clean
+	@go clean -cache -testcache
 
 .PHONY: go-compile
 go-compile: go-clean go-mod go-vet go-build
