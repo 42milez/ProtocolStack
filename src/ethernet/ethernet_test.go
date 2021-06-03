@@ -14,6 +14,15 @@ import (
 	"testing"
 )
 
+func setup(t *testing.T) (ctrl *gomock.Controller, teardown func()) {
+	psLog.DisableOutput()
+	ctrl = gomock.NewController(t)
+	teardown = func() {
+		ctrl.Finish()
+	}
+	return
+}
+
 func trim(s string) string {
 	ret := strings.Replace(s, "\t", "", -1)
 	ret = strings.Replace(ret, "\n", "", -1)
@@ -88,11 +97,8 @@ func TestEthFrameDump(t *testing.T) {
 }
 
 func TestReadEthFrame_1(t *testing.T) {
-	psLog.DisableOutput()
-	defer psLog.EnableOutput()
-
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+	ctrl, teardown := setup(t)
+	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)
 	m.EXPECT().
@@ -120,11 +126,8 @@ func TestReadEthFrame_1(t *testing.T) {
 
 // Fail when Read() returns error.
 func TestReadEthFrame_2(t *testing.T) {
-	psLog.DisableOutput()
-	defer psLog.EnableOutput()
-
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+	ctrl, teardown := setup(t)
+	defer teardown()
 
 	dev := &Device{Addr_: EthAddr{11, 12, 13, 14, 15, 16}}
 	m := psSyscall.NewMockISyscall(ctrl)
@@ -139,11 +142,8 @@ func TestReadEthFrame_2(t *testing.T) {
 
 // Fail when header length is invalid.
 func TestReadEthFrame_3(t *testing.T) {
-	psLog.DisableOutput()
-	defer psLog.EnableOutput()
-
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+	ctrl, teardown := setup(t)
+	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)
 	m.EXPECT().Read(gomock.Any(), gomock.Any()).Return(10, nil)
@@ -159,11 +159,25 @@ func TestReadEthFrame_3(t *testing.T) {
 
 // Success when no data exits.
 func TestReadEthFrame_4(t *testing.T) {
-	psLog.DisableOutput()
-	defer psLog.EnableOutput()
+	ctrl, teardown := setup(t)
+	defer teardown()
 
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+	m := psSyscall.NewMockISyscall(ctrl)
+	m.EXPECT().Read(gomock.Any(), gomock.Any()).Return(150, nil)
+	psSyscall.Syscall = m
+
+	dev := &Device{Addr_: EthAddr{33, 44, 55, 66, 77, 88}}
+
+	_, got := ReadEthFrame(dev.Priv().FD, dev.Addr())
+	if got != psErr.NoDataToRead {
+		t.Errorf("ReadEthFrame() = %v; want %v", got, psErr.NoDataToRead)
+	}
+}
+
+// Fail when Read() system call returns error.
+func TestReadEthFrame_5(t *testing.T) {
+	ctrl, teardown := setup(t)
+	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)
 	m.EXPECT().Read(gomock.Any(), gomock.Any()).Return(150, nil)

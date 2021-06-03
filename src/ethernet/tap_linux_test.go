@@ -3,7 +3,6 @@ package ethernet
 import (
 	"errors"
 	psErr "github.com/42milez/ProtocolStack/src/error"
-	psLog "github.com/42milez/ProtocolStack/src/log"
 	psSyscall "github.com/42milez/ProtocolStack/src/syscall"
 	"github.com/golang/mock/gomock"
 	"syscall"
@@ -21,11 +20,8 @@ var ErrorWithNoMessage error
 var Any = gomock.Any()
 
 func TestTapDevice_Open_1(t *testing.T) {
-	psLog.DisableOutput()
-	defer psLog.EnableOutput()
-
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+	ctrl, teardown := setup(t)
+	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)
 	m.EXPECT().Open(Any, Any, Any).Return(3, nil)
@@ -47,11 +43,8 @@ func TestTapDevice_Open_1(t *testing.T) {
 
 // Fail when Open() returns error.
 func TestTapDevice_Open_2(t *testing.T) {
-	psLog.DisableOutput()
-	defer psLog.EnableOutput()
-
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+	ctrl, teardown := setup(t)
+	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)
 	m.EXPECT().Open(Any, Any, Any).Return(RetValOnFail, ErrorWithNoMessage)
@@ -68,11 +61,8 @@ func TestTapDevice_Open_2(t *testing.T) {
 
 // Fail when Ioctl() returns error.
 func TestTapDevice_Open_3(t *testing.T) {
-	psLog.DisableOutput()
-	defer psLog.EnableOutput()
-
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+	ctrl, teardown := setup(t)
+	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)
 	m.EXPECT().Open(Any, Any, Any).Return(10, nil)
@@ -90,12 +80,9 @@ func TestTapDevice_Open_3(t *testing.T) {
 }
 
 // Fail when Socket() returns error.
-func TestTapDevice_Open_34(t *testing.T) {
-	psLog.DisableOutput()
-	defer psLog.EnableOutput()
-
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+func TestTapDevice_Open_4(t *testing.T) {
+	ctrl, teardown := setup(t)
+	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)
 
@@ -118,11 +105,8 @@ func TestTapDevice_Open_34(t *testing.T) {
 
 // Fail when Ioctl() returns error.
 func TestTapDevice_Open_5(t *testing.T) {
-	psLog.DisableOutput()
-	defer psLog.EnableOutput()
-
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+	ctrl, teardown := setup(t)
+	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)
 
@@ -147,11 +131,8 @@ func TestTapDevice_Open_5(t *testing.T) {
 
 // Fail when EpollCreate1() returns error.
 func TestTapDevice_Open_6(t *testing.T) {
-	psLog.DisableOutput()
-	defer psLog.EnableOutput()
-
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+	ctrl, teardown := setup(t)
+	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)
 
@@ -177,11 +158,8 @@ func TestTapDevice_Open_6(t *testing.T) {
 
 // Fail when EpollCtl() returns error.
 func TestTapDevice_Open_7(t *testing.T) {
-	psLog.DisableOutput()
-	defer psLog.EnableOutput()
-
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+	ctrl, teardown := setup(t)
+	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)
 	m.EXPECT().Open(Any, Any, Any).Return(10, nil)
@@ -220,11 +198,8 @@ func TestTapDevice_Close(t *testing.T) {
 }
 
 func TestTapDevice_Transmit(t *testing.T) {
-	psLog.DisableOutput()
-	defer psLog.EnableOutput()
-
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+	ctrl, teardown := setup(t)
+	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)
 	m.EXPECT().Write(Any, Any).Return(0, nil)
@@ -241,11 +216,8 @@ func TestTapDevice_Transmit(t *testing.T) {
 
 // Success when no event occurs.
 func TestTapDevice_Poll_1(t *testing.T) {
-	psLog.DisableOutput()
-	defer psLog.EnableOutput()
-
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+	ctrl, teardown := setup(t)
+	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)
 	m.EXPECT().EpollWait(Any, Any, Any).Return(0, nil)
@@ -262,11 +234,8 @@ func TestTapDevice_Poll_1(t *testing.T) {
 
 // Success when an event occurs.
 func TestTapDevice_Poll_2(t *testing.T) {
-	psLog.DisableOutput()
-	defer psLog.EnableOutput()
-
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+	ctrl, teardown := setup(t)
+	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)
 	m.EXPECT().EpollWait(Any, Any, Any).Return(1, nil)
@@ -284,11 +253,8 @@ func TestTapDevice_Poll_2(t *testing.T) {
 
 // Success when Poll() is terminated.
 func TestTapDevice_Poll_3(t *testing.T) {
-	psLog.DisableOutput()
-	defer psLog.EnableOutput()
-
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+	ctrl, teardown := setup(t)
+	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)
 	m.EXPECT().Close(Any).Return(nil)
@@ -305,11 +271,8 @@ func TestTapDevice_Poll_3(t *testing.T) {
 
 // Fail when EpollWait() is interrupted.
 func TestTapDevice_Poll_4(t *testing.T) {
-	psLog.DisableOutput()
-	defer psLog.EnableOutput()
-
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+	ctrl, teardown := setup(t)
+	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)
 	m.EXPECT().EpollWait(Any, Any, Any).Return(RetValOnFail, syscall.EINTR)
@@ -326,11 +289,8 @@ func TestTapDevice_Poll_4(t *testing.T) {
 
 // Fail when EpollWait() returns EFAULT.
 func TestTapDevice_Poll_5(t *testing.T) {
-	psLog.DisableOutput()
-	defer psLog.EnableOutput()
-
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+	ctrl, teardown := setup(t)
+	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)
 	m.EXPECT().EpollWait(Any, Any, Any).Return(RetValOnFail, syscall.EFAULT)
@@ -347,11 +307,8 @@ func TestTapDevice_Poll_5(t *testing.T) {
 
 // Fail when ReadEthFrame() failed.
 func TestTapDevice_Poll_6(t *testing.T) {
-	psLog.DisableOutput()
-	defer psLog.EnableOutput()
-
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+	ctrl, teardown := setup(t)
+	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)
 	m.EXPECT().EpollWait(Any, Any, Any).Return(1, nil)
