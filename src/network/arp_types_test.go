@@ -1,6 +1,7 @@
 package network
 
 import (
+	"fmt"
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	"github.com/42milez/ProtocolStack/src/ethernet"
 	psTime "github.com/42milez/ProtocolStack/src/time"
@@ -58,15 +59,21 @@ func TestArpCache_Add_2(t *testing.T) {
 }
 
 func TestArpCache_Add_3(t *testing.T) {
+	ctrl, teardown := setup(t)
+	defer teardown()
 	defer cache.Init()
 
 	want := psErr.OK
 	var got psErr.E
 
-	for i := 0; i < ArpCacheSize+1; i++ {
+	m := psTime.NewMockITime(ctrl)
+	psTime.Time = m
+	for i := ArpCacheSize; i >= 0; i-- {
 		ha := ethernet.EthAddr{0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 		pa := ArpProtoAddr{192, 168, byte(i), 1}
 		state := ArpCacheStateResolved
+		createdAt, _ := time.Parse(time.RFC3339, fmt.Sprintf("2021-01-01T00:%02d:00Z", i))
+		m.EXPECT().Now().Return(createdAt)
 		got = cache.Add(ha, pa, state)
 	}
 
