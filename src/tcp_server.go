@@ -23,6 +23,18 @@ var sigCh chan os.Signal
 
 var terminate bool
 
+func handleSignal(sigCh <-chan os.Signal, wg *sync.WaitGroup) {
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		sig := <-sigCh
+		psLog.I(fmt.Sprintf("Signal: %s", sig))
+		ethSigCh <- syscall.SIGUSR1
+		mainSigCh <- syscall.SIGUSR1
+		netSigCh <- syscall.SIGUSR1
+	}()
+}
+
 func setup() psErr.E {
 	psLog.I("--------------------------------------------------")
 	psLog.I(" INITIALIZE DEVICES                               ")
@@ -132,22 +144,6 @@ func init() {
 	sigCh = make(chan os.Signal, 1)
 	// https://pkg.go.dev/os/signal#Notify
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
-}
-
-func handleSignal(sigCh <-chan os.Signal, wg *sync.WaitGroup) {
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		sig := <-sigCh
-		psLog.I(fmt.Sprintf("Signal: %s", sig))
-		ethSigCh <- syscall.SIGUSR1
-		mainSigCh <- syscall.SIGUSR1
-		netSigCh <- syscall.SIGUSR1
-	}()
-}
-
-func init() {
-	terminate = false
 }
 
 func main() {
