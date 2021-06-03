@@ -4,6 +4,7 @@ import (
 	"fmt"
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	"github.com/42milez/ProtocolStack/src/ethernet"
+	psLog "github.com/42milez/ProtocolStack/src/log"
 	psTime "github.com/42milez/ProtocolStack/src/time"
 	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
@@ -21,8 +22,10 @@ func isEthAddrAllZero(addr [ethernet.EthAddrLen]byte) bool {
 }
 
 func setup(t *testing.T) (ctrl *gomock.Controller, teardown func()) {
+	psLog.DisableOutput()
 	ctrl = gomock.NewController(t)
 	teardown = func() {
+		psLog.EnableOutput()
 		ctrl.Finish()
 	}
 	return

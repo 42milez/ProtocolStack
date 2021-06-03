@@ -18,6 +18,7 @@ func setup(t *testing.T) (ctrl *gomock.Controller, teardown func()) {
 	psLog.DisableOutput()
 	ctrl = gomock.NewController(t)
 	teardown = func() {
+		psLog.EnableOutput()
 		ctrl.Finish()
 	}
 	return

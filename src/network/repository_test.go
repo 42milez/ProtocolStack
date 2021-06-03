@@ -3,8 +3,6 @@ package network
 import (
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	"github.com/42milez/ProtocolStack/src/ethernet"
-	psLog "github.com/42milez/ProtocolStack/src/log"
-	"github.com/golang/mock/gomock"
 	"testing"
 )
 
@@ -14,10 +12,9 @@ func reset() {
 }
 
 func TestDeviceRepo_Register_1(t *testing.T) {
+	_, teardown := setup(t)
+	defer teardown()
 	defer reset()
-
-	psLog.DisableOutput()
-	defer psLog.EnableOutput()
 
 	dev := &ethernet.TapDevice{}
 
@@ -29,10 +26,9 @@ func TestDeviceRepo_Register_1(t *testing.T) {
 
 // Fail when it's trying to register same device.
 func TestDeviceRepo_Register_2(t *testing.T) {
+	_, teardown := setup(t)
+	defer teardown()
 	defer reset()
-
-	psLog.DisableOutput()
-	defer psLog.EnableOutput()
 
 	dev1 := &ethernet.TapDevice{Device: ethernet.Device{Name_: "net0"}}
 	dev2 := &ethernet.TapDevice{Device: ethernet.Device{Name_: "net0"}}
@@ -45,10 +41,9 @@ func TestDeviceRepo_Register_2(t *testing.T) {
 }
 
 func TestIfaceRepo_Register_1(t *testing.T) {
+	_, teardown := setup(t)
+	defer teardown()
 	defer reset()
-
-	psLog.DisableOutput()
-	defer psLog.EnableOutput()
 
 	iface := &Iface{
 		Family:    V4AddrFamily,
@@ -75,10 +70,9 @@ func TestIfaceRepo_Register_1(t *testing.T) {
 
 // Fail when it's trying to register same interface.
 func TestIfaceRepo_Register_2(t *testing.T) {
+	_, teardown := setup(t)
+	defer teardown()
 	defer reset()
-
-	psLog.DisableOutput()
-	defer psLog.EnableOutput()
 
 	iface := &Iface{
 		Family:    V4AddrFamily,
@@ -106,13 +100,9 @@ func TestIfaceRepo_Register_2(t *testing.T) {
 }
 
 func TestUp_1(t *testing.T) {
+	ctrl, teardown := setup(t)
+	defer teardown()
 	defer reset()
-
-	psLog.DisableOutput()
-	defer psLog.EnableOutput()
-
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
 
 	m := ethernet.NewMockIDevice(ctrl)
 	m.EXPECT().Open().Return(psErr.OK)
@@ -133,13 +123,9 @@ func TestUp_1(t *testing.T) {
 
 // Fail when device is already opened.
 func TestUp_2(t *testing.T) {
+	ctrl, teardown := setup(t)
+	defer teardown()
 	defer reset()
-
-	psLog.DisableOutput()
-	defer psLog.EnableOutput()
-
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
 
 	m := ethernet.NewMockIDevice(ctrl)
 	m.EXPECT().IsUp().Return(true)
@@ -158,13 +144,9 @@ func TestUp_2(t *testing.T) {
 
 // Fail when it could not get device up.
 func TestUp_3(t *testing.T) {
+	ctrl, teardown := setup(t)
+	defer teardown()
 	defer reset()
-
-	psLog.DisableOutput()
-	defer psLog.EnableOutput()
-
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
 
 	m := ethernet.NewMockIDevice(ctrl)
 	m.EXPECT().Open().Return(psErr.Error)
