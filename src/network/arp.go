@@ -7,8 +7,11 @@ import (
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	"github.com/42milez/ProtocolStack/src/ethernet"
 	psLog "github.com/42milez/ProtocolStack/src/log"
+	"sync"
 	"time"
 )
+
+var arpTimerCh chan bool
 
 func ArpInputHandler(packet []byte, dev ethernet.IDevice) psErr.E {
 	if len(packet) < ArpPacketLen {
@@ -61,6 +64,28 @@ func ArpInputHandler(packet []byte, dev ethernet.IDevice) psErr.E {
 	}
 
 	return psErr.OK
+}
+
+func RunArpTimer(wg *sync.WaitGroup) {
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case isStop := <-arpTimerCh:
+				if isStop {
+					return
+				}
+			default:
+				arpTimer()
+				time.Sleep(time.Second)
+			}
+		}
+	}()
+}
+
+func StopArpTimer() {
+	arpTimerCh <- true
 }
 
 func arpReply(tha ethernet.EthAddr, tpa ArpProtoAddr, iface *Iface) psErr.E {
@@ -152,9 +177,10 @@ func arpResolve(iface *Iface, ip IP) (ethernet.EthAddr, ArpStatus) {
 
 func arpTimer() {
 	ret := cache.expire()
-	if len(ret) > 0 {
-		psLog.I("ARP cache entries were expired:")
+	if len(ret) == 0 {
+		return
 	}
+	psLog.I("ARP cache entries were expired:")
 	for i, v := range ret {
 		psLog.I(fmt.Sprintf("\t%d: %s", i+1, v))
 	}
@@ -175,11 +201,4 @@ func dumpArpPacket(packet *ArpPacket) {
 func init() {
 	cache = &ArpCache{}
 	cache.Init()
-
-	go func() {
-		for {
-			arpTimer()
-			time.Sleep(time.Second)
-		}
-	}()
 }
