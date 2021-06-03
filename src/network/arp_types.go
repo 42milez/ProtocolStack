@@ -46,12 +46,15 @@ func (p *ArpCache) Add(ha ethernet.EthAddr, pa ArpProtoAddr, state ArpCacheState
 		return psErr.Exist
 	}
 	entry = p.danglingEntry()
+
 	p.mtx.Lock()
 	defer p.mtx.Unlock()
+
 	entry.State = state
 	entry.CreatedAt = psTime.Time.Now()
 	entry.HA = ha
 	entry.PA = pa
+
 	return psErr.OK
 }
 
@@ -79,17 +82,28 @@ func (p *ArpCache) Renew(pa ArpProtoAddr, ha ethernet.EthAddr, state ArpCacheSta
 	if entry == nil {
 		return psErr.NotFound
 	}
+
 	p.mtx.Lock()
 	defer p.mtx.Unlock()
+
 	entry.State = state
 	entry.CreatedAt = psTime.Time.Now()
 	entry.HA = ha
+
 	return psErr.OK
+}
+
+func (p *ArpCache) clear(idx int) {
+	p.entries[idx].State = ArpCacheStateFree
+	p.entries[idx].CreatedAt = time.Unix(0, 0)
+	p.entries[idx].HA = ethernet.EthAddr{}
+	p.entries[idx].PA = ArpProtoAddr{}
 }
 
 func (p *ArpCache) danglingEntry() *ArpCacheEntry {
 	p.mtx.Lock()
 	defer p.mtx.Unlock()
+
 	oldest := p.entries[0]
 	for _, entry := range p.entries {
 		if entry.State == ArpCacheStateFree {
@@ -99,17 +113,35 @@ func (p *ArpCache) danglingEntry() *ArpCacheEntry {
 			oldest = entry
 		}
 	}
+
 	return oldest
+}
+
+func (p *ArpCache) expire() (invalidations []string) {
+	p.mtx.Lock()
+	defer p.mtx.Unlock()
+
+	now := time.Now()
+	for i, v := range p.entries {
+		if v.CreatedAt != time.Unix(0, 0) && now.Sub(v.CreatedAt) > arpCacheLifetime {
+			invalidations = append(invalidations, fmt.Sprintf("%s (%s)", v.PA, v.HA))
+			p.clear(i)
+		}
+	}
+
+	return
 }
 
 func (p *ArpCache) get(ip ArpProtoAddr) *ArpCacheEntry {
 	p.mtx.Lock()
 	defer p.mtx.Unlock()
+
 	for i, v := range p.entries {
 		if v.PA == ip {
 			return p.entries[i]
 		}
 	}
+
 	return nil
 }
 
@@ -146,6 +178,7 @@ type ArpPacket struct {
 	THA ethernet.EthAddr // target hardware address
 	TPA ArpProtoAddr     // target protocol address
 }
+
 type ArpProtoAddr [V4AddrLen]byte
 
 func (p ArpProtoAddr) String() string {
@@ -153,6 +186,8 @@ func (p ArpProtoAddr) String() string {
 }
 
 type ArpStatus int
+
+const arpCacheLifetime = 10 * time.Second
 
 // Hardware Types
 // https://www.iana.org/assignments/arp-parameters/arp-parameters.xhtml#arp-parameters-2
@@ -236,3 +271,5 @@ var arpOpCodes = map[ArpOpcode]string{
 	// 26-65534: Unassigned
 	// 65535: Reserved
 }
+
+var cache *ArpCache
