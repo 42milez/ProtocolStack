@@ -187,7 +187,7 @@ func (p ArpProtoAddr) String() string {
 
 type ArpStatus int
 
-const arpCacheLifetime = 10 * time.Second
+const arpCacheLifetime = 24 * time.Hour
 
 // Hardware Types
 // https://www.iana.org/assignments/arp-parameters/arp-parameters.xhtml#arp-parameters-2
