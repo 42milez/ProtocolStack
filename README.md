@@ -65,6 +65,8 @@ Note: `make` supports the commands below:
   - [x] v4
   - [ ] v6
 - [x] ICMP
+  - [ ] Echo Request
+  - [x] Echo Reply
 - [ ] TCP
 - [ ] UDP
 
