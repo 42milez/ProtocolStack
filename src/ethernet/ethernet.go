@@ -69,7 +69,7 @@ func ReadEthFrame(fd int, addr EthAddr) (*Packet, psErr.E) {
 		return nil, psErr.Error
 	}
 
-	psLog.I(fmt.Sprintf("Ethernet frame was received: %d bytes", flen))
+	psLog.I(fmt.Sprintf("Ethernet frame arrived: %d bytes", flen))
 
 	buf := bytes.NewBuffer(rxBuf)
 	hdr := EthHdr{}

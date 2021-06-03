@@ -49,8 +49,8 @@ func ArpInputHandler(packet []byte, dev ethernet.IDevice) psErr.E {
 			}
 		} else {
 			psLog.I("ARP entry was renewed")
-			psLog.I(fmt.Sprintf("\tSPA: %s", arpPacket.SPA))
-			psLog.I(fmt.Sprintf("\tSHA: %s", arpPacket.SHA))
+			psLog.I(fmt.Sprintf("\tspa: %s", arpPacket.SPA))
+			psLog.I(fmt.Sprintf("\tsha: %s", arpPacket.SHA))
 		}
 		if arpPacket.Opcode == ArpOpRequest {
 			if err := arpReply(arpPacket.SHA, arpPacket.SPA, iface); err != psErr.OK {
@@ -58,7 +58,7 @@ func ArpInputHandler(packet []byte, dev ethernet.IDevice) psErr.E {
 			}
 		}
 	} else {
-		psLog.I("Ignored ARP packet (It was sent to different address)")
+		psLog.I("ARP packet was ignored (It was sent to different address)")
 	}
 
 	return psErr.OK

@@ -81,7 +81,7 @@ func IpReceive(payload []byte, dev ethernet.IDevice) psErr.E {
 
 	if !iface.Unicast.EqualV4(hdr.Dst) {
 		if !iface.Broadcast.EqualV4(hdr.Dst) && V4Broadcast.EqualV4(hdr.Dst) {
-			psLog.I("Ignored IP packet (It was sent to different address)")
+			psLog.I("IP packet was ignored (It was sent to different address)")
 			return psErr.OK
 		}
 	}
