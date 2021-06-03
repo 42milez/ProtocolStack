@@ -83,7 +83,7 @@ go-clean:
 	@go clean -cache -testcache
 
 .PHONY: go-compile
-go-compile: go-clean go-mod go-vet go-build
+go-compile: go-mod go-vet go-build
 
 .PHONY: go-fmt
 go-fmt:

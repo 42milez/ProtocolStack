@@ -44,7 +44,7 @@ func ArpInputHandler(packet []byte, dev ethernet.IDevice) psErr.E {
 
 	if iface.Unicast.EqualV4(arpPacket.TPA) {
 		if err := cache.Renew(arpPacket.SPA, arpPacket.SHA, ArpCacheStateResolved); err == psErr.NotFound {
-			if err := cache.Add(arpPacket.SHA, arpPacket.SPA, ArpCacheStateResolved); err != psErr.Exist {
+			if err := cache.Add(arpPacket.SHA, arpPacket.SPA, ArpCacheStateResolved); err == psErr.Exist {
 				psLog.W(fmt.Sprintf("Cache entry already exists: %s", arpPacket.SPA))
 			}
 		} else {
