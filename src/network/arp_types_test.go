@@ -158,3 +158,27 @@ func TestArpCache_EthAddr_2(t *testing.T) {
 		t.Errorf("ArpCache.EthAddr() = %v, %t; want %v, %t", ethAddr, found, ha, true)
 	}
 }
+
+func TestArpHwType_String(t *testing.T) {
+	want := arpHwTypes[ArpHwTypeEthernet]
+	got := ArpHwTypeEthernet.String()
+	if got != want {
+		t.Errorf("ArpHwType.String() = %s; want %s", got, want)
+	}
+}
+
+func TestArpOpcode_String(t *testing.T) {
+	want := arpOpCodes[ArpOpRequest]
+	got := ArpOpRequest.String()
+	if got != want {
+		t.Errorf("ArpOpcode.String() = %s; want %s", got, want)
+	}
+}
+
+func TestArpProtoAddr_String(t *testing.T) {
+	want := "192.168.1.1"
+	got := ArpProtoAddr{192, 168, 1, 1}.String()
+	if got != want {
+		t.Errorf("ArpProtoAddr.String() = %s; want %s", got, want)
+	}
+}
