@@ -71,10 +71,10 @@ func TestEthFrameDump(t *testing.T) {
 	macSrc := Addr{0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f}
 	ethType := Type(0x0800)
 	want, _ := regexp.Compile(fmt.Sprintf(
-		"^.+ %s type:    0x%04x \\(%s\\).+ %s dst:     %s.+ %s src:     %s.+ %s payload: 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 .+ %s  15 16 17 18 19 1a 1b 1c 1d 1e 1f 20 21 22 23 24 25 26 27 28 $",
+		"^.+ %s type:    %s \\(0x%04x\\).+ %s dst:     %s.+ %s src:     %s.+ %s payload: 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 .+ %s  15 16 17 18 19 1a 1b 1c 1d 1e 1f 20 21 22 23 24 25 26 27 28 $",
 		regexpDatetime,
-		uint16(ethType),
 		ethType.String(),
+		uint16(ethType),
 		regexpDatetime,
 		macDst,
 		regexpDatetime,

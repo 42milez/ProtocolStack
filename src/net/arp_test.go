@@ -17,7 +17,7 @@ func TestArpInputHandler_1(t *testing.T) {
 	ctrl, teardown := SetupArpInputHandlerTest(t)
 	defer teardown()
 
-	ethAddr := [eth.AddrLen]byte{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}
+	ethAddr := eth.Addr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}
 	mockDev := eth.NewMockIDevice(ctrl)
 	mockDev.EXPECT().Addr().Return(ethAddr)
 	mockDev.EXPECT().Transmit(Any, Any, Any).Return(psErr.OK)
@@ -126,7 +126,7 @@ func TestArpInputHandler_5(t *testing.T) {
 	ctrl, teardown := SetupArpInputHandlerTest(t)
 	defer teardown()
 
-	ethAddr := [eth.AddrLen]byte{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}
+	ethAddr := eth.Addr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}
 	mockDev := eth.NewMockIDevice(ctrl)
 	mockDev.EXPECT().Addr().Return(ethAddr)
 	mockDev.EXPECT().Transmit(Any, Any, Any).Return(psErr.Error)
@@ -195,7 +195,7 @@ func TestRunArpTimer_1(t *testing.T) {
 	psTime.Time = m
 
 	pa := ArpProtoAddr{192, 168, 1, 1}
-	_ = ARP.cache.Create([eth.AddrLen]byte{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}, pa, ArpCacheStateResolved)
+	_ = ARP.cache.Create(eth.Addr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}, pa, ArpCacheStateResolved)
 
 	var wg sync.WaitGroup
 	ARP.RunTimer(&wg)
@@ -240,9 +240,9 @@ func (v ArpPacketBuilder) Default() *ArpPacket {
 			PAL:    V4AddrLen,
 			Opcode: ArpOpRequest,
 		},
-		SHA: [eth.AddrLen]byte{0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff},
+		SHA: eth.Addr{0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff},
 		SPA: ArpProtoAddr{192, 0, 2, 1},
-		THA: [eth.AddrLen]byte{0x11, 0x12, 0x13, 0x14, 0x15, 0x16},
+		THA: eth.Addr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16},
 		TPA: ArpProtoAddr{192, 0, 2, 2},
 	}
 }
