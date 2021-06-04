@@ -6,15 +6,6 @@ import (
 	"time"
 )
 
-// Address Resolution Protocol (ARP) Parameters
-// https://www.iana.org/assignments/arp-parameters/arp-parameters.xhtml
-
-// EtherType
-// https://en.wikipedia.org/wiki/EtherType#Examples
-
-// Notes:
-//  - Protocol Type is same as EtherType.
-
 const (
 	cacheStatusFree CacheStatus = iota
 	cacheStatusIncomplete
@@ -115,6 +106,14 @@ var arpOpCodes = map[ArpOpcode]string{
 }
 
 type CacheStatus uint8
+
+// Address Resolution Protocol (ARP) Parameters
+// https://www.iana.org/assignments/arp-parameters/arp-parameters.xhtml
+
+// EtherType
+// https://en.wikipedia.org/wiki/EtherType#Examples
+
+// Notes: Protocol Type is same as EtherType.
 
 type ArpHdr struct {
 	HT     ArpHwType // hardware type
