@@ -10,11 +10,11 @@ import (
 )
 
 const AddrLen = 6
-const EthFrameLenMax = 1514
-const EthFrameLenMin = 60
+const FrameLenMax = 1514
+const FrameLenMin = 60
 const EthHdrLen = 14
-const EthPayloadLenMax = EthFrameLenMax - EthHdrLen
-const EthPayloadLenMin = EthFrameLenMin - EthHdrLen
+const EthPayloadLenMax = FrameLenMax - EthHdrLen
+const EthPayloadLenMin = FrameLenMin - EthHdrLen
 const EthTypeArp EthType = 0x0806
 const EthTypeIpv4 EthType = 0x0800
 const EthTypeIpv6 EthType = 0x86dd
@@ -129,8 +129,8 @@ func WriteEthFrame(fd int, dst EthAddr, src EthAddr, typ EthType, payload []byte
 }
 
 func pad(buf *bytes.Buffer) psErr.E {
-	if flen := buf.Len(); flen < EthFrameLenMin {
-		padLen := EthFrameLenMin - flen
+	if flen := buf.Len(); flen < FrameLenMin {
+		padLen := FrameLenMin - flen
 		pad := make([]byte, padLen)
 		if err := binary.Write(buf, binary.BigEndian, &pad); err != nil {
 			return psErr.WriteToBufError
@@ -151,5 +151,5 @@ var ethTypes = map[EthType]string{
 var rxBuf []byte
 
 func init() {
-	rxBuf = make([]byte, EthFrameLenMax)
+	rxBuf = make([]byte, FrameLenMax)
 }
