@@ -127,7 +127,7 @@ func (p *arp) SendRequest(iface *Iface, ip IP) psErr.E {
 	psLog.I("Outgoing ARP packet")
 	dumpArpPacket(&packet)
 
-	if err := Transmit(eth.EthAddrBroadcast, payload, eth.ARP, iface); err != psErr.OK {
+	if err := Transmit(eth.Broadcast, payload, eth.ARP, iface); err != psErr.OK {
 		return psErr.Error
 	}
 

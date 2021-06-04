@@ -20,7 +20,7 @@ const IPv4 EthType = 0x0800
 const IPv6 EthType = 0x86dd
 
 var Any = EthAddr{0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
-var EthAddrBroadcast = EthAddr{0xff, 0xff, 0xff, 0xff, 0xff, 0xff}
+var Broadcast = EthAddr{0xff, 0xff, 0xff, 0xff, 0xff, 0xff}
 
 type EthAddr [AddrLen]byte
 
@@ -78,7 +78,7 @@ func ReadEthFrame(fd int, addr EthAddr) (*Packet, psErr.E) {
 	}
 
 	if !hdr.Dst.Equal(addr) {
-		if !hdr.Dst.Equal(EthAddrBroadcast) {
+		if !hdr.Dst.Equal(Broadcast) {
 			return nil, psErr.NoDataToRead
 		}
 	}

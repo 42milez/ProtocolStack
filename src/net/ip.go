@@ -254,7 +254,7 @@ func lookupEthAddr(iface *Iface, nextHop IP) (eth.EthAddr, psErr.E) {
 	var addr eth.EthAddr
 	if iface.Dev.Flag()&eth.DevFlagNeedArp != 0 {
 		if nextHop.Equal(iface.Broadcast) || nextHop.Equal(V4Broadcast) {
-			addr = eth.EthAddrBroadcast
+			addr = eth.Broadcast
 		} else {
 			var status ArpStatus
 			if addr, status = ARP.Resolve(iface, nextHop); status != ArpStatusComplete {
