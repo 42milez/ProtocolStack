@@ -16,7 +16,7 @@ const HdrLen = 14
 const PayloadLenMax = FrameLenMax - HdrLen
 const PayloadLenMin = FrameLenMin - HdrLen
 const ARP EthType = 0x0806
-const EthTypeIpv4 EthType = 0x0800
+const IPv4 EthType = 0x0800
 const EthTypeIpv6 EthType = 0x86dd
 
 var EthAddrAny = EthAddr{0x00, 0x00, 0x00, 0x00, 0x00, 0x00}

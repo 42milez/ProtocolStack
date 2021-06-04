@@ -13,7 +13,7 @@ func InputHandler(packet *eth.Packet) psErr.E {
 		if err := ARP.Receive(packet.Content, packet.Dev); err != psErr.OK {
 			return psErr.Error
 		}
-	case eth.EthTypeIpv4:
+	case eth.IPv4:
 		if err := IpReceive(packet.Content, packet.Dev); err != psErr.OK {
 			return psErr.Error
 		}

@@ -235,7 +235,7 @@ func (v ArpPacketBuilder) Default() *ArpPacket {
 	return &ArpPacket{
 		ArpHdr: ArpHdr{
 			HT:     ArpHwTypeEthernet,
-			PT:     eth.EthTypeIpv4,
+			PT:     eth.IPv4,
 			HAL:    eth.AddrLen,
 			PAL:    V4AddrLen,
 			Opcode: ArpOpRequest,

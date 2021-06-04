@@ -141,7 +141,7 @@ func IpSend(protoNum ProtocolNumber, payload []byte, dst IP, src IP) psErr.E {
 	}
 
 	// send ip packet
-	if err = Transmit(ethAddr, packet, eth.EthTypeIpv4, iface); err != psErr.OK {
+	if err = Transmit(ethAddr, packet, eth.IPv4, iface); err != psErr.OK {
 		return psErr.Error
 	}
 

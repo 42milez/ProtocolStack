@@ -38,7 +38,7 @@ func (p *arp) Receive(packet []byte, dev eth.IDevice) psErr.E {
 		return psErr.InvalidPacket
 	}
 
-	if arpPacket.PT != eth.EthTypeIpv4 || arpPacket.PAL != V4AddrLen {
+	if arpPacket.PT != eth.IPv4 || arpPacket.PAL != V4AddrLen {
 		psLog.E("Value of ARP packet header is invalid (Protocol)")
 		return psErr.InvalidPacket
 	}
@@ -76,7 +76,7 @@ func (p *arp) SendReply(tha [eth.AddrLen]byte, tpa ArpProtoAddr, iface *Iface) p
 	packet := ArpPacket{
 		ArpHdr: ArpHdr{
 			HT:     ArpHwTypeEthernet,
-			PT:     eth.EthTypeIpv4,
+			PT:     eth.IPv4,
 			HAL:    eth.AddrLen,
 			PAL:    V4AddrLen,
 			Opcode: ArpOpReply,
@@ -107,7 +107,7 @@ func (p *arp) SendRequest(iface *Iface, ip IP) psErr.E {
 	packet := ArpPacket{
 		ArpHdr: ArpHdr{
 			HT:     ArpHwTypeEthernet,
-			PT:     eth.EthTypeIpv4,
+			PT:     eth.IPv4,
 			HAL:    eth.AddrLen,
 			PAL:    V4AddrLen,
 			Opcode: ArpOpRequest,
