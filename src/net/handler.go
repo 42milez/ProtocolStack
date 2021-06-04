@@ -10,7 +10,7 @@ import (
 func InputHandler(packet *eth.Packet) psErr.E {
 	switch packet.Type {
 	case eth.EthTypeArp:
-		if err := ArpInputHandler(packet.Content, packet.Dev); err != psErr.OK {
+		if err := ARP.Receive(packet.Content, packet.Dev); err != psErr.OK {
 			return psErr.Error
 		}
 	case eth.EthTypeIpv4:

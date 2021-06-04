@@ -12,10 +12,13 @@ import (
 	"time"
 )
 
+var ARP *arp
 var ArpCondCh chan timer.Condition
 var ArpSigCh chan timer.Signal
 
-func ArpInputHandler(packet []byte, dev eth.IDevice) psErr.E {
+type arp struct{}
+
+func (v arp) Receive(packet []byte, dev eth.IDevice) psErr.E {
 	if len(packet) < ArpPacketLen {
 		psLog.E(fmt.Sprintf("ARP packet length is too short: %d bytes", len(packet)))
 		return psErr.InvalidPacket
@@ -55,7 +58,7 @@ func ArpInputHandler(packet []byte, dev eth.IDevice) psErr.E {
 			psLog.I(fmt.Sprintf("\tsha: %s", arpPacket.SHA))
 		}
 		if arpPacket.Opcode == ArpOpRequest {
-			if err := arpReply(arpPacket.SHA, arpPacket.SPA, iface); err != psErr.OK {
+			if err := v.SendReply(arpPacket.SHA, arpPacket.SPA, iface); err != psErr.OK {
 				return psErr.Error
 			}
 		}
@@ -66,32 +69,7 @@ func ArpInputHandler(packet []byte, dev eth.IDevice) psErr.E {
 	return psErr.OK
 }
 
-func RunArpTimer(wg *sync.WaitGroup) {
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		ArpCondCh <- timer.Condition{
-			CurrentState: timer.Running,
-		}
-		for {
-			select {
-			case signal := <-ArpSigCh:
-				if signal == timer.Stop {
-					return
-				}
-			default:
-				arpTimer()
-				time.Sleep(time.Second)
-			}
-		}
-	}()
-}
-
-func StopArpTimer() {
-	ArpSigCh <- timer.Stop
-}
-
-func arpReply(tha eth.EthAddr, tpa ArpProtoAddr, iface *Iface) psErr.E {
+func (v arp) SendReply(tha eth.EthAddr, tpa ArpProtoAddr, iface *Iface) psErr.E {
 	packet := ArpPacket{
 		ArpHdr: ArpHdr{
 			HT:     ArpHwTypeEthernet,
@@ -122,7 +100,7 @@ func arpReply(tha eth.EthAddr, tpa ArpProtoAddr, iface *Iface) psErr.E {
 	return psErr.OK
 }
 
-func arpRequest(iface *Iface, ip IP) psErr.E {
+func (v arp) SendRequest(iface *Iface, ip IP) psErr.E {
 	packet := ArpPacket{
 		ArpHdr: ArpHdr{
 			HT:     ArpHwTypeEthernet,
@@ -153,7 +131,7 @@ func arpRequest(iface *Iface, ip IP) psErr.E {
 	return psErr.OK
 }
 
-func arpResolve(iface *Iface, ip IP) (eth.EthAddr, ArpStatus) {
+func (v arp) Resolve(iface *Iface, ip IP) (eth.EthAddr, ArpStatus) {
 	if iface.Dev.Type() != eth.DevTypeEthernet {
 		psLog.E(fmt.Sprintf("Unsupported device type: %s", iface.Dev.Type()))
 		return eth.EthAddr{}, ArpStatusError
@@ -169,7 +147,7 @@ func arpResolve(iface *Iface, ip IP) (eth.EthAddr, ArpStatus) {
 		if err := cache.Add(eth.EthAddr{}, ip.ToV4(), ArpCacheStateIncomplete); err != psErr.OK {
 			return eth.EthAddr{}, ArpStatusError
 		}
-		if err := arpRequest(iface, ip); err != psErr.OK {
+		if err := v.SendRequest(iface, ip); err != psErr.OK {
 			return eth.EthAddr{}, ArpStatusError
 		}
 		return eth.EthAddr{}, ArpStatusIncomplete
@@ -178,15 +156,36 @@ func arpResolve(iface *Iface, ip IP) (eth.EthAddr, ArpStatus) {
 	return ethAddr, ArpStatusComplete
 }
 
-func arpTimer() {
-	ret := cache.expire()
-	if len(ret) == 0 {
-		return
-	}
-	psLog.I("ARP cache entries were expired:")
-	for i, v := range ret {
-		psLog.I(fmt.Sprintf("\t%d: %s", i+1, v))
-	}
+func (v arp) RunTimer(wg *sync.WaitGroup) {
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		ArpCondCh <-timer.Condition{
+			CurrentState: timer.Running,
+		}
+		for {
+			select {
+			case signal := <-ArpSigCh:
+				if signal == timer.Stop {
+					return
+				}
+			default:
+				ret := cache.expire()
+				if len(ret) == 0 {
+					return
+				}
+				psLog.I("ARP cache entries were expired:")
+				for i, v := range ret {
+					psLog.I(fmt.Sprintf("\t%d: %s", i+1, v))
+				}
+				time.Sleep(time.Second)
+			}
+		}
+	}()
+}
+
+func (v arp) StopTimer() {
+	ArpSigCh <-timer.Stop
 }
 
 func dumpArpPacket(packet *ArpPacket) {
@@ -202,6 +201,7 @@ func dumpArpPacket(packet *ArpPacket) {
 }
 
 func init() {
+	ARP = &arp{}
 	ArpCondCh = make(chan timer.Condition)
 	ArpSigCh = make(chan timer.Signal)
 }

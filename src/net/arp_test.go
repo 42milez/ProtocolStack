@@ -50,7 +50,7 @@ func TestArpInputHandler_1(t *testing.T) {
 	}
 
 	want := psErr.OK
-	got := ArpInputHandler(buf.Bytes(), dev)
+	got := ARP.Receive(buf.Bytes(), dev)
 	if got != want {
 		t.Errorf("ArpInputHandler() = %s; want %s", got, want)
 	}
@@ -65,7 +65,7 @@ func TestArpInputHandler_2(t *testing.T) {
 	dev := &eth.TapDevice{}
 
 	want := psErr.InvalidPacket
-	got := ArpInputHandler(packet, dev)
+	got := ARP.Receive(packet, dev)
 	if got != want {
 		t.Errorf("ArpInputHandler() = %s; want %s", got, want)
 	}
@@ -83,7 +83,7 @@ func TestArpInputHandler_3(t *testing.T) {
 	dev := &eth.TapDevice{}
 
 	want := psErr.InvalidPacket
-	got := ArpInputHandler(buf.Bytes(), dev)
+	got := ARP.Receive(buf.Bytes(), dev)
 	if got != want {
 		t.Errorf("ArpInputHandler() = %s; want %s", got, want)
 	}
@@ -94,7 +94,7 @@ func TestArpInputHandler_3(t *testing.T) {
 	dev = &eth.TapDevice{}
 
 	want = psErr.InvalidPacket
-	got = ArpInputHandler(buf.Bytes(), dev)
+	got = ARP.Receive(buf.Bytes(), dev)
 	if got != want {
 		t.Errorf("ArpInputHandler() = %s; want %s", got, want)
 	}
@@ -115,7 +115,7 @@ func TestArpInputHandler_4(t *testing.T) {
 	dev := &eth.TapDevice{}
 
 	want := psErr.InterfaceNotFound
-	got := ArpInputHandler(buf.Bytes(), dev)
+	got := ARP.Receive(buf.Bytes(), dev)
 	if got != want {
 		t.Errorf("ArpInputHandler() = %s; want %s", got, want)
 	}
@@ -147,7 +147,7 @@ func TestArpInputHandler_5(t *testing.T) {
 	dev := &eth.TapDevice{}
 
 	want := psErr.Error
-	got := ArpInputHandler(buf.Bytes(), dev)
+	got := ARP.Receive(buf.Bytes(), dev)
 	if got != want {
 		t.Errorf("ArpInputHandler() = %s; want %s", got, want)
 	}
@@ -178,7 +178,7 @@ func TestArpInputHandler_6(t *testing.T) {
 	}
 
 	want := psErr.OK
-	got := ArpInputHandler(buf.Bytes(), dev)
+	got := ARP.Receive(buf.Bytes(), dev)
 	if got != want {
 		t.Errorf("ArpInputHandler() = %s; want %s", got, want)
 	}
@@ -198,9 +198,9 @@ func TestRunArpTimer_1(t *testing.T) {
 	_ = cache.Add(eth.EthAddr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}, pa, ArpCacheStateResolved)
 
 	var wg sync.WaitGroup
-	RunArpTimer(&wg)
+	ARP.RunTimer(&wg)
 	<-ArpCondCh
-	StopArpTimer()
+	ARP.StopTimer()
 	wg.Wait()
 
 	_, got := cache.EthAddr(pa)
@@ -215,9 +215,9 @@ func TestRunArpTimer_2(t *testing.T) {
 	defer cache.Init()
 
 	var wg sync.WaitGroup
-	RunArpTimer(&wg)
+	ARP.RunTimer(&wg)
 	<-ArpCondCh
-	StopArpTimer()
+	ARP.StopTimer()
 	wg.Wait()
 
 	_, got := cache.EthAddr(ArpProtoAddr{192, 168, 0, 1})

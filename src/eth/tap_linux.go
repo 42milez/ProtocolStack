@@ -138,7 +138,7 @@ func (p *TapDevice) Poll(isTerminated bool) psErr.E {
 			}
 		} else {
 			packet.Dev = p
-			RxCh <- packet
+			RxCh <-packet
 		}
 	}
 

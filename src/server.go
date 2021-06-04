@@ -31,9 +31,9 @@ func handleSignal(sigCh <-chan os.Signal, wg *sync.WaitGroup) {
 		defer wg.Done()
 		sig := <-sigCh
 		psLog.I(fmt.Sprintf("Signal: %s", sig))
-		ethSigCh <- syscall.SIGUSR1
-		mainSigCh <- syscall.SIGUSR1
-		netSigCh <- syscall.SIGUSR1
+		ethSigCh <-syscall.SIGUSR1
+		mainSigCh <-syscall.SIGUSR1
+		netSigCh <-syscall.SIGUSR1
 	}()
 }
 
