@@ -12,9 +12,9 @@ import (
 const AddrLen = 6
 const FrameLenMax = 1514
 const FrameLenMin = 60
-const EthHdrLen = 14
-const EthPayloadLenMax = FrameLenMax - EthHdrLen
-const EthPayloadLenMin = FrameLenMin - EthHdrLen
+const HdrLen = 14
+const EthPayloadLenMax = FrameLenMax - HdrLen
+const EthPayloadLenMin = FrameLenMin - HdrLen
 const EthTypeArp EthType = 0x0806
 const EthTypeIpv4 EthType = 0x0800
 const EthTypeIpv6 EthType = 0x86dd
@@ -64,7 +64,7 @@ func ReadEthFrame(fd int, addr EthAddr) (*Packet, psErr.E) {
 		return nil, psErr.Error
 	}
 
-	if flen < EthHdrLen {
+	if flen < HdrLen {
 		psLog.E(fmt.Sprintf("Ethernet header length is too short: %d bytes", flen))
 		return nil, psErr.Error
 	}
