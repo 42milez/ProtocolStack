@@ -187,7 +187,7 @@ func (mr *MockIDeviceMockRecorder) Priv() *gomock.Call {
 }
 
 // Transmit mocks base method.
-func (m *MockIDevice) Transmit(dst Addr, payload []byte, typ EthType) error.E {
+func (m *MockIDevice) Transmit(dst Addr, payload []byte, typ Type) error.E {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Transmit", dst, payload, typ)
 	ret0, _ := ret[0].(error.E)

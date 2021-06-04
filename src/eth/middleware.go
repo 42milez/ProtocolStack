@@ -7,7 +7,7 @@ const RxChBufSize = 10
 const TxChBufSize = 10
 
 type Packet struct {
-	Type    EthType
+	Type    Type
 	Content []byte
 	Dev     IDevice
 }

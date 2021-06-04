@@ -88,7 +88,7 @@ func TestArpInputHandler_3(t *testing.T) {
 		t.Errorf("ArpInputHandler() = %s; want %s", got, want)
 	}
 
-	packet = Builder.CustomPT(eth.EthType(0xffff))
+	packet = Builder.CustomPT(eth.Type(0xffff))
 	buf = new(bytes.Buffer)
 	_ = binary.Write(buf, binary.BigEndian, packet)
 	dev = &eth.TapDevice{}
@@ -253,7 +253,7 @@ func (v ArpPacketBuilder) CustomHT(ht ArpHwType) (packet *ArpPacket) {
 	return
 }
 
-func (v ArpPacketBuilder) CustomPT(pt eth.EthType) (packet *ArpPacket) {
+func (v ArpPacketBuilder) CustomPT(pt eth.Type) (packet *ArpPacket) {
 	packet = v.Default()
 	packet.PT = pt
 	return

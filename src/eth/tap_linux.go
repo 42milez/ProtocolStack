@@ -145,7 +145,7 @@ func (p *TapDevice) Poll(isTerminated bool) psErr.E {
 	return psErr.OK
 }
 
-func (p *TapDevice) Transmit(dst Addr, payload []byte, typ EthType) psErr.E {
+func (p *TapDevice) Transmit(dst Addr, payload []byte, typ Type) psErr.E {
 	return WriteEthFrame(p.Priv_.FD, dst, p.Addr_, typ, payload)
 }
 

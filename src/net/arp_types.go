@@ -118,10 +118,10 @@ var arpOpCodes = map[ArpOpcode]string{
 type ArpCacheStatus uint8
 
 type ArpHdr struct {
-	HT     ArpHwType   // hardware type
-	PT     eth.EthType // protocol type
-	HAL    uint8       // hardware address length
-	PAL    uint8       // protocol address length
+	HT     ArpHwType // hardware type
+	PT     eth.Type  // protocol type
+	HAL    uint8     // hardware address length
+	PAL    uint8     // protocol address length
 	Opcode ArpOpcode
 }
 

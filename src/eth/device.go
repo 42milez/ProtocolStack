@@ -28,7 +28,7 @@ type IDevice interface {
 	Open() psErr.E
 	Close() psErr.E
 	Poll(terminate bool) psErr.E
-	Transmit(dst Addr, payload []byte, typ EthType) psErr.E
+	Transmit(dst Addr, payload []byte, typ Type) psErr.E
 	Up()
 	Down()
 	Equal(dev IDevice) bool

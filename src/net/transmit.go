@@ -7,7 +7,7 @@ import (
 	psLog "github.com/42milez/ProtocolStack/src/log"
 )
 
-func Transmit(dst eth.Addr, payload []byte, typ eth.EthType, iface *Iface) psErr.E {
+func Transmit(dst eth.Addr, payload []byte, typ eth.Type, iface *Iface) psErr.E {
 	if !iface.Dev.IsUp() {
 		psLog.E(fmt.Sprintf("Device %s is down", iface.Dev.Name()))
 		return psErr.DeviceNotOpened
