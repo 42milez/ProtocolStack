@@ -191,7 +191,7 @@ func (p *arp) StopTimer() {
 }
 
 type arpCacheEntry struct {
-	State     ArpCacheState
+	Status    ArpCacheStatus
 	CreatedAt time.Time
 	HA        eth.EthAddr
 	PA        ArpProtoAddr
@@ -205,7 +205,7 @@ type arpCache struct {
 func (p *arpCache) Init() {
 	for i := range p.entries {
 		p.entries[i] = &arpCacheEntry{
-			State:     ArpCacheStateFree,
+			Status:    ArpCacheStateFree,
 			CreatedAt: time.Unix(0, 0),
 			HA:        eth.EthAddr{},
 			PA:        ArpProtoAddr{},
@@ -213,7 +213,7 @@ func (p *arpCache) Init() {
 	}
 }
 
-func (p *arpCache) Create(ha eth.EthAddr, pa ArpProtoAddr, state ArpCacheState) psErr.E {
+func (p *arpCache) Create(ha eth.EthAddr, pa ArpProtoAddr, state ArpCacheStatus) psErr.E {
 	var entry *arpCacheEntry
 	if entry = p.GetEntry(pa); entry != nil {
 		return psErr.Exist
@@ -223,7 +223,7 @@ func (p *arpCache) Create(ha eth.EthAddr, pa ArpProtoAddr, state ArpCacheState) 
 	p.mtx.Lock()
 	defer p.mtx.Unlock()
 
-	entry.State = state
+	entry.Status = state
 	entry.CreatedAt = psTime.Time.Now()
 	entry.HA = ha
 	entry.PA = pa
@@ -231,7 +231,7 @@ func (p *arpCache) Create(ha eth.EthAddr, pa ArpProtoAddr, state ArpCacheState) 
 	return psErr.OK
 }
 
-func (p *arpCache) Renew(pa ArpProtoAddr, ha eth.EthAddr, state ArpCacheState) psErr.E {
+func (p *arpCache) Renew(pa ArpProtoAddr, ha eth.EthAddr, state ArpCacheStatus) psErr.E {
 	entry := p.GetEntry(pa)
 	if entry == nil {
 		return psErr.NotFound
@@ -240,7 +240,7 @@ func (p *arpCache) Renew(pa ArpProtoAddr, ha eth.EthAddr, state ArpCacheState) p
 	p.mtx.Lock()
 	defer p.mtx.Unlock()
 
-	entry.State = state
+	entry.Status = state
 	entry.CreatedAt = psTime.Time.Now()
 	entry.HA = ha
 
@@ -266,7 +266,7 @@ func (p *arpCache) GetReusableEntry() *arpCacheEntry {
 
 	oldest := p.entries[0]
 	for _, entry := range p.entries {
-		if entry.State == ArpCacheStateFree {
+		if entry.Status == ArpCacheStateFree {
 			return entry
 		}
 		if oldest.CreatedAt.After(entry.CreatedAt) {
@@ -278,7 +278,7 @@ func (p *arpCache) GetReusableEntry() *arpCacheEntry {
 }
 
 func (p *arpCache) Clear(idx int) {
-	p.entries[idx].State = ArpCacheStateFree
+	p.entries[idx].Status = ArpCacheStateFree
 	p.entries[idx].CreatedAt = time.Unix(0, 0)
 	p.entries[idx].HA = eth.EthAddr{}
 	p.entries[idx].PA = ArpProtoAddr{}

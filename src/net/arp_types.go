@@ -17,7 +17,7 @@ import (
 
 const ArpCacheSize = 32 // number of cache entries
 const (
-	ArpCacheStateFree ArpCacheState = iota
+	ArpCacheStateFree ArpCacheStatus = iota
 	ArpCacheStateIncomplete
 	ArpCacheStateResolved
 	ArpCacheStateStatic
@@ -115,7 +115,7 @@ var arpOpCodes = map[ArpOpcode]string{
 	// 65535: Reserved
 }
 
-type ArpCacheState uint8
+type ArpCacheStatus uint8
 
 type ArpHdr struct {
 	HT     ArpHwType   // hardware type

@@ -85,7 +85,7 @@ func TestArpCache_Renew_1(t *testing.T) {
 	_ = ARP.cache.Renew(pa, ha2, state)
 
 	want := &arpCacheEntry{
-		State:     ArpCacheStateResolved,
+		Status:    ArpCacheStateResolved,
 		CreatedAt: createdAt,
 		HA:        eth.EthAddr{0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f},
 		PA:        ArpProtoAddr{192, 168, 1, 1},
