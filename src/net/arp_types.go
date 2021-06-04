@@ -2,10 +2,7 @@ package net
 
 import (
 	"fmt"
-	psErr "github.com/42milez/ProtocolStack/src/error"
 	"github.com/42milez/ProtocolStack/src/eth"
-	psTime "github.com/42milez/ProtocolStack/src/time"
-	"sync"
 	"time"
 )
 
@@ -117,124 +114,7 @@ var arpOpCodes = map[ArpOpcode]string{
 	// 26-65534: Unassigned
 	// 65535: Reserved
 }
-var cache *ArpCache
 
-type ArpCache struct {
-	entries [ArpCacheSize]*ArpCacheEntry
-	mtx     sync.Mutex
-}
-
-func (p *ArpCache) Add(ha eth.EthAddr, pa ArpProtoAddr, state ArpCacheState) psErr.E {
-	var entry *ArpCacheEntry
-	if entry = p.get(pa); entry != nil {
-		return psErr.Exist
-	}
-	entry = p.danglingEntry()
-
-	p.mtx.Lock()
-	defer p.mtx.Unlock()
-
-	entry.State = state
-	entry.CreatedAt = psTime.Time.Now()
-	entry.HA = ha
-	entry.PA = pa
-
-	return psErr.OK
-}
-
-func (p *ArpCache) EthAddr(pa ArpProtoAddr) (eth.EthAddr, bool) {
-	if entry := p.get(pa); entry != nil {
-		return entry.HA, true
-	} else {
-		return eth.EthAddr{}, false
-	}
-}
-
-func (p *ArpCache) Init() {
-	for i := range p.entries {
-		p.entries[i] = &ArpCacheEntry{
-			State:     ArpCacheStateFree,
-			CreatedAt: time.Unix(0, 0),
-			HA:        eth.EthAddr{},
-			PA:        ArpProtoAddr{},
-		}
-	}
-}
-
-func (p *ArpCache) Renew(pa ArpProtoAddr, ha eth.EthAddr, state ArpCacheState) psErr.E {
-	entry := p.get(pa)
-	if entry == nil {
-		return psErr.NotFound
-	}
-
-	p.mtx.Lock()
-	defer p.mtx.Unlock()
-
-	entry.State = state
-	entry.CreatedAt = psTime.Time.Now()
-	entry.HA = ha
-
-	return psErr.OK
-}
-
-func (p *ArpCache) clear(idx int) {
-	p.entries[idx].State = ArpCacheStateFree
-	p.entries[idx].CreatedAt = time.Unix(0, 0)
-	p.entries[idx].HA = eth.EthAddr{}
-	p.entries[idx].PA = ArpProtoAddr{}
-}
-
-func (p *ArpCache) danglingEntry() *ArpCacheEntry {
-	p.mtx.Lock()
-	defer p.mtx.Unlock()
-
-	oldest := p.entries[0]
-	for _, entry := range p.entries {
-		if entry.State == ArpCacheStateFree {
-			return entry
-		}
-		if oldest.CreatedAt.After(entry.CreatedAt) {
-			oldest = entry
-		}
-	}
-
-	return oldest
-}
-
-func (p *ArpCache) expire() (invalidations []string) {
-	p.mtx.Lock()
-	defer p.mtx.Unlock()
-
-	now := time.Now()
-	for i, v := range p.entries {
-		if v.CreatedAt != time.Unix(0, 0) && now.Sub(v.CreatedAt) > arpCacheLifetime {
-			invalidations = append(invalidations, fmt.Sprintf("%s (%s)", v.PA, v.HA))
-			p.clear(i)
-		}
-	}
-
-	return
-}
-
-func (p *ArpCache) get(ip ArpProtoAddr) *ArpCacheEntry {
-	p.mtx.Lock()
-	defer p.mtx.Unlock()
-
-	for i, v := range p.entries {
-		if v.PA == ip {
-			return p.entries[i]
-		}
-	}
-
-	return nil
-}
-
-type ArpCacheEntry struct {
-	State     ArpCacheState
-	CreatedAt time.Time
-	HA        eth.EthAddr
-	PA        ArpProtoAddr
-}
 type ArpCacheState uint8
 
 type ArpHdr struct {
@@ -272,8 +152,3 @@ func (p ArpProtoAddr) String() string {
 }
 
 type ArpStatus int
-
-func init() {
-	cache = &ArpCache{}
-	cache.Init()
-}

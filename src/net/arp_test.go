@@ -187,7 +187,7 @@ func TestArpInputHandler_6(t *testing.T) {
 func TestRunArpTimer_1(t *testing.T) {
 	ctrl, teardown := SetupRunArpTimerTest(t)
 	defer teardown()
-	defer cache.Init()
+	defer ARP.cache.Init()
 
 	createdAt, _ := time.Parse(time.RFC3339, "2021-01-01T00:00:00Z")
 	m := psTime.NewMockITime(ctrl)
@@ -195,7 +195,7 @@ func TestRunArpTimer_1(t *testing.T) {
 	psTime.Time = m
 
 	pa := ArpProtoAddr{192, 168, 1, 1}
-	_ = cache.Add(eth.EthAddr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}, pa, ArpCacheStateResolved)
+	_ = ARP.cache.Create(eth.EthAddr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}, pa, ArpCacheStateResolved)
 
 	var wg sync.WaitGroup
 	ARP.RunTimer(&wg)
@@ -203,7 +203,7 @@ func TestRunArpTimer_1(t *testing.T) {
 	ARP.StopTimer()
 	wg.Wait()
 
-	_, got := cache.EthAddr(pa)
+	_, got := ARP.cache.EthAddr(pa)
 	if got {
 		t.Errorf("ARP cache is not expired")
 	}
@@ -212,7 +212,7 @@ func TestRunArpTimer_1(t *testing.T) {
 func TestRunArpTimer_2(t *testing.T) {
 	_, teardown := SetupRunArpTimerTest(t)
 	defer teardown()
-	defer cache.Init()
+	defer ARP.cache.Init()
 
 	var wg sync.WaitGroup
 	ARP.RunTimer(&wg)
@@ -220,7 +220,7 @@ func TestRunArpTimer_2(t *testing.T) {
 	ARP.StopTimer()
 	wg.Wait()
 
-	_, got := cache.EthAddr(ArpProtoAddr{192, 168, 0, 1})
+	_, got := ARP.cache.EthAddr(ArpProtoAddr{192, 168, 0, 1})
 	if got {
 		t.Errorf("ARP cache exists")
 	}

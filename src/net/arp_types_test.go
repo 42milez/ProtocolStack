@@ -36,30 +36,30 @@ func setupArpTypesTest(t *testing.T) (ctrl *gomock.Controller, teardown func()) 
 }
 
 func TestArpCache_Add_1(t *testing.T) {
-	defer cache.Init()
+	defer ARP.cache.Init()
 
 	ha := eth.EthAddr{0x11, 0x22, 0x33, 0x44, 0x55, 0x66}
 	pa := ArpProtoAddr{192, 168, 1, 1}
 	state := ArpCacheStateResolved
 
 	want := psErr.OK
-	got := cache.Add(ha, pa, state)
+	got := ARP.cache.Create(ha, pa, state)
 	if got != want {
 		t.Errorf("ArpCache.Add() = %s; want %s", got, want)
 	}
 }
 
 func TestArpCache_Add_2(t *testing.T) {
-	defer cache.Init()
+	defer ARP.cache.Init()
 
 	ha := eth.EthAddr{0x11, 0x22, 0x33, 0x44, 0x55, 0x66}
 	pa := ArpProtoAddr{192, 168, 1, 1}
 	state := ArpCacheStateResolved
 
-	_ = cache.Add(ha, pa, state)
+	_ = ARP.cache.Create(ha, pa, state)
 
 	want := psErr.Exist
-	got := cache.Add(ha, pa, state)
+	got := ARP.cache.Create(ha, pa, state)
 	if got != want {
 		t.Errorf("ArpCache.Add() = %s; want %s", got, want)
 	}
@@ -68,7 +68,7 @@ func TestArpCache_Add_2(t *testing.T) {
 func TestArpCache_Add_3(t *testing.T) {
 	ctrl, teardown := setupArpTypesTest(t)
 	defer teardown()
-	defer cache.Init()
+	defer ARP.cache.Init()
 
 	want := psErr.OK
 	var got psErr.E
@@ -81,7 +81,7 @@ func TestArpCache_Add_3(t *testing.T) {
 		state := ArpCacheStateResolved
 		createdAt, _ := time.Parse(time.RFC3339, fmt.Sprintf("2021-01-01T00:%02d:00Z", i))
 		m.EXPECT().Now().Return(createdAt)
-		got = cache.Add(ha, pa, state)
+		got = ARP.cache.Create(ha, pa, state)
 	}
 
 	if got != want {
@@ -92,7 +92,7 @@ func TestArpCache_Add_3(t *testing.T) {
 func TestArpCache_Renew_1(t *testing.T) {
 	ctrl, teardown := setupArpTypesTest(t)
 	defer teardown()
-	defer cache.Init()
+	defer ARP.cache.Init()
 
 	createdAt, _ := time.Parse(time.RFC3339, "2021-01-01T00:00:00Z")
 	m := psTime.NewMockITime(ctrl)
@@ -102,34 +102,34 @@ func TestArpCache_Renew_1(t *testing.T) {
 	ha1 := eth.EthAddr{0x11, 0x22, 0x33, 0x44, 0x55, 0x66}
 	pa := ArpProtoAddr{192, 168, 1, 1}
 	state := ArpCacheStateResolved
-	_ = cache.Add(ha1, pa, state)
+	_ = ARP.cache.Create(ha1, pa, state)
 
 	ha2 := eth.EthAddr{0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f}
-	_ = cache.Renew(pa, ha2, state)
+	_ = ARP.cache.Renew(pa, ha2, state)
 
-	want := &ArpCacheEntry{
+	want := &arpCacheEntry{
 		State:     ArpCacheStateResolved,
 		CreatedAt: createdAt,
 		HA:        eth.EthAddr{0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f},
 		PA:        ArpProtoAddr{192, 168, 1, 1},
 	}
 
-	got := cache.get(pa)
+	got := ARP.cache.get(pa)
 	if d := cmp.Diff(got, want); d != "" {
 		t.Errorf("Renew() differs: (-got +want)\n%s", d)
 	}
 }
 
 func TestArpCache_Renew_2(t *testing.T) {
-	defer cache.Init()
+	defer ARP.cache.Init()
 
 	ha1 := eth.EthAddr{0x11, 0x22, 0x33, 0x44, 0x55, 0x66}
 	pa := ArpProtoAddr{192, 168, 1, 1}
 	state := ArpCacheStateResolved
-	_ = cache.Add(ha1, pa, state)
+	_ = ARP.cache.Create(ha1, pa, state)
 
 	want := psErr.NotFound
-	got := cache.Renew(ArpProtoAddr{192, 0, 2, 1}, eth.EthAddr{}, ArpCacheStateResolved)
+	got := ARP.cache.Renew(ArpProtoAddr{192, 0, 2, 1}, eth.EthAddr{}, ArpCacheStateResolved)
 
 	if got != want {
 		t.Errorf("Renew() = %s; want %s", got, want)
@@ -137,14 +137,14 @@ func TestArpCache_Renew_2(t *testing.T) {
 }
 
 func TestArpCache_EthAddr_1(t *testing.T) {
-	defer cache.Init()
+	defer ARP.cache.Init()
 
 	ha := eth.EthAddr{0x11, 0x22, 0x33, 0x44, 0x55, 0x66}
 	pa := ArpProtoAddr{192, 168, 1, 1}
 	state := ArpCacheStateResolved
-	_ = cache.Add(ha, pa, state)
+	_ = ARP.cache.Create(ha, pa, state)
 
-	ethAddr, found := cache.EthAddr(pa)
+	ethAddr, found := ARP.cache.EthAddr(pa)
 
 	if ethAddr != ha || !found {
 		t.Errorf("ArpCache.EthAddr() = %v, %t; want %v, %t", ethAddr, found, ha, true)
@@ -152,14 +152,14 @@ func TestArpCache_EthAddr_1(t *testing.T) {
 }
 
 func TestArpCache_EthAddr_2(t *testing.T) {
-	defer cache.Init()
+	defer ARP.cache.Init()
 
 	ha := eth.EthAddr{0x11, 0x22, 0x33, 0x44, 0x55, 0x66}
 	pa := ArpProtoAddr{192, 168, 1, 1}
 	state := ArpCacheStateResolved
-	_ = cache.Add(ha, pa, state)
+	_ = ARP.cache.Create(ha, pa, state)
 
-	ethAddr, found := cache.EthAddr(ArpProtoAddr{192, 0, 2, 1})
+	ethAddr, found := ARP.cache.EthAddr(ArpProtoAddr{192, 0, 2, 1})
 
 	if !isEthAddrAllZero(ethAddr) || found {
 		t.Errorf("ArpCache.EthAddr() = %v, %t; want %v, %t", ethAddr, found, ha, true)
