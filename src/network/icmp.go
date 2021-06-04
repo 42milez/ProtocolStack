@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	psErr "github.com/42milez/ProtocolStack/src/error"
-	"github.com/42milez/ProtocolStack/src/ethernet"
+	"github.com/42milez/ProtocolStack/src/eth"
 	psLog "github.com/42milez/ProtocolStack/src/log"
 )
 
@@ -13,7 +13,7 @@ const IcmpHdrLen = 8 // byte
 const IcmpTypeEchoReply = 0x00
 const IcmpTypeEcho = 0x08
 
-func IcmpReceive(payload []byte, dst [V4AddrLen]byte, src [V4AddrLen]byte, dev ethernet.IDevice) psErr.E {
+func IcmpReceive(payload []byte, dst [V4AddrLen]byte, src [V4AddrLen]byte, dev eth.IDevice) psErr.E {
 	if len(payload) < IcmpHdrLen {
 		psLog.E(fmt.Sprintf("ICMP header length is too short: %d bytes", len(payload)))
 		return psErr.InvalidPacket

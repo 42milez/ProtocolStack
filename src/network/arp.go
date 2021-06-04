@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	psErr "github.com/42milez/ProtocolStack/src/error"
-	"github.com/42milez/ProtocolStack/src/ethernet"
+	"github.com/42milez/ProtocolStack/src/eth"
 	psLog "github.com/42milez/ProtocolStack/src/log"
 	"github.com/42milez/ProtocolStack/src/timer"
 	"sync"
@@ -15,7 +15,7 @@ import (
 var ArpCondCh chan timer.Condition
 var ArpSigCh chan timer.Signal
 
-func ArpInputHandler(packet []byte, dev ethernet.IDevice) psErr.E {
+func ArpInputHandler(packet []byte, dev eth.IDevice) psErr.E {
 	if len(packet) < ArpPacketLen {
 		psLog.E(fmt.Sprintf("ARP packet length is too short: %d bytes", len(packet)))
 		return psErr.InvalidPacket
@@ -27,12 +27,12 @@ func ArpInputHandler(packet []byte, dev ethernet.IDevice) psErr.E {
 		return psErr.ReadFromBufError
 	}
 
-	if arpPacket.HT != ArpHwTypeEthernet || arpPacket.HAL != ethernet.EthAddrLen {
+	if arpPacket.HT != ArpHwTypeEthernet || arpPacket.HAL != eth.EthAddrLen {
 		psLog.E("Value of ARP packet header is invalid (Hardware)")
 		return psErr.InvalidPacket
 	}
 
-	if arpPacket.PT != ethernet.EthTypeIpv4 || arpPacket.PAL != V4AddrLen {
+	if arpPacket.PT != eth.EthTypeIpv4 || arpPacket.PAL != V4AddrLen {
 		psLog.E("Value of ARP packet header is invalid (Protocol)")
 		return psErr.InvalidPacket
 	}
@@ -91,12 +91,12 @@ func StopArpTimer() {
 	ArpSigCh <- timer.Stop
 }
 
-func arpReply(tha ethernet.EthAddr, tpa ArpProtoAddr, iface *Iface) psErr.E {
+func arpReply(tha eth.EthAddr, tpa ArpProtoAddr, iface *Iface) psErr.E {
 	packet := ArpPacket{
 		ArpHdr: ArpHdr{
 			HT:     ArpHwTypeEthernet,
-			PT:     ethernet.EthTypeIpv4,
-			HAL:    ethernet.EthAddrLen,
+			PT:     eth.EthTypeIpv4,
+			HAL:    eth.EthAddrLen,
 			PAL:    V4AddrLen,
 			Opcode: ArpOpReply,
 		},
@@ -115,7 +115,7 @@ func arpReply(tha ethernet.EthAddr, tpa ArpProtoAddr, iface *Iface) psErr.E {
 		return psErr.WriteToBufError
 	}
 
-	if err := iface.Dev.Transmit(tha, buf.Bytes(), ethernet.EthTypeArp); err != psErr.OK {
+	if err := iface.Dev.Transmit(tha, buf.Bytes(), eth.EthTypeArp); err != psErr.OK {
 		return psErr.Error
 	}
 
@@ -126,14 +126,14 @@ func arpRequest(iface *Iface, ip IP) psErr.E {
 	packet := ArpPacket{
 		ArpHdr: ArpHdr{
 			HT:     ArpHwTypeEthernet,
-			PT:     ethernet.EthTypeIpv4,
-			HAL:    ethernet.EthAddrLen,
+			PT:     eth.EthTypeIpv4,
+			HAL:    eth.EthAddrLen,
 			PAL:    V4AddrLen,
 			Opcode: ArpOpRequest,
 		},
 		SHA: iface.Dev.Addr(),
 		SPA: iface.Unicast.ToV4(),
-		THA: ethernet.EthAddr{},
+		THA: eth.EthAddr{},
 		TPA: ip.ToV4(),
 	}
 
@@ -146,33 +146,33 @@ func arpRequest(iface *Iface, ip IP) psErr.E {
 	psLog.I("Outgoing ARP packet")
 	dumpArpPacket(&packet)
 
-	if err := Transmit(ethernet.EthAddrBroadcast, payload, ethernet.EthTypeArp, iface); err != psErr.OK {
+	if err := Transmit(eth.EthAddrBroadcast, payload, eth.EthTypeArp, iface); err != psErr.OK {
 		return psErr.Error
 	}
 
 	return psErr.OK
 }
 
-func arpResolve(iface *Iface, ip IP) (ethernet.EthAddr, ArpStatus) {
-	if iface.Dev.Type() != ethernet.DevTypeEthernet {
+func arpResolve(iface *Iface, ip IP) (eth.EthAddr, ArpStatus) {
+	if iface.Dev.Type() != eth.DevTypeEthernet {
 		psLog.E(fmt.Sprintf("Unsupported device type: %s", iface.Dev.Type()))
-		return ethernet.EthAddr{}, ArpStatusError
+		return eth.EthAddr{}, ArpStatusError
 	}
 
 	if iface.Family != V4AddrFamily {
 		psLog.E(fmt.Sprintf("Unsupported address family: %s", iface.Family))
-		return ethernet.EthAddr{}, ArpStatusError
+		return eth.EthAddr{}, ArpStatusError
 	}
 
 	ethAddr, found := cache.EthAddr(ip.ToV4())
 	if !found {
-		if err := cache.Add(ethernet.EthAddr{}, ip.ToV4(), ArpCacheStateIncomplete); err != psErr.OK {
-			return ethernet.EthAddr{}, ArpStatusError
+		if err := cache.Add(eth.EthAddr{}, ip.ToV4(), ArpCacheStateIncomplete); err != psErr.OK {
+			return eth.EthAddr{}, ArpStatusError
 		}
 		if err := arpRequest(iface, ip); err != psErr.OK {
-			return ethernet.EthAddr{}, ArpStatusError
+			return eth.EthAddr{}, ArpStatusError
 		}
-		return ethernet.EthAddr{}, ArpStatusIncomplete
+		return eth.EthAddr{}, ArpStatusIncomplete
 	}
 
 	return ethAddr, ArpStatusComplete

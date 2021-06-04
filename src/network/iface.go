@@ -1,7 +1,7 @@
 package network
 
 import (
-	"github.com/42milez/ProtocolStack/src/ethernet"
+	"github.com/42milez/ProtocolStack/src/eth"
 )
 
 const LoopbackIpAddr = "127.0.0.1"
@@ -15,5 +15,5 @@ type Iface struct {
 	Unicast   IP
 	Netmask   IP
 	Broadcast IP
-	Dev       ethernet.IDevice
+	Dev       eth.IDevice
 }

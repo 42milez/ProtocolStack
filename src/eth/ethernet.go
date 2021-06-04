@@ -1,4 +1,4 @@
-package ethernet
+package eth
 
 import (
 	"bytes"
@@ -88,7 +88,7 @@ func ReadEthFrame(fd int, addr EthAddr) (*Packet, psErr.E) {
 		return nil, psErr.ReadFromBufError
 	}
 
-	psLog.I("Incoming ethernet frame")
+	psLog.I("Incoming eth frame")
 	EthFrameDump(&hdr, payload)
 
 	return &Packet{

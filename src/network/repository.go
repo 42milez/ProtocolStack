@@ -5,7 +5,7 @@ package network
 import (
 	"fmt"
 	psErr "github.com/42milez/ProtocolStack/src/error"
-	"github.com/42milez/ProtocolStack/src/ethernet"
+	"github.com/42milez/ProtocolStack/src/eth"
 	psLog "github.com/42milez/ProtocolStack/src/log"
 )
 
@@ -13,7 +13,7 @@ var DeviceRepo IDeviceRepo
 var IfaceRepo IIfaceRepo
 var RouteRepo IRouteRepo
 
-type Handler func(data []byte, dev ethernet.IDevice) psErr.E
+type Handler func(data []byte, dev eth.IDevice) psErr.E
 
 type Route struct {
 	Network IP
@@ -25,12 +25,12 @@ type Route struct {
 type IDeviceRepo interface {
 	NextNumber() int
 	Poll(terminate bool) psErr.E
-	Register(dev ethernet.IDevice) psErr.E
+	Register(dev eth.IDevice) psErr.E
 	Up() psErr.E
 }
 
 type deviceRepo struct {
-	devices []ethernet.IDevice
+	devices []eth.IDevice
 }
 
 func (p *deviceRepo) NextNumber() int {
@@ -52,7 +52,7 @@ func (p *deviceRepo) Poll(terminate bool) psErr.E {
 	return psErr.OK
 }
 
-func (p *deviceRepo) Register(dev ethernet.IDevice) psErr.E {
+func (p *deviceRepo) Register(dev eth.IDevice) psErr.E {
 	for _, d := range p.devices {
 		if d.Equal(dev) {
 			psLog.W("Device is already registered")
@@ -93,8 +93,8 @@ func (p *deviceRepo) Up() psErr.E {
 
 type IIfaceRepo interface {
 	Get(unicast IP) *Iface
-	Lookup(dev ethernet.IDevice, family AddrFamily) *Iface
-	Register(iface *Iface, dev ethernet.IDevice) psErr.E
+	Lookup(dev eth.IDevice, family AddrFamily) *Iface
+	Register(iface *Iface, dev eth.IDevice) psErr.E
 }
 
 type ifaceRepo struct {
@@ -110,7 +110,7 @@ func (p *ifaceRepo) Get(unicast IP) *Iface {
 	return nil
 }
 
-func (p *ifaceRepo) Lookup(dev ethernet.IDevice, family AddrFamily) *Iface {
+func (p *ifaceRepo) Lookup(dev eth.IDevice, family AddrFamily) *Iface {
 	for _, v := range p.ifaces {
 		if v.Dev.Equal(dev) && v.Family == family {
 			return v
@@ -119,7 +119,7 @@ func (p *ifaceRepo) Lookup(dev ethernet.IDevice, family AddrFamily) *Iface {
 	return nil
 }
 
-func (p *ifaceRepo) Register(iface *Iface, dev ethernet.IDevice) psErr.E {
+func (p *ifaceRepo) Register(iface *Iface, dev eth.IDevice) psErr.E {
 	for _, i := range p.ifaces {
 		if i.Dev.Equal(dev) && i.Family == iface.Family {
 			psLog.W(fmt.Sprintf("Interface is already registered: %s", i.Family))

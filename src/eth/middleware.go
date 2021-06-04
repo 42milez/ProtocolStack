@@ -1,4 +1,4 @@
-package ethernet
+package eth
 
 var RxCh chan *Packet // channel for receiving packets
 var TxCh chan *Packet // channel for sending packets

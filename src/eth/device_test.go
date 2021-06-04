@@ -1,4 +1,4 @@
-package ethernet
+package eth
 
 import (
 	"github.com/golang/mock/gomock"

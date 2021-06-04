@@ -3,17 +3,17 @@ package network
 import (
 	"fmt"
 	psErr "github.com/42milez/ProtocolStack/src/error"
-	"github.com/42milez/ProtocolStack/src/ethernet"
+	"github.com/42milez/ProtocolStack/src/eth"
 	psLog "github.com/42milez/ProtocolStack/src/log"
 )
 
-func InputHandler(packet *ethernet.Packet) psErr.E {
+func InputHandler(packet *eth.Packet) psErr.E {
 	switch packet.Type {
-	case ethernet.EthTypeArp:
+	case eth.EthTypeArp:
 		if err := ArpInputHandler(packet.Content, packet.Dev); err != psErr.OK {
 			return psErr.Error
 		}
-	case ethernet.EthTypeIpv4:
+	case eth.EthTypeIpv4:
 		if err := IpReceive(packet.Content, packet.Dev); err != psErr.OK {
 			return psErr.Error
 		}
@@ -25,6 +25,6 @@ func InputHandler(packet *ethernet.Packet) psErr.E {
 	return psErr.OK
 }
 
-func OutputHandler(packet *ethernet.Packet) psErr.E {
+func OutputHandler(packet *eth.Packet) psErr.E {
 	return psErr.OK
 }

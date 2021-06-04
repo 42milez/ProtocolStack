@@ -8,7 +8,7 @@ import (
 	reflect "reflect"
 
 	error "github.com/42milez/ProtocolStack/src/error"
-	ethernet "github.com/42milez/ProtocolStack/src/ethernet"
+	eth "github.com/42milez/ProtocolStack/src/eth"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -64,7 +64,7 @@ func (mr *MockIDeviceRepoMockRecorder) Poll(terminate interface{}) *gomock.Call 
 }
 
 // Register mocks base method.
-func (m *MockIDeviceRepo) Register(dev ethernet.IDevice) error.E {
+func (m *MockIDeviceRepo) Register(dev eth.IDevice) error.E {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Register", dev)
 	ret0, _ := ret[0].(error.E)
@@ -129,7 +129,7 @@ func (mr *MockIIfaceRepoMockRecorder) Get(unicast interface{}) *gomock.Call {
 }
 
 // Lookup mocks base method.
-func (m *MockIIfaceRepo) Lookup(dev ethernet.IDevice, family AddrFamily) *Iface {
+func (m *MockIIfaceRepo) Lookup(dev eth.IDevice, family AddrFamily) *Iface {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Lookup", dev, family)
 	ret0, _ := ret[0].(*Iface)
@@ -143,7 +143,7 @@ func (mr *MockIIfaceRepoMockRecorder) Lookup(dev, family interface{}) *gomock.Ca
 }
 
 // Register mocks base method.
-func (m *MockIIfaceRepo) Register(iface *Iface, dev ethernet.IDevice) error.E {
+func (m *MockIIfaceRepo) Register(iface *Iface, dev eth.IDevice) error.E {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Register", iface, dev)
 	ret0, _ := ret[0].(error.E)

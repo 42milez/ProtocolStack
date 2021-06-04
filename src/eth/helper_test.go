@@ -1,4 +1,4 @@
-package ethernet
+package eth
 
 import (
 	"github.com/google/go-cmp/cmp"

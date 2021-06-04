@@ -1,6 +1,6 @@
 // +build amd64,linux
 
-package ethernet
+package eth
 
 import (
 	"errors"

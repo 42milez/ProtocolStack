@@ -3,7 +3,7 @@ package network
 import (
 	"fmt"
 	psErr "github.com/42milez/ProtocolStack/src/error"
-	"github.com/42milez/ProtocolStack/src/ethernet"
+	"github.com/42milez/ProtocolStack/src/eth"
 	psTime "github.com/42milez/ProtocolStack/src/time"
 	"sync"
 	"time"
@@ -124,7 +124,7 @@ type ArpCache struct {
 	mtx     sync.Mutex
 }
 
-func (p *ArpCache) Add(ha ethernet.EthAddr, pa ArpProtoAddr, state ArpCacheState) psErr.E {
+func (p *ArpCache) Add(ha eth.EthAddr, pa ArpProtoAddr, state ArpCacheState) psErr.E {
 	var entry *ArpCacheEntry
 	if entry = p.get(pa); entry != nil {
 		return psErr.Exist
@@ -142,11 +142,11 @@ func (p *ArpCache) Add(ha ethernet.EthAddr, pa ArpProtoAddr, state ArpCacheState
 	return psErr.OK
 }
 
-func (p *ArpCache) EthAddr(pa ArpProtoAddr) (ethernet.EthAddr, bool) {
+func (p *ArpCache) EthAddr(pa ArpProtoAddr) (eth.EthAddr, bool) {
 	if entry := p.get(pa); entry != nil {
 		return entry.HA, true
 	} else {
-		return ethernet.EthAddr{}, false
+		return eth.EthAddr{}, false
 	}
 }
 
@@ -155,13 +155,13 @@ func (p *ArpCache) Init() {
 		p.entries[i] = &ArpCacheEntry{
 			State:     ArpCacheStateFree,
 			CreatedAt: time.Unix(0, 0),
-			HA:        ethernet.EthAddr{},
+			HA:        eth.EthAddr{},
 			PA:        ArpProtoAddr{},
 		}
 	}
 }
 
-func (p *ArpCache) Renew(pa ArpProtoAddr, ha ethernet.EthAddr, state ArpCacheState) psErr.E {
+func (p *ArpCache) Renew(pa ArpProtoAddr, ha eth.EthAddr, state ArpCacheState) psErr.E {
 	entry := p.get(pa)
 	if entry == nil {
 		return psErr.NotFound
@@ -180,7 +180,7 @@ func (p *ArpCache) Renew(pa ArpProtoAddr, ha ethernet.EthAddr, state ArpCacheSta
 func (p *ArpCache) clear(idx int) {
 	p.entries[idx].State = ArpCacheStateFree
 	p.entries[idx].CreatedAt = time.Unix(0, 0)
-	p.entries[idx].HA = ethernet.EthAddr{}
+	p.entries[idx].HA = eth.EthAddr{}
 	p.entries[idx].PA = ArpProtoAddr{}
 }
 
@@ -232,16 +232,16 @@ func (p *ArpCache) get(ip ArpProtoAddr) *ArpCacheEntry {
 type ArpCacheEntry struct {
 	State     ArpCacheState
 	CreatedAt time.Time
-	HA        ethernet.EthAddr
+	HA        eth.EthAddr
 	PA        ArpProtoAddr
 }
 type ArpCacheState uint8
 
 type ArpHdr struct {
-	HT     ArpHwType        // hardware type
-	PT     ethernet.EthType // protocol type
-	HAL    uint8            // hardware address length
-	PAL    uint8            // protocol address length
+	HT     ArpHwType   // hardware type
+	PT     eth.EthType // protocol type
+	HAL    uint8       // hardware address length
+	PAL    uint8       // protocol address length
 	Opcode ArpOpcode
 }
 
@@ -259,10 +259,10 @@ func (v ArpOpcode) String() string {
 
 type ArpPacket struct {
 	ArpHdr
-	SHA ethernet.EthAddr // sender hardware address
-	SPA ArpProtoAddr     // sender protocol address
-	THA ethernet.EthAddr // target hardware address
-	TPA ArpProtoAddr     // target protocol address
+	SHA eth.EthAddr  // sender hardware address
+	SPA ArpProtoAddr // sender protocol address
+	THA eth.EthAddr  // target hardware address
+	TPA ArpProtoAddr // target protocol address
 }
 
 type ArpProtoAddr [V4AddrLen]byte

@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	psErr "github.com/42milez/ProtocolStack/src/error"
-	"github.com/42milez/ProtocolStack/src/ethernet"
+	"github.com/42milez/ProtocolStack/src/eth"
 	psLog "github.com/42milez/ProtocolStack/src/log"
 	"strings"
 	"sync"
@@ -30,7 +30,7 @@ func (p *PacketID) Next() (id uint16) {
 	return
 }
 
-func IpReceive(payload []byte, dev ethernet.IDevice) psErr.E {
+func IpReceive(payload []byte, dev eth.IDevice) psErr.E {
 	packetLen := len(payload)
 
 	if packetLen < IpHdrLenMin {
@@ -133,15 +133,15 @@ func IpSend(protoNum ProtocolNumber, payload []byte, dst IP, src IP) psErr.E {
 	psLog.I("Outgoing IP packet")
 	dumpIpPacket(packet)
 
-	// get ethernet address from ip address
-	var ethAddr ethernet.EthAddr
+	// get eth address from ip address
+	var ethAddr eth.EthAddr
 	if ethAddr, err = lookupEthAddr(iface, nextHop); err != psErr.OK {
 		psLog.E(fmt.Sprintf("Ethernet address was not found: %s", err))
 		return psErr.Error
 	}
 
 	// send ip packet
-	if err = Transmit(ethAddr, packet, ethernet.EthTypeIpv4, iface); err != psErr.OK {
+	if err = Transmit(ethAddr, packet, eth.EthTypeIpv4, iface); err != psErr.OK {
 		return psErr.Error
 	}
 
@@ -250,15 +250,15 @@ func dumpIpPacket(packet []byte) {
 	psLog.I(fmt.Sprintf("\tdestination address: %d.%d.%d.%d", packet[16], packet[17], packet[18], packet[19]))
 }
 
-func lookupEthAddr(iface *Iface, nextHop IP) (ethernet.EthAddr, psErr.E) {
-	var addr ethernet.EthAddr
-	if iface.Dev.Flag()&ethernet.DevFlagNeedArp != 0 {
+func lookupEthAddr(iface *Iface, nextHop IP) (eth.EthAddr, psErr.E) {
+	var addr eth.EthAddr
+	if iface.Dev.Flag()&eth.DevFlagNeedArp != 0 {
 		if nextHop.Equal(iface.Broadcast) || nextHop.Equal(V4Broadcast) {
-			addr = ethernet.EthAddrBroadcast
+			addr = eth.EthAddrBroadcast
 		} else {
 			var status ArpStatus
 			if addr, status = arpResolve(iface, nextHop); status != ArpStatusComplete {
-				return ethernet.EthAddr{}, psErr.ArpIncomplete
+				return eth.EthAddr{}, psErr.ArpIncomplete
 			}
 		}
 	}

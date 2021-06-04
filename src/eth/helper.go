@@ -1,4 +1,4 @@
-package ethernet
+package eth
 
 // GenLoopbackDevice generates loopback device object.
 func GenLoopbackDevice(name string) *LoopbackDevice {

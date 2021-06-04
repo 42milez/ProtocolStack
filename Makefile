@@ -77,7 +77,7 @@ resolve: go-mod
 test:
 	@go test -race -covermode=atomic -coverprofile=coverage.out \
 		$(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/error \
-		$(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/ethernet \
+		$(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/eth \
 		$(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/log \
 		$(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/network
 

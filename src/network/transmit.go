@@ -3,11 +3,11 @@ package network
 import (
 	"fmt"
 	psErr "github.com/42milez/ProtocolStack/src/error"
-	"github.com/42milez/ProtocolStack/src/ethernet"
+	"github.com/42milez/ProtocolStack/src/eth"
 	psLog "github.com/42milez/ProtocolStack/src/log"
 )
 
-func Transmit(dst ethernet.EthAddr, payload []byte, typ ethernet.EthType, iface *Iface) psErr.E {
+func Transmit(dst eth.EthAddr, payload []byte, typ eth.EthType, iface *Iface) psErr.E {
 	if !iface.Dev.IsUp() {
 		psLog.E(fmt.Sprintf("Device %s is down", iface.Dev.Name()))
 		return psErr.DeviceNotOpened

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	psErr "github.com/42milez/ProtocolStack/src/error"
-	"github.com/42milez/ProtocolStack/src/ethernet"
+	"github.com/42milez/ProtocolStack/src/eth"
 	psLog "github.com/42milez/ProtocolStack/src/log"
 	psTime "github.com/42milez/ProtocolStack/src/time"
 	"github.com/golang/mock/gomock"
@@ -17,8 +17,8 @@ func TestArpInputHandler_1(t *testing.T) {
 	ctrl, teardown := SetupArpInputHandlerTest(t)
 	defer teardown()
 
-	ethAddr := ethernet.EthAddr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}
-	mockDev := ethernet.NewMockIDevice(ctrl)
+	ethAddr := eth.EthAddr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}
+	mockDev := eth.NewMockIDevice(ctrl)
 	mockDev.EXPECT().Addr().Return(ethAddr)
 	mockDev.EXPECT().Transmit(Any, Any, Any).Return(psErr.OK)
 
@@ -35,14 +35,14 @@ func TestArpInputHandler_1(t *testing.T) {
 	packet := Builder.Default()
 	buf := new(bytes.Buffer)
 	_ = binary.Write(buf, binary.BigEndian, packet)
-	dev := &ethernet.TapDevice{
-		Device: ethernet.Device{
-			Type_: ethernet.DevTypeEthernet,
+	dev := &eth.TapDevice{
+		Device: eth.Device{
+			Type_: eth.DevTypeEthernet,
 			Name_: "net0",
 			Addr_: ethAddr,
-			Flag_: ethernet.DevFlagBroadcast | ethernet.DevFlagNeedArp,
-			MTU_:  ethernet.EthPayloadLenMax,
-			Priv_: ethernet.Privilege{
+			Flag_: eth.DevFlagBroadcast | eth.DevFlagNeedArp,
+			MTU_:  eth.EthPayloadLenMax,
+			Priv_: eth.Privilege{
 				FD:   3,
 				Name: "tap0",
 			},
@@ -62,7 +62,7 @@ func TestArpInputHandler_2(t *testing.T) {
 	defer teardown()
 
 	var packet []byte
-	dev := &ethernet.TapDevice{}
+	dev := &eth.TapDevice{}
 
 	want := psErr.InvalidPacket
 	got := ArpInputHandler(packet, dev)
@@ -80,7 +80,7 @@ func TestArpInputHandler_3(t *testing.T) {
 	packet := Builder.CustomHT(ArpHwType(0xffff))
 	buf := new(bytes.Buffer)
 	_ = binary.Write(buf, binary.BigEndian, packet)
-	dev := &ethernet.TapDevice{}
+	dev := &eth.TapDevice{}
 
 	want := psErr.InvalidPacket
 	got := ArpInputHandler(buf.Bytes(), dev)
@@ -88,10 +88,10 @@ func TestArpInputHandler_3(t *testing.T) {
 		t.Errorf("ArpInputHandler() = %s; want %s", got, want)
 	}
 
-	packet = Builder.CustomPT(ethernet.EthType(0xffff))
+	packet = Builder.CustomPT(eth.EthType(0xffff))
 	buf = new(bytes.Buffer)
 	_ = binary.Write(buf, binary.BigEndian, packet)
-	dev = &ethernet.TapDevice{}
+	dev = &eth.TapDevice{}
 
 	want = psErr.InvalidPacket
 	got = ArpInputHandler(buf.Bytes(), dev)
@@ -112,7 +112,7 @@ func TestArpInputHandler_4(t *testing.T) {
 	packet := Builder.Default()
 	buf := new(bytes.Buffer)
 	_ = binary.Write(buf, binary.BigEndian, packet)
-	dev := &ethernet.TapDevice{}
+	dev := &eth.TapDevice{}
 
 	want := psErr.InterfaceNotFound
 	got := ArpInputHandler(buf.Bytes(), dev)
@@ -126,8 +126,8 @@ func TestArpInputHandler_5(t *testing.T) {
 	ctrl, teardown := SetupArpInputHandlerTest(t)
 	defer teardown()
 
-	ethAddr := ethernet.EthAddr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}
-	mockDev := ethernet.NewMockIDevice(ctrl)
+	ethAddr := eth.EthAddr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}
+	mockDev := eth.NewMockIDevice(ctrl)
 	mockDev.EXPECT().Addr().Return(ethAddr)
 	mockDev.EXPECT().Transmit(Any, Any, Any).Return(psErr.Error)
 
@@ -144,7 +144,7 @@ func TestArpInputHandler_5(t *testing.T) {
 	packet := Builder.Default()
 	buf := new(bytes.Buffer)
 	_ = binary.Write(buf, binary.BigEndian, packet)
-	dev := &ethernet.TapDevice{}
+	dev := &eth.TapDevice{}
 
 	want := psErr.Error
 	got := ArpInputHandler(buf.Bytes(), dev)
@@ -164,15 +164,15 @@ func TestArpInputHandler_6(t *testing.T) {
 		Unicast:   ParseIP("192.0.2.2"),
 		Netmask:   ParseIP("255.255.255.0"),
 		Broadcast: ParseIP("192.0.2.255"),
-		Dev:       &ethernet.TapDevice{},
+		Dev:       &eth.TapDevice{},
 	})
 	IfaceRepo = mockIfaceRepo
 
 	packet := Builder.CustomTPA(ArpProtoAddr{192, 168, 2, 3})
 	buf := new(bytes.Buffer)
 	_ = binary.Write(buf, binary.BigEndian, packet)
-	dev := &ethernet.TapDevice{
-		Device: ethernet.Device{
+	dev := &eth.TapDevice{
+		Device: eth.Device{
 			Name_: "net0",
 		},
 	}
@@ -195,7 +195,7 @@ func TestRunArpTimer_1(t *testing.T) {
 	psTime.Time = m
 
 	pa := ArpProtoAddr{192, 168, 1, 1}
-	_ = cache.Add(ethernet.EthAddr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}, pa, ArpCacheStateResolved)
+	_ = cache.Add(eth.EthAddr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}, pa, ArpCacheStateResolved)
 
 	var wg sync.WaitGroup
 	RunArpTimer(&wg)
@@ -229,20 +229,20 @@ func TestRunArpTimer_2(t *testing.T) {
 var Any = gomock.Any()
 var Builder = ArpPacketBuilder{}
 
-type ArpPacketBuilder struct {}
+type ArpPacketBuilder struct{}
 
 func (v ArpPacketBuilder) Default() *ArpPacket {
 	return &ArpPacket{
 		ArpHdr: ArpHdr{
 			HT:     ArpHwTypeEthernet,
-			PT:     ethernet.EthTypeIpv4,
-			HAL:    ethernet.EthAddrLen,
+			PT:     eth.EthTypeIpv4,
+			HAL:    eth.EthAddrLen,
 			PAL:    V4AddrLen,
 			Opcode: ArpOpRequest,
 		},
-		SHA: ethernet.EthAddr{0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff},
+		SHA: eth.EthAddr{0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff},
 		SPA: ArpProtoAddr{192, 0, 2, 1},
-		THA: ethernet.EthAddr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16},
+		THA: eth.EthAddr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16},
 		TPA: ArpProtoAddr{192, 0, 2, 2},
 	}
 }
@@ -253,7 +253,7 @@ func (v ArpPacketBuilder) CustomHT(ht ArpHwType) (packet *ArpPacket) {
 	return
 }
 
-func (v ArpPacketBuilder) CustomPT(pt ethernet.EthType) (packet *ArpPacket) {
+func (v ArpPacketBuilder) CustomPT(pt eth.EthType) (packet *ArpPacket) {
 	packet = v.Default()
 	packet.PT = pt
 	return

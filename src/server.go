@@ -5,7 +5,7 @@ package main
 import (
 	"fmt"
 	psErr "github.com/42milez/ProtocolStack/src/error"
-	"github.com/42milez/ProtocolStack/src/ethernet"
+	"github.com/42milez/ProtocolStack/src/eth"
 	psLog "github.com/42milez/ProtocolStack/src/log"
 	"github.com/42milez/ProtocolStack/src/network"
 	"os"
@@ -43,7 +43,7 @@ func setup() psErr.E {
 	psLog.I("--------------------------------------------------")
 
 	// Create a loopback device and its iface, then link them.
-	loopbackDev := ethernet.GenLoopbackDevice("net" + strconv.Itoa(network.DeviceRepo.NextNumber()))
+	loopbackDev := eth.GenLoopbackDevice("net" + strconv.Itoa(network.DeviceRepo.NextNumber()))
 	if err := network.DeviceRepo.Register(loopbackDev); err != psErr.OK {
 		return psErr.Error
 	}
@@ -56,10 +56,10 @@ func setup() psErr.E {
 	network.RouteRepo.Register(network.ParseIP(network.LoopbackNetwork), network.V4Zero, iface1)
 
 	// Create a TAP device and its interface, then link them.
-	tapDev := ethernet.GenTapDevice(
+	tapDev := eth.GenTapDevice(
 		"net"+strconv.Itoa(network.DeviceRepo.NextNumber()),
 		"tap0",
-		ethernet.EthAddr{11, 22, 33, 44, 55, 66})
+		eth.EthAddr{11, 22, 33, 44, 55, 66})
 	if err := network.DeviceRepo.Register(tapDev); err != psErr.OK {
 		return psErr.Error
 	}
@@ -120,13 +120,13 @@ func start(wg *sync.WaitGroup) psErr.E {
 			case <-netSigCh:
 				psLog.I("Terminating Net worker...")
 				return
-			case packet := <-ethernet.RxCh:
+			case packet := <-eth.RxCh:
 				if err := network.InputHandler(packet); err != psErr.OK {
 					psLog.F(err.Error())
 					// TODO: notify error to main goroutine
 					// ...
 				}
-			case packet := <-ethernet.TxCh:
+			case packet := <-eth.TxCh:
 				if err := network.OutputHandler(packet); err != psErr.OK {
 					psLog.F(err.Error())
 					// TODO: notify error to main goroutine

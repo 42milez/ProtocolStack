@@ -1,4 +1,4 @@
-package ethernet
+package eth
 
 import (
 	psErr "github.com/42milez/ProtocolStack/src/error"
