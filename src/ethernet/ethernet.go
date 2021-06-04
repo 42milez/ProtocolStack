@@ -74,7 +74,7 @@ func ReadEthFrame(fd int, addr EthAddr) (*Packet, psErr.E) {
 	buf := bytes.NewBuffer(rxBuf)
 	hdr := EthHdr{}
 	if err := binary.Read(buf, binary.BigEndian, &hdr); err != nil {
-		return nil, psErr.Error
+		return nil, psErr.ReadFromBufError
 	}
 
 	if !hdr.Dst.Equal(addr) {
@@ -85,7 +85,7 @@ func ReadEthFrame(fd int, addr EthAddr) (*Packet, psErr.E) {
 
 	payload := make([]byte, flen)
 	if err := binary.Read(buf, binary.BigEndian, &payload); err != nil {
-		return nil, psErr.Error
+		return nil, psErr.ReadFromBufError
 	}
 
 	psLog.I("Incoming ethernet frame")
@@ -106,10 +106,10 @@ func WriteEthFrame(fd int, dst EthAddr, src EthAddr, typ EthType, payload []byte
 
 	buf := new(bytes.Buffer)
 	if err := binary.Write(buf, binary.BigEndian, &hdr); err != nil {
-		return psErr.Error
+		return psErr.WriteToBufError
 	}
 	if err := binary.Write(buf, binary.BigEndian, &payload); err != nil {
-		return psErr.Error
+		return psErr.WriteToBufError
 	}
 	if err := pad(buf); err != psErr.OK {
 		return psErr.Error
@@ -133,7 +133,7 @@ func pad(buf *bytes.Buffer) psErr.E {
 		padLen := EthFrameLenMin - flen
 		pad := make([]byte, padLen)
 		if err := binary.Write(buf, binary.BigEndian, &pad); err != nil {
-			return psErr.Error
+			return psErr.WriteToBufError
 		}
 	}
 	return psErr.OK
