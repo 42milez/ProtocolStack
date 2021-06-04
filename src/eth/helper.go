@@ -6,7 +6,7 @@ func GenLoopbackDevice(name string) *LoopbackDevice {
 		Device: Device{
 			Type_: DevTypeLoopback,
 			Name_: name,
-			Addr_: EthAddrAny,
+			Addr_: Any,
 			Flag_: DevFlagLoopback,
 			MTU_:  LoopbackMTU,
 		},
