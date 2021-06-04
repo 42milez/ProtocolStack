@@ -12,29 +12,6 @@ import (
 	"time"
 )
 
-func isEthAddrAllZero(addr [eth.EthAddrLen]byte) bool {
-	for _, v := range addr {
-		if v != 0 {
-			return false
-		}
-	}
-	return true
-}
-
-func setupArpTypesTest(t *testing.T) (ctrl *gomock.Controller, teardown func()) {
-	psLog.DisableOutput()
-	backup := psTime.Time
-	ctrl = gomock.NewController(t)
-
-	teardown = func() {
-		psLog.EnableOutput()
-		psTime.Time = backup
-		ctrl.Finish()
-	}
-
-	return
-}
-
 func TestArpCache_Add_1(t *testing.T) {
 	defer ARP.cache.Init()
 
@@ -66,7 +43,7 @@ func TestArpCache_Add_2(t *testing.T) {
 }
 
 func TestArpCache_Add_3(t *testing.T) {
-	ctrl, teardown := setupArpTypesTest(t)
+	ctrl, teardown := SetupArpCacheTest(t)
 	defer teardown()
 	defer ARP.cache.Init()
 
@@ -90,7 +67,7 @@ func TestArpCache_Add_3(t *testing.T) {
 }
 
 func TestArpCache_Renew_1(t *testing.T) {
-	ctrl, teardown := setupArpTypesTest(t)
+	ctrl, teardown := SetupArpCacheTest(t)
 	defer teardown()
 	defer ARP.cache.Init()
 
@@ -136,7 +113,7 @@ func TestArpCache_Renew_2(t *testing.T) {
 	}
 }
 
-func TestArpCache_EthAddr_1(t *testing.T) {
+func TestArpCache_GetEntry_1(t *testing.T) {
 	defer ARP.cache.Init()
 
 	ha := eth.EthAddr{0x11, 0x22, 0x33, 0x44, 0x55, 0x66}
@@ -144,14 +121,14 @@ func TestArpCache_EthAddr_1(t *testing.T) {
 	state := ArpCacheStateResolved
 	_ = ARP.cache.Create(ha, pa, state)
 
-	ethAddr, found := ARP.cache.EthAddr(pa)
-
-	if ethAddr != ha || !found {
-		t.Errorf("ArpCache.EthAddr() = %v, %t; want %v, %t", ethAddr, found, ha, true)
+	entry := ARP.cache.GetEntry(pa)
+	if entry == nil {
+		t.Errorf("arp cache entry does not exist")
 	}
 }
 
-func TestArpCache_EthAddr_2(t *testing.T) {
+// GetEntry() returns nil when entry to match does not exist.
+func TestArpCache_GetEntry_2(t *testing.T) {
 	defer ARP.cache.Init()
 
 	ha := eth.EthAddr{0x11, 0x22, 0x33, 0x44, 0x55, 0x66}
@@ -159,10 +136,10 @@ func TestArpCache_EthAddr_2(t *testing.T) {
 	state := ArpCacheStateResolved
 	_ = ARP.cache.Create(ha, pa, state)
 
-	ethAddr, found := ARP.cache.EthAddr(ArpProtoAddr{192, 0, 2, 1})
+	entry := ARP.cache.GetEntry(ArpProtoAddr{192, 0, 2, 1})
 
-	if !isEthAddrAllZero(ethAddr) || found {
-		t.Errorf("ArpCache.EthAddr() = %v, %t; want %v, %t", ethAddr, found, ha, true)
+	if entry != nil {
+		t.Errorf("unexpected arp cache entry exist")
 	}
 }
 
@@ -188,4 +165,18 @@ func TestArpProtoAddr_String(t *testing.T) {
 	if got != want {
 		t.Errorf("ArpProtoAddr.String() = %s; want %s", got, want)
 	}
+}
+
+func SetupArpCacheTest(t *testing.T) (ctrl *gomock.Controller, teardown func()) {
+	psLog.DisableOutput()
+	backup := psTime.Time
+	ctrl = gomock.NewController(t)
+
+	teardown = func() {
+		psLog.EnableOutput()
+		psTime.Time = backup
+		ctrl.Finish()
+	}
+
+	return
 }

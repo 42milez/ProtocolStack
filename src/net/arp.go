@@ -145,8 +145,8 @@ func (p *arp) Resolve(iface *Iface, ip IP) (eth.EthAddr, ArpStatus) {
 		return eth.EthAddr{}, ArpStatusError
 	}
 
-	ethAddr, found := p.cache.EthAddr(ip.ToV4())
-	if !found {
+	entry := p.cache.GetEntry(ip.ToV4())
+	if entry == nil {
 		if err := p.cache.Create(eth.EthAddr{}, ip.ToV4(), ArpCacheStateIncomplete); err != psErr.OK {
 			return eth.EthAddr{}, ArpStatusError
 		}
@@ -156,7 +156,7 @@ func (p *arp) Resolve(iface *Iface, ip IP) (eth.EthAddr, ArpStatus) {
 		return eth.EthAddr{}, ArpStatusIncomplete
 	}
 
-	return ethAddr, ArpStatusComplete
+	return entry.HA, ArpStatusComplete
 }
 
 func (p *arp) RunTimer(wg *sync.WaitGroup) {
@@ -245,14 +245,6 @@ func (p *arpCache) Renew(pa ArpProtoAddr, ha eth.EthAddr, state ArpCacheState) p
 	entry.HA = ha
 
 	return psErr.OK
-}
-
-func (p *arpCache) EthAddr(pa ArpProtoAddr) (eth.EthAddr, bool) {
-	if entry := p.GetEntry(pa); entry != nil {
-		return entry.HA, true
-	} else {
-		return eth.EthAddr{}, false
-	}
 }
 
 func (p *arpCache) Clear(idx int) {

@@ -203,8 +203,8 @@ func TestRunArpTimer_1(t *testing.T) {
 	ARP.StopTimer()
 	wg.Wait()
 
-	_, got := ARP.cache.EthAddr(pa)
-	if got {
+	got := ARP.cache.GetEntry(pa)
+	if got != nil {
 		t.Errorf("ARP cache is not expired")
 	}
 }
@@ -220,8 +220,8 @@ func TestRunArpTimer_2(t *testing.T) {
 	ARP.StopTimer()
 	wg.Wait()
 
-	_, got := ARP.cache.EthAddr(ArpProtoAddr{192, 168, 0, 1})
-	if got {
+	got := ARP.cache.GetEntry(ArpProtoAddr{192, 168, 0, 1})
+	if got != nil {
 		t.Errorf("ARP cache exists")
 	}
 }
