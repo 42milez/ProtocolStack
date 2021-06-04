@@ -72,7 +72,7 @@ func (p *arp) Receive(packet []byte, dev eth.IDevice) psErr.E {
 	return psErr.OK
 }
 
-func (p *arp) SendReply(tha eth.EthAddr, tpa ArpProtoAddr, iface *Iface) psErr.E {
+func (p *arp) SendReply(tha [eth.EthAddrLen]byte, tpa ArpProtoAddr, iface *Iface) psErr.E {
 	packet := ArpPacket{
 		ArpHdr: ArpHdr{
 			HT:     ArpHwTypeEthernet,
@@ -114,7 +114,7 @@ func (p *arp) SendRequest(iface *Iface, ip IP) psErr.E {
 		},
 		SHA: iface.Dev.Addr(),
 		SPA: iface.Unicast.ToV4(),
-		THA: eth.EthAddr{},
+		THA: [eth.EthAddrLen]byte{},
 		TPA: ip.ToV4(),
 	}
 
@@ -134,26 +134,26 @@ func (p *arp) SendRequest(iface *Iface, ip IP) psErr.E {
 	return psErr.OK
 }
 
-func (p *arp) Resolve(iface *Iface, ip IP) (eth.EthAddr, ArpStatus) {
+func (p *arp) Resolve(iface *Iface, ip IP) ([eth.EthAddrLen]byte, ArpStatus) {
 	if iface.Dev.Type() != eth.DevTypeEthernet {
 		psLog.E(fmt.Sprintf("Unsupported device type: %s", iface.Dev.Type()))
-		return eth.EthAddr{}, ArpStatusError
+		return [eth.EthAddrLen]byte{}, ArpStatusError
 	}
 
 	if iface.Family != V4AddrFamily {
 		psLog.E(fmt.Sprintf("Unsupported address family: %s", iface.Family))
-		return eth.EthAddr{}, ArpStatusError
+		return [eth.EthAddrLen]byte{}, ArpStatusError
 	}
 
 	entry := p.cache.GetEntry(ip.ToV4())
 	if entry == nil {
-		if err := p.cache.Create(eth.EthAddr{}, ip.ToV4(), ArpCacheStateIncomplete); err != psErr.OK {
-			return eth.EthAddr{}, ArpStatusError
+		if err := p.cache.Create([eth.EthAddrLen]byte{}, ip.ToV4(), ArpCacheStateIncomplete); err != psErr.OK {
+			return [eth.EthAddrLen]byte{}, ArpStatusError
 		}
 		if err := p.SendRequest(iface, ip); err != psErr.OK {
-			return eth.EthAddr{}, ArpStatusError
+			return [eth.EthAddrLen]byte{}, ArpStatusError
 		}
-		return eth.EthAddr{}, ArpStatusIncomplete
+		return [eth.EthAddrLen]byte{}, ArpStatusIncomplete
 	}
 
 	return entry.HA, ArpStatusComplete
@@ -193,7 +193,7 @@ func (p *arp) StopTimer() {
 type arpCacheEntry struct {
 	Status    ArpCacheStatus
 	CreatedAt time.Time
-	HA        eth.EthAddr
+	HA        [eth.EthAddrLen]byte
 	PA        ArpProtoAddr
 }
 
@@ -207,13 +207,13 @@ func (p *arpCache) Init() {
 		p.entries[i] = &arpCacheEntry{
 			Status:    ArpCacheStateFree,
 			CreatedAt: time.Unix(0, 0),
-			HA:        eth.EthAddr{},
+			HA:        [eth.EthAddrLen]byte{},
 			PA:        ArpProtoAddr{},
 		}
 	}
 }
 
-func (p *arpCache) Create(ha eth.EthAddr, pa ArpProtoAddr, state ArpCacheStatus) psErr.E {
+func (p *arpCache) Create(ha [eth.EthAddrLen]byte, pa ArpProtoAddr, state ArpCacheStatus) psErr.E {
 	var entry *arpCacheEntry
 	if entry = p.GetEntry(pa); entry != nil {
 		return psErr.Exist
@@ -231,7 +231,7 @@ func (p *arpCache) Create(ha eth.EthAddr, pa ArpProtoAddr, state ArpCacheStatus)
 	return psErr.OK
 }
 
-func (p *arpCache) Renew(pa ArpProtoAddr, ha eth.EthAddr, state ArpCacheStatus) psErr.E {
+func (p *arpCache) Renew(pa ArpProtoAddr, ha [eth.EthAddrLen]byte, state ArpCacheStatus) psErr.E {
 	entry := p.GetEntry(pa)
 	if entry == nil {
 		return psErr.NotFound
@@ -280,7 +280,7 @@ func (p *arpCache) GetReusableEntry() *arpCacheEntry {
 func (p *arpCache) Clear(idx int) {
 	p.entries[idx].Status = ArpCacheStateFree
 	p.entries[idx].CreatedAt = time.Unix(0, 0)
-	p.entries[idx].HA = eth.EthAddr{}
+	p.entries[idx].HA = [eth.EthAddrLen]byte{}
 	p.entries[idx].PA = ArpProtoAddr{}
 }
 
