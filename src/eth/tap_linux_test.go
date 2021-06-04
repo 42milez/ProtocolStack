@@ -215,7 +215,7 @@ func TestTapDevice_Transmit(t *testing.T) {
 
 	tapDev := TapDevice{}
 
-	got := tapDev.Transmit(EthAddr{}, make([]byte, 0), EthTypeArp)
+	got := tapDev.Transmit(EthAddr{}, make([]byte, 0), ARP)
 	if got != psErr.OK {
 		t.Errorf("TapDevice.Transmit() = %v; want %v", got, psErr.OK)
 	}

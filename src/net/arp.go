@@ -96,7 +96,7 @@ func (p *arp) SendReply(tha [eth.AddrLen]byte, tpa ArpProtoAddr, iface *Iface) p
 		return psErr.WriteToBufError
 	}
 
-	if err := iface.Dev.Transmit(tha, buf.Bytes(), eth.EthTypeArp); err != psErr.OK {
+	if err := iface.Dev.Transmit(tha, buf.Bytes(), eth.ARP); err != psErr.OK {
 		return psErr.Error
 	}
 
@@ -127,7 +127,7 @@ func (p *arp) SendRequest(iface *Iface, ip IP) psErr.E {
 	psLog.I("Outgoing ARP packet")
 	dumpArpPacket(&packet)
 
-	if err := Transmit(eth.EthAddrBroadcast, payload, eth.EthTypeArp, iface); err != psErr.OK {
+	if err := Transmit(eth.EthAddrBroadcast, payload, eth.ARP, iface); err != psErr.OK {
 		return psErr.Error
 	}
 

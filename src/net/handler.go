@@ -9,7 +9,7 @@ import (
 
 func InputHandler(packet *eth.Packet) psErr.E {
 	switch packet.Type {
-	case eth.EthTypeArp:
+	case eth.ARP:
 		if err := ARP.Receive(packet.Content, packet.Dev); err != psErr.OK {
 			return psErr.Error
 		}

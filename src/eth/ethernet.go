@@ -15,7 +15,7 @@ const FrameLenMin = 60
 const HdrLen = 14
 const PayloadLenMax = FrameLenMax - HdrLen
 const PayloadLenMin = FrameLenMin - HdrLen
-const EthTypeArp EthType = 0x0806
+const ARP EthType = 0x0806
 const EthTypeIpv4 EthType = 0x0800
 const EthTypeIpv6 EthType = 0x86dd
 
