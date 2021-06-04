@@ -11,7 +11,20 @@ import (
 	"time"
 )
 
-var arpTimerCh chan bool
+const (
+	TimerAny TimerState = iota
+	TimerStopped
+	TimerRunning
+)
+
+var ArpTimerCh chan TimerOps
+
+type TimerState int
+
+type TimerOps struct {
+	CurrentState TimerState
+	DesiredState TimerState
+}
 
 func ArpInputHandler(packet []byte, dev ethernet.IDevice) psErr.E {
 	if len(packet) < ArpPacketLen {
@@ -70,10 +83,13 @@ func RunArpTimer(wg *sync.WaitGroup) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+		ArpTimerCh <- TimerOps{
+			CurrentState: TimerRunning,
+		}
 		for {
 			select {
-			case isStop := <-arpTimerCh:
-				if isStop {
+			case ops := <-ArpTimerCh:
+				if ops.DesiredState == TimerStopped {
 					return
 				}
 			default:
@@ -85,7 +101,9 @@ func RunArpTimer(wg *sync.WaitGroup) {
 }
 
 func StopArpTimer() {
-	arpTimerCh <- true
+	ArpTimerCh <- TimerOps{
+		DesiredState: TimerStopped,
+	}
 }
 
 func arpReply(tha ethernet.EthAddr, tpa ArpProtoAddr, iface *Iface) psErr.E {

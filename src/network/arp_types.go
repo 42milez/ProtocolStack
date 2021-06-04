@@ -236,6 +236,7 @@ type ArpCacheEntry struct {
 	PA        ArpProtoAddr
 }
 type ArpCacheState uint8
+
 type ArpHdr struct {
 	HT     ArpHwType        // hardware type
 	PT     ethernet.EthType // protocol type
@@ -243,6 +244,7 @@ type ArpHdr struct {
 	PAL    uint8            // protocol address length
 	Opcode ArpOpcode
 }
+
 type ArpHwType uint16
 
 func (v ArpHwType) String() string {
