@@ -3,6 +3,7 @@ package ethernet
 import (
 	"errors"
 	psErr "github.com/42milez/ProtocolStack/src/error"
+	psLog "github.com/42milez/ProtocolStack/src/log"
 	psSyscall "github.com/42milez/ProtocolStack/src/syscall"
 	"github.com/golang/mock/gomock"
 	"syscall"
@@ -10,17 +11,23 @@ import (
 )
 
 const ErrnoSuccess = syscall.Errno(0)
-const R2Zero = uintptr(0)
-
-var RetValOnSuccess = 0
-var RetValOnFail = -1
-
-var ErrorWithNoMessage error
 
 var Any = gomock.Any()
+var ErrorWithNoMessage error
+var RetValOnFail = -1
+
+func setupTapLinuxTest(t *testing.T) (ctrl *gomock.Controller, teardown func()) {
+	psLog.DisableOutput()
+	ctrl = gomock.NewController(t)
+	teardown = func() {
+		ctrl.Finish()
+		psLog.EnableOutput()
+	}
+	return
+}
 
 func TestTapDevice_Open_1(t *testing.T) {
-	ctrl, teardown := setup(t)
+	ctrl, teardown := setupTapLinuxTest(t)
 	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)
@@ -43,7 +50,7 @@ func TestTapDevice_Open_1(t *testing.T) {
 
 // Fail when Open() returns error.
 func TestTapDevice_Open_2(t *testing.T) {
-	ctrl, teardown := setup(t)
+	ctrl, teardown := setupTapLinuxTest(t)
 	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)
@@ -61,7 +68,7 @@ func TestTapDevice_Open_2(t *testing.T) {
 
 // Fail when Ioctl() returns error.
 func TestTapDevice_Open_3(t *testing.T) {
-	ctrl, teardown := setup(t)
+	ctrl, teardown := setupTapLinuxTest(t)
 	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)
@@ -81,7 +88,7 @@ func TestTapDevice_Open_3(t *testing.T) {
 
 // Fail when Socket() returns error.
 func TestTapDevice_Open_4(t *testing.T) {
-	ctrl, teardown := setup(t)
+	ctrl, teardown := setupTapLinuxTest(t)
 	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)
@@ -105,7 +112,7 @@ func TestTapDevice_Open_4(t *testing.T) {
 
 // Fail when Ioctl() returns error.
 func TestTapDevice_Open_5(t *testing.T) {
-	ctrl, teardown := setup(t)
+	ctrl, teardown := setupTapLinuxTest(t)
 	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)
@@ -131,7 +138,7 @@ func TestTapDevice_Open_5(t *testing.T) {
 
 // Fail when EpollCreate1() returns error.
 func TestTapDevice_Open_6(t *testing.T) {
-	ctrl, teardown := setup(t)
+	ctrl, teardown := setupTapLinuxTest(t)
 	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)
@@ -158,7 +165,7 @@ func TestTapDevice_Open_6(t *testing.T) {
 
 // Fail when EpollCtl() returns error.
 func TestTapDevice_Open_7(t *testing.T) {
-	ctrl, teardown := setup(t)
+	ctrl, teardown := setupTapLinuxTest(t)
 	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)
@@ -198,7 +205,7 @@ func TestTapDevice_Close(t *testing.T) {
 }
 
 func TestTapDevice_Transmit(t *testing.T) {
-	ctrl, teardown := setup(t)
+	ctrl, teardown := setupTapLinuxTest(t)
 	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)
@@ -216,7 +223,7 @@ func TestTapDevice_Transmit(t *testing.T) {
 
 // Success when no event occurs.
 func TestTapDevice_Poll_1(t *testing.T) {
-	ctrl, teardown := setup(t)
+	ctrl, teardown := setupTapLinuxTest(t)
 	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)
@@ -234,7 +241,7 @@ func TestTapDevice_Poll_1(t *testing.T) {
 
 // Success when an event occurs.
 func TestTapDevice_Poll_2(t *testing.T) {
-	ctrl, teardown := setup(t)
+	ctrl, teardown := setupTapLinuxTest(t)
 	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)
@@ -253,7 +260,7 @@ func TestTapDevice_Poll_2(t *testing.T) {
 
 // Success when Poll() is terminated.
 func TestTapDevice_Poll_3(t *testing.T) {
-	ctrl, teardown := setup(t)
+	ctrl, teardown := setupTapLinuxTest(t)
 	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)
@@ -271,7 +278,7 @@ func TestTapDevice_Poll_3(t *testing.T) {
 
 // Fail when EpollWait() is interrupted.
 func TestTapDevice_Poll_4(t *testing.T) {
-	ctrl, teardown := setup(t)
+	ctrl, teardown := setupTapLinuxTest(t)
 	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)
@@ -289,7 +296,7 @@ func TestTapDevice_Poll_4(t *testing.T) {
 
 // Fail when EpollWait() returns EFAULT.
 func TestTapDevice_Poll_5(t *testing.T) {
-	ctrl, teardown := setup(t)
+	ctrl, teardown := setupTapLinuxTest(t)
 	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)
@@ -307,7 +314,7 @@ func TestTapDevice_Poll_5(t *testing.T) {
 
 // Fail when ReadEthFrame() failed.
 func TestTapDevice_Poll_6(t *testing.T) {
-	ctrl, teardown := setup(t)
+	ctrl, teardown := setupTapLinuxTest(t)
 	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)

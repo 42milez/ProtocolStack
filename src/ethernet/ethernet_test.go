@@ -14,12 +14,12 @@ import (
 	"testing"
 )
 
-func setup(t *testing.T) (ctrl *gomock.Controller, teardown func()) {
+func setupEthernetTest(t *testing.T) (ctrl *gomock.Controller, teardown func()) {
 	psLog.DisableOutput()
 	ctrl = gomock.NewController(t)
 	teardown = func() {
-		psLog.EnableOutput()
 		ctrl.Finish()
+		psLog.EnableOutput()
 	}
 	return
 }
@@ -98,7 +98,7 @@ func TestEthFrameDump(t *testing.T) {
 }
 
 func TestReadEthFrame_1(t *testing.T) {
-	ctrl, teardown := setup(t)
+	ctrl, teardown := setupEthernetTest(t)
 	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)
@@ -127,7 +127,7 @@ func TestReadEthFrame_1(t *testing.T) {
 
 // Fail when Read() returns error.
 func TestReadEthFrame_2(t *testing.T) {
-	ctrl, teardown := setup(t)
+	ctrl, teardown := setupEthernetTest(t)
 	defer teardown()
 
 	dev := &Device{Addr_: EthAddr{11, 12, 13, 14, 15, 16}}
@@ -143,7 +143,7 @@ func TestReadEthFrame_2(t *testing.T) {
 
 // Fail when header length is invalid.
 func TestReadEthFrame_3(t *testing.T) {
-	ctrl, teardown := setup(t)
+	ctrl, teardown := setupEthernetTest(t)
 	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)
@@ -160,7 +160,7 @@ func TestReadEthFrame_3(t *testing.T) {
 
 // Success when no data exits.
 func TestReadEthFrame_4(t *testing.T) {
-	ctrl, teardown := setup(t)
+	ctrl, teardown := setupEthernetTest(t)
 	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)
@@ -177,7 +177,7 @@ func TestReadEthFrame_4(t *testing.T) {
 
 // Fail when Read() system call returns error.
 func TestReadEthFrame_5(t *testing.T) {
-	ctrl, teardown := setup(t)
+	ctrl, teardown := setupEthernetTest(t)
 	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)

@@ -2,12 +2,24 @@ package ethernet
 
 import (
 	psErr "github.com/42milez/ProtocolStack/src/error"
+	psLog "github.com/42milez/ProtocolStack/src/log"
 	psSyscall "github.com/42milez/ProtocolStack/src/syscall"
+	"github.com/golang/mock/gomock"
 	"testing"
 )
 
+func setupLoopbackTest(t *testing.T) (ctrl *gomock.Controller, teardown func()) {
+	psLog.DisableOutput()
+	ctrl = gomock.NewController(t)
+	teardown = func() {
+		ctrl.Finish()
+		psLog.EnableOutput()
+	}
+	return
+}
+
 func TestLoopbackDevice_Open(t *testing.T) {
-	ctrl, teardown := setup(t)
+	ctrl, teardown := setupLoopbackTest(t)
 	defer teardown()
 
 	psSyscall.Syscall = psSyscall.NewMockISyscall(ctrl)
@@ -21,7 +33,7 @@ func TestLoopbackDevice_Open(t *testing.T) {
 }
 
 func TestLoopbackDevice_Close(t *testing.T) {
-	ctrl, teardown := setup(t)
+	ctrl, teardown := setupLoopbackTest(t)
 	defer teardown()
 
 	psSyscall.Syscall = psSyscall.NewMockISyscall(ctrl)
@@ -35,7 +47,7 @@ func TestLoopbackDevice_Close(t *testing.T) {
 }
 
 func TestLoopbackDevice_Poll(t *testing.T) {
-	ctrl, teardown := setup(t)
+	ctrl, teardown := setupLoopbackTest(t)
 	defer teardown()
 
 	psSyscall.Syscall = psSyscall.NewMockISyscall(ctrl)
@@ -49,7 +61,7 @@ func TestLoopbackDevice_Poll(t *testing.T) {
 }
 
 func TestLoopbackDevice_Transmit(t *testing.T) {
-	ctrl, teardown := setup(t)
+	ctrl, teardown := setupLoopbackTest(t)
 	defer teardown()
 
 	psSyscall.Syscall = psSyscall.NewMockISyscall(ctrl)

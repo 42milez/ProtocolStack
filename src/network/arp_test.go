@@ -2,14 +2,36 @@ package network
 
 import (
 	"github.com/42milez/ProtocolStack/src/ethernet"
+	psLog "github.com/42milez/ProtocolStack/src/log"
 	psTime "github.com/42milez/ProtocolStack/src/time"
+	"github.com/golang/mock/gomock"
 	"sync"
 	"testing"
 	"time"
 )
 
+func setupArpTest(t *testing.T) (ctrl *gomock.Controller, teardown func()) {
+	psLog.DisableOutput()
+	ctrl = gomock.NewController(t)
+	backupIfaceRepo := IfaceRepo
+	backupTime := psTime.Time
+
+	teardown = func() {
+		IfaceRepo = backupIfaceRepo
+		psTime.Time = backupTime
+		ctrl.Finish()
+		psLog.EnableOutput()
+	}
+
+	return
+}
+
+func TestArpInputHandler(t *testing.T) {
+
+}
+
 func TestRunArpTimer_1(t *testing.T) {
-	ctrl, teardown := setup(t)
+	ctrl, teardown := setupArpTest(t)
 	defer teardown()
 	defer cache.Init()
 

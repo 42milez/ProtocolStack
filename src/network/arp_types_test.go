@@ -21,7 +21,7 @@ func isEthAddrAllZero(addr [ethernet.EthAddrLen]byte) bool {
 	return true
 }
 
-func setup(t *testing.T) (ctrl *gomock.Controller, teardown func()) {
+func setupArpTypesTest(t *testing.T) (ctrl *gomock.Controller, teardown func()) {
 	psLog.DisableOutput()
 	backup := psTime.Time
 	ctrl = gomock.NewController(t)
@@ -66,7 +66,7 @@ func TestArpCache_Add_2(t *testing.T) {
 }
 
 func TestArpCache_Add_3(t *testing.T) {
-	ctrl, teardown := setup(t)
+	ctrl, teardown := setupArpTypesTest(t)
 	defer teardown()
 	defer cache.Init()
 
@@ -90,7 +90,7 @@ func TestArpCache_Add_3(t *testing.T) {
 }
 
 func TestArpCache_Renew_1(t *testing.T) {
-	ctrl, teardown := setup(t)
+	ctrl, teardown := setupArpTypesTest(t)
 	defer teardown()
 	defer cache.Init()
 

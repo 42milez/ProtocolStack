@@ -3,6 +3,8 @@ package network
 import (
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	"github.com/42milez/ProtocolStack/src/ethernet"
+	psLog "github.com/42milez/ProtocolStack/src/log"
+	"github.com/golang/mock/gomock"
 	"testing"
 )
 
@@ -11,8 +13,18 @@ func reset() {
 	IfaceRepo = &ifaceRepo{}
 }
 
+func setupRepositoryTest(t *testing.T) (ctrl *gomock.Controller, teardown func()) {
+	psLog.DisableOutput()
+	ctrl = gomock.NewController(t)
+	teardown = func() {
+		ctrl.Finish()
+		psLog.EnableOutput()
+	}
+	return
+}
+
 func TestDeviceRepo_Register_1(t *testing.T) {
-	_, teardown := setup(t)
+	_, teardown := setupRepositoryTest(t)
 	defer teardown()
 	defer reset()
 
@@ -26,7 +38,7 @@ func TestDeviceRepo_Register_1(t *testing.T) {
 
 // Fail when it's trying to register same device.
 func TestDeviceRepo_Register_2(t *testing.T) {
-	_, teardown := setup(t)
+	_, teardown := setupRepositoryTest(t)
 	defer teardown()
 	defer reset()
 
@@ -41,7 +53,7 @@ func TestDeviceRepo_Register_2(t *testing.T) {
 }
 
 func TestIfaceRepo_Register_1(t *testing.T) {
-	_, teardown := setup(t)
+	_, teardown := setupRepositoryTest(t)
 	defer teardown()
 	defer reset()
 
@@ -70,7 +82,7 @@ func TestIfaceRepo_Register_1(t *testing.T) {
 
 // Fail when it's trying to register same interface.
 func TestIfaceRepo_Register_2(t *testing.T) {
-	_, teardown := setup(t)
+	_, teardown := setupRepositoryTest(t)
 	defer teardown()
 	defer reset()
 
@@ -100,7 +112,7 @@ func TestIfaceRepo_Register_2(t *testing.T) {
 }
 
 func TestUp_1(t *testing.T) {
-	ctrl, teardown := setup(t)
+	ctrl, teardown := setupRepositoryTest(t)
 	defer teardown()
 	defer reset()
 
@@ -123,7 +135,7 @@ func TestUp_1(t *testing.T) {
 
 // Fail when device is already opened.
 func TestUp_2(t *testing.T) {
-	ctrl, teardown := setup(t)
+	ctrl, teardown := setupRepositoryTest(t)
 	defer teardown()
 	defer reset()
 
@@ -144,7 +156,7 @@ func TestUp_2(t *testing.T) {
 
 // Fail when it could not get device up.
 func TestUp_3(t *testing.T) {
-	ctrl, teardown := setup(t)
+	ctrl, teardown := setupRepositoryTest(t)
 	defer teardown()
 	defer reset()
 
