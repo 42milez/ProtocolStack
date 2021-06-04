@@ -5,7 +5,6 @@ import (
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	"github.com/42milez/ProtocolStack/src/ethernet"
 	psLog "github.com/42milez/ProtocolStack/src/log"
-	"syscall"
 )
 
 var DeviceRepo *deviceRepo
@@ -19,13 +18,6 @@ type Route struct {
 	Netmask IP
 	NextHop IP
 	Iface   *Iface
-}
-
-type Timer struct {
-	Name     string
-	Interval syscall.Timeval
-	Last     syscall.Timeval
-	Handler  Handler
 }
 
 type deviceRepo struct {
@@ -94,9 +86,9 @@ type ifaceRepo struct {
 	ifaces []*Iface
 }
 
-func (p *ifaceRepo) Get(ip IP) *Iface {
+func (p *ifaceRepo) Get(unicast IP) *Iface {
 	for _, v := range p.ifaces {
-		if v.Unicast.Equal(ip) {
+		if v.Unicast.Equal(unicast) {
 			return v
 		}
 	}
