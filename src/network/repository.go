@@ -1,3 +1,5 @@
+//go:generate mockgen -source=repository.go -destination=repository_mock.go -package=$GOPACKAGE -self_package=github.com/42milez/ProtocolStack/src/$GOPACKAGE
+
 package network
 
 import (
@@ -7,9 +9,9 @@ import (
 	psLog "github.com/42milez/ProtocolStack/src/log"
 )
 
-var DeviceRepo *deviceRepo
-var IfaceRepo *ifaceRepo
-var RouteRepo *routeRepo
+var DeviceRepo IDeviceRepo
+var IfaceRepo IIfaceRepo
+var RouteRepo IRouteRepo
 
 type Handler func(data []byte, dev ethernet.IDevice) psErr.E
 
@@ -18,6 +20,13 @@ type Route struct {
 	Netmask IP
 	NextHop IP
 	Iface   *Iface
+}
+
+type IDeviceRepo interface {
+	NextNumber() int
+	Poll(terminate bool) psErr.E
+	Register(dev ethernet.IDevice) psErr.E
+	Up() psErr.E
 }
 
 type deviceRepo struct {
@@ -82,6 +91,12 @@ func (p *deviceRepo) Up() psErr.E {
 	return psErr.OK
 }
 
+type IIfaceRepo interface {
+	Get(unicast IP) *Iface
+	Lookup(dev ethernet.IDevice, family AddrFamily) *Iface
+	Register(iface *Iface, dev ethernet.IDevice) psErr.E
+}
+
 type ifaceRepo struct {
 	ifaces []*Iface
 }
@@ -120,6 +135,12 @@ func (p *ifaceRepo) Register(iface *Iface, dev ethernet.IDevice) psErr.E {
 	psLog.I(fmt.Sprintf("\tdevice: %s (%s)", dev.Name(), dev.Priv().Name))
 
 	return psErr.OK
+}
+
+type IRouteRepo interface {
+	Get(ip IP) *Route
+	Register(network IP, nextHop IP, iface *Iface)
+	RegisterDefaultGateway(iface *Iface, nextHop IP)
 }
 
 type routeRepo struct {
