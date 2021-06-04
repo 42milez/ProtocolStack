@@ -32,7 +32,7 @@ func (v Addr) String() string {
 	return fmt.Sprintf("%02x:%02x:%02x:%02x:%02x:%02x", v[0], v[1], v[2], v[3], v[4], v[5])
 }
 
-type EthHdr struct {
+type Hdr struct {
 	Dst  Addr
 	Src  Addr
 	Type EthType
@@ -43,7 +43,7 @@ func (v EthType) String() string {
 	return ethTypes[v]
 }
 
-func EthFrameDump(hdr *EthHdr, payload []byte) {
+func EthFrameDump(hdr *Hdr, payload []byte) {
 	psLog.I(fmt.Sprintf("\ttype:    0x%04x (%s)", uint16(hdr.Type), hdr.Type))
 	psLog.I(fmt.Sprintf("\tdst:     %s", hdr.Dst))
 	psLog.I(fmt.Sprintf("\tsrc:     %s", hdr.Src))
@@ -72,7 +72,7 @@ func ReadEthFrame(fd int, addr Addr) (*Packet, psErr.E) {
 	psLog.I(fmt.Sprintf("Ethernet frame arrived: %d bytes", flen))
 
 	buf := bytes.NewBuffer(rxBuf)
-	hdr := EthHdr{}
+	hdr := Hdr{}
 	if err := binary.Read(buf, binary.BigEndian, &hdr); err != nil {
 		return nil, psErr.ReadFromBufError
 	}
@@ -98,7 +98,7 @@ func ReadEthFrame(fd int, addr Addr) (*Packet, psErr.E) {
 }
 
 func WriteEthFrame(fd int, dst Addr, src Addr, typ EthType, payload []byte) psErr.E {
-	hdr := EthHdr{
+	hdr := Hdr{
 		Dst:  dst,
 		Src:  src,
 		Type: typ,

@@ -82,7 +82,7 @@ func TestEthFrameDump(t *testing.T) {
 		regexpDatetime,
 		regexpDatetime))
 	got := psLog.CaptureLogOutput(func() {
-		hdr := EthHdr{Dst: macDst, Src: macSrc, Type: ethType}
+		hdr := Hdr{Dst: macDst, Src: macSrc, Type: ethType}
 		payload := []byte{
 			0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a,
 			0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14,
@@ -105,7 +105,7 @@ func TestReadEthFrame_1(t *testing.T) {
 	m.EXPECT().
 		Read(gomock.Any(), gomock.Any()).
 		Do(func(_ int, buf []byte) {
-			hdr := EthHdr{
+			hdr := Hdr{
 				Dst:  Addr{11, 12, 13, 14, 15, 16},
 				Src:  Addr{21, 22, 23, 24, 25, 26},
 				Type: EthType(0x0800),
