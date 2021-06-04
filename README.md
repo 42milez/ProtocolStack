@@ -165,6 +165,7 @@ Note: `make` supports the commands below:
     - [Memory safety](https://en.wikipedia.org/wiki/Memory_safety)
     - [Region-based memory management](https://en.wikipedia.org/wiki/Region-based_memory_management)
   - Others
+    - [Architectural pattern](https://en.wikipedia.org/wiki/Architectural_pattern)
     - [Communicating sequential processes](https://en.wikipedia.org/wiki/Communicating_sequential_processes)
     - [Continuation](https://en.wikipedia.org/wiki/Continuation)
     - [Cooperative multitasking](https://en.wikipedia.org/wiki/Cooperative_multitasking)
@@ -178,6 +179,7 @@ Note: `make` supports the commands below:
     - [Preemption (computing)](https://en.wikipedia.org/wiki/Preemption_(computing))
     - [Process substitution](https://en.wikipedia.org/wiki/Process_substitution)
     - [Reflective programming](https://en.wikipedia.org/wiki/Reflective_programming)
+    - [Software design pattern](https://en.wikipedia.org/wiki/Software_design_pattern)
     - [Task (computing)](https://en.wikipedia.org/wiki/Task_(computing))
     - [Template metaprogramming](https://en.wikipedia.org/wiki/Template_metaprogramming)
     - [Thread pool](https://en.wikipedia.org/wiki/Thread_pool)
