@@ -21,7 +21,7 @@ func GenTapDevice(devName string, privName string, addr EthAddr) *TapDevice {
 			Name_: devName,
 			Addr_: addr,
 			Flag_: DevFlagBroadcast | DevFlagNeedArp,
-			MTU_:  EthPayloadLenMax,
+			MTU_:  PayloadLenMax,
 			Priv_: Privilege{
 				FD:   -1,
 				Name: privName,

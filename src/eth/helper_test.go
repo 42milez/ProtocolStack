@@ -28,7 +28,7 @@ func TestGenTapDevice(t *testing.T) {
 		Device: Device{
 			Type_: DevTypeEthernet,
 			Name_: devName,
-			MTU_:  EthPayloadLenMax,
+			MTU_:  PayloadLenMax,
 			Flag_: DevFlagBroadcast | DevFlagNeedArp,
 			Addr_: devEthAddr,
 			Priv_: Privilege{

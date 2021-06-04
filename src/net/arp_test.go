@@ -41,7 +41,7 @@ func TestArpInputHandler_1(t *testing.T) {
 			Name_: "net0",
 			Addr_: ethAddr,
 			Flag_: eth.DevFlagBroadcast | eth.DevFlagNeedArp,
-			MTU_:  eth.EthPayloadLenMax,
+			MTU_:  eth.PayloadLenMax,
 			Priv_: eth.Privilege{
 				FD:   3,
 				Name: "tap0",
