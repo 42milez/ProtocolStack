@@ -69,7 +69,7 @@ func TestIfaceRepo_Register_1(t *testing.T) {
 			Type_: eth.DevTypeEthernet,
 			MTU_:  eth.PayloadLenMax,
 			Flag_: eth.DevFlagBroadcast | eth.DevFlagNeedArp,
-			Addr_: eth.EthAddr{11, 12, 13, 14, 15, 16},
+			Addr_: eth.Addr{11, 12, 13, 14, 15, 16},
 			Priv_: eth.Privilege{FD: -1, Name: "tap0"},
 		},
 	}
@@ -98,7 +98,7 @@ func TestIfaceRepo_Register_2(t *testing.T) {
 			Type_: eth.DevTypeEthernet,
 			MTU_:  eth.PayloadLenMax,
 			Flag_: eth.DevFlagBroadcast | eth.DevFlagNeedArp,
-			Addr_: eth.EthAddr{11, 12, 13, 14, 15, 16},
+			Addr_: eth.Addr{11, 12, 13, 14, 15, 16},
 			Priv_: eth.Privilege{FD: -1, Name: "tap0"},
 		},
 	}
@@ -120,7 +120,7 @@ func TestUp_1(t *testing.T) {
 	m.EXPECT().Open().Return(psErr.OK)
 	m.EXPECT().Up()
 	m.EXPECT().IsUp().Return(false)
-	m.EXPECT().Addr().Return(eth.EthAddr{})
+	m.EXPECT().Addr().Return(eth.Addr{})
 	m.EXPECT().Type().Return(eth.DevTypeEthernet).AnyTimes()
 	m.EXPECT().Name().Return("net0").AnyTimes()
 	m.EXPECT().Priv().Return(eth.Privilege{Name: "tap0"}).AnyTimes()
@@ -144,7 +144,7 @@ func TestUp_2(t *testing.T) {
 	m.EXPECT().Type().Return(eth.DevTypeEthernet).AnyTimes()
 	m.EXPECT().Name().Return("net0").AnyTimes()
 	m.EXPECT().Priv().Return(eth.Privilege{Name: "tap0"}).AnyTimes()
-	m.EXPECT().Addr().Return(eth.EthAddr{})
+	m.EXPECT().Addr().Return(eth.Addr{})
 
 	_ = DeviceRepo.Register(m)
 
@@ -166,7 +166,7 @@ func TestUp_3(t *testing.T) {
 	m.EXPECT().Type().Return(eth.DevTypeEthernet).AnyTimes()
 	m.EXPECT().Name().Return("net0").AnyTimes()
 	m.EXPECT().Priv().Return(eth.Privilege{Name: "tap0"}).AnyTimes()
-	m.EXPECT().Addr().Return(eth.EthAddr{})
+	m.EXPECT().Addr().Return(eth.Addr{})
 
 	_ = DeviceRepo.Register(m)
 

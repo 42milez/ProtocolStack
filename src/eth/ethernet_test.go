@@ -31,17 +31,17 @@ func trim(s string) string {
 }
 
 func TestEthAddr_Equal(t *testing.T) {
-	ethAddr1 := EthAddr{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}
-	ethAddr2 := EthAddr{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}
+	ethAddr1 := Addr{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}
+	ethAddr2 := Addr{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}
 	got := ethAddr1.Equal(ethAddr2)
 	if got != true {
-		t.Errorf("EthAddr.Equal() = %t; want %t", got, true)
+		t.Errorf("Addr.Equal() = %t; want %t", got, true)
 	}
 
-	ethAddr3 := EthAddr{}
+	ethAddr3 := Addr{}
 	got = ethAddr1.Equal(ethAddr3)
 	if got != false {
-		t.Errorf("EthAddr.Equal() = %t; want %t", got, false)
+		t.Errorf("Addr.Equal() = %t; want %t", got, false)
 	}
 }
 
@@ -67,8 +67,8 @@ func TestEthType_String(t *testing.T) {
 
 func TestEthFrameDump(t *testing.T) {
 	regexpDatetime := "[0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}"
-	macDst := EthAddr{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}
-	macSrc := EthAddr{0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f}
+	macDst := Addr{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}
+	macSrc := Addr{0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f}
 	ethType := EthType(0x0800)
 	want, _ := regexp.Compile(fmt.Sprintf(
 		"^.+ %s type:    0x%04x \\(%s\\).+ %s dst:     %s.+ %s src:     %s.+ %s payload: 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 .+ %s  15 16 17 18 19 1a 1b 1c 1d 1e 1f 20 21 22 23 24 25 26 27 28 $",
@@ -106,8 +106,8 @@ func TestReadEthFrame_1(t *testing.T) {
 		Read(gomock.Any(), gomock.Any()).
 		Do(func(_ int, buf []byte) {
 			hdr := EthHdr{
-				Dst:  EthAddr{11, 12, 13, 14, 15, 16},
-				Src:  EthAddr{21, 22, 23, 24, 25, 26},
+				Dst:  Addr{11, 12, 13, 14, 15, 16},
+				Src:  Addr{21, 22, 23, 24, 25, 26},
 				Type: EthType(0x0800),
 			}
 			b := new(bytes.Buffer)
@@ -117,7 +117,7 @@ func TestReadEthFrame_1(t *testing.T) {
 		Return(150, nil)
 	psSyscall.Syscall = m
 
-	dev := &Device{Addr_: EthAddr{11, 12, 13, 14, 15, 16}}
+	dev := &Device{Addr_: Addr{11, 12, 13, 14, 15, 16}}
 
 	_, got := ReadEthFrame(dev.Priv().FD, dev.Addr())
 	if got != psErr.OK {
@@ -130,7 +130,7 @@ func TestReadEthFrame_2(t *testing.T) {
 	ctrl, teardown := setupEthernetTest(t)
 	defer teardown()
 
-	dev := &Device{Addr_: EthAddr{11, 12, 13, 14, 15, 16}}
+	dev := &Device{Addr_: Addr{11, 12, 13, 14, 15, 16}}
 	m := psSyscall.NewMockISyscall(ctrl)
 	m.EXPECT().Read(gomock.Any(), gomock.Any()).Return(-1, errors.New(""))
 	psSyscall.Syscall = m
@@ -150,7 +150,7 @@ func TestReadEthFrame_3(t *testing.T) {
 	m.EXPECT().Read(gomock.Any(), gomock.Any()).Return(10, nil)
 	psSyscall.Syscall = m
 
-	dev := &Device{Addr_: EthAddr{11, 12, 13, 14, 15, 16}}
+	dev := &Device{Addr_: Addr{11, 12, 13, 14, 15, 16}}
 
 	_, got := ReadEthFrame(dev.Priv().FD, dev.Addr())
 	if got != psErr.Error {
@@ -167,7 +167,7 @@ func TestReadEthFrame_4(t *testing.T) {
 	m.EXPECT().Read(gomock.Any(), gomock.Any()).Return(150, nil)
 	psSyscall.Syscall = m
 
-	dev := &Device{Addr_: EthAddr{33, 44, 55, 66, 77, 88}}
+	dev := &Device{Addr_: Addr{33, 44, 55, 66, 77, 88}}
 
 	_, got := ReadEthFrame(dev.Priv().FD, dev.Addr())
 	if got != psErr.NoDataToRead {
@@ -184,7 +184,7 @@ func TestReadEthFrame_5(t *testing.T) {
 	m.EXPECT().Read(gomock.Any(), gomock.Any()).Return(150, nil)
 	psSyscall.Syscall = m
 
-	dev := &Device{Addr_: EthAddr{33, 44, 55, 66, 77, 88}}
+	dev := &Device{Addr_: Addr{33, 44, 55, 66, 77, 88}}
 
 	_, got := ReadEthFrame(dev.Priv().FD, dev.Addr())
 	if got != psErr.NoDataToRead {

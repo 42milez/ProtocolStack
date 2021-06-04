@@ -19,22 +19,22 @@ const ARP EthType = 0x0806
 const IPv4 EthType = 0x0800
 const IPv6 EthType = 0x86dd
 
-var Any = EthAddr{0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
-var Broadcast = EthAddr{0xff, 0xff, 0xff, 0xff, 0xff, 0xff}
+var Any = Addr{0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
+var Broadcast = Addr{0xff, 0xff, 0xff, 0xff, 0xff, 0xff}
 
-type EthAddr [AddrLen]byte
+type Addr [AddrLen]byte
 
-func (v EthAddr) Equal(vv EthAddr) bool {
+func (v Addr) Equal(vv Addr) bool {
 	return v == vv
 }
 
-func (v EthAddr) String() string {
+func (v Addr) String() string {
 	return fmt.Sprintf("%02x:%02x:%02x:%02x:%02x:%02x", v[0], v[1], v[2], v[3], v[4], v[5])
 }
 
 type EthHdr struct {
-	Dst  EthAddr
-	Src  EthAddr
+	Dst  Addr
+	Src  Addr
 	Type EthType
 }
 type EthType uint16
@@ -58,7 +58,7 @@ func EthFrameDump(hdr *EthHdr, payload []byte) {
 	}
 }
 
-func ReadEthFrame(fd int, addr EthAddr) (*Packet, psErr.E) {
+func ReadEthFrame(fd int, addr Addr) (*Packet, psErr.E) {
 	flen, err := psSyscall.Syscall.Read(fd, rxBuf)
 	if err != nil {
 		return nil, psErr.Error
@@ -97,7 +97,7 @@ func ReadEthFrame(fd int, addr EthAddr) (*Packet, psErr.E) {
 	}, psErr.OK
 }
 
-func WriteEthFrame(fd int, dst EthAddr, src EthAddr, typ EthType, payload []byte) psErr.E {
+func WriteEthFrame(fd int, dst Addr, src Addr, typ EthType, payload []byte) psErr.E {
 	hdr := EthHdr{
 		Dst:  dst,
 		Src:  src,

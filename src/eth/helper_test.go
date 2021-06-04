@@ -23,7 +23,7 @@ func TestGenLoopbackDevice(t *testing.T) {
 func TestGenTapDevice(t *testing.T) {
 	devName := "net0"
 	privName := "tap0"
-	devEthAddr := EthAddr{11, 12, 13, 14, 15, 16}
+	devEthAddr := Addr{11, 12, 13, 14, 15, 16}
 	want := &TapDevice{
 		Device: Device{
 			Type_: DevTypeEthernet,

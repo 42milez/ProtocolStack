@@ -14,7 +14,7 @@ func GenLoopbackDevice(name string) *LoopbackDevice {
 }
 
 // GenTapDevice generates TAP device object.
-func GenTapDevice(devName string, privName string, addr EthAddr) *TapDevice {
+func GenTapDevice(devName string, privName string, addr Addr) *TapDevice {
 	return &TapDevice{
 		Device: Device{
 			Type_: DevTypeEthernet,
