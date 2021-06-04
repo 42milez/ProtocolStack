@@ -61,13 +61,11 @@ func TestArpInputHandler_2(t *testing.T) {
 	_, teardown := SetupArpInputHandlerTest(t)
 	defer teardown()
 
-	packet := &ArpPacket{}
-	buf := new(bytes.Buffer)
-	_ = binary.Write(buf, binary.BigEndian, packet)
+	var packet []byte
 	dev := &ethernet.TapDevice{}
 
 	want := psErr.InvalidPacket
-	got := ArpInputHandler(buf.Bytes(), dev)
+	got := ArpInputHandler(packet, dev)
 	if got != want {
 		t.Errorf("ArpInputHandler() = %s; want %s", got, want)
 	}
