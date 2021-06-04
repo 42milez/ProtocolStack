@@ -13,26 +13,8 @@ import (
 	"time"
 )
 
-var Any = gomock.Any()
-
-func setupArpTest(t *testing.T) (ctrl *gomock.Controller, teardown func()) {
-	psLog.DisableOutput()
-	ctrl = gomock.NewController(t)
-	backupIfaceRepo := IfaceRepo
-	backupTime := psTime.Time
-
-	teardown = func() {
-		IfaceRepo = backupIfaceRepo
-		psTime.Time = backupTime
-		ctrl.Finish()
-		psLog.EnableOutput()
-	}
-
-	return
-}
-
-func TestArpInputHandler(t *testing.T) {
-	ctrl, teardown := setupArpTest(t)
+func TestArpInputHandler_1(t *testing.T) {
+	ctrl, teardown := SetupArpInputHandlerTest(t)
 	defer teardown()
 
 	ethAddr := ethernet.EthAddr{11, 22, 33, 44, 55, 66}
@@ -65,17 +47,7 @@ func TestArpInputHandler(t *testing.T) {
 	})
 	IfaceRepo = mockIfaceRepo
 
-	packet := &ArpPacket{
-		ArpHdr: ArpHdr{
-			HT:     ArpHwTypeEthernet,
-			PT:     ethernet.EthTypeIpv4,
-			HAL:    ethernet.EthAddrLen,
-			PAL:    V4AddrLen,
-			Opcode: ArpOpRequest,
-		},
-		THA: ethAddr,
-		TPA: ArpProtoAddr{192, 0, 2, 2},
-	}
+	packet := Builder.Valid()
 
 	buf := new(bytes.Buffer)
 	_ = binary.Write(buf, binary.BigEndian, packet)
@@ -87,8 +59,55 @@ func TestArpInputHandler(t *testing.T) {
 	}
 }
 
+// Fail when ARP packet is too short.
+func TestArpInputHandler_2(t *testing.T) {
+	_, teardown := SetupArpInputHandlerTest(t)
+	defer teardown()
+
+	packet := &ArpPacket{}
+	buf := new(bytes.Buffer)
+	_ = binary.Write(buf, binary.BigEndian, packet)
+
+	dev := &ethernet.TapDevice{}
+
+	want := psErr.InvalidPacket
+	got := ArpInputHandler(buf.Bytes(), dev)
+	if got != want {
+		t.Errorf("ArpInputHandler() = %s; want %s", got, want)
+	}
+}
+
+// Fail when hardware type of ARP packet is invalid.
+// Fail when protocol type of ARP packet is invalid.
+func TestArpInputHandler_3(t *testing.T) {
+	_, teardown := SetupArpInputHandlerTest(t)
+	defer teardown()
+
+	packet := Builder.InvalidHardwareType()
+	buf := new(bytes.Buffer)
+	_ = binary.Write(buf, binary.BigEndian, packet)
+
+	dev := &ethernet.TapDevice{}
+
+	want := psErr.InvalidPacket
+	got := ArpInputHandler(buf.Bytes(), dev)
+	if got != want {
+		t.Errorf("ArpInputHandler() = %s; want %s", got, want)
+	}
+
+	packet = Builder.InvalidProtocolType()
+	buf = new(bytes.Buffer)
+	_ = binary.Write(buf, binary.BigEndian, packet)
+
+	want = psErr.InvalidPacket
+	got = ArpInputHandler(buf.Bytes(), dev)
+	if got != want {
+		t.Errorf("ArpInputHandler() = %s; want %s", got, want)
+	}
+}
+
 func TestRunArpTimer_1(t *testing.T) {
-	ctrl, teardown := setupArpTest(t)
+	ctrl, teardown := SetupRunArpTimerTest(t)
 	defer teardown()
 	defer cache.Init()
 
@@ -97,10 +116,8 @@ func TestRunArpTimer_1(t *testing.T) {
 	m.EXPECT().Now().Return(createdAt)
 	psTime.Time = m
 
-	ha := ethernet.EthAddr{0x11, 0x22, 0x33, 0x44, 0x55, 0x66}
 	pa := ArpProtoAddr{192, 168, 1, 1}
-	state := ArpCacheStateResolved
-	_ = cache.Add(ha, pa, state)
+	_ = cache.Add(ethernet.EthAddr{0x11, 0x22, 0x33, 0x44, 0x55, 0x66}, pa, ArpCacheStateResolved)
 
 	var wg sync.WaitGroup
 	RunArpTimer(&wg)
@@ -115,6 +132,8 @@ func TestRunArpTimer_1(t *testing.T) {
 }
 
 func TestRunArpTimer_2(t *testing.T) {
+	_, teardown := SetupRunArpTimerTest(t)
+	defer teardown()
 	defer cache.Init()
 
 	var wg sync.WaitGroup
@@ -127,4 +146,81 @@ func TestRunArpTimer_2(t *testing.T) {
 	if got {
 		t.Errorf("ARP cache exists")
 	}
+}
+
+var Any = gomock.Any()
+var Builder = ArpPacketBuilder{}
+
+type ArpPacketBuilder struct {}
+
+func (ArpPacketBuilder) Valid() *ArpPacket {
+	return &ArpPacket{
+		ArpHdr: ArpHdr{
+			HT:     ArpHwTypeEthernet,
+			PT:     ethernet.EthTypeIpv4,
+			HAL:    ethernet.EthAddrLen,
+			PAL:    V4AddrLen,
+			Opcode: ArpOpRequest,
+		},
+		THA: ethernet.EthAddr{0x11, 0x22, 0x33, 0x44, 0x55, 0x66},
+		TPA: ArpProtoAddr{192, 0, 2, 2},
+	}
+}
+
+func (ArpPacketBuilder) InvalidHardwareType() *ArpPacket {
+	return &ArpPacket{
+		ArpHdr: ArpHdr{
+			HT:     0x0002, // invalid hardware type
+			PT:     ethernet.EthTypeIpv4,
+			HAL:    ethernet.EthAddrLen,
+			PAL:    V4AddrLen,
+			Opcode: ArpOpRequest,
+		},
+		THA: ethernet.EthAddr{0x11, 0x22, 0x33, 0x44, 0x55, 0x66},
+		TPA: ArpProtoAddr{192, 0, 2, 2},
+	}
+}
+
+func (ArpPacketBuilder) InvalidProtocolType() *ArpPacket {
+	return &ArpPacket{
+		ArpHdr: ArpHdr{
+			HT:     ArpHwTypeEthernet,
+			PT:     0x0, // invalid protocol type
+			HAL:    ethernet.EthAddrLen,
+			PAL:    V4AddrLen,
+			Opcode: ArpOpRequest,
+		},
+		THA: ethernet.EthAddr{0x11, 0x22, 0x33, 0x44, 0x55, 0x66},
+		TPA: ArpProtoAddr{192, 0, 2, 2},
+	}
+}
+
+func SetupArpInputHandlerTest(t *testing.T) (ctrl *gomock.Controller, teardown func()) {
+	psLog.DisableOutput()
+	ctrl = gomock.NewController(t)
+	backupIfaceRepo := IfaceRepo
+	backupTime := psTime.Time
+
+	teardown = func() {
+		IfaceRepo = backupIfaceRepo
+		psTime.Time = backupTime
+		ctrl.Finish()
+		psLog.EnableOutput()
+	}
+
+	return
+}
+
+func SetupRunArpTimerTest(t *testing.T) (ctrl *gomock.Controller, teardown func()) {
+	psLog.DisableOutput()
+	ctrl = gomock.NewController(t)
+	backupTime := psTime.Time
+
+	teardown = func() {
+		psTime.Time = backupTime
+		ctrl.Finish()
+		psLog.EnableOutput()
+	}
+
+	return
 }
