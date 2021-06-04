@@ -89,11 +89,11 @@ func TestEthFrameDump(t *testing.T) {
 			0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e,
 			0x1f, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28,
 		}
-		EthFrameDump(&hdr, payload)
+		dumpEthFrame(&hdr, payload)
 	})
 	got = trim(got)
 	if !want.MatchString(got) {
-		t.Errorf("EthFrameDump() = %v; want %v", got, want)
+		t.Errorf("dumpEthFrame() = %v; want %v", got, want)
 	}
 }
 
