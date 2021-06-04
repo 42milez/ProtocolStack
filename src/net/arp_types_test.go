@@ -114,7 +114,7 @@ func TestArpCache_Renew_1(t *testing.T) {
 		PA:        ArpProtoAddr{192, 168, 1, 1},
 	}
 
-	got := ARP.cache.get(pa)
+	got := ARP.cache.GetEntry(pa)
 	if d := cmp.Diff(got, want); d != "" {
 		t.Errorf("Renew() differs: (-got +want)\n%s", d)
 	}

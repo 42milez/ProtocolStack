@@ -117,7 +117,7 @@ func (m *MockIIfaceRepo) EXPECT() *MockIIfaceRepoMockRecorder {
 // Get mocks base method.
 func (m *MockIIfaceRepo) Get(unicast IP) *Iface {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Get", unicast)
+	ret := m.ctrl.Call(m, "GetEntry", unicast)
 	ret0, _ := ret[0].(*Iface)
 	return ret0
 }
@@ -125,7 +125,7 @@ func (m *MockIIfaceRepo) Get(unicast IP) *Iface {
 // Get indicates an expected call of Get.
 func (mr *MockIIfaceRepoMockRecorder) Get(unicast interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockIIfaceRepo)(nil).Get), unicast)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEntry", reflect.TypeOf((*MockIIfaceRepo)(nil).Get), unicast)
 }
 
 // Lookup mocks base method.
@@ -182,7 +182,7 @@ func (m *MockIRouteRepo) EXPECT() *MockIRouteRepoMockRecorder {
 // Get mocks base method.
 func (m *MockIRouteRepo) Get(ip IP) *Route {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Get", ip)
+	ret := m.ctrl.Call(m, "GetEntry", ip)
 	ret0, _ := ret[0].(*Route)
 	return ret0
 }
@@ -190,7 +190,7 @@ func (m *MockIRouteRepo) Get(ip IP) *Route {
 // Get indicates an expected call of Get.
 func (mr *MockIRouteRepoMockRecorder) Get(ip interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockIRouteRepo)(nil).Get), ip)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEntry", reflect.TypeOf((*MockIRouteRepo)(nil).Get), ip)
 }
 
 // Register mocks base method.

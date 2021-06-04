@@ -215,10 +215,10 @@ func (p *arpCache) Init() {
 
 func (p *arpCache) Create(ha eth.EthAddr, pa ArpProtoAddr, state ArpCacheState) psErr.E {
 	var entry *arpCacheEntry
-	if entry = p.get(pa); entry != nil {
+	if entry = p.GetEntry(pa); entry != nil {
 		return psErr.Exist
 	}
-	entry = p.reusableEntry()
+	entry = p.GetReusableEntry()
 
 	p.mtx.Lock()
 	defer p.mtx.Unlock()
@@ -232,7 +232,7 @@ func (p *arpCache) Create(ha eth.EthAddr, pa ArpProtoAddr, state ArpCacheState) 
 }
 
 func (p *arpCache) Renew(pa ArpProtoAddr, ha eth.EthAddr, state ArpCacheState) psErr.E {
-	entry := p.get(pa)
+	entry := p.GetEntry(pa)
 	if entry == nil {
 		return psErr.NotFound
 	}
@@ -248,21 +248,21 @@ func (p *arpCache) Renew(pa ArpProtoAddr, ha eth.EthAddr, state ArpCacheState) p
 }
 
 func (p *arpCache) EthAddr(pa ArpProtoAddr) (eth.EthAddr, bool) {
-	if entry := p.get(pa); entry != nil {
+	if entry := p.GetEntry(pa); entry != nil {
 		return entry.HA, true
 	} else {
 		return eth.EthAddr{}, false
 	}
 }
 
-func (p *arpCache) clear(idx int) {
+func (p *arpCache) Clear(idx int) {
 	p.entries[idx].State = ArpCacheStateFree
 	p.entries[idx].CreatedAt = time.Unix(0, 0)
 	p.entries[idx].HA = eth.EthAddr{}
 	p.entries[idx].PA = ArpProtoAddr{}
 }
 
-func (p *arpCache) get(ip ArpProtoAddr) *arpCacheEntry {
+func (p *arpCache) GetEntry(ip ArpProtoAddr) *arpCacheEntry {
 	p.mtx.Lock()
 	defer p.mtx.Unlock()
 
@@ -275,7 +275,7 @@ func (p *arpCache) get(ip ArpProtoAddr) *arpCacheEntry {
 	return nil
 }
 
-func (p *arpCache) reusableEntry() *arpCacheEntry {
+func (p *arpCache) GetReusableEntry() *arpCacheEntry {
 	p.mtx.Lock()
 	defer p.mtx.Unlock()
 
@@ -300,7 +300,7 @@ func (p *arpCache) expire() (invalidations []string) {
 	for i, v := range p.entries {
 		if v.CreatedAt != time.Unix(0, 0) && now.Sub(v.CreatedAt) > arpCacheLifetime {
 			invalidations = append(invalidations, fmt.Sprintf("%s (%s)", v.PA, v.HA))
-			p.clear(i)
+			p.Clear(i)
 		}
 	}
 
