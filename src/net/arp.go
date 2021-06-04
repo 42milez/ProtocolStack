@@ -218,7 +218,7 @@ func (p *arpCache) Create(ha eth.EthAddr, pa ArpProtoAddr, state ArpCacheState) 
 	if entry = p.get(pa); entry != nil {
 		return psErr.Exist
 	}
-	entry = p.danglingEntry()
+	entry = p.reusableEntry()
 
 	p.mtx.Lock()
 	defer p.mtx.Unlock()
@@ -262,7 +262,20 @@ func (p *arpCache) clear(idx int) {
 	p.entries[idx].PA = ArpProtoAddr{}
 }
 
-func (p *arpCache) danglingEntry() *arpCacheEntry {
+func (p *arpCache) get(ip ArpProtoAddr) *arpCacheEntry {
+	p.mtx.Lock()
+	defer p.mtx.Unlock()
+
+	for i, v := range p.entries {
+		if v.PA == ip {
+			return p.entries[i]
+		}
+	}
+
+	return nil
+}
+
+func (p *arpCache) reusableEntry() *arpCacheEntry {
 	p.mtx.Lock()
 	defer p.mtx.Unlock()
 
@@ -292,19 +305,6 @@ func (p *arpCache) expire() (invalidations []string) {
 	}
 
 	return
-}
-
-func (p *arpCache) get(ip ArpProtoAddr) *arpCacheEntry {
-	p.mtx.Lock()
-	defer p.mtx.Unlock()
-
-	for i, v := range p.entries {
-		if v.PA == ip {
-			return p.entries[i]
-		}
-	}
-
-	return nil
 }
 
 func dumpArpPacket(packet *ArpPacket) {
