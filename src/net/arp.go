@@ -247,13 +247,6 @@ func (p *arpCache) Renew(pa ArpProtoAddr, ha eth.EthAddr, state ArpCacheState) p
 	return psErr.OK
 }
 
-func (p *arpCache) Clear(idx int) {
-	p.entries[idx].State = ArpCacheStateFree
-	p.entries[idx].CreatedAt = time.Unix(0, 0)
-	p.entries[idx].HA = eth.EthAddr{}
-	p.entries[idx].PA = ArpProtoAddr{}
-}
-
 func (p *arpCache) GetEntry(ip ArpProtoAddr) *arpCacheEntry {
 	p.mtx.Lock()
 	defer p.mtx.Unlock()
@@ -282,6 +275,13 @@ func (p *arpCache) GetReusableEntry() *arpCacheEntry {
 	}
 
 	return oldest
+}
+
+func (p *arpCache) Clear(idx int) {
+	p.entries[idx].State = ArpCacheStateFree
+	p.entries[idx].CreatedAt = time.Unix(0, 0)
+	p.entries[idx].HA = eth.EthAddr{}
+	p.entries[idx].PA = ArpProtoAddr{}
 }
 
 func (p *arpCache) Expire() (invalidations []string) {
