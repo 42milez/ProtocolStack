@@ -22,6 +22,17 @@ const IPv6 Type = 0x86dd
 var Any = Addr{0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 var Broadcast = Addr{0xff, 0xff, 0xff, 0xff, 0xff, 0xff}
 
+// Ethertypes
+// https://www.iana.org/assignments/ieee-802-numbers/ieee-802-numbers.xhtml#ieee-802-numbers-1
+
+var ethTypes = map[Type]string{
+	0x0800: "IPv4",
+	0x0806: "ARP",
+	0x86dd: "IPv6",
+}
+
+var rxBuf []byte
+
 type Addr [AddrLen]byte
 
 func (v Addr) Equal(vv Addr) bool {
@@ -41,21 +52,6 @@ type Type uint16
 
 func (v Type) String() string {
 	return ethTypes[v]
-}
-
-func dumpEthFrame(hdr *Hdr, payload []byte) {
-	psLog.I(fmt.Sprintf("\ttype:    0x%04x (%s)", uint16(hdr.Type), hdr.Type))
-	psLog.I(fmt.Sprintf("\tdst:     %s", hdr.Dst))
-	psLog.I(fmt.Sprintf("\tsrc:     %s", hdr.Src))
-
-	s := "\tpayload: "
-	for i, v := range payload {
-		s += fmt.Sprintf("%02x ", v)
-		if (i+1)%20 == 0 {
-			psLog.I(s)
-			s = "\t\t "
-		}
-	}
 }
 
 func ReadEthFrame(fd int, addr Addr) (*Packet, psErr.E) {
@@ -128,6 +124,21 @@ func WriteEthFrame(fd int, dst Addr, src Addr, typ Type, payload []byte) psErr.E
 	return psErr.OK
 }
 
+func dumpEthFrame(hdr *Hdr, payload []byte) {
+	psLog.I(fmt.Sprintf("\ttype:    0x%04x (%s)", uint16(hdr.Type), hdr.Type))
+	psLog.I(fmt.Sprintf("\tdst:     %s", hdr.Dst))
+	psLog.I(fmt.Sprintf("\tsrc:     %s", hdr.Src))
+
+	s := "\tpayload: "
+	for i, v := range payload {
+		s += fmt.Sprintf("%02x ", v)
+		if (i+1)%20 == 0 {
+			psLog.I(s)
+			s = "\t\t "
+		}
+	}
+}
+
 func pad(buf *bytes.Buffer) psErr.E {
 	if flen := buf.Len(); flen < FrameLenMin {
 		padLen := FrameLenMin - flen
@@ -138,17 +149,6 @@ func pad(buf *bytes.Buffer) psErr.E {
 	}
 	return psErr.OK
 }
-
-// Ethertypes
-// https://www.iana.org/assignments/ieee-802-numbers/ieee-802-numbers.xhtml#ieee-802-numbers-1
-
-var ethTypes = map[Type]string{
-	0x0800: "IPv4",
-	0x0806: "ARP",
-	0x86dd: "IPv6",
-}
-
-var rxBuf []byte
 
 func init() {
 	rxBuf = make([]byte, FrameLenMax)
