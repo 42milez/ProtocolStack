@@ -236,7 +236,7 @@ func dumpIpPacket(packet []byte) {
 	ihl := packet[0] & 0x0f
 	totalLen := uint16(packet[2])<<8 | uint16(packet[3])
 	payloadLen := totalLen - uint16(4*ihl)
-	psLog.I(fmt.Sprintf("\tversion:             IPv%d", packet[0]>>4))
+	psLog.I(fmt.Sprintf("\tversion:             %d", packet[0]>>4))
 	psLog.I(fmt.Sprintf("\tihl:                 %d", ihl))
 	psLog.I(fmt.Sprintf("\ttype of service:     0b%08b", packet[1]))
 	psLog.I(fmt.Sprintf("\ttotal length:        %d bytes (payload: %d bytes)", totalLen, payloadLen))
@@ -244,7 +244,7 @@ func dumpIpPacket(packet []byte) {
 	psLog.I(fmt.Sprintf("\tflags:               0b%03b", (packet[6]&0xe0)>>5))
 	psLog.I(fmt.Sprintf("\tfragment offset:     %d", uint16(packet[6]&0x1f)<<8|uint16(packet[7])))
 	psLog.I(fmt.Sprintf("\tttl:                 %d", packet[8]))
-	psLog.I(fmt.Sprintf("\tprotocol:            %d (%s)", packet[9], protocolNumbers[ProtocolNumber(packet[9])]))
+	psLog.I(fmt.Sprintf("\tprotocol:            %s (%d)", protocolNumbers[ProtocolNumber(packet[9])], packet[9]))
 	psLog.I(fmt.Sprintf("\tchecksum:            0x%04x", uint16(packet[10])<<8|uint16(packet[11])))
 	psLog.I(fmt.Sprintf("\tsource address:      %d.%d.%d.%d", packet[12], packet[13], packet[14], packet[15]))
 	psLog.I(fmt.Sprintf("\tdestination address: %d.%d.%d.%d", packet[16], packet[17], packet[18], packet[19]))

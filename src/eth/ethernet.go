@@ -125,7 +125,7 @@ func WriteEthFrame(fd int, dst Addr, src Addr, typ Type, payload []byte) psErr.E
 }
 
 func dumpEthFrame(hdr *Hdr, payload []byte) {
-	psLog.I(fmt.Sprintf("\ttype:    0x%04x (%s)", uint16(hdr.Type), hdr.Type))
+	psLog.I(fmt.Sprintf("\ttype:    %s (0x%04x)", hdr.Type, uint16(hdr.Type)))
 	psLog.I(fmt.Sprintf("\tdst:     %s", hdr.Dst))
 	psLog.I(fmt.Sprintf("\tsrc:     %s", hdr.Src))
 

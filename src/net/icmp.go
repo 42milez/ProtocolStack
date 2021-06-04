@@ -83,7 +83,7 @@ func IcmpSend(typ IcmpType, code uint8, content uint32, payload []byte, dst IP, 
 }
 
 func dumpIcmpPacket(hdr *IcmpHdr, payload []byte) {
-	psLog.I(fmt.Sprintf("\ttype:     %d (%s)", hdr.Type, icmpTypes[hdr.Type]))
+	psLog.I(fmt.Sprintf("\ttype:     %s (%d)", icmpTypes[hdr.Type], hdr.Type))
 	psLog.I(fmt.Sprintf("\tcode:     %d", hdr.Code))
 	psLog.I(fmt.Sprintf("\tchecksum: 0x%04x", hdr.Checksum))
 
