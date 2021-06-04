@@ -7,24 +7,13 @@ import (
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	"github.com/42milez/ProtocolStack/src/ethernet"
 	psLog "github.com/42milez/ProtocolStack/src/log"
+	"github.com/42milez/ProtocolStack/src/timer"
 	"sync"
 	"time"
 )
 
-const (
-	TimerAny TimerState = iota
-	TimerStopped
-	TimerRunning
-)
-
-var ArpTimerCh chan TimerOps
-
-type TimerState int
-
-type TimerOps struct {
-	CurrentState TimerState
-	DesiredState TimerState
-}
+var ArpCondCh chan timer.Condition
+var ArpSigCh chan timer.Signal
 
 func ArpInputHandler(packet []byte, dev ethernet.IDevice) psErr.E {
 	if len(packet) < ArpPacketLen {
@@ -83,13 +72,13 @@ func RunArpTimer(wg *sync.WaitGroup) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		ArpTimerCh <- TimerOps{
-			CurrentState: TimerRunning,
+		ArpCondCh <-timer.Condition{
+			CurrentState: timer.Running,
 		}
 		for {
 			select {
-			case ops := <-ArpTimerCh:
-				if ops.DesiredState == TimerStopped {
+			case signal := <-ArpSigCh:
+				if signal == timer.Stop {
 					return
 				}
 			default:
@@ -101,9 +90,7 @@ func RunArpTimer(wg *sync.WaitGroup) {
 }
 
 func StopArpTimer() {
-	ArpTimerCh <- TimerOps{
-		DesiredState: TimerStopped,
-	}
+	ArpSigCh <-timer.Stop
 }
 
 func arpReply(tha ethernet.EthAddr, tpa ArpProtoAddr, iface *Iface) psErr.E {
@@ -217,6 +204,6 @@ func dumpArpPacket(packet *ArpPacket) {
 }
 
 func init() {
-	cache = &ArpCache{}
-	cache.Init()
+	ArpCondCh = make(chan timer.Condition)
+	ArpSigCh = make(chan timer.Signal)
 }

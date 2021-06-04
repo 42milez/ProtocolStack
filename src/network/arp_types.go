@@ -272,3 +272,8 @@ func (p ArpProtoAddr) String() string {
 }
 
 type ArpStatus int
+
+func init() {
+	cache = &ArpCache{}
+	cache.Init()
+}

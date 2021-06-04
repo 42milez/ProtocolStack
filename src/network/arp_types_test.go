@@ -23,11 +23,15 @@ func isEthAddrAllZero(addr [ethernet.EthAddrLen]byte) bool {
 
 func setup(t *testing.T) (ctrl *gomock.Controller, teardown func()) {
 	psLog.DisableOutput()
+	backup := psTime.Time
 	ctrl = gomock.NewController(t)
+
 	teardown = func() {
 		psLog.EnableOutput()
+		psTime.Time = backup
 		ctrl.Finish()
 	}
+
 	return
 }
 
