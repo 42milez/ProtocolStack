@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func TestRunArpTimer(t *testing.T) {
+func TestRunArpTimer_1(t *testing.T) {
 	ctrl, teardown := setup(t)
 	defer teardown()
 	defer cache.Init()
@@ -32,5 +32,20 @@ func TestRunArpTimer(t *testing.T) {
 	_, got := cache.EthAddr(pa)
 	if got {
 		t.Errorf("ARP cache is not expired")
+	}
+}
+
+func TestRunArpTimer_2(t *testing.T) {
+	defer cache.Init()
+
+	var wg sync.WaitGroup
+	RunArpTimer(&wg)
+	<-ArpCondCh
+	StopArpTimer()
+	wg.Wait()
+
+	_, got := cache.EthAddr(ArpProtoAddr{192, 168, 0, 1})
+	if got {
+		t.Errorf("ARP cache exists")
 	}
 }
