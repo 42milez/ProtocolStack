@@ -12,8 +12,11 @@ import (
 	"unsafe"
 )
 
-const EpollTimeout = 1000
-const MaxEpollEvents = 32
+const epollTimeout = 1000
+const maxEpollEvents = 32
+const virtualNetworkDevice = "/dev/net/tun"
+
+var epfd int
 
 // src/syscall/zerrors_linux_amd64.go
 // https://golang.org/src/syscall/zerrors_linux_amd64.go
@@ -117,8 +120,8 @@ func (p *TapDevice) Poll(isTerminated bool) psErr.E {
 		return psErr.Terminated
 	}
 
-	var events [MaxEpollEvents]syscall.EpollEvent
-	nEvents, err := psSyscall.Syscall.EpollWait(epfd, events[:], EpollTimeout)
+	var events [maxEpollEvents]syscall.EpollEvent
+	nEvents, err := psSyscall.Syscall.EpollWait(epfd, events[:], epollTimeout)
 	if err != nil {
 		// https://man7.org/linux/man-pages/man2/epoll_wait.2.html#RETURN_VALUE
 		// ignore EINTR
@@ -148,7 +151,3 @@ func (p *TapDevice) Poll(isTerminated bool) psErr.E {
 func (p *TapDevice) Transmit(dst Addr, payload []byte, typ Type) psErr.E {
 	return WriteEthFrame(p.Priv_.FD, dst, p.Addr_, typ, payload)
 }
-
-const virtualNetworkDevice = "/dev/net/tun"
-
-var epfd int
