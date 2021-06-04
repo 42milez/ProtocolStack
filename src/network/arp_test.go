@@ -17,7 +17,7 @@ func TestArpInputHandler_1(t *testing.T) {
 	ctrl, teardown := SetupArpInputHandlerTest(t)
 	defer teardown()
 
-	ethAddr := ethernet.EthAddr{11, 22, 33, 44, 55, 66}
+	ethAddr := ethernet.EthAddr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}
 	mockDev := ethernet.NewMockIDevice(ctrl)
 	mockDev.EXPECT().Addr().Return(ethAddr)
 	mockDev.EXPECT().Transmit(Any, Any, Any).Return(psErr.OK)
@@ -132,7 +132,7 @@ func TestRunArpTimer_1(t *testing.T) {
 	psTime.Time = m
 
 	pa := ArpProtoAddr{192, 168, 1, 1}
-	_ = cache.Add(ethernet.EthAddr{0x11, 0x22, 0x33, 0x44, 0x55, 0x66}, pa, ArpCacheStateResolved)
+	_ = cache.Add(ethernet.EthAddr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}, pa, ArpCacheStateResolved)
 
 	var wg sync.WaitGroup
 	RunArpTimer(&wg)
@@ -177,7 +177,9 @@ func (ArpPacketBuilder) Valid() *ArpPacket {
 			PAL:    V4AddrLen,
 			Opcode: ArpOpRequest,
 		},
-		THA: ethernet.EthAddr{0x11, 0x22, 0x33, 0x44, 0x55, 0x66},
+		SHA: ethernet.EthAddr{0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff},
+		SPA: ArpProtoAddr{192, 0, 2, 1},
+		THA: ethernet.EthAddr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16},
 		TPA: ArpProtoAddr{192, 0, 2, 2},
 	}
 }
@@ -191,7 +193,7 @@ func (ArpPacketBuilder) InvalidHardwareType() *ArpPacket {
 			PAL:    V4AddrLen,
 			Opcode: ArpOpRequest,
 		},
-		THA: ethernet.EthAddr{0x11, 0x22, 0x33, 0x44, 0x55, 0x66},
+		THA: ethernet.EthAddr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16},
 		TPA: ArpProtoAddr{192, 0, 2, 2},
 	}
 }
@@ -205,7 +207,7 @@ func (ArpPacketBuilder) InvalidProtocolType() *ArpPacket {
 			PAL:    V4AddrLen,
 			Opcode: ArpOpRequest,
 		},
-		THA: ethernet.EthAddr{0x11, 0x22, 0x33, 0x44, 0x55, 0x66},
+		THA: ethernet.EthAddr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16},
 		TPA: ArpProtoAddr{192, 0, 2, 2},
 	}
 }
