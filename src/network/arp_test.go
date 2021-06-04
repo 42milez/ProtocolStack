@@ -18,21 +18,6 @@ func TestArpInputHandler_1(t *testing.T) {
 	defer teardown()
 
 	ethAddr := ethernet.EthAddr{11, 22, 33, 44, 55, 66}
-
-	dev := &ethernet.TapDevice{
-		Device: ethernet.Device{
-			Type_: ethernet.DevTypeEthernet,
-			Name_: "net0",
-			Addr_: ethAddr,
-			Flag_: ethernet.DevFlagBroadcast | ethernet.DevFlagNeedArp,
-			MTU_:  ethernet.EthPayloadLenMax,
-			Priv_: ethernet.Privilege{
-				FD:   3,
-				Name: "tap0",
-			},
-		},
-	}
-
 	mockDev := ethernet.NewMockIDevice(ctrl)
 	mockDev.EXPECT().Addr().Return(ethAddr)
 	mockDev.EXPECT().Transmit(Any, Any, Any).Return(psErr.OK)
@@ -48,9 +33,21 @@ func TestArpInputHandler_1(t *testing.T) {
 	IfaceRepo = mockIfaceRepo
 
 	packet := Builder.Valid()
-
 	buf := new(bytes.Buffer)
 	_ = binary.Write(buf, binary.BigEndian, packet)
+	dev := &ethernet.TapDevice{
+		Device: ethernet.Device{
+			Type_: ethernet.DevTypeEthernet,
+			Name_: "net0",
+			Addr_: ethAddr,
+			Flag_: ethernet.DevFlagBroadcast | ethernet.DevFlagNeedArp,
+			MTU_:  ethernet.EthPayloadLenMax,
+			Priv_: ethernet.Privilege{
+				FD:   3,
+				Name: "tap0",
+			},
+		},
+	}
 
 	want := psErr.OK
 	got := ArpInputHandler(buf.Bytes(), dev)
@@ -67,7 +64,6 @@ func TestArpInputHandler_2(t *testing.T) {
 	packet := &ArpPacket{}
 	buf := new(bytes.Buffer)
 	_ = binary.Write(buf, binary.BigEndian, packet)
-
 	dev := &ethernet.TapDevice{}
 
 	want := psErr.InvalidPacket
@@ -86,7 +82,6 @@ func TestArpInputHandler_3(t *testing.T) {
 	packet := Builder.InvalidHardwareType()
 	buf := new(bytes.Buffer)
 	_ = binary.Write(buf, binary.BigEndian, packet)
-
 	dev := &ethernet.TapDevice{}
 
 	want := psErr.InvalidPacket
@@ -98,9 +93,31 @@ func TestArpInputHandler_3(t *testing.T) {
 	packet = Builder.InvalidProtocolType()
 	buf = new(bytes.Buffer)
 	_ = binary.Write(buf, binary.BigEndian, packet)
+	dev = &ethernet.TapDevice{}
 
 	want = psErr.InvalidPacket
 	got = ArpInputHandler(buf.Bytes(), dev)
+	if got != want {
+		t.Errorf("ArpInputHandler() = %s; want %s", got, want)
+	}
+}
+
+// Fail when Iface is not found.
+func TestArpInputHandler_4(t *testing.T) {
+	ctrl, teardown := SetupArpInputHandlerTest(t)
+	defer teardown()
+
+	mockIfaceRepo := NewMockIIfaceRepo(ctrl)
+	mockIfaceRepo.EXPECT().Lookup(Any, Any).Return(nil)
+	IfaceRepo = mockIfaceRepo
+
+	packet := Builder.Valid()
+	buf := new(bytes.Buffer)
+	_ = binary.Write(buf, binary.BigEndian, packet)
+	dev := &ethernet.TapDevice{}
+
+	want := psErr.InterfaceNotFound
+	got := ArpInputHandler(buf.Bytes(), dev)
 	if got != want {
 		t.Errorf("ArpInputHandler() = %s; want %s", got, want)
 	}
