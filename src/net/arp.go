@@ -171,12 +171,11 @@ func (v arp) RunTimer(wg *sync.WaitGroup) {
 				}
 			default:
 				ret := cache.expire()
-				if len(ret) == 0 {
-					return
-				}
-				psLog.I("ARP cache entries were expired:")
-				for i, v := range ret {
-					psLog.I(fmt.Sprintf("\t%d: %s", i+1, v))
+				if len(ret) != 0 {
+					psLog.I("ARP cache entries were expired:")
+					for i, v := range ret {
+						psLog.I(fmt.Sprintf("\t%d: %s", i+1, v))
+					}
 				}
 				time.Sleep(time.Second)
 			}
