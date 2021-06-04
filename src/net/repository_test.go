@@ -1,4 +1,4 @@
-package network
+package net
 
 import (
 	psErr "github.com/42milez/ProtocolStack/src/error"

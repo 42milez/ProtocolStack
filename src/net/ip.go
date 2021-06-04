@@ -1,4 +1,4 @@
-package network
+package net
 
 import (
 	"bytes"
@@ -270,7 +270,7 @@ func lookupRouting(dst IP, src IP) (*Iface, IP, psErr.E) {
 	var nextHop IP
 
 	if src.Equal(V4Zero) {
-		// Can't determine network address (0.0.0.0 is a non-routable meta-address), so lookup appropriate interface to
+		// Can't determine net address (0.0.0.0 is a non-routable meta-address), so lookup appropriate interface to
 		// send IP packet.
 		route := RouteRepo.Get(dst)
 		if route == nil {
@@ -284,13 +284,13 @@ func lookupRouting(dst IP, src IP) (*Iface, IP, psErr.E) {
 			nextHop = route.NextHop
 		}
 	} else {
-		// Source address isn't equal to V4Zero means it can determine network address.
+		// Source address isn't equal to V4Zero means it can determine net address.
 		iface = IfaceRepo.Get(src)
 		if iface == nil {
 			psLog.E(fmt.Sprintf("Interface for %s was not found", src))
 			return nil, IP{}, psErr.InterfaceNotFound
 		}
-		// Don't send IP packet when network address of both destination and iface is not matched each other or
+		// Don't send IP packet when net address of both destination and iface is not matched each other or
 		// destination address is not matched to the broadcast address.
 		if !dst.Mask(iface.Netmask).Equal(iface.Unicast.Mask(iface.Netmask)) && !dst.Equal(V4Broadcast) {
 			psLog.E(fmt.Sprintf("IP packet can't reach %s (Network address is not matched)", dst.String()))
@@ -347,7 +347,7 @@ var protocolNumbers = map[ProtocolNumber]string{
 	19: "DCN",
 	20: "TAC Monitoring",
 	// 21-62: Unassigned
-	63: "any local network",
+	63: "any local net",
 	64: "SATNET and Backroom EXPAK",
 	65: "MIT Subnet Support",
 	// 66-68: Unassigned

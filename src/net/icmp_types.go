@@ -1,4 +1,4 @@
-package network
+package net
 
 type IcmpHdr struct {
 	Type     IcmpType

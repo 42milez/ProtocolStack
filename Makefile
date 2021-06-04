@@ -79,7 +79,7 @@ test:
 		$(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/error \
 		$(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/eth \
 		$(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/log \
-		$(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/network
+		$(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/net
 
 #  Go Commands
 # --------------------------------------------------

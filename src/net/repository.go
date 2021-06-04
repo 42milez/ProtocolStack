@@ -1,6 +1,6 @@
 //go:generate mockgen -source=repository.go -destination=repository_mock.go -package=$GOPACKAGE -self_package=github.com/42milez/ProtocolStack/src/$GOPACKAGE
 
-package network
+package net
 
 import (
 	"fmt"

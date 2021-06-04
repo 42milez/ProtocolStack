@@ -1,4 +1,4 @@
-package network
+package net
 
 import (
 	"github.com/google/go-cmp/cmp"

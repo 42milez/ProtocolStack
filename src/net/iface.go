@@ -1,4 +1,4 @@
-package network
+package net
 
 import (
 	"github.com/42milez/ProtocolStack/src/eth"

@@ -1,4 +1,4 @@
-package network
+package net
 
 // GenIface generates Iface.
 func GenIface(unicast string, netmask string, broadcast string) *Iface {
