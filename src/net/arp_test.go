@@ -20,10 +20,10 @@ func TestArpInputHandler_1(t *testing.T) {
 	ethAddr := eth.Addr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}
 	mockDev := eth.NewMockIDevice(ctrl)
 	mockDev.EXPECT().Addr().Return(ethAddr)
-	mockDev.EXPECT().Transmit(Any, Any, Any).Return(psErr.OK)
+	mockDev.EXPECT().Transmit(any, any, any).Return(psErr.OK)
 
 	mockIfaceRepo := NewMockIIfaceRepo(ctrl)
-	mockIfaceRepo.EXPECT().Lookup(Any, Any).Return(&Iface{
+	mockIfaceRepo.EXPECT().Lookup(any, any).Return(&Iface{
 		Family:    V4AddrFamily,
 		Unicast:   ParseIP("192.0.2.2"),
 		Netmask:   ParseIP("255.255.255.0"),
@@ -106,7 +106,7 @@ func TestArpInputHandler_4(t *testing.T) {
 	defer teardown()
 
 	mockIfaceRepo := NewMockIIfaceRepo(ctrl)
-	mockIfaceRepo.EXPECT().Lookup(Any, Any).Return(nil)
+	mockIfaceRepo.EXPECT().Lookup(any, any).Return(nil)
 	IfaceRepo = mockIfaceRepo
 
 	packet := Builder.Default()
@@ -129,10 +129,10 @@ func TestArpInputHandler_5(t *testing.T) {
 	ethAddr := eth.Addr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}
 	mockDev := eth.NewMockIDevice(ctrl)
 	mockDev.EXPECT().Addr().Return(ethAddr)
-	mockDev.EXPECT().Transmit(Any, Any, Any).Return(psErr.Error)
+	mockDev.EXPECT().Transmit(any, any, any).Return(psErr.Error)
 
 	mockIfaceRepo := NewMockIIfaceRepo(ctrl)
-	mockIfaceRepo.EXPECT().Lookup(Any, Any).Return(&Iface{
+	mockIfaceRepo.EXPECT().Lookup(any, any).Return(&Iface{
 		Family:    V4AddrFamily,
 		Unicast:   ParseIP("192.0.2.2"),
 		Netmask:   ParseIP("255.255.255.0"),
@@ -159,7 +159,7 @@ func TestArpInputHandler_6(t *testing.T) {
 	defer teardown()
 
 	mockIfaceRepo := NewMockIIfaceRepo(ctrl)
-	mockIfaceRepo.EXPECT().Lookup(Any, Any).Return(&Iface{
+	mockIfaceRepo.EXPECT().Lookup(any, any).Return(&Iface{
 		Family:    V4AddrFamily,
 		Unicast:   ParseIP("192.0.2.2"),
 		Netmask:   ParseIP("255.255.255.0"),
@@ -226,8 +226,8 @@ func TestRunArpTimer_2(t *testing.T) {
 	}
 }
 
-var Any = gomock.Any()
 var Builder = ArpPacketBuilder{}
+var any = gomock.Any()
 
 type ArpPacketBuilder struct{}
 
