@@ -173,7 +173,7 @@ func (p *arp) RunTimer(wg *sync.WaitGroup) {
 					return
 				}
 			default:
-				ret := p.cache.expire()
+				ret := p.cache.Expire()
 				if len(ret) != 0 {
 					psLog.I("ARP cache entries were expired:")
 					for i, v := range ret {
@@ -292,7 +292,7 @@ func (p *arpCache) GetReusableEntry() *arpCacheEntry {
 	return oldest
 }
 
-func (p *arpCache) expire() (invalidations []string) {
+func (p *arpCache) Expire() (invalidations []string) {
 	p.mtx.Lock()
 	defer p.mtx.Unlock()
 
