@@ -15,12 +15,11 @@ import (
 // Notes:
 //  - Protocol Type is same as EtherType.
 
-const ArpCacheSize = 32 // number of cache entries
 const (
-	ArpCacheStateFree ArpCacheStatus = iota
-	ArpCacheStateIncomplete
-	ArpCacheStateResolved
-	ArpCacheStateStatic
+	cacheStatusFree CacheStatus = iota
+	cacheStatusIncomplete
+	cacheStatusResolved
+	cacheStatusStatic
 )
 const ArpHwTypeEthernet ArpHwType = 0x0001
 const ArpOpRequest ArpOpcode = 0x0001
@@ -115,7 +114,7 @@ var arpOpCodes = map[ArpOpcode]string{
 	// 65535: Reserved
 }
 
-type ArpCacheStatus uint8
+type CacheStatus uint8
 
 type ArpHdr struct {
 	HT     ArpHwType // hardware type

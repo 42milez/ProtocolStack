@@ -53,8 +53,8 @@ func (p *arp) Receive(packet []byte, dev eth.IDevice) psErr.E {
 	}
 
 	if iface.Unicast.EqualV4(arpPacket.TPA) {
-		if err := p.cache.Renew(arpPacket.SPA, arpPacket.SHA, ArpCacheStateResolved); err == psErr.NotFound {
-			_ = p.cache.Create(arpPacket.SHA, arpPacket.SPA, ArpCacheStateResolved)
+		if err := p.cache.Renew(arpPacket.SPA, arpPacket.SHA, cacheStatusResolved); err == psErr.NotFound {
+			_ = p.cache.Create(arpPacket.SHA, arpPacket.SPA, cacheStatusResolved)
 		} else {
 			psLog.I("ARP entry was renewed")
 			psLog.I(fmt.Sprintf("\tspa: %s", arpPacket.SPA))
@@ -147,7 +147,7 @@ func (p *arp) Resolve(iface *Iface, ip IP) (eth.Addr, ArpStatus) {
 
 	entry := p.cache.GetEntry(ip.ToV4())
 	if entry == nil {
-		if err := p.cache.Create(eth.Addr{}, ip.ToV4(), ArpCacheStateIncomplete); err != psErr.OK {
+		if err := p.cache.Create(eth.Addr{}, ip.ToV4(), cacheStatusIncomplete); err != psErr.OK {
 			return eth.Addr{}, ArpStatusError
 		}
 		if err := p.SendRequest(iface, ip); err != psErr.OK {
@@ -191,21 +191,21 @@ func (p *arp) StopTimer() {
 }
 
 type arpCacheEntry struct {
-	Status    ArpCacheStatus
+	Status    CacheStatus
 	CreatedAt time.Time
 	HA        eth.Addr
 	PA        ArpProtoAddr
 }
 
 type arpCache struct {
-	entries [ArpCacheSize]*arpCacheEntry
+	entries [32]*arpCacheEntry
 	mtx     sync.Mutex
 }
 
 func (p *arpCache) Init() {
 	for i := range p.entries {
 		p.entries[i] = &arpCacheEntry{
-			Status:    ArpCacheStateFree,
+			Status:    cacheStatusFree,
 			CreatedAt: time.Unix(0, 0),
 			HA:        eth.Addr{},
 			PA:        ArpProtoAddr{},
@@ -213,7 +213,7 @@ func (p *arpCache) Init() {
 	}
 }
 
-func (p *arpCache) Create(ha eth.Addr, pa ArpProtoAddr, state ArpCacheStatus) psErr.E {
+func (p *arpCache) Create(ha eth.Addr, pa ArpProtoAddr, state CacheStatus) psErr.E {
 	var entry *arpCacheEntry
 	if entry = p.GetEntry(pa); entry != nil {
 		return psErr.Exist
@@ -231,7 +231,7 @@ func (p *arpCache) Create(ha eth.Addr, pa ArpProtoAddr, state ArpCacheStatus) ps
 	return psErr.OK
 }
 
-func (p *arpCache) Renew(pa ArpProtoAddr, ha eth.Addr, state ArpCacheStatus) psErr.E {
+func (p *arpCache) Renew(pa ArpProtoAddr, ha eth.Addr, state CacheStatus) psErr.E {
 	entry := p.GetEntry(pa)
 	if entry == nil {
 		return psErr.NotFound
@@ -266,7 +266,7 @@ func (p *arpCache) GetReusableEntry() *arpCacheEntry {
 
 	oldest := p.entries[0]
 	for _, entry := range p.entries {
-		if entry.Status == ArpCacheStateFree {
+		if entry.Status == cacheStatusFree {
 			return entry
 		}
 		if oldest.CreatedAt.After(entry.CreatedAt) {
@@ -278,7 +278,7 @@ func (p *arpCache) GetReusableEntry() *arpCacheEntry {
 }
 
 func (p *arpCache) Clear(idx int) {
-	p.entries[idx].Status = ArpCacheStateFree
+	p.entries[idx].Status = cacheStatusFree
 	p.entries[idx].CreatedAt = time.Unix(0, 0)
 	p.entries[idx].HA = eth.Addr{}
 	p.entries[idx].PA = ArpProtoAddr{}

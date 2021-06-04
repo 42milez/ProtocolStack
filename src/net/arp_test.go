@@ -195,7 +195,7 @@ func TestRunArpTimer_1(t *testing.T) {
 	psTime.Time = m
 
 	pa := ArpProtoAddr{192, 168, 1, 1}
-	_ = ARP.cache.Create(eth.Addr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}, pa, ArpCacheStateResolved)
+	_ = ARP.cache.Create(eth.Addr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}, pa, cacheStatusResolved)
 
 	var wg sync.WaitGroup
 	ARP.RunTimer(&wg)
