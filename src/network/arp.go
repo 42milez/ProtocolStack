@@ -72,7 +72,7 @@ func RunArpTimer(wg *sync.WaitGroup) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		ArpCondCh <-timer.Condition{
+		ArpCondCh <- timer.Condition{
 			CurrentState: timer.Running,
 		}
 		for {
@@ -90,7 +90,7 @@ func RunArpTimer(wg *sync.WaitGroup) {
 }
 
 func StopArpTimer() {
-	ArpSigCh <-timer.Stop
+	ArpSigCh <- timer.Stop
 }
 
 func arpReply(tha ethernet.EthAddr, tpa ArpProtoAddr, iface *Iface) psErr.E {
