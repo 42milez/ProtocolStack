@@ -32,7 +32,7 @@ func TestArpInputHandler_1(t *testing.T) {
 	})
 	IfaceRepo = mockIfaceRepo
 
-	packet := Builder.Valid()
+	packet := Builder.Default()
 	buf := new(bytes.Buffer)
 	_ = binary.Write(buf, binary.BigEndian, packet)
 	dev := &ethernet.TapDevice{
@@ -77,7 +77,7 @@ func TestArpInputHandler_3(t *testing.T) {
 	_, teardown := SetupArpInputHandlerTest(t)
 	defer teardown()
 
-	packet := Builder.InvalidHardwareType()
+	packet := Builder.CustomHT(ArpHwType(0xffff))
 	buf := new(bytes.Buffer)
 	_ = binary.Write(buf, binary.BigEndian, packet)
 	dev := &ethernet.TapDevice{}
@@ -88,7 +88,7 @@ func TestArpInputHandler_3(t *testing.T) {
 		t.Errorf("ArpInputHandler() = %s; want %s", got, want)
 	}
 
-	packet = Builder.InvalidProtocolType()
+	packet = Builder.CustomPT(ethernet.EthType(0xffff))
 	buf = new(bytes.Buffer)
 	_ = binary.Write(buf, binary.BigEndian, packet)
 	dev = &ethernet.TapDevice{}
@@ -109,12 +109,75 @@ func TestArpInputHandler_4(t *testing.T) {
 	mockIfaceRepo.EXPECT().Lookup(Any, Any).Return(nil)
 	IfaceRepo = mockIfaceRepo
 
-	packet := Builder.Valid()
+	packet := Builder.Default()
 	buf := new(bytes.Buffer)
 	_ = binary.Write(buf, binary.BigEndian, packet)
 	dev := &ethernet.TapDevice{}
 
 	want := psErr.InterfaceNotFound
+	got := ArpInputHandler(buf.Bytes(), dev)
+	if got != want {
+		t.Errorf("ArpInputHandler() = %s; want %s", got, want)
+	}
+}
+
+// Fail when arpReply() returns error.
+func TestArpInputHandler_5(t *testing.T) {
+	ctrl, teardown := SetupArpInputHandlerTest(t)
+	defer teardown()
+
+	ethAddr := ethernet.EthAddr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}
+	mockDev := ethernet.NewMockIDevice(ctrl)
+	mockDev.EXPECT().Addr().Return(ethAddr)
+	mockDev.EXPECT().Transmit(Any, Any, Any).Return(psErr.Error)
+
+	mockIfaceRepo := NewMockIIfaceRepo(ctrl)
+	mockIfaceRepo.EXPECT().Lookup(Any, Any).Return(&Iface{
+		Family:    V4AddrFamily,
+		Unicast:   ParseIP("192.0.2.2"),
+		Netmask:   ParseIP("255.255.255.0"),
+		Broadcast: ParseIP("192.0.2.255"),
+		Dev:       mockDev,
+	})
+	IfaceRepo = mockIfaceRepo
+
+	packet := Builder.Default()
+	buf := new(bytes.Buffer)
+	_ = binary.Write(buf, binary.BigEndian, packet)
+	dev := &ethernet.TapDevice{}
+
+	want := psErr.Error
+	got := ArpInputHandler(buf.Bytes(), dev)
+	if got != want {
+		t.Errorf("ArpInputHandler() = %s; want %s", got, want)
+	}
+}
+
+// Success when an ARP packet sent to other destination arrives.
+func TestArpInputHandler_6(t *testing.T) {
+	ctrl, teardown := SetupArpInputHandlerTest(t)
+	defer teardown()
+
+	mockIfaceRepo := NewMockIIfaceRepo(ctrl)
+	mockIfaceRepo.EXPECT().Lookup(Any, Any).Return(&Iface{
+		Family:    V4AddrFamily,
+		Unicast:   ParseIP("192.0.2.2"),
+		Netmask:   ParseIP("255.255.255.0"),
+		Broadcast: ParseIP("192.0.2.255"),
+		Dev:       &ethernet.TapDevice{},
+	})
+	IfaceRepo = mockIfaceRepo
+
+	packet := Builder.CustomTPA(ArpProtoAddr{192, 168, 2, 3})
+	buf := new(bytes.Buffer)
+	_ = binary.Write(buf, binary.BigEndian, packet)
+	dev := &ethernet.TapDevice{
+		Device: ethernet.Device{
+			Name_: "net0",
+		},
+	}
+
+	want := psErr.OK
 	got := ArpInputHandler(buf.Bytes(), dev)
 	if got != want {
 		t.Errorf("ArpInputHandler() = %s; want %s", got, want)
@@ -168,7 +231,7 @@ var Builder = ArpPacketBuilder{}
 
 type ArpPacketBuilder struct {}
 
-func (ArpPacketBuilder) Valid() *ArpPacket {
+func (v ArpPacketBuilder) Default() *ArpPacket {
 	return &ArpPacket{
 		ArpHdr: ArpHdr{
 			HT:     ArpHwTypeEthernet,
@@ -184,32 +247,22 @@ func (ArpPacketBuilder) Valid() *ArpPacket {
 	}
 }
 
-func (ArpPacketBuilder) InvalidHardwareType() *ArpPacket {
-	return &ArpPacket{
-		ArpHdr: ArpHdr{
-			HT:     0x0002, // invalid hardware type
-			PT:     ethernet.EthTypeIpv4,
-			HAL:    ethernet.EthAddrLen,
-			PAL:    V4AddrLen,
-			Opcode: ArpOpRequest,
-		},
-		THA: ethernet.EthAddr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16},
-		TPA: ArpProtoAddr{192, 0, 2, 2},
-	}
+func (v ArpPacketBuilder) CustomHT(ht ArpHwType) (packet *ArpPacket) {
+	packet = v.Default()
+	packet.HT = ht
+	return
 }
 
-func (ArpPacketBuilder) InvalidProtocolType() *ArpPacket {
-	return &ArpPacket{
-		ArpHdr: ArpHdr{
-			HT:     ArpHwTypeEthernet,
-			PT:     0x0, // invalid protocol type
-			HAL:    ethernet.EthAddrLen,
-			PAL:    V4AddrLen,
-			Opcode: ArpOpRequest,
-		},
-		THA: ethernet.EthAddr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16},
-		TPA: ArpProtoAddr{192, 0, 2, 2},
-	}
+func (v ArpPacketBuilder) CustomPT(pt ethernet.EthType) (packet *ArpPacket) {
+	packet = v.Default()
+	packet.PT = pt
+	return
+}
+
+func (v ArpPacketBuilder) CustomTPA(tpa ArpProtoAddr) (packet *ArpPacket) {
+	packet = v.Default()
+	packet.TPA = tpa
+	return
 }
 
 func SetupArpInputHandlerTest(t *testing.T) (ctrl *gomock.Controller, teardown func()) {
