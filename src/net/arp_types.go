@@ -139,10 +139,10 @@ func (v ArpOpcode) String() string {
 
 type ArpPacket struct {
 	ArpHdr
-	SHA [eth.EthAddrLen]byte // sender hardware address
-	SPA ArpProtoAddr         // sender protocol address
-	THA [eth.EthAddrLen]byte // target hardware address
-	TPA ArpProtoAddr         // target protocol address
+	SHA [eth.AddrLen]byte // sender hardware address
+	SPA ArpProtoAddr      // sender protocol address
+	THA [eth.AddrLen]byte // target hardware address
+	TPA ArpProtoAddr      // target protocol address
 }
 
 type ArpProtoAddr [V4AddrLen]byte

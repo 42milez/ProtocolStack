@@ -9,7 +9,7 @@ import (
 	psSyscall "github.com/42milez/ProtocolStack/src/syscall"
 )
 
-const EthAddrLen = 6
+const AddrLen = 6
 const EthFrameLenMax = 1514
 const EthFrameLenMin = 60
 const EthHdrLen = 14
@@ -22,7 +22,7 @@ const EthTypeIpv6 EthType = 0x86dd
 var EthAddrAny = EthAddr{0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 var EthAddrBroadcast = EthAddr{0xff, 0xff, 0xff, 0xff, 0xff, 0xff}
 
-type EthAddr [EthAddrLen]byte
+type EthAddr [AddrLen]byte
 
 func (v EthAddr) Equal(vv EthAddr) bool {
 	return v == vv

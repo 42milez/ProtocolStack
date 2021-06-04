@@ -33,7 +33,7 @@ func (p *arp) Receive(packet []byte, dev eth.IDevice) psErr.E {
 		return psErr.ReadFromBufError
 	}
 
-	if arpPacket.HT != ArpHwTypeEthernet || arpPacket.HAL != eth.EthAddrLen {
+	if arpPacket.HT != ArpHwTypeEthernet || arpPacket.HAL != eth.AddrLen {
 		psLog.E("Value of ARP packet header is invalid (Hardware)")
 		return psErr.InvalidPacket
 	}
@@ -72,12 +72,12 @@ func (p *arp) Receive(packet []byte, dev eth.IDevice) psErr.E {
 	return psErr.OK
 }
 
-func (p *arp) SendReply(tha [eth.EthAddrLen]byte, tpa ArpProtoAddr, iface *Iface) psErr.E {
+func (p *arp) SendReply(tha [eth.AddrLen]byte, tpa ArpProtoAddr, iface *Iface) psErr.E {
 	packet := ArpPacket{
 		ArpHdr: ArpHdr{
 			HT:     ArpHwTypeEthernet,
 			PT:     eth.EthTypeIpv4,
-			HAL:    eth.EthAddrLen,
+			HAL:    eth.AddrLen,
 			PAL:    V4AddrLen,
 			Opcode: ArpOpReply,
 		},
@@ -108,13 +108,13 @@ func (p *arp) SendRequest(iface *Iface, ip IP) psErr.E {
 		ArpHdr: ArpHdr{
 			HT:     ArpHwTypeEthernet,
 			PT:     eth.EthTypeIpv4,
-			HAL:    eth.EthAddrLen,
+			HAL:    eth.AddrLen,
 			PAL:    V4AddrLen,
 			Opcode: ArpOpRequest,
 		},
 		SHA: iface.Dev.Addr(),
 		SPA: iface.Unicast.ToV4(),
-		THA: [eth.EthAddrLen]byte{},
+		THA: [eth.AddrLen]byte{},
 		TPA: ip.ToV4(),
 	}
 
@@ -134,26 +134,26 @@ func (p *arp) SendRequest(iface *Iface, ip IP) psErr.E {
 	return psErr.OK
 }
 
-func (p *arp) Resolve(iface *Iface, ip IP) ([eth.EthAddrLen]byte, ArpStatus) {
+func (p *arp) Resolve(iface *Iface, ip IP) ([eth.AddrLen]byte, ArpStatus) {
 	if iface.Dev.Type() != eth.DevTypeEthernet {
 		psLog.E(fmt.Sprintf("Unsupported device type: %s", iface.Dev.Type()))
-		return [eth.EthAddrLen]byte{}, ArpStatusError
+		return [eth.AddrLen]byte{}, ArpStatusError
 	}
 
 	if iface.Family != V4AddrFamily {
 		psLog.E(fmt.Sprintf("Unsupported address family: %s", iface.Family))
-		return [eth.EthAddrLen]byte{}, ArpStatusError
+		return [eth.AddrLen]byte{}, ArpStatusError
 	}
 
 	entry := p.cache.GetEntry(ip.ToV4())
 	if entry == nil {
-		if err := p.cache.Create([eth.EthAddrLen]byte{}, ip.ToV4(), ArpCacheStateIncomplete); err != psErr.OK {
-			return [eth.EthAddrLen]byte{}, ArpStatusError
+		if err := p.cache.Create([eth.AddrLen]byte{}, ip.ToV4(), ArpCacheStateIncomplete); err != psErr.OK {
+			return [eth.AddrLen]byte{}, ArpStatusError
 		}
 		if err := p.SendRequest(iface, ip); err != psErr.OK {
-			return [eth.EthAddrLen]byte{}, ArpStatusError
+			return [eth.AddrLen]byte{}, ArpStatusError
 		}
-		return [eth.EthAddrLen]byte{}, ArpStatusIncomplete
+		return [eth.AddrLen]byte{}, ArpStatusIncomplete
 	}
 
 	return entry.HA, ArpStatusComplete
@@ -193,7 +193,7 @@ func (p *arp) StopTimer() {
 type arpCacheEntry struct {
 	Status    ArpCacheStatus
 	CreatedAt time.Time
-	HA        [eth.EthAddrLen]byte
+	HA        [eth.AddrLen]byte
 	PA        ArpProtoAddr
 }
 
@@ -207,13 +207,13 @@ func (p *arpCache) Init() {
 		p.entries[i] = &arpCacheEntry{
 			Status:    ArpCacheStateFree,
 			CreatedAt: time.Unix(0, 0),
-			HA:        [eth.EthAddrLen]byte{},
+			HA:        [eth.AddrLen]byte{},
 			PA:        ArpProtoAddr{},
 		}
 	}
 }
 
-func (p *arpCache) Create(ha [eth.EthAddrLen]byte, pa ArpProtoAddr, state ArpCacheStatus) psErr.E {
+func (p *arpCache) Create(ha [eth.AddrLen]byte, pa ArpProtoAddr, state ArpCacheStatus) psErr.E {
 	var entry *arpCacheEntry
 	if entry = p.GetEntry(pa); entry != nil {
 		return psErr.Exist
@@ -231,7 +231,7 @@ func (p *arpCache) Create(ha [eth.EthAddrLen]byte, pa ArpProtoAddr, state ArpCac
 	return psErr.OK
 }
 
-func (p *arpCache) Renew(pa ArpProtoAddr, ha [eth.EthAddrLen]byte, state ArpCacheStatus) psErr.E {
+func (p *arpCache) Renew(pa ArpProtoAddr, ha [eth.AddrLen]byte, state ArpCacheStatus) psErr.E {
 	entry := p.GetEntry(pa)
 	if entry == nil {
 		return psErr.NotFound
@@ -280,7 +280,7 @@ func (p *arpCache) GetReusableEntry() *arpCacheEntry {
 func (p *arpCache) Clear(idx int) {
 	p.entries[idx].Status = ArpCacheStateFree
 	p.entries[idx].CreatedAt = time.Unix(0, 0)
-	p.entries[idx].HA = [eth.EthAddrLen]byte{}
+	p.entries[idx].HA = [eth.AddrLen]byte{}
 	p.entries[idx].PA = ArpProtoAddr{}
 }
 

@@ -15,7 +15,7 @@ import (
 func TestArpCache_Add_1(t *testing.T) {
 	defer ARP.cache.Init()
 
-	ha := [eth.EthAddrLen]byte{0x11, 0x22, 0x33, 0x44, 0x55, 0x66}
+	ha := [eth.AddrLen]byte{0x11, 0x22, 0x33, 0x44, 0x55, 0x66}
 	pa := ArpProtoAddr{192, 168, 1, 1}
 	state := ArpCacheStateResolved
 
@@ -29,7 +29,7 @@ func TestArpCache_Add_1(t *testing.T) {
 func TestArpCache_Add_2(t *testing.T) {
 	defer ARP.cache.Init()
 
-	ha := [eth.EthAddrLen]byte{0x11, 0x22, 0x33, 0x44, 0x55, 0x66}
+	ha := [eth.AddrLen]byte{0x11, 0x22, 0x33, 0x44, 0x55, 0x66}
 	pa := ArpProtoAddr{192, 168, 1, 1}
 	state := ArpCacheStateResolved
 
@@ -53,7 +53,7 @@ func TestArpCache_Add_3(t *testing.T) {
 	m := psTime.NewMockITime(ctrl)
 	psTime.Time = m
 	for i := ArpCacheSize; i >= 0; i-- {
-		ha := [eth.EthAddrLen]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
+		ha := [eth.AddrLen]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 		pa := ArpProtoAddr{192, 168, byte(i), 1}
 		state := ArpCacheStateResolved
 		createdAt, _ := time.Parse(time.RFC3339, fmt.Sprintf("2021-01-01T00:%02d:00Z", i))
@@ -76,18 +76,18 @@ func TestArpCache_Renew_1(t *testing.T) {
 	m.EXPECT().Now().Return(createdAt).AnyTimes()
 	psTime.Time = m
 
-	ha1 := [eth.EthAddrLen]byte{0x11, 0x22, 0x33, 0x44, 0x55, 0x66}
+	ha1 := [eth.AddrLen]byte{0x11, 0x22, 0x33, 0x44, 0x55, 0x66}
 	pa := ArpProtoAddr{192, 168, 1, 1}
 	state := ArpCacheStateResolved
 	_ = ARP.cache.Create(ha1, pa, state)
 
-	ha2 := [eth.EthAddrLen]byte{0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f}
+	ha2 := [eth.AddrLen]byte{0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f}
 	_ = ARP.cache.Renew(pa, ha2, state)
 
 	want := &arpCacheEntry{
 		Status:    ArpCacheStateResolved,
 		CreatedAt: createdAt,
-		HA:        [eth.EthAddrLen]byte{0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f},
+		HA:        [eth.AddrLen]byte{0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f},
 		PA:        ArpProtoAddr{192, 168, 1, 1},
 	}
 
@@ -100,13 +100,13 @@ func TestArpCache_Renew_1(t *testing.T) {
 func TestArpCache_Renew_2(t *testing.T) {
 	defer ARP.cache.Init()
 
-	ha1 := [eth.EthAddrLen]byte{0x11, 0x22, 0x33, 0x44, 0x55, 0x66}
+	ha1 := [eth.AddrLen]byte{0x11, 0x22, 0x33, 0x44, 0x55, 0x66}
 	pa := ArpProtoAddr{192, 168, 1, 1}
 	state := ArpCacheStateResolved
 	_ = ARP.cache.Create(ha1, pa, state)
 
 	want := psErr.NotFound
-	got := ARP.cache.Renew(ArpProtoAddr{192, 0, 2, 1}, [eth.EthAddrLen]byte{}, ArpCacheStateResolved)
+	got := ARP.cache.Renew(ArpProtoAddr{192, 0, 2, 1}, [eth.AddrLen]byte{}, ArpCacheStateResolved)
 
 	if got != want {
 		t.Errorf("Renew() = %s; want %s", got, want)
@@ -116,7 +116,7 @@ func TestArpCache_Renew_2(t *testing.T) {
 func TestArpCache_GetEntry_1(t *testing.T) {
 	defer ARP.cache.Init()
 
-	ha := [eth.EthAddrLen]byte{0x11, 0x22, 0x33, 0x44, 0x55, 0x66}
+	ha := [eth.AddrLen]byte{0x11, 0x22, 0x33, 0x44, 0x55, 0x66}
 	pa := ArpProtoAddr{192, 168, 1, 1}
 	state := ArpCacheStateResolved
 	_ = ARP.cache.Create(ha, pa, state)
@@ -131,7 +131,7 @@ func TestArpCache_GetEntry_1(t *testing.T) {
 func TestArpCache_GetEntry_2(t *testing.T) {
 	defer ARP.cache.Init()
 
-	ha := [eth.EthAddrLen]byte{0x11, 0x22, 0x33, 0x44, 0x55, 0x66}
+	ha := [eth.AddrLen]byte{0x11, 0x22, 0x33, 0x44, 0x55, 0x66}
 	pa := ArpProtoAddr{192, 168, 1, 1}
 	state := ArpCacheStateResolved
 	_ = ARP.cache.Create(ha, pa, state)
