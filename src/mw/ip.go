@@ -22,8 +22,8 @@ const (
 
 // IP address expressions
 var (
+	V4Any       = V4(0, 0, 0, 0)
 	V4Broadcast = V4(255, 255, 255, 255)
-	V4Zero      = V4(0, 0, 0, 0)
 )
 
 // ASSIGNED INTERNET PROTOCOL NUMBERS

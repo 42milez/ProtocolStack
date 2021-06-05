@@ -58,7 +58,7 @@ func setup() psErr.E {
 		return psErr.Error
 	}
 
-	repo.RouteRepo.Register(mw.ParseIP(mw.LoopbackNetwork), mw.V4Zero, iface1)
+	repo.RouteRepo.Register(mw.ParseIP(mw.LoopbackNetwork), mw.V4Any, iface1)
 
 	// Create a TAP device and its interface, then link them.
 	tapDev := eth2.GenTapDevice(
@@ -74,7 +74,7 @@ func setup() psErr.E {
 		return psErr.Error
 	}
 
-	repo.RouteRepo.Register(mw.ParseIP("192.0.0.0"), mw.V4Zero, iface2)
+	repo.RouteRepo.Register(mw.ParseIP("192.0.0.0"), mw.V4Any, iface2)
 
 	repo.RouteRepo.RegisterDefaultGateway(iface2, mw.ParseIP("192.0.2.1"))
 

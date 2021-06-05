@@ -179,8 +179,8 @@ func (p *routeRepo) Register(network mw.IP, nextHop mw.IP, iface *mw.Iface) {
 
 func (p *routeRepo) RegisterDefaultGateway(iface *mw.Iface, nextHop mw.IP) {
 	route := &Route{
-		Network: mw.V4Zero,
-		Netmask: mw.V4Zero,
+		Network: mw.V4Any,
+		Netmask: mw.V4Any,
 		NextHop: nextHop,
 		Iface:   iface,
 	}

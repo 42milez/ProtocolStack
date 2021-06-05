@@ -233,7 +233,7 @@ func lookupRoute(dst mw.IP, src mw.IP) (*mw.Iface, mw.IP, psErr.E) {
 	var iface *mw.Iface
 	var nextHop mw.IP
 
-	if src.Equal(mw.V4Zero) {
+	if src.Equal(mw.V4Any) {
 		// Can't determine net address (0.0.0.0 is a non-routable meta-address), so lookup appropriate interface to
 		// send IP packet.
 		route := repo.RouteRepo.Get(dst)
@@ -242,13 +242,13 @@ func lookupRoute(dst mw.IP, src mw.IP) (*mw.Iface, mw.IP, psErr.E) {
 			return nil, mw.IP{}, psErr.RouteNotFound
 		}
 		iface = route.Iface
-		if route.NextHop.Equal(mw.V4Zero) {
+		if route.NextHop.Equal(mw.V4Any) {
 			nextHop = dst
 		} else {
 			nextHop = route.NextHop
 		}
 	} else {
-		// Source address isn't equal to V4Zero means it can determine net address.
+		// Source address isn't equal to V4Any means it can determine net address.
 		iface = repo.IfaceRepo.Get(src)
 		if iface == nil {
 			psLog.E(fmt.Sprintf("Interface for %s was not found", src))
