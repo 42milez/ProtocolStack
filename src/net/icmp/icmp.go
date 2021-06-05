@@ -11,18 +11,69 @@ import (
 	"github.com/42milez/ProtocolStack/src/repo"
 )
 
-const IcmpHdrLen = 8 // byte
-const IcmpTypeEchoReply = 0x00
-const IcmpTypeEcho = 0x08
+const Echo = 0x08
+const EchoReply = 0x00
+const HdrLen = 8 // byte
 
-func IcmpReceive(payload []byte, dst [mw.V4AddrLen]byte, src [mw.V4AddrLen]byte, dev mw.IDevice) psErr.E {
-	if len(payload) < IcmpHdrLen {
+// ICMP Type Numbers
+// https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml#icmp-parameters-types
+
+var types = map[uint8]string{
+	0: "Echo Reply",
+	// 1-2: Unassigned
+	3: "Destination Unreachable",
+	4: "Source Quench (Deprecated)",
+	5: "Redirect",
+	6: "Alternate Host Address (Deprecated)",
+	// 7: Unassigned
+	8:  "Echo",
+	9:  "Router Advertisement",
+	10: "Router Solicitation",
+	11: "Time Exceeded",
+	12: "Parameter Problem",
+	13: "Timestamp",
+	14: "Timestamp Reply",
+	15: "Information Request (Deprecated)",
+	16: "Information Reply (Deprecated)",
+	17: "Address Mask Request (Deprecated)",
+	18: "Address Mask Reply (Deprecated)",
+	19: "Reserved (for Security)",
+	// 20-29: Reserved (for Robustness Experiment)
+	30: "Traceroute (Deprecated)",
+	31: "Datagram Conversion Error (Deprecated)",
+	32: "Mobile Host Redirect (Deprecated)",
+	33: "IPv6 Where-Are-You (Deprecated)",
+	34: "IPv6 I-Am-Here (Deprecated)",
+	35: "Mobile Registration Request (Deprecated)",
+	36: "Mobile Registration Reply (Deprecated)",
+	37: "Domain Name Request (Deprecated)",
+	38: "Domain Name Reply (Deprecated)",
+	39: "SKIP (Deprecated)",
+	40: "Photuris",
+	41: "ICMP messages utilized by experimental mobility protocols such as Seamoby",
+	42: "Extended Echo Request",
+	43: "Extended Echo Reply",
+	// 44-252: Unassigned
+	253: "RFC3692-style Experiment 1",
+	254: "RFC3692-style Experiment 2",
+	// 255: Reserved
+}
+
+type Hdr struct {
+	Type     uint8
+	Code     uint8
+	Checksum uint16
+	Content  uint32
+}
+
+func Receive(payload []byte, dst [mw.V4AddrLen]byte, src [mw.V4AddrLen]byte, dev mw.IDevice) psErr.E {
+	if len(payload) < HdrLen {
 		psLog.E(fmt.Sprintf("ICMP header length is too short: %d bytes", len(payload)))
 		return psErr.InvalidPacket
 	}
 
 	buf := bytes.NewBuffer(payload)
-	hdr := IcmpHdr{}
+	hdr := Hdr{}
 	if err := binary.Read(buf, binary.BigEndian, &hdr); err != nil {
 		return psErr.ReadFromBufError
 	}
@@ -36,10 +87,10 @@ func IcmpReceive(payload []byte, dst [mw.V4AddrLen]byte, src [mw.V4AddrLen]byte,
 	}
 
 	psLog.I("Incoming ICMP packet")
-	dumpIcmpPacket(&hdr, payload[IcmpHdrLen:])
+	dump(&hdr, payload[HdrLen:])
 
 	switch hdr.Type {
-	case IcmpTypeEcho:
+	case Echo:
 		s := mw.IP(src[:])
 		d := mw.IP(dst[:])
 		iface := repo.IfaceRepo.Lookup(dev, mw.V4AddrFamily)
@@ -47,15 +98,15 @@ func IcmpReceive(payload []byte, dst [mw.V4AddrLen]byte, src [mw.V4AddrLen]byte,
 			d = iface.Unicast
 		}
 		msg := &mw.IcmpTxMessage{
-			Type:    IcmpTypeEchoReply,
+			Type:    EchoReply,
 			Code:    hdr.Code,
 			Content: hdr.Content,
-			Payload: payload[IcmpHdrLen:],
+			Payload: payload[HdrLen:],
 			Src:     d,
 			Dst:     s,
 		}
 		mw.IcmpTxCh <- msg
-		//if err := IcmpSend(IcmpTypeEchoReply, hdr.Code, hdr.Content, payload[IcmpHdrLen:], d, s); err != psErr.OK {
+		//if err := Send(EchoReply, hdr.Code, hdr.Content, payload[HdrLen:], d, s); err != psErr.OK {
 		//	return psErr.Error
 		//}
 	}
@@ -63,8 +114,8 @@ func IcmpReceive(payload []byte, dst [mw.V4AddrLen]byte, src [mw.V4AddrLen]byte,
 	return psErr.OK
 }
 
-func IcmpSend(typ uint8, code uint8, content uint32, payload []byte, src mw.IP, dst mw.IP) psErr.E {
-	hdr := IcmpHdr{
+func Send(typ uint8, code uint8, content uint32, payload []byte, src mw.IP, dst mw.IP) psErr.E {
+	hdr := Hdr{
 		Type:    typ,
 		Code:    code,
 		Content: content,
@@ -84,7 +135,7 @@ func IcmpSend(typ uint8, code uint8, content uint32, payload []byte, src mw.IP, 
 	packet[3] = uint8(hdr.Checksum & 0x00ff)
 
 	psLog.I("Outgoing ICMP packet")
-	dumpIcmpPacket(&hdr, payload)
+	dump(&hdr, payload)
 
 	mw.IpTxCh <- &mw.IpMessage{
 		ProtoNum: ip.ICMP,
@@ -96,14 +147,33 @@ func IcmpSend(typ uint8, code uint8, content uint32, payload []byte, src mw.IP, 
 	return psErr.OK
 }
 
-func dumpIcmpPacket(hdr *IcmpHdr, payload []byte) {
-	psLog.I(fmt.Sprintf("\ttype:     %s (%d)", icmpTypes[hdr.Type], hdr.Type))
+func StartService() {
+	go func() {
+		for {
+			msg := <-mw.IcmpRxCh
+			if err := Receive(msg.Payload, msg.Dst, msg.Src, msg.Dev); err != psErr.OK {
+				return
+			}
+		}
+	}()
+	go func() {
+		for {
+			msg := <-mw.IcmpTxCh
+			if err := Send(msg.Type, msg.Code, msg.Content, msg.Payload, msg.Src, msg.Dst); err != psErr.OK {
+				return
+			}
+		}
+	}()
+}
+
+func dump(hdr *Hdr, payload []byte) {
+	psLog.I(fmt.Sprintf("\ttype:     %s (%d)", types[hdr.Type], hdr.Type))
 	psLog.I(fmt.Sprintf("\tcode:     %d", hdr.Code))
 	psLog.I(fmt.Sprintf("\tchecksum: 0x%04x", hdr.Checksum))
 
 	switch hdr.Type {
-	case IcmpTypeEchoReply:
-	case IcmpTypeEcho:
+	case EchoReply:
+	case Echo:
 		psLog.I(fmt.Sprintf("\tid:       %d", (hdr.Content&0xffff0000)>>16))
 		psLog.I(fmt.Sprintf("\tseq:      %d", hdr.Content&0x0000ffff))
 	default:
@@ -122,23 +192,4 @@ func dumpIcmpPacket(hdr *IcmpHdr, payload []byte) {
 			s = "\t\t  "
 		}
 	}
-}
-
-func StartService() {
-	go func() {
-		for {
-			msg := <-mw.IcmpRxCh
-			if err := IcmpReceive(msg.Payload, msg.Dst, msg.Src, msg.Dev); err != psErr.OK {
-				return
-			}
-		}
-	}()
-	go func() {
-		for {
-			msg := <-mw.IcmpTxCh
-			if err := IcmpSend(msg.Type, msg.Code, msg.Content, msg.Payload, msg.Src, msg.Dst); err != psErr.OK {
-				return
-			}
-		}
-	}()
 }
