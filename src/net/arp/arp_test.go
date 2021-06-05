@@ -185,7 +185,7 @@ func TestReceive_6(t *testing.T) {
 }
 
 func TestHwType_String(t *testing.T) {
-	want := arpHwTypes[Ethernet]
+	want := hwTypes[Ethernet]
 	got := Ethernet.String()
 	if got != want {
 		t.Errorf("HwType.String() = %s; want %s", got, want)
@@ -193,7 +193,7 @@ func TestHwType_String(t *testing.T) {
 }
 
 func TestOpcode_String(t *testing.T) {
-	want := arpOpCodes[Request]
+	want := opCodes[Request]
 	got := Request.String()
 	if got != want {
 		t.Errorf("Opcode.String() = %s; want %s", got, want)

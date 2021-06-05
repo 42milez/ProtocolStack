@@ -35,7 +35,7 @@ var TimerTxCh chan *worker.Message
 // Hardware Types
 // https://www.iana.org/assignments/arp-parameters/arp-parameters.xhtml#arp-parameters-2
 
-var arpHwTypes = map[HwType]string{
+var hwTypes = map[HwType]string{
 	// 0: Reserved
 	1:  "Ethernet (10Mb)",
 	2:  "Experimental Ethernet (3Mb)",
@@ -84,7 +84,7 @@ var arpHwTypes = map[HwType]string{
 // Operation Codes
 // https://www.iana.org/assignments/arp-parameters/arp-parameters.xhtml#arp-parameters-1
 
-var arpOpCodes = map[Opcode]string{
+var opCodes = map[Opcode]string{
 	// 0: Reserved
 	1:  "REQUEST",
 	2:  "REPLY",
@@ -134,13 +134,13 @@ type Hdr struct {
 type HwType uint16
 
 func (v HwType) String() string {
-	return arpHwTypes[v]
+	return hwTypes[v]
 }
 
 type Opcode uint16
 
 func (v Opcode) String() string {
-	return arpOpCodes[v]
+	return opCodes[v]
 }
 
 type Packet struct {
