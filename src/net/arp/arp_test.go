@@ -197,7 +197,7 @@ func TestTimer_1(t *testing.T) {
 	psTime.Time = m
 
 	pa := ArpProtoAddr{192, 168, 1, 1}
-	_ = cache.Create(mw.Addr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}, pa, cacheStatusResolved)
+	_ = cache.Create(mw.Addr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}, pa, resolved)
 
 	var wg sync.WaitGroup
 	StartService(&wg)

@@ -55,8 +55,8 @@ func Receive(packet []byte, dev mw.IDevice) psErr.E {
 	}
 
 	if iface.Unicast.EqualV4(arpPacket.TPA) {
-		if err := cache.Renew(arpPacket.SPA, arpPacket.SHA, cacheStatusResolved); err == psErr.NotFound {
-			_ = cache.Create(arpPacket.SHA, arpPacket.SPA, cacheStatusResolved)
+		if err := cache.Renew(arpPacket.SPA, arpPacket.SHA, resolved); err == psErr.NotFound {
+			_ = cache.Create(arpPacket.SHA, arpPacket.SPA, resolved)
 		} else {
 			psLog.I("ARP entry was renewed")
 			psLog.I(fmt.Sprintf("\tspa: %s", arpPacket.SPA))
@@ -149,7 +149,7 @@ func Resolve(iface *mw.Iface, ip mw.IP) (mw.Addr, ArpStatus) {
 
 	entry := cache.GetEntry(ip.ToV4())
 	if entry == nil {
-		if err := cache.Create(mw.Addr{}, ip.ToV4(), cacheStatusIncomplete); err != psErr.OK {
+		if err := cache.Create(mw.Addr{}, ip.ToV4(), incomplete); err != psErr.OK {
 			return mw.Addr{}, ArpStatusError
 		}
 		if err := Request(iface, ip); err != psErr.OK {

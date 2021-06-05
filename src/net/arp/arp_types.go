@@ -6,12 +6,6 @@ import (
 	"time"
 )
 
-const (
-	cacheStatusFree CacheStatus = iota
-	cacheStatusIncomplete
-	cacheStatusResolved
-	//cacheStatusStatic
-)
 const ArpHwTypeEthernet HwType = 0x0001
 const ArpOpRequest Opcode = 0x0001
 const ArpOpReply Opcode = 0x0002
@@ -104,8 +98,6 @@ var arpOpCodes = map[Opcode]string{
 	// 26-65534: Unassigned
 	// 65535: Reserved
 }
-
-type CacheStatus uint8
 
 // Address Resolution Protocol (ARP) Parameters
 // https://www.iana.org/assignments/arp-parameters/arp-parameters.xhtml

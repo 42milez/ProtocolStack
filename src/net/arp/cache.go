@@ -10,6 +10,12 @@ import (
 )
 
 const cacheSize = 32
+const (
+	free status = iota
+	incomplete
+	resolved
+	//static
+)
 
 var cache *arpCache
 
@@ -21,7 +27,7 @@ type arpCache struct {
 func (p *arpCache) Init() {
 	for i := range p.entries {
 		p.entries[i] = &arpCacheEntry{
-			Status:    cacheStatusFree,
+			Status:    free,
 			CreatedAt: time.Unix(0, 0),
 			HA:        mw.Addr{},
 			PA:        ArpProtoAddr{},
@@ -29,7 +35,7 @@ func (p *arpCache) Init() {
 	}
 }
 
-func (p *arpCache) Create(ha mw.Addr, pa ArpProtoAddr, state CacheStatus) psErr.E {
+func (p *arpCache) Create(ha mw.Addr, pa ArpProtoAddr, st status) psErr.E {
 	var entry *arpCacheEntry
 	if entry = p.GetEntry(pa); entry != nil {
 		return psErr.Exist
@@ -39,7 +45,7 @@ func (p *arpCache) Create(ha mw.Addr, pa ArpProtoAddr, state CacheStatus) psErr.
 	p.mtx.Lock()
 	defer p.mtx.Unlock()
 
-	entry.Status = state
+	entry.Status = st
 	entry.CreatedAt = psTime.Time.Now()
 	entry.HA = ha
 	entry.PA = pa
@@ -47,7 +53,7 @@ func (p *arpCache) Create(ha mw.Addr, pa ArpProtoAddr, state CacheStatus) psErr.
 	return psErr.OK
 }
 
-func (p *arpCache) Renew(pa ArpProtoAddr, ha mw.Addr, state CacheStatus) psErr.E {
+func (p *arpCache) Renew(pa ArpProtoAddr, ha mw.Addr, st status) psErr.E {
 	entry := p.GetEntry(pa)
 	if entry == nil {
 		return psErr.NotFound
@@ -56,7 +62,7 @@ func (p *arpCache) Renew(pa ArpProtoAddr, ha mw.Addr, state CacheStatus) psErr.E
 	p.mtx.Lock()
 	defer p.mtx.Unlock()
 
-	entry.Status = state
+	entry.Status = st
 	entry.CreatedAt = psTime.Time.Now()
 	entry.HA = ha
 
@@ -82,7 +88,7 @@ func (p *arpCache) GetReusableEntry() *arpCacheEntry {
 
 	oldest := p.entries[0]
 	for _, entry := range p.entries {
-		if entry.Status == cacheStatusFree {
+		if entry.Status == free {
 			return entry
 		}
 		if oldest.CreatedAt.After(entry.CreatedAt) {
@@ -94,7 +100,7 @@ func (p *arpCache) GetReusableEntry() *arpCacheEntry {
 }
 
 func (p *arpCache) Clear(idx int) {
-	p.entries[idx].Status = cacheStatusFree
+	p.entries[idx].Status = free
 	p.entries[idx].CreatedAt = time.Unix(0, 0)
 	p.entries[idx].HA = mw.Addr{}
 	p.entries[idx].PA = ArpProtoAddr{}
@@ -116,11 +122,13 @@ func (p *arpCache) Expire() (invalidations []string) {
 }
 
 type arpCacheEntry struct {
-	Status    CacheStatus
+	Status    status
 	CreatedAt time.Time
 	HA        mw.Addr
 	PA        ArpProtoAddr
 }
+
+type status uint8
 
 func init() {
 	cache = &arpCache{}

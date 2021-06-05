@@ -17,7 +17,7 @@ func TestArpCache_Add_1(t *testing.T) {
 
 	ha := mw.Addr{0x11, 0x22, 0x33, 0x44, 0x55, 0x66}
 	pa := ArpProtoAddr{192, 168, 1, 1}
-	state := cacheStatusResolved
+	state := resolved
 
 	want := psErr.OK
 	got := cache.Create(ha, pa, state)
@@ -31,7 +31,7 @@ func TestArpCache_Add_2(t *testing.T) {
 
 	ha := mw.Addr{0x11, 0x22, 0x33, 0x44, 0x55, 0x66}
 	pa := ArpProtoAddr{192, 168, 1, 1}
-	state := cacheStatusResolved
+	state := resolved
 
 	_ = cache.Create(ha, pa, state)
 
@@ -55,7 +55,7 @@ func TestArpCache_Add_3(t *testing.T) {
 	for i := cacheSize; i >= 0; i-- {
 		ha := mw.Addr{0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 		pa := ArpProtoAddr{192, 168, byte(i), 1}
-		state := cacheStatusResolved
+		state := resolved
 		createdAt, _ := time.Parse(time.RFC3339, fmt.Sprintf("2021-01-01T00:%02d:00Z", i))
 		m.EXPECT().Now().Return(createdAt)
 		got = cache.Create(ha, pa, state)
@@ -78,14 +78,14 @@ func TestArpCache_Renew_1(t *testing.T) {
 
 	ha1 := mw.Addr{0x11, 0x22, 0x33, 0x44, 0x55, 0x66}
 	pa := ArpProtoAddr{192, 168, 1, 1}
-	state := cacheStatusResolved
+	state := resolved
 	_ = cache.Create(ha1, pa, state)
 
 	ha2 := mw.Addr{0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f}
 	_ = cache.Renew(pa, ha2, state)
 
 	want := &arpCacheEntry{
-		Status:    cacheStatusResolved,
+		Status:    resolved,
 		CreatedAt: createdAt,
 		HA:        mw.Addr{0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f},
 		PA:        ArpProtoAddr{192, 168, 1, 1},
@@ -102,11 +102,11 @@ func TestArpCache_Renew_2(t *testing.T) {
 
 	ha1 := mw.Addr{0x11, 0x22, 0x33, 0x44, 0x55, 0x66}
 	pa := ArpProtoAddr{192, 168, 1, 1}
-	state := cacheStatusResolved
+	state := resolved
 	_ = cache.Create(ha1, pa, state)
 
 	want := psErr.NotFound
-	got := cache.Renew(ArpProtoAddr{192, 0, 2, 1}, mw.Addr{}, cacheStatusResolved)
+	got := cache.Renew(ArpProtoAddr{192, 0, 2, 1}, mw.Addr{}, resolved)
 
 	if got != want {
 		t.Errorf("Renew() = %s; want %s", got, want)
@@ -118,7 +118,7 @@ func TestArpCache_GetEntry_1(t *testing.T) {
 
 	ha := mw.Addr{0x11, 0x22, 0x33, 0x44, 0x55, 0x66}
 	pa := ArpProtoAddr{192, 168, 1, 1}
-	state := cacheStatusResolved
+	state := resolved
 	_ = cache.Create(ha, pa, state)
 
 	entry := cache.GetEntry(pa)
@@ -133,7 +133,7 @@ func TestArpCache_GetEntry_2(t *testing.T) {
 
 	ha := mw.Addr{0x11, 0x22, 0x33, 0x44, 0x55, 0x66}
 	pa := ArpProtoAddr{192, 168, 1, 1}
-	state := cacheStatusResolved
+	state := resolved
 	_ = cache.Create(ha, pa, state)
 
 	entry := cache.GetEntry(ArpProtoAddr{192, 0, 2, 1})
