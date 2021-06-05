@@ -5,11 +5,11 @@ package main
 import (
 	"fmt"
 	psErr "github.com/42milez/ProtocolStack/src/error"
-	"github.com/42milez/ProtocolStack/src/eth"
 	psLog "github.com/42milez/ProtocolStack/src/log"
 	"github.com/42milez/ProtocolStack/src/mw"
 	"github.com/42milez/ProtocolStack/src/net"
 	"github.com/42milez/ProtocolStack/src/net/arp"
+	eth2 "github.com/42milez/ProtocolStack/src/net/eth"
 	"github.com/42milez/ProtocolStack/src/net/icmp"
 	"github.com/42milez/ProtocolStack/src/net/ip"
 	"github.com/42milez/ProtocolStack/src/repo"
@@ -48,7 +48,7 @@ func setup() psErr.E {
 	psLog.I("--------------------------------------------------")
 
 	// Create a loopback device and its iface, then link them.
-	loopbackDev := eth.GenLoopbackDevice("net" + strconv.Itoa(repo.DeviceRepo.NextNumber()))
+	loopbackDev := eth2.GenLoopbackDevice("net" + strconv.Itoa(repo.DeviceRepo.NextNumber()))
 	if err := repo.DeviceRepo.Register(loopbackDev); err != psErr.OK {
 		return psErr.Error
 	}
@@ -61,7 +61,7 @@ func setup() psErr.E {
 	repo.RouteRepo.Register(mw.ParseIP(mw.LoopbackNetwork), mw.V4Zero, iface1)
 
 	// Create a TAP device and its interface, then link them.
-	tapDev := eth.GenTapDevice(
+	tapDev := eth2.GenTapDevice(
 		"net"+strconv.Itoa(repo.DeviceRepo.NextNumber()),
 		"tap0",
 		mw.EthAddr{11, 22, 33, 44, 55, 66})

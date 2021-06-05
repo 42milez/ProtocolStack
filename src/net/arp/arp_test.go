@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"encoding/binary"
 	psErr "github.com/42milez/ProtocolStack/src/error"
-	"github.com/42milez/ProtocolStack/src/eth"
 	psLog "github.com/42milez/ProtocolStack/src/log"
 	"github.com/42milez/ProtocolStack/src/mw"
+	eth2 "github.com/42milez/ProtocolStack/src/net/eth"
 	"github.com/42milez/ProtocolStack/src/repo"
 	psTime "github.com/42milez/ProtocolStack/src/time"
 	"github.com/golang/mock/gomock"
@@ -35,7 +35,7 @@ func TestReceive_1(t *testing.T) {
 	packet := builder.Default()
 	buf := new(bytes.Buffer)
 	_ = binary.Write(buf, binary.BigEndian, packet)
-	dev := &eth.TapDevice{
+	dev := &eth2.TapDevice{
 		Device: mw.Device{
 			Type_: mw.DevTypeEthernet,
 			Name_: "net0",
@@ -62,7 +62,7 @@ func TestReceive_2(t *testing.T) {
 	defer teardown()
 
 	var packet []byte
-	dev := &eth.TapDevice{}
+	dev := &eth2.TapDevice{}
 
 	want := psErr.InvalidPacket
 	got := Receive(packet, dev)
@@ -80,7 +80,7 @@ func TestReceive_3(t *testing.T) {
 	packet := builder.CustomHT(HwType(0xffff))
 	buf := new(bytes.Buffer)
 	_ = binary.Write(buf, binary.BigEndian, packet)
-	dev := &eth.TapDevice{}
+	dev := &eth2.TapDevice{}
 
 	want := psErr.InvalidPacket
 	got := Receive(buf.Bytes(), dev)
@@ -91,7 +91,7 @@ func TestReceive_3(t *testing.T) {
 	packet = builder.CustomPT(mw.EthType(0xffff))
 	buf = new(bytes.Buffer)
 	_ = binary.Write(buf, binary.BigEndian, packet)
-	dev = &eth.TapDevice{}
+	dev = &eth2.TapDevice{}
 
 	want = psErr.InvalidPacket
 	got = Receive(buf.Bytes(), dev)
@@ -112,7 +112,7 @@ func TestReceive_4(t *testing.T) {
 	packet := builder.Default()
 	buf := new(bytes.Buffer)
 	_ = binary.Write(buf, binary.BigEndian, packet)
-	dev := &eth.TapDevice{}
+	dev := &eth2.TapDevice{}
 
 	want := psErr.InterfaceNotFound
 	got := Receive(buf.Bytes(), dev)
@@ -144,7 +144,7 @@ func TestReceive_5(t *testing.T) {
 	packet := builder.Default()
 	buf := new(bytes.Buffer)
 	_ = binary.Write(buf, binary.BigEndian, packet)
-	dev := &eth.TapDevice{}
+	dev := &eth2.TapDevice{}
 
 	want := psErr.Error
 	got := Receive(buf.Bytes(), dev)
@@ -164,14 +164,14 @@ func TestReceive_6(t *testing.T) {
 		Unicast:   mw.ParseIP("192.0.2.2"),
 		Netmask:   mw.ParseIP("255.255.255.0"),
 		Broadcast: mw.ParseIP("192.0.2.255"),
-		Dev:       &eth.TapDevice{},
+		Dev:       &eth2.TapDevice{},
 	})
 	repo.IfaceRepo = mockIfaceRepo
 
 	packet := builder.CustomTPA(mw.V4Addr{192, 168, 2, 3})
 	buf := new(bytes.Buffer)
 	_ = binary.Write(buf, binary.BigEndian, packet)
-	dev := &eth.TapDevice{
+	dev := &eth2.TapDevice{
 		Device: mw.Device{
 			Name_: "net0",
 		},
