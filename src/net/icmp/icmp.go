@@ -9,11 +9,18 @@ import (
 	"github.com/42milez/ProtocolStack/src/mw"
 	"github.com/42milez/ProtocolStack/src/net/ip"
 	"github.com/42milez/ProtocolStack/src/repo"
+	"github.com/42milez/ProtocolStack/src/worker"
 )
 
 const Echo = 0x08
 const EchoReply = 0x00
 const HdrLen = 8 // byte
+const xChBufSize = 5
+
+var RcvRxCh chan *worker.Message
+var RcvTxCh chan *worker.Message
+var SndRxCh chan *worker.Message
+var SndTxCh chan *worker.Message
 
 // ICMP Type Numbers
 // https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml#icmp-parameters-types
@@ -148,22 +155,8 @@ func Send(typ uint8, code uint8, content uint32, payload []byte, src mw.IP, dst 
 }
 
 func StartService() {
-	go func() {
-		for {
-			msg := <-mw.IcmpRxCh
-			if err := Receive(msg.Payload, msg.Dst, msg.Src, msg.Dev); err != psErr.OK {
-				return
-			}
-		}
-	}()
-	go func() {
-		for {
-			msg := <-mw.IcmpTxCh
-			if err := Send(msg.Type, msg.Code, msg.Content, msg.Payload, msg.Src, msg.Dst); err != psErr.OK {
-				return
-			}
-		}
-	}()
+	go receiver()
+	go sender()
 }
 
 func dump(hdr *Hdr, payload []byte) {
@@ -192,4 +185,53 @@ func dump(hdr *Hdr, payload []byte) {
 			s = "\t\t  "
 		}
 	}
+}
+
+func receiver() {
+	RcvTxCh <- &worker.Message{
+		Current: worker.Running,
+	}
+	for {
+		select {
+		case msg := <-RcvRxCh:
+			if msg.Desired == worker.Stopped {
+				RcvTxCh <- &worker.Message{
+					Current: worker.Stopped,
+				}
+				return
+			}
+		case msg := <-mw.IcmpRxCh:
+			if err := Receive(msg.Payload, msg.Dst, msg.Src, msg.Dev); err != psErr.OK {
+				return
+			}
+		}
+	}
+}
+
+func sender() {
+	SndTxCh <- &worker.Message{
+		Current: worker.Running,
+	}
+	for {
+		select {
+		case msg := <-SndRxCh:
+			if msg.Desired == worker.Stopped {
+				SndTxCh <- &worker.Message{
+					Current: worker.Stopped,
+				}
+				return
+			}
+		case msg := <-mw.IcmpTxCh:
+			if err := Send(msg.Type, msg.Code, msg.Content, msg.Payload, msg.Src, msg.Dst); err != psErr.OK {
+				return
+			}
+		}
+	}
+}
+
+func init() {
+	RcvRxCh = make(chan *worker.Message, xChBufSize)
+	RcvTxCh = make(chan *worker.Message, xChBufSize)
+	SndRxCh = make(chan *worker.Message, xChBufSize)
+	SndTxCh = make(chan *worker.Message, xChBufSize)
 }
