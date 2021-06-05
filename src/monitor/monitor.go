@@ -1,9 +1,7 @@
 package monitor
 
 import (
-	"fmt"
 	psErr "github.com/42milez/ProtocolStack/src/error"
-	psLog "github.com/42milez/ProtocolStack/src/log"
 	"github.com/42milez/ProtocolStack/src/worker"
 	"sync"
 	"time"
@@ -63,7 +61,6 @@ func (p *serviceRepo_) Watch() {
 		case msg := <-s.MonitorCh:
 			if msg.Current == worker.Running && s.State != worker.Running {
 				s.State = worker.Running
-				psLog.W(fmt.Sprintf("%s is ready", s.Name))
 			}
 		default:
 			continue
