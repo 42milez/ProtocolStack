@@ -9,13 +9,19 @@ import (
 	"github.com/42milez/ProtocolStack/src/mw"
 	"github.com/42milez/ProtocolStack/src/net"
 	"github.com/42milez/ProtocolStack/src/repo"
-	"github.com/42milez/ProtocolStack/src/timer"
+	"github.com/42milez/ProtocolStack/src/worker"
 	"sync"
 	"time"
 )
 
-var ArpCondCh chan timer.Condition
-var ArpSigCh chan timer.Signal
+const xChBufSize = 5
+
+var RcvRxCh chan *worker.Message
+var RcvTxCh chan *worker.Message
+var SndRxCh chan *worker.Message
+var SndTxCh chan *worker.Message
+var TimerRxCh chan *worker.Message
+var TimerTxCh chan *worker.Message
 
 func Receive(packet []byte, dev mw.IDevice) psErr.E {
 	if len(packet) < ArpPacketLen {
@@ -155,35 +161,20 @@ func Resolve(iface *mw.Iface, ip mw.IP) (mw.Addr, ArpStatus) {
 	return entry.HA, ArpStatusComplete
 }
 
-func RunTimer(wg *sync.WaitGroup) {
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		ArpCondCh <- timer.Condition{
-			CurrentState: timer.Running,
-		}
-		for {
-			select {
-			case signal := <-ArpSigCh:
-				if signal == timer.Stop {
-					return
-				}
-			default:
-				ret := cache.Expire()
-				if len(ret) != 0 {
-					psLog.I("ARP cache entries were expired:")
-					for i, v := range ret {
-						psLog.I(fmt.Sprintf("\t%d: %s", i+1, v))
-					}
-				}
-				time.Sleep(time.Second)
-			}
-		}
-	}()
+func StartService(wg *sync.WaitGroup) {
+	wg.Add(3)
+	go receiver(wg)
+	go sender(wg)
+	go timer(wg)
 }
 
-func StopTimer() {
-	ArpSigCh <- timer.Stop
+func StopService() {
+	msg := &worker.Message{
+		Desired: worker.Stopped,
+	}
+	RcvRxCh <- msg
+	SndRxCh <- msg
+	TimerRxCh <- msg
 }
 
 func dumpArpPacket(packet *Packet) {
@@ -198,18 +189,73 @@ func dumpArpPacket(packet *Packet) {
 	psLog.I(fmt.Sprintf("\ttarget protocol address: %v", packet.TPA))
 }
 
-func StartService() {
-	go func() {
-		for {
-			msg := <-mw.ArpRxCh
+func receiver(wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	RcvTxCh <- &worker.Message{
+		Current: worker.Running,
+	}
+
+	for {
+		select {
+		case msg := <-RcvRxCh:
+			if msg.Desired == worker.Stopped {
+				return
+			}
+		case msg := <-mw.ArpRxCh:
 			if err := Receive(msg.Packet, msg.Dev); err != psErr.OK {
 				return
 			}
 		}
-	}()
+	}
+}
+
+func sender(wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	SndTxCh <- &worker.Message{
+		Current: worker.Running,
+	}
+
+	for {
+		msg := <-SndRxCh
+		if msg.Desired == worker.Stopped {
+			return
+		}
+	}
+}
+
+func timer(wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	TimerTxCh <- &worker.Message{
+		Current: worker.Running,
+	}
+
+	for {
+		select {
+		case msg := <-TimerRxCh:
+			if msg.Desired == worker.Stopped {
+				return
+			}
+		default:
+			ret := cache.Expire()
+			if len(ret) != 0 {
+				psLog.I("ARP cache entries were expired:")
+				for i, v := range ret {
+					psLog.I(fmt.Sprintf("\t%d: %s", i+1, v))
+				}
+			}
+		}
+		time.Sleep(time.Second)
+	}
 }
 
 func init() {
-	ArpCondCh = make(chan timer.Condition)
-	ArpSigCh = make(chan timer.Signal)
+	RcvRxCh = make(chan *worker.Message, xChBufSize)
+	RcvTxCh = make(chan *worker.Message, xChBufSize)
+	SndRxCh = make(chan *worker.Message, xChBufSize)
+	SndTxCh = make(chan *worker.Message, xChBufSize)
+	TimerRxCh = make(chan *worker.Message, xChBufSize)
+	TimerTxCh = make(chan *worker.Message, xChBufSize)
 }

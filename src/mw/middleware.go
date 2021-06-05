@@ -43,7 +43,10 @@ type ArpRxMessage struct {
 	Dev    IDevice
 }
 
-type ArpTxMessage struct{}
+type ArpTxMessage struct {
+	Iface *Iface
+	IP    IP
+}
 
 type IpMessage struct {
 	ProtoNum ProtocolNumber

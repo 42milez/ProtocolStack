@@ -15,8 +15,8 @@ import (
 	"time"
 )
 
-func TestArpInputHandler_1(t *testing.T) {
-	ctrl, teardown := SetupArpInputHandlerTest(t)
+func TestReceive_1(t *testing.T) {
+	ctrl, teardown := SetupReceiveTest(t)
 	defer teardown()
 
 	ethAddr := mw.Addr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}
@@ -54,13 +54,13 @@ func TestArpInputHandler_1(t *testing.T) {
 	want := psErr.OK
 	got := Receive(buf.Bytes(), dev)
 	if got != want {
-		t.Errorf("ArpInputHandler() = %s; want %s", got, want)
+		t.Errorf("Receive() = %s; want %s", got, want)
 	}
 }
 
 // Fail when ARP packet is too short.
-func TestArpInputHandler_2(t *testing.T) {
-	_, teardown := SetupArpInputHandlerTest(t)
+func TestReceive_2(t *testing.T) {
+	_, teardown := SetupReceiveTest(t)
 	defer teardown()
 
 	var packet []byte
@@ -69,14 +69,14 @@ func TestArpInputHandler_2(t *testing.T) {
 	want := psErr.InvalidPacket
 	got := Receive(packet, dev)
 	if got != want {
-		t.Errorf("ArpInputHandler() = %s; want %s", got, want)
+		t.Errorf("Receive() = %s; want %s", got, want)
 	}
 }
 
-// Fail when hardware type of ARP packet is invalid.
-// Fail when protocol type of ARP packet is invalid.
-func TestArpInputHandler_3(t *testing.T) {
-	_, teardown := SetupArpInputHandlerTest(t)
+// Fail when hardware type is invalid.
+// Fail when protocol type is invalid.
+func TestReceive_3(t *testing.T) {
+	_, teardown := SetupReceiveTest(t)
 	defer teardown()
 
 	packet := Builder.CustomHT(HwType(0xffff))
@@ -87,7 +87,7 @@ func TestArpInputHandler_3(t *testing.T) {
 	want := psErr.InvalidPacket
 	got := Receive(buf.Bytes(), dev)
 	if got != want {
-		t.Errorf("ArpInputHandler() = %s; want %s", got, want)
+		t.Errorf("Receive() = %s; want %s", got, want)
 	}
 
 	packet = Builder.CustomPT(mw.EthType(0xffff))
@@ -98,13 +98,13 @@ func TestArpInputHandler_3(t *testing.T) {
 	want = psErr.InvalidPacket
 	got = Receive(buf.Bytes(), dev)
 	if got != want {
-		t.Errorf("ArpInputHandler() = %s; want %s", got, want)
+		t.Errorf("Receive() = %s; want %s", got, want)
 	}
 }
 
 // Fail when Iface is not found.
-func TestArpInputHandler_4(t *testing.T) {
-	ctrl, teardown := SetupArpInputHandlerTest(t)
+func TestReceive_4(t *testing.T) {
+	ctrl, teardown := SetupReceiveTest(t)
 	defer teardown()
 
 	mockIfaceRepo := repo.NewMockIIfaceRepo(ctrl)
@@ -119,13 +119,13 @@ func TestArpInputHandler_4(t *testing.T) {
 	want := psErr.InterfaceNotFound
 	got := Receive(buf.Bytes(), dev)
 	if got != want {
-		t.Errorf("ArpInputHandler() = %s; want %s", got, want)
+		t.Errorf("Receive() = %s; want %s", got, want)
 	}
 }
 
 // Fail when arpReply() returns error.
-func TestArpInputHandler_5(t *testing.T) {
-	ctrl, teardown := SetupArpInputHandlerTest(t)
+func TestReceive_5(t *testing.T) {
+	ctrl, teardown := SetupReceiveTest(t)
 	defer teardown()
 
 	ethAddr := mw.Addr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}
@@ -151,13 +151,13 @@ func TestArpInputHandler_5(t *testing.T) {
 	want := psErr.Error
 	got := Receive(buf.Bytes(), dev)
 	if got != want {
-		t.Errorf("ArpInputHandler() = %s; want %s", got, want)
+		t.Errorf("Receive() = %s; want %s", got, want)
 	}
 }
 
 // Success when an ARP packet sent to other destination arrives.
-func TestArpInputHandler_6(t *testing.T) {
-	ctrl, teardown := SetupArpInputHandlerTest(t)
+func TestReceive_6(t *testing.T) {
+	ctrl, teardown := SetupReceiveTest(t)
 	defer teardown()
 
 	mockIfaceRepo := repo.NewMockIIfaceRepo(ctrl)
@@ -182,11 +182,11 @@ func TestArpInputHandler_6(t *testing.T) {
 	want := psErr.OK
 	got := Receive(buf.Bytes(), dev)
 	if got != want {
-		t.Errorf("ArpInputHandler() = %s; want %s", got, want)
+		t.Errorf("Receive() = %s; want %s", got, want)
 	}
 }
 
-func TestRunArpTimer_1(t *testing.T) {
+func TestTimer_1(t *testing.T) {
 	ctrl, teardown := SetupRunArpTimerTest(t)
 	defer teardown()
 	defer cache.Init()
@@ -200,9 +200,9 @@ func TestRunArpTimer_1(t *testing.T) {
 	_ = cache.Create(mw.Addr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}, pa, cacheStatusResolved)
 
 	var wg sync.WaitGroup
-	RunTimer(&wg)
-	<-ArpCondCh
-	StopTimer()
+	StartService(&wg)
+	<-TimerTxCh
+	StopService()
 	wg.Wait()
 
 	got := cache.GetEntry(pa)
@@ -211,15 +211,15 @@ func TestRunArpTimer_1(t *testing.T) {
 	}
 }
 
-func TestRunArpTimer_2(t *testing.T) {
+func TestTimer_2(t *testing.T) {
 	_, teardown := SetupRunArpTimerTest(t)
 	defer teardown()
 	defer cache.Init()
 
 	var wg sync.WaitGroup
-	RunTimer(&wg)
-	<-ArpCondCh
-	StopTimer()
+	StartService(&wg)
+	<-TimerTxCh
+	StopService()
 	wg.Wait()
 
 	got := cache.GetEntry(ArpProtoAddr{192, 168, 0, 1})
@@ -267,7 +267,7 @@ func (v ArpPacketBuilder) CustomTPA(tpa ArpProtoAddr) (packet *Packet) {
 	return
 }
 
-func SetupArpInputHandlerTest(t *testing.T) (ctrl *gomock.Controller, teardown func()) {
+func SetupReceiveTest(t *testing.T) (ctrl *gomock.Controller, teardown func()) {
 	psLog.DisableOutput()
 	ctrl = gomock.NewController(t)
 	backupIfaceRepo := repo.IfaceRepo
