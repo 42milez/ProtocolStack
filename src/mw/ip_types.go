@@ -1,8 +1,9 @@
-package net
+package mw
 
 import (
 	"github.com/google/go-cmp/cmp"
 	"reflect"
+	"strings"
 	"syscall"
 )
 
@@ -28,6 +29,15 @@ var v4InV6Prefix = []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff}
 
 // AddrFamily is IP address family.
 type AddrFamily int
+
+func (v AddrFamily) String() string {
+	return addrFamilies[v]
+}
+
+var addrFamilies = map[AddrFamily]string{
+	V4AddrFamily: "IPv4",
+	V6AddrFamily: "IPv6",
+}
 
 // An IP is a single IP address.
 type IP []byte
@@ -59,10 +69,6 @@ type IpHdr struct {
 
 // ProtocolNumber is assigned internet protocol number
 type ProtocolNumber uint8
-
-func (v AddrFamily) String() string {
-	return addrFamilies[v]
-}
 
 func (v IP) Equal(x IP) bool {
 	if len(v) == len(x) {
@@ -133,6 +139,50 @@ func (v IP) ToV4() (ip [V4AddrLen]byte) {
 	return
 }
 
+// ParseIP parses string as IPv4 or IPv6 address by detecting its format.
+func ParseIP(s string) IP {
+	if strings.Contains(s, ".") {
+		return parseV4(s)
+	}
+	if strings.Contains(s, ":") {
+		return parseV6(s)
+	}
+	return nil
+}
+
+// The prefix for the special addresses described in RFC5952.
+//var v4InV6Prefix = []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff}
+
+// v4 creates IP from bytes.
+//func v4(a, b, c, d byte) IP {
+//	p := make(IP, V6AddrLen)
+//	copy(p, v4InV6Prefix)
+//	p[12] = a
+//	p[13] = b
+//	p[14] = c
+//	p[15] = d
+//	return p
+//}
+
+// V4 creates IP from bytes. TODO: use IPv4-mapped address above
+func V4(a, b, c, d byte) IP {
+	p := make(IP, V4AddrLen)
+	p[0] = a
+	p[1] = b
+	p[2] = c
+	p[3] = d
+	return p
+}
+
+func allFF(b []byte) bool {
+	for _, c := range b {
+		if c != 0xff {
+			return false
+		}
+	}
+	return true
+}
+
 // isZeros checks if ip all zeros.
 func isZeros(ip IP) bool {
 	for i := 0; i < len(ip); i++ {
@@ -141,6 +191,18 @@ func isZeros(ip IP) bool {
 		}
 	}
 	return true
+}
+
+func LongestIP(ip1 IP, ip2 IP) IP {
+	if len(ip1) != len(ip2) {
+		return nil
+	}
+	for i, v := range ip1 {
+		if v < ip2[i] {
+			return ip2
+		}
+	}
+	return ip1
 }
 
 // parseV4 parses string as IPv4 address.

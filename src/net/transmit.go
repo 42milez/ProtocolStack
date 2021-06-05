@@ -3,18 +3,18 @@ package net
 import (
 	"fmt"
 	psErr "github.com/42milez/ProtocolStack/src/error"
-	"github.com/42milez/ProtocolStack/src/eth"
 	psLog "github.com/42milez/ProtocolStack/src/log"
+	"github.com/42milez/ProtocolStack/src/mw"
 )
 
-func Transmit(dst eth.Addr, payload []byte, typ eth.Type, iface *Iface) psErr.E {
+func Transmit(dst mw.Addr, payload []byte, typ mw.EthType, iface *mw.Iface) psErr.E {
 	if !iface.Dev.IsUp() {
 		psLog.E(fmt.Sprintf("Device %s is down", iface.Dev.Name()))
 		return psErr.DeviceNotOpened
 	}
 
 	if len(payload) > int(iface.Dev.MTU()) {
-		psLog.E(fmt.Sprintf("Packet is too long: mtu = %d, actual = %d", iface.Dev.MTU(), len(payload)))
+		psLog.E(fmt.Sprintf("EthMessage is too long: mtu = %d, actual = %d", iface.Dev.MTU(), len(payload)))
 		return psErr.PacketTooLong
 	}
 

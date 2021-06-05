@@ -1,6 +1,6 @@
 //go:generate mockgen -source=device.go -destination=device_mock.go -package=$GOPACKAGE -self_package=github.com/42milez/ProtocolStack/src/$GOPACKAGE
 
-package eth
+package mw
 
 import (
 	psErr "github.com/42milez/ProtocolStack/src/error"
@@ -28,7 +28,7 @@ type IDevice interface {
 	Open() psErr.E
 	Close() psErr.E
 	Poll(terminate bool) psErr.E
-	Transmit(dst Addr, payload []byte, typ Type) psErr.E
+	Transmit(dst Addr, payload []byte, typ EthType) psErr.E
 	Up()
 	Down()
 	Equal(dev IDevice) bool

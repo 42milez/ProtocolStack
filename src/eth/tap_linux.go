@@ -7,6 +7,7 @@ import (
 	"fmt"
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	psLog "github.com/42milez/ProtocolStack/src/log"
+	"github.com/42milez/ProtocolStack/src/mw"
 	psSyscall "github.com/42milez/ProtocolStack/src/syscall"
 	"syscall"
 	"unsafe"
@@ -44,7 +45,7 @@ type IfreqSockAddr struct {
 }
 
 type TapDevice struct {
-	Device
+	mw.Device
 }
 
 func (p *TapDevice) Open() psErr.E {
@@ -135,19 +136,19 @@ func (p *TapDevice) Poll(isTerminated bool) psErr.E {
 		psLog.I("Event occurred")
 		psLog.I(fmt.Sprintf("\tevents: %v", nEvents))
 		psLog.I(fmt.Sprintf("\tdevice: %v (%v)", p.Name_, p.Priv_.Name))
-		if packet, err := ReadEthFrame(p.Priv_.FD, p.Addr_); err != psErr.OK {
+		if msg, err := mw.ReadEthFrame(p.Priv_.FD, p.Addr_); err != psErr.OK {
 			if err != psErr.NoDataToRead {
 				return psErr.Error
 			}
 		} else {
-			packet.Dev = p
-			RxCh <- packet
+			msg.Dev = p
+			mw.EthRxCh <- msg
 		}
 	}
 
 	return psErr.OK
 }
 
-func (p *TapDevice) Transmit(dst Addr, payload []byte, typ Type) psErr.E {
-	return WriteEthFrame(p.Priv_.FD, dst, p.Addr_, typ, payload)
+func (p *TapDevice) Transmit(dst mw.Addr, payload []byte, typ mw.EthType) psErr.E {
+	return mw.WriteEthFrame(p.Priv_.FD, dst, p.Addr_, typ, payload)
 }

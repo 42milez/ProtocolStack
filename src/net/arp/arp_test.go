@@ -1,4 +1,4 @@
-package net
+package arp
 
 import (
 	"bytes"
@@ -6,6 +6,8 @@ import (
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	"github.com/42milez/ProtocolStack/src/eth"
 	psLog "github.com/42milez/ProtocolStack/src/log"
+	"github.com/42milez/ProtocolStack/src/mw"
+	"github.com/42milez/ProtocolStack/src/repo"
 	psTime "github.com/42milez/ProtocolStack/src/time"
 	"github.com/golang/mock/gomock"
 	"sync"
@@ -17,32 +19,32 @@ func TestArpInputHandler_1(t *testing.T) {
 	ctrl, teardown := SetupArpInputHandlerTest(t)
 	defer teardown()
 
-	ethAddr := eth.Addr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}
-	mockDev := eth.NewMockIDevice(ctrl)
+	ethAddr := mw.Addr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}
+	mockDev := mw.NewMockIDevice(ctrl)
 	mockDev.EXPECT().Addr().Return(ethAddr)
 	mockDev.EXPECT().Transmit(any, any, any).Return(psErr.OK)
 
-	mockIfaceRepo := NewMockIIfaceRepo(ctrl)
-	mockIfaceRepo.EXPECT().Lookup(any, any).Return(&Iface{
-		Family:    V4AddrFamily,
-		Unicast:   ParseIP("192.0.2.2"),
-		Netmask:   ParseIP("255.255.255.0"),
-		Broadcast: ParseIP("192.0.2.255"),
+	mockIfaceRepo := repo.NewMockIIfaceRepo(ctrl)
+	mockIfaceRepo.EXPECT().Lookup(any, any).Return(&mw.Iface{
+		Family:    mw.V4AddrFamily,
+		Unicast:   mw.ParseIP("192.0.2.2"),
+		Netmask:   mw.ParseIP("255.255.255.0"),
+		Broadcast: mw.ParseIP("192.0.2.255"),
 		Dev:       mockDev,
 	})
-	IfaceRepo = mockIfaceRepo
+	repo.IfaceRepo = mockIfaceRepo
 
 	packet := Builder.Default()
 	buf := new(bytes.Buffer)
 	_ = binary.Write(buf, binary.BigEndian, packet)
 	dev := &eth.TapDevice{
-		Device: eth.Device{
-			Type_: eth.DevTypeEthernet,
+		Device: mw.Device{
+			Type_: mw.DevTypeEthernet,
 			Name_: "net0",
 			Addr_: ethAddr,
-			Flag_: eth.DevFlagBroadcast | eth.DevFlagNeedArp,
-			MTU_:  eth.PayloadLenMax,
-			Priv_: eth.Privilege{
+			Flag_: mw.DevFlagBroadcast | mw.DevFlagNeedArp,
+			MTU_:  mw.PayloadLenMax,
+			Priv_: mw.Privilege{
 				FD:   3,
 				Name: "tap0",
 			},
@@ -88,7 +90,7 @@ func TestArpInputHandler_3(t *testing.T) {
 		t.Errorf("ArpInputHandler() = %s; want %s", got, want)
 	}
 
-	packet = Builder.CustomPT(eth.Type(0xffff))
+	packet = Builder.CustomPT(mw.EthType(0xffff))
 	buf = new(bytes.Buffer)
 	_ = binary.Write(buf, binary.BigEndian, packet)
 	dev = &eth.TapDevice{}
@@ -105,9 +107,9 @@ func TestArpInputHandler_4(t *testing.T) {
 	ctrl, teardown := SetupArpInputHandlerTest(t)
 	defer teardown()
 
-	mockIfaceRepo := NewMockIIfaceRepo(ctrl)
+	mockIfaceRepo := repo.NewMockIIfaceRepo(ctrl)
 	mockIfaceRepo.EXPECT().Lookup(any, any).Return(nil)
-	IfaceRepo = mockIfaceRepo
+	repo.IfaceRepo = mockIfaceRepo
 
 	packet := Builder.Default()
 	buf := new(bytes.Buffer)
@@ -126,20 +128,20 @@ func TestArpInputHandler_5(t *testing.T) {
 	ctrl, teardown := SetupArpInputHandlerTest(t)
 	defer teardown()
 
-	ethAddr := eth.Addr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}
-	mockDev := eth.NewMockIDevice(ctrl)
+	ethAddr := mw.Addr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}
+	mockDev := mw.NewMockIDevice(ctrl)
 	mockDev.EXPECT().Addr().Return(ethAddr)
 	mockDev.EXPECT().Transmit(any, any, any).Return(psErr.Error)
 
-	mockIfaceRepo := NewMockIIfaceRepo(ctrl)
-	mockIfaceRepo.EXPECT().Lookup(any, any).Return(&Iface{
-		Family:    V4AddrFamily,
-		Unicast:   ParseIP("192.0.2.2"),
-		Netmask:   ParseIP("255.255.255.0"),
-		Broadcast: ParseIP("192.0.2.255"),
+	mockIfaceRepo := repo.NewMockIIfaceRepo(ctrl)
+	mockIfaceRepo.EXPECT().Lookup(any, any).Return(&mw.Iface{
+		Family:    mw.V4AddrFamily,
+		Unicast:   mw.ParseIP("192.0.2.2"),
+		Netmask:   mw.ParseIP("255.255.255.0"),
+		Broadcast: mw.ParseIP("192.0.2.255"),
 		Dev:       mockDev,
 	})
-	IfaceRepo = mockIfaceRepo
+	repo.IfaceRepo = mockIfaceRepo
 
 	packet := Builder.Default()
 	buf := new(bytes.Buffer)
@@ -158,21 +160,21 @@ func TestArpInputHandler_6(t *testing.T) {
 	ctrl, teardown := SetupArpInputHandlerTest(t)
 	defer teardown()
 
-	mockIfaceRepo := NewMockIIfaceRepo(ctrl)
-	mockIfaceRepo.EXPECT().Lookup(any, any).Return(&Iface{
-		Family:    V4AddrFamily,
-		Unicast:   ParseIP("192.0.2.2"),
-		Netmask:   ParseIP("255.255.255.0"),
-		Broadcast: ParseIP("192.0.2.255"),
+	mockIfaceRepo := repo.NewMockIIfaceRepo(ctrl)
+	mockIfaceRepo.EXPECT().Lookup(any, any).Return(&mw.Iface{
+		Family:    mw.V4AddrFamily,
+		Unicast:   mw.ParseIP("192.0.2.2"),
+		Netmask:   mw.ParseIP("255.255.255.0"),
+		Broadcast: mw.ParseIP("192.0.2.255"),
 		Dev:       &eth.TapDevice{},
 	})
-	IfaceRepo = mockIfaceRepo
+	repo.IfaceRepo = mockIfaceRepo
 
 	packet := Builder.CustomTPA(ArpProtoAddr{192, 168, 2, 3})
 	buf := new(bytes.Buffer)
 	_ = binary.Write(buf, binary.BigEndian, packet)
 	dev := &eth.TapDevice{
-		Device: eth.Device{
+		Device: mw.Device{
 			Name_: "net0",
 		},
 	}
@@ -195,7 +197,7 @@ func TestRunArpTimer_1(t *testing.T) {
 	psTime.Time = m
 
 	pa := ArpProtoAddr{192, 168, 1, 1}
-	_ = ARP.cache.Create(eth.Addr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}, pa, cacheStatusResolved)
+	_ = ARP.cache.Create(mw.Addr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}, pa, cacheStatusResolved)
 
 	var wg sync.WaitGroup
 	ARP.RunTimer(&wg)
@@ -235,14 +237,14 @@ func (v ArpPacketBuilder) Default() *ArpPacket {
 	return &ArpPacket{
 		ArpHdr: ArpHdr{
 			HT:     ArpHwTypeEthernet,
-			PT:     eth.IPv4,
-			HAL:    eth.AddrLen,
-			PAL:    V4AddrLen,
+			PT:     mw.IPv4,
+			HAL:    mw.AddrLen,
+			PAL:    mw.V4AddrLen,
 			Opcode: ArpOpRequest,
 		},
-		SHA: eth.Addr{0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff},
+		SHA: mw.Addr{0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff},
 		SPA: ArpProtoAddr{192, 0, 2, 1},
-		THA: eth.Addr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16},
+		THA: mw.Addr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16},
 		TPA: ArpProtoAddr{192, 0, 2, 2},
 	}
 }
@@ -253,7 +255,7 @@ func (v ArpPacketBuilder) CustomHT(ht ArpHwType) (packet *ArpPacket) {
 	return
 }
 
-func (v ArpPacketBuilder) CustomPT(pt eth.Type) (packet *ArpPacket) {
+func (v ArpPacketBuilder) CustomPT(pt mw.EthType) (packet *ArpPacket) {
 	packet = v.Default()
 	packet.PT = pt
 	return
@@ -268,11 +270,11 @@ func (v ArpPacketBuilder) CustomTPA(tpa ArpProtoAddr) (packet *ArpPacket) {
 func SetupArpInputHandlerTest(t *testing.T) (ctrl *gomock.Controller, teardown func()) {
 	psLog.DisableOutput()
 	ctrl = gomock.NewController(t)
-	backupIfaceRepo := IfaceRepo
+	backupIfaceRepo := repo.IfaceRepo
 	backupTime := psTime.Time
 
 	teardown = func() {
-		IfaceRepo = backupIfaceRepo
+		repo.IfaceRepo = backupIfaceRepo
 		psTime.Time = backupTime
 		ctrl.Finish()
 		psLog.EnableOutput()

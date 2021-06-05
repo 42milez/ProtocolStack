@@ -1,19 +1,21 @@
-package net
+package icmp
 
 import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
 	psErr "github.com/42milez/ProtocolStack/src/error"
-	"github.com/42milez/ProtocolStack/src/eth"
 	psLog "github.com/42milez/ProtocolStack/src/log"
+	"github.com/42milez/ProtocolStack/src/mw"
+	"github.com/42milez/ProtocolStack/src/net/ip"
+	"github.com/42milez/ProtocolStack/src/repo"
 )
 
 const IcmpHdrLen = 8 // byte
 const IcmpTypeEchoReply = 0x00
 const IcmpTypeEcho = 0x08
 
-func IcmpReceive(payload []byte, dst [V4AddrLen]byte, src [V4AddrLen]byte, dev eth.IDevice) psErr.E {
+func IcmpReceive(payload []byte, dst [mw.V4AddrLen]byte, src [mw.V4AddrLen]byte, dev mw.IDevice) psErr.E {
 	if len(payload) < IcmpHdrLen {
 		psLog.E(fmt.Sprintf("ICMP header length is too short: %d bytes", len(payload)))
 		return psErr.InvalidPacket
@@ -28,7 +30,7 @@ func IcmpReceive(payload []byte, dst [V4AddrLen]byte, src [V4AddrLen]byte, dev e
 	checksum1 := uint16(payload[2])<<8 | uint16(payload[3])
 	payload[2] = 0x00 // assign 0 to Checksum field (16bit)
 	payload[3] = 0x00
-	if checksum2 := checksum(payload); checksum2 != checksum1 {
+	if checksum2 := mw.Checksum(payload); checksum2 != checksum1 {
 		psLog.E(fmt.Sprintf("Checksum mismatch: Expect = 0x%04x, Actual = 0x%04x", checksum1, checksum2))
 		return psErr.ChecksumMismatch
 	}
@@ -38,21 +40,30 @@ func IcmpReceive(payload []byte, dst [V4AddrLen]byte, src [V4AddrLen]byte, dev e
 
 	switch hdr.Type {
 	case IcmpTypeEcho:
-		s := IP(src[:])
-		d := IP(dst[:])
-		iface := IfaceRepo.Lookup(dev, V4AddrFamily)
+		s := mw.IP(src[:])
+		d := mw.IP(dst[:])
+		iface := repo.IfaceRepo.Lookup(dev, mw.V4AddrFamily)
 		if !iface.Unicast.EqualV4(dst) {
 			d = iface.Unicast
 		}
-		if err := IcmpSend(IcmpTypeEchoReply, hdr.Code, hdr.Content, payload[IcmpHdrLen:], d, s); err != psErr.OK {
-			return psErr.Error
+		msg := &mw.IcmpTxMessage{
+			Type:    IcmpTypeEchoReply,
+			Code:    hdr.Code,
+			Content: hdr.Content,
+			Payload: payload[IcmpHdrLen:],
+			Src:     d,
+			Dst:     s,
 		}
+		mw.IcmpTxCh <- msg
+		//if err := IcmpSend(IcmpTypeEchoReply, hdr.Code, hdr.Content, payload[IcmpHdrLen:], d, s); err != psErr.OK {
+		//	return psErr.Error
+		//}
 	}
 
 	return psErr.OK
 }
 
-func IcmpSend(typ IcmpType, code uint8, content uint32, payload []byte, dst IP, src IP) psErr.E {
+func IcmpSend(typ uint8, code uint8, content uint32, payload []byte, src mw.IP, dst mw.IP) psErr.E {
 	hdr := IcmpHdr{
 		Type:    typ,
 		Code:    code,
@@ -68,15 +79,18 @@ func IcmpSend(typ IcmpType, code uint8, content uint32, payload []byte, dst IP, 
 	}
 
 	packet := buf.Bytes()
-	hdr.Checksum = checksum(packet)
+	hdr.Checksum = mw.Checksum(packet)
 	packet[2] = uint8((hdr.Checksum & 0xff00) >> 8)
 	packet[3] = uint8(hdr.Checksum & 0x00ff)
 
 	psLog.I("Outgoing ICMP packet")
 	dumpIcmpPacket(&hdr, payload)
 
-	if err := IpSend(ProtoNumICMP, packet, src, dst); err != psErr.OK {
-		return psErr.Error
+	mw.IpTxCh <- &mw.IpMessage{
+		ProtoNum: ip.ProtoNumICMP,
+		Packet:   packet,
+		Dst:      dst,
+		Src:      src,
 	}
 
 	return psErr.OK
@@ -108,4 +122,23 @@ func dumpIcmpPacket(hdr *IcmpHdr, payload []byte) {
 			s = "\t\t  "
 		}
 	}
+}
+
+func StartService() {
+	go func() {
+		for {
+			msg := <-mw.IcmpRxCh
+			if err := IcmpReceive(msg.Payload, msg.Dst, msg.Src, msg.Dev); err != psErr.OK {
+				return
+			}
+		}
+	}()
+	go func() {
+		for {
+			msg := <-mw.IcmpTxCh
+			if err := IcmpSend(msg.Type, msg.Code, msg.Content, msg.Payload, msg.Src, msg.Dst); err != psErr.OK {
+				return
+			}
+		}
+	}()
 }

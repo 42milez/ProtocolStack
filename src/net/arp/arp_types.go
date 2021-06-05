@@ -1,8 +1,8 @@
-package net
+package arp
 
 import (
 	"fmt"
-	"github.com/42milez/ProtocolStack/src/eth"
+	"github.com/42milez/ProtocolStack/src/mw"
 	"time"
 )
 
@@ -10,7 +10,7 @@ const (
 	cacheStatusFree CacheStatus = iota
 	cacheStatusIncomplete
 	cacheStatusResolved
-	cacheStatusStatic
+	//cacheStatusStatic
 )
 const ArpHwTypeEthernet ArpHwType = 0x0001
 const ArpOpRequest ArpOpcode = 0x0001
@@ -116,10 +116,10 @@ type CacheStatus uint8
 // Notes: Protocol Type is same as EtherType.
 
 type ArpHdr struct {
-	HT     ArpHwType // hardware type
-	PT     eth.Type  // protocol type
-	HAL    uint8     // hardware address length
-	PAL    uint8     // protocol address length
+	HT     ArpHwType  // hardware type
+	PT     mw.EthType // protocol type
+	HAL    uint8      // hardware address length
+	PAL    uint8      // protocol address length
 	Opcode ArpOpcode
 }
 
@@ -137,13 +137,13 @@ func (v ArpOpcode) String() string {
 
 type ArpPacket struct {
 	ArpHdr
-	SHA eth.Addr     // sender hardware address
+	SHA mw.Addr      // sender hardware address
 	SPA ArpProtoAddr // sender protocol address
-	THA eth.Addr     // target hardware address
+	THA mw.Addr      // target hardware address
 	TPA ArpProtoAddr // target protocol address
 }
 
-type ArpProtoAddr [V4AddrLen]byte
+type ArpProtoAddr [mw.V4AddrLen]byte
 
 func (p ArpProtoAddr) String() string {
 	return fmt.Sprintf("%d.%d.%d.%d", p[0], p[1], p[2], p[3])

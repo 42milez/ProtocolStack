@@ -1,28 +1,30 @@
 package eth
 
+import "github.com/42milez/ProtocolStack/src/mw"
+
 // GenLoopbackDevice generates loopback device object.
 func GenLoopbackDevice(name string) *LoopbackDevice {
 	return &LoopbackDevice{
-		Device: Device{
-			Type_: DevTypeLoopback,
+		Device: mw.Device{
+			Type_: mw.DevTypeLoopback,
 			Name_: name,
-			Addr_: Any,
-			Flag_: DevFlagLoopback,
+			Addr_: mw.Any,
+			Flag_: mw.DevFlagLoopback,
 			MTU_:  LoopbackMTU,
 		},
 	}
 }
 
 // GenTapDevice generates TAP device object.
-func GenTapDevice(devName string, privName string, addr Addr) *TapDevice {
+func GenTapDevice(devName string, privName string, addr mw.Addr) *TapDevice {
 	return &TapDevice{
-		Device: Device{
-			Type_: DevTypeEthernet,
+		Device: mw.Device{
+			Type_: mw.DevTypeEthernet,
 			Name_: devName,
 			Addr_: addr,
-			Flag_: DevFlagBroadcast | DevFlagNeedArp,
-			MTU_:  PayloadLenMax,
-			Priv_: Privilege{
+			Flag_: mw.DevFlagBroadcast | mw.DevFlagNeedArp,
+			MTU_:  mw.PayloadLenMax,
+			Priv_: mw.Privilege{
 				FD:   -1,
 				Name: privName,
 			},

@@ -1,36 +1,36 @@
 //go:generate mockgen -source=repository.go -destination=repository_mock.go -package=$GOPACKAGE -self_package=github.com/42milez/ProtocolStack/src/$GOPACKAGE
 
-package net
+package repo
 
 import (
 	"fmt"
 	psErr "github.com/42milez/ProtocolStack/src/error"
-	"github.com/42milez/ProtocolStack/src/eth"
 	psLog "github.com/42milez/ProtocolStack/src/log"
+	"github.com/42milez/ProtocolStack/src/mw"
 )
 
 var DeviceRepo IDeviceRepo
 var IfaceRepo IIfaceRepo
 var RouteRepo IRouteRepo
 
-type Handler func(data []byte, dev eth.IDevice) psErr.E
+type Handler func(data []byte, dev mw.IDevice) psErr.E
 
 type Route struct {
-	Network IP
-	Netmask IP
-	NextHop IP
-	Iface   *Iface
+	Network mw.IP
+	Netmask mw.IP
+	NextHop mw.IP
+	Iface   *mw.Iface
 }
 
 type IDeviceRepo interface {
 	NextNumber() int
 	Poll(terminate bool) psErr.E
-	Register(dev eth.IDevice) psErr.E
+	Register(dev mw.IDevice) psErr.E
 	Up() psErr.E
 }
 
 type deviceRepo struct {
-	devices []eth.IDevice
+	devices []mw.IDevice
 }
 
 func (p *deviceRepo) NextNumber() int {
@@ -52,7 +52,7 @@ func (p *deviceRepo) Poll(terminate bool) psErr.E {
 	return psErr.OK
 }
 
-func (p *deviceRepo) Register(dev eth.IDevice) psErr.E {
+func (p *deviceRepo) Register(dev mw.IDevice) psErr.E {
 	for _, d := range p.devices {
 		if d.Equal(dev) {
 			psLog.W("Device is already registered")
@@ -92,16 +92,16 @@ func (p *deviceRepo) Up() psErr.E {
 }
 
 type IIfaceRepo interface {
-	Get(unicast IP) *Iface
-	Lookup(dev eth.IDevice, family AddrFamily) *Iface
-	Register(iface *Iface, dev eth.IDevice) psErr.E
+	Get(unicast mw.IP) *mw.Iface
+	Lookup(dev mw.IDevice, family mw.AddrFamily) *mw.Iface
+	Register(iface *mw.Iface, dev mw.IDevice) psErr.E
 }
 
 type ifaceRepo struct {
-	ifaces []*Iface
+	ifaces []*mw.Iface
 }
 
-func (p *ifaceRepo) Get(unicast IP) *Iface {
+func (p *ifaceRepo) Get(unicast mw.IP) *mw.Iface {
 	for _, v := range p.ifaces {
 		if v.Unicast.Equal(unicast) {
 			return v
@@ -110,7 +110,7 @@ func (p *ifaceRepo) Get(unicast IP) *Iface {
 	return nil
 }
 
-func (p *ifaceRepo) Lookup(dev eth.IDevice, family AddrFamily) *Iface {
+func (p *ifaceRepo) Lookup(dev mw.IDevice, family mw.AddrFamily) *mw.Iface {
 	for _, v := range p.ifaces {
 		if v.Dev.Equal(dev) && v.Family == family {
 			return v
@@ -119,7 +119,7 @@ func (p *ifaceRepo) Lookup(dev eth.IDevice, family AddrFamily) *Iface {
 	return nil
 }
 
-func (p *ifaceRepo) Register(iface *Iface, dev eth.IDevice) psErr.E {
+func (p *ifaceRepo) Register(iface *mw.Iface, dev mw.IDevice) psErr.E {
 	for _, i := range p.ifaces {
 		if i.Dev.Equal(dev) && i.Family == iface.Family {
 			psLog.W(fmt.Sprintf("Interface is already registered: %s", i.Family))
@@ -138,22 +138,22 @@ func (p *ifaceRepo) Register(iface *Iface, dev eth.IDevice) psErr.E {
 }
 
 type IRouteRepo interface {
-	Get(ip IP) *Route
-	Register(network IP, nextHop IP, iface *Iface)
-	RegisterDefaultGateway(iface *Iface, nextHop IP)
+	Get(ip mw.IP) *Route
+	Register(network mw.IP, nextHop mw.IP, iface *mw.Iface)
+	RegisterDefaultGateway(iface *mw.Iface, nextHop mw.IP)
 }
 
 type routeRepo struct {
 	routes []*Route
 }
 
-func (p *routeRepo) Get(ip IP) *Route {
+func (p *routeRepo) Get(ip mw.IP) *Route {
 	var ret *Route
 	for _, route := range p.routes {
 		if ip.Mask(route.Netmask).Equal(route.Network) {
 			// Longest prefix match
 			// https://en.wikipedia.org/wiki/Longest_prefix_match
-			if ret == nil || longestIP(ret.Netmask, route.Netmask).Equal(route.Netmask) {
+			if ret == nil || mw.LongestIP(ret.Netmask, route.Netmask).Equal(route.Netmask) {
 				ret = route
 			}
 		}
@@ -161,7 +161,7 @@ func (p *routeRepo) Get(ip IP) *Route {
 	return ret
 }
 
-func (p *routeRepo) Register(network IP, nextHop IP, iface *Iface) {
+func (p *routeRepo) Register(network mw.IP, nextHop mw.IP, iface *mw.Iface) {
 	route := &Route{
 		Network: network,
 		Netmask: iface.Netmask,
@@ -177,10 +177,10 @@ func (p *routeRepo) Register(network IP, nextHop IP, iface *Iface) {
 	psLog.I(fmt.Sprintf("\tdevice:   %s (%s)", iface.Dev.Name(), iface.Dev.Priv().Name))
 }
 
-func (p *routeRepo) RegisterDefaultGateway(iface *Iface, nextHop IP) {
+func (p *routeRepo) RegisterDefaultGateway(iface *mw.Iface, nextHop mw.IP) {
 	route := &Route{
-		Network: V4Zero,
-		Netmask: V4Zero,
+		Network: mw.V4Zero,
+		Netmask: mw.V4Zero,
 		NextHop: nextHop,
 		Iface:   iface,
 	}

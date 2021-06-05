@@ -1,17 +1,18 @@
 package eth
 
 import (
+	"github.com/42milez/ProtocolStack/src/mw"
 	"github.com/google/go-cmp/cmp"
 	"testing"
 )
 
 func TestGenLoopbackDevice(t *testing.T) {
 	want := &LoopbackDevice{
-		Device: Device{
-			Type_: DevTypeLoopback,
+		Device: mw.Device{
+			Type_: mw.DevTypeLoopback,
 			Name_: "net0",
 			MTU_:  LoopbackMTU,
-			Flag_: DevFlagLoopback,
+			Flag_: mw.DevFlagLoopback,
 		},
 	}
 	got := GenLoopbackDevice("net0")
@@ -23,15 +24,15 @@ func TestGenLoopbackDevice(t *testing.T) {
 func TestGenTapDevice(t *testing.T) {
 	devName := "net0"
 	privName := "tap0"
-	devEthAddr := Addr{11, 12, 13, 14, 15, 16}
+	devEthAddr := mw.Addr{11, 12, 13, 14, 15, 16}
 	want := &TapDevice{
-		Device: Device{
-			Type_: DevTypeEthernet,
+		Device: mw.Device{
+			Type_: mw.DevTypeEthernet,
 			Name_: devName,
-			MTU_:  PayloadLenMax,
-			Flag_: DevFlagBroadcast | DevFlagNeedArp,
+			MTU_:  mw.PayloadLenMax,
+			Flag_: mw.DevFlagBroadcast | mw.DevFlagNeedArp,
 			Addr_: devEthAddr,
-			Priv_: Privilege{
+			Priv_: mw.Privilege{
 				FD:   -1,
 				Name: privName,
 			},

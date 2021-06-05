@@ -1,17 +1,21 @@
-package net
+package arp
 
 import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
 	psErr "github.com/42milez/ProtocolStack/src/error"
-	"github.com/42milez/ProtocolStack/src/eth"
 	psLog "github.com/42milez/ProtocolStack/src/log"
+	"github.com/42milez/ProtocolStack/src/mw"
+	"github.com/42milez/ProtocolStack/src/net"
+	"github.com/42milez/ProtocolStack/src/repo"
 	psTime "github.com/42milez/ProtocolStack/src/time"
 	"github.com/42milez/ProtocolStack/src/timer"
 	"sync"
 	"time"
 )
+
+const CacheSize = 32
 
 var ARP *arp
 var ArpCondCh chan timer.Condition
@@ -21,7 +25,7 @@ type arp struct {
 	cache arpCache
 }
 
-func (p *arp) Receive(packet []byte, dev eth.IDevice) psErr.E {
+func (p *arp) Receive(packet []byte, dev mw.IDevice) psErr.E {
 	if len(packet) < ArpPacketLen {
 		psLog.E(fmt.Sprintf("ARP packet length is too short: %d bytes", len(packet)))
 		return psErr.InvalidPacket
@@ -33,12 +37,12 @@ func (p *arp) Receive(packet []byte, dev eth.IDevice) psErr.E {
 		return psErr.ReadFromBufError
 	}
 
-	if arpPacket.HT != ArpHwTypeEthernet || arpPacket.HAL != eth.AddrLen {
+	if arpPacket.HT != ArpHwTypeEthernet || arpPacket.HAL != mw.AddrLen {
 		psLog.E("Value of ARP packet header is invalid (Hardware)")
 		return psErr.InvalidPacket
 	}
 
-	if arpPacket.PT != eth.IPv4 || arpPacket.PAL != V4AddrLen {
+	if arpPacket.PT != mw.IPv4 || arpPacket.PAL != mw.V4AddrLen {
 		psLog.E("Value of ARP packet header is invalid (Protocol)")
 		return psErr.InvalidPacket
 	}
@@ -46,7 +50,7 @@ func (p *arp) Receive(packet []byte, dev eth.IDevice) psErr.E {
 	psLog.I("Incoming ARP packet")
 	dumpArpPacket(&arpPacket)
 
-	iface := IfaceRepo.Lookup(dev, V4AddrFamily)
+	iface := repo.IfaceRepo.Lookup(dev, mw.V4AddrFamily)
 	if iface == nil {
 		psLog.E(fmt.Sprintf("Interface for %s is not registered", dev.Name()))
 		return psErr.InterfaceNotFound
@@ -61,7 +65,7 @@ func (p *arp) Receive(packet []byte, dev eth.IDevice) psErr.E {
 			psLog.I(fmt.Sprintf("\tsha: %s", arpPacket.SHA))
 		}
 		if arpPacket.Opcode == ArpOpRequest {
-			if err := p.SendReply(arpPacket.SHA, arpPacket.SPA, iface); err != psErr.OK {
+			if err := p.Reply(arpPacket.SHA, arpPacket.SPA, iface); err != psErr.OK {
 				return psErr.Error
 			}
 		}
@@ -72,13 +76,13 @@ func (p *arp) Receive(packet []byte, dev eth.IDevice) psErr.E {
 	return psErr.OK
 }
 
-func (p *arp) SendReply(tha eth.Addr, tpa ArpProtoAddr, iface *Iface) psErr.E {
+func (p *arp) Reply(tha mw.Addr, tpa ArpProtoAddr, iface *mw.Iface) psErr.E {
 	packet := ArpPacket{
 		ArpHdr: ArpHdr{
 			HT:     ArpHwTypeEthernet,
-			PT:     eth.IPv4,
-			HAL:    eth.AddrLen,
-			PAL:    V4AddrLen,
+			PT:     mw.IPv4,
+			HAL:    mw.AddrLen,
+			PAL:    mw.V4AddrLen,
 			Opcode: ArpOpReply,
 		},
 		THA: tha,
@@ -96,25 +100,25 @@ func (p *arp) SendReply(tha eth.Addr, tpa ArpProtoAddr, iface *Iface) psErr.E {
 		return psErr.WriteToBufError
 	}
 
-	if err := iface.Dev.Transmit(tha, buf.Bytes(), eth.ARP); err != psErr.OK {
+	if err := iface.Dev.Transmit(tha, buf.Bytes(), mw.ARP); err != psErr.OK {
 		return psErr.Error
 	}
 
 	return psErr.OK
 }
 
-func (p *arp) SendRequest(iface *Iface, ip IP) psErr.E {
+func (p *arp) Request(iface *mw.Iface, ip mw.IP) psErr.E {
 	packet := ArpPacket{
 		ArpHdr: ArpHdr{
 			HT:     ArpHwTypeEthernet,
-			PT:     eth.IPv4,
-			HAL:    eth.AddrLen,
-			PAL:    V4AddrLen,
+			PT:     mw.IPv4,
+			HAL:    mw.AddrLen,
+			PAL:    mw.V4AddrLen,
 			Opcode: ArpOpRequest,
 		},
 		SHA: iface.Dev.Addr(),
 		SPA: iface.Unicast.ToV4(),
-		THA: eth.Addr{},
+		THA: mw.Addr{},
 		TPA: ip.ToV4(),
 	}
 
@@ -127,33 +131,33 @@ func (p *arp) SendRequest(iface *Iface, ip IP) psErr.E {
 	psLog.I("Outgoing ARP packet")
 	dumpArpPacket(&packet)
 
-	if err := Transmit(eth.Broadcast, payload, eth.ARP, iface); err != psErr.OK {
+	if err := net.Transmit(mw.Broadcast, payload, mw.ARP, iface); err != psErr.OK {
 		return psErr.Error
 	}
 
 	return psErr.OK
 }
 
-func (p *arp) Resolve(iface *Iface, ip IP) (eth.Addr, ArpStatus) {
-	if iface.Dev.Type() != eth.DevTypeEthernet {
+func (p *arp) Resolve(iface *mw.Iface, ip mw.IP) (mw.Addr, ArpStatus) {
+	if iface.Dev.Type() != mw.DevTypeEthernet {
 		psLog.E(fmt.Sprintf("Unsupported device type: %s", iface.Dev.Type()))
-		return eth.Addr{}, ArpStatusError
+		return mw.Addr{}, ArpStatusError
 	}
 
-	if iface.Family != V4AddrFamily {
+	if iface.Family != mw.V4AddrFamily {
 		psLog.E(fmt.Sprintf("Unsupported address family: %s", iface.Family))
-		return eth.Addr{}, ArpStatusError
+		return mw.Addr{}, ArpStatusError
 	}
 
 	entry := p.cache.GetEntry(ip.ToV4())
 	if entry == nil {
-		if err := p.cache.Create(eth.Addr{}, ip.ToV4(), cacheStatusIncomplete); err != psErr.OK {
-			return eth.Addr{}, ArpStatusError
+		if err := p.cache.Create(mw.Addr{}, ip.ToV4(), cacheStatusIncomplete); err != psErr.OK {
+			return mw.Addr{}, ArpStatusError
 		}
-		if err := p.SendRequest(iface, ip); err != psErr.OK {
-			return eth.Addr{}, ArpStatusError
+		if err := p.Request(iface, ip); err != psErr.OK {
+			return mw.Addr{}, ArpStatusError
 		}
-		return eth.Addr{}, ArpStatusIncomplete
+		return mw.Addr{}, ArpStatusIncomplete
 	}
 
 	return entry.HA, ArpStatusComplete
@@ -193,12 +197,12 @@ func (p *arp) StopTimer() {
 type arpCacheEntry struct {
 	Status    CacheStatus
 	CreatedAt time.Time
-	HA        eth.Addr
+	HA        mw.Addr
 	PA        ArpProtoAddr
 }
 
 type arpCache struct {
-	entries [32]*arpCacheEntry
+	entries [CacheSize]*arpCacheEntry
 	mtx     sync.Mutex
 }
 
@@ -207,13 +211,13 @@ func (p *arpCache) Init() {
 		p.entries[i] = &arpCacheEntry{
 			Status:    cacheStatusFree,
 			CreatedAt: time.Unix(0, 0),
-			HA:        eth.Addr{},
+			HA:        mw.Addr{},
 			PA:        ArpProtoAddr{},
 		}
 	}
 }
 
-func (p *arpCache) Create(ha eth.Addr, pa ArpProtoAddr, state CacheStatus) psErr.E {
+func (p *arpCache) Create(ha mw.Addr, pa ArpProtoAddr, state CacheStatus) psErr.E {
 	var entry *arpCacheEntry
 	if entry = p.GetEntry(pa); entry != nil {
 		return psErr.Exist
@@ -231,7 +235,7 @@ func (p *arpCache) Create(ha eth.Addr, pa ArpProtoAddr, state CacheStatus) psErr
 	return psErr.OK
 }
 
-func (p *arpCache) Renew(pa ArpProtoAddr, ha eth.Addr, state CacheStatus) psErr.E {
+func (p *arpCache) Renew(pa ArpProtoAddr, ha mw.Addr, state CacheStatus) psErr.E {
 	entry := p.GetEntry(pa)
 	if entry == nil {
 		return psErr.NotFound
@@ -280,7 +284,7 @@ func (p *arpCache) GetReusableEntry() *arpCacheEntry {
 func (p *arpCache) Clear(idx int) {
 	p.entries[idx].Status = cacheStatusFree
 	p.entries[idx].CreatedAt = time.Unix(0, 0)
-	p.entries[idx].HA = eth.Addr{}
+	p.entries[idx].HA = mw.Addr{}
 	p.entries[idx].PA = ArpProtoAddr{}
 }
 
@@ -309,6 +313,17 @@ func dumpArpPacket(packet *ArpPacket) {
 	psLog.I(fmt.Sprintf("\tsender protocol address: %v", packet.SPA))
 	psLog.I(fmt.Sprintf("\ttarget hardware address: %s", packet.THA))
 	psLog.I(fmt.Sprintf("\ttarget protocol address: %v", packet.TPA))
+}
+
+func StartService() {
+	go func() {
+		for {
+			packet := <-mw.ArpRxCh
+			if err := ARP.Receive(packet.Content, packet.Dev); err != psErr.OK {
+				return
+			}
+		}
+	}()
 }
 
 func init() {

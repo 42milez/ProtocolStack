@@ -1,4 +1,4 @@
-package eth
+package mw
 
 import (
 	"bytes"
@@ -15,21 +15,12 @@ const FrameLenMin = 60
 const HdrLen = 14
 const PayloadLenMax = FrameLenMax - HdrLen
 const PayloadLenMin = FrameLenMin - HdrLen
-const ARP Type = 0x0806
-const IPv4 Type = 0x0800
-const IPv6 Type = 0x86dd
+const ARP EthType = 0x0806
+const IPv4 EthType = 0x0800
+const IPv6 EthType = 0x86dd
 
 var Any = Addr{0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 var Broadcast = Addr{0xff, 0xff, 0xff, 0xff, 0xff, 0xff}
-
-// Ethertypes
-// https://www.iana.org/assignments/ieee-802-numbers/ieee-802-numbers.xhtml#ieee-802-numbers-1
-
-var ethTypes = map[Type]string{
-	0x0800: "IPv4",
-	0x0806: "ARP",
-	0x86dd: "IPv6",
-}
 
 var rxBuf []byte
 
@@ -46,15 +37,10 @@ func (v Addr) String() string {
 type Hdr struct {
 	Dst  Addr
 	Src  Addr
-	Type Type
-}
-type Type uint16
-
-func (v Type) String() string {
-	return ethTypes[v]
+	Type EthType
 }
 
-func ReadEthFrame(fd int, addr Addr) (*Packet, psErr.E) {
+func ReadEthFrame(fd int, addr Addr) (*EthMessage, psErr.E) {
 	flen, err := psSyscall.Syscall.Read(fd, rxBuf)
 	if err != nil {
 		return nil, psErr.Error
@@ -87,13 +73,13 @@ func ReadEthFrame(fd int, addr Addr) (*Packet, psErr.E) {
 	psLog.I("Incoming eth frame")
 	dumpEthFrame(&hdr, payload)
 
-	return &Packet{
+	return &EthMessage{
 		Type:    hdr.Type,
 		Content: payload,
 	}, psErr.OK
 }
 
-func WriteEthFrame(fd int, dst Addr, src Addr, typ Type, payload []byte) psErr.E {
+func WriteEthFrame(fd int, dst Addr, src Addr, typ EthType, payload []byte) psErr.E {
 	hdr := Hdr{
 		Dst:  dst,
 		Src:  src,

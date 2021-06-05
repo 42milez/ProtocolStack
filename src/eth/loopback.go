@@ -2,13 +2,14 @@ package eth
 
 import (
 	psErr "github.com/42milez/ProtocolStack/src/error"
+	"github.com/42milez/ProtocolStack/src/mw"
 	"math"
 )
 
 const LoopbackMTU = math.MaxUint16
 
 type LoopbackDevice struct {
-	Device
+	mw.Device
 }
 
 func (p *LoopbackDevice) Open() psErr.E {
@@ -23,6 +24,6 @@ func (p *LoopbackDevice) Poll(terminate bool) psErr.E {
 	return psErr.OK
 }
 
-func (p *LoopbackDevice) Transmit(dst Addr, payload []byte, typ Type) psErr.E {
+func (p *LoopbackDevice) Transmit(dst mw.Addr, payload []byte, typ mw.EthType) psErr.E {
 	return psErr.OK
 }

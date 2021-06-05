@@ -3,6 +3,7 @@ package eth
 import (
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	psLog "github.com/42milez/ProtocolStack/src/log"
+	"github.com/42milez/ProtocolStack/src/mw"
 	psSyscall "github.com/42milez/ProtocolStack/src/syscall"
 	"github.com/golang/mock/gomock"
 	"testing"
@@ -68,7 +69,7 @@ func TestLoopbackDevice_Transmit(t *testing.T) {
 
 	loopbackDev := LoopbackDevice{}
 
-	got := loopbackDev.Transmit(Addr{}, make([]byte, 0), ARP)
+	got := loopbackDev.Transmit(mw.Addr{}, make([]byte, 0), mw.ARP)
 	if got != psErr.OK {
 		t.Errorf("LoopbackDevice.Transmit() = %v; want %v", got, psErr.OK)
 	}

@@ -1,4 +1,4 @@
-package net
+package mw
 
 import (
 	"github.com/google/go-cmp/cmp"

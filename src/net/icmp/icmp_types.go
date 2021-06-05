@@ -1,18 +1,16 @@
-package net
+package icmp
 
 type IcmpHdr struct {
-	Type     IcmpType
+	Type     uint8
 	Code     uint8
 	Checksum uint16
 	Content  uint32
 }
 
-type IcmpType uint8
-
 // ICMP Type Numbers
 // https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml#icmp-parameters-types
 
-var icmpTypes = map[IcmpType]string{
+var icmpTypes = map[uint8]string{
 	0: "Echo Reply",
 	// 1-2: Unassigned
 	3: "Destination Unreachable",

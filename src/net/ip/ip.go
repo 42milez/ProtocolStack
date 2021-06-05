@@ -1,13 +1,15 @@
-package net
+package ip
 
 import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
 	psErr "github.com/42milez/ProtocolStack/src/error"
-	"github.com/42milez/ProtocolStack/src/eth"
 	psLog "github.com/42milez/ProtocolStack/src/log"
-	"strings"
+	"github.com/42milez/ProtocolStack/src/mw"
+	"github.com/42milez/ProtocolStack/src/net"
+	"github.com/42milez/ProtocolStack/src/net/arp"
+	"github.com/42milez/ProtocolStack/src/repo"
 	"sync"
 )
 
@@ -30,7 +32,7 @@ func (p *PacketID) Next() (id uint16) {
 	return
 }
 
-func IpReceive(payload []byte, dev eth.IDevice) psErr.E {
+func IpReceive(payload []byte, dev mw.IDevice) psErr.E {
 	packetLen := len(payload)
 
 	if packetLen < IpHdrLenMin {
@@ -39,7 +41,7 @@ func IpReceive(payload []byte, dev eth.IDevice) psErr.E {
 	}
 
 	buf := bytes.NewBuffer(payload)
-	hdr := IpHdr{}
+	hdr := mw.IpHdr{}
 	if err := binary.Read(buf, binary.BigEndian, &hdr); err != nil {
 		return psErr.ReadFromBufError
 	}
@@ -68,19 +70,19 @@ func IpReceive(payload []byte, dev eth.IDevice) psErr.E {
 	cs1 := uint16(payload[10])<<8 | uint16(payload[11])
 	payload[10] = 0x00 // assign 0 to Header Checksum field (16bit)
 	payload[11] = 0x00
-	if cs2 := checksum(payload); cs2 != cs1 {
+	if cs2 := mw.Checksum(payload); cs2 != cs1 {
 		psLog.E(fmt.Sprintf("Checksum mismatch: Expect = 0x%04x, Actual = 0x%04x", cs1, cs2))
 		return psErr.ChecksumMismatch
 	}
 
-	iface := IfaceRepo.Lookup(dev, V4AddrFamily)
+	iface := repo.IfaceRepo.Lookup(dev, mw.V4AddrFamily)
 	if iface == nil {
 		psLog.E(fmt.Sprintf("Interface for %s is not registered", dev.Name()))
 		return psErr.InterfaceNotFound
 	}
 
 	if !iface.Unicast.EqualV4(hdr.Dst) {
-		if !iface.Broadcast.EqualV4(hdr.Dst) && V4Broadcast.EqualV4(hdr.Dst) {
+		if !iface.Broadcast.EqualV4(hdr.Dst) && mw.V4Broadcast.EqualV4(hdr.Dst) {
 			psLog.I("IP packet was ignored (It was sent to different address)")
 			return psErr.OK
 		}
@@ -91,9 +93,13 @@ func IpReceive(payload []byte, dev eth.IDevice) psErr.E {
 
 	switch hdr.Protocol {
 	case ProtoNumICMP:
-		if err := IcmpReceive(payload[hdrLen:], hdr.Dst, hdr.Src, dev); err != psErr.OK {
-			return psErr.Error
+		msg := &mw.IcmpRxMessage{
+			Payload: payload[hdrLen:],
+			Dst:     hdr.Dst,
+			Src:     hdr.Src,
+			Dev:     dev,
 		}
+		mw.IcmpRxCh <- msg
 	case ProtoNumTCP:
 		psLog.E("Currently NOT support TCP")
 		return psErr.Error
@@ -108,9 +114,9 @@ func IpReceive(payload []byte, dev eth.IDevice) psErr.E {
 	return psErr.OK
 }
 
-func IpSend(protoNum ProtocolNumber, payload []byte, dst IP, src IP) psErr.E {
-	var iface *Iface
-	var nextHop IP
+func IpSend(protoNum mw.ProtocolNumber, payload []byte, src mw.IP, dst mw.IP) psErr.E {
+	var iface *mw.Iface
+	var nextHop mw.IP
 	var err psErr.E
 
 	// get a next hop
@@ -134,80 +140,22 @@ func IpSend(protoNum ProtocolNumber, payload []byte, dst IP, src IP) psErr.E {
 	dumpIpPacket(packet)
 
 	// get eth address from ip address
-	var ethAddr eth.Addr
+	var ethAddr mw.Addr
 	if ethAddr, err = lookupEthAddr(iface, nextHop); err != psErr.OK {
 		psLog.E(fmt.Sprintf("Ethernet address was not found: %s", err))
 		return psErr.Error
 	}
 
 	// send ip packet
-	if err = Transmit(ethAddr, packet, eth.IPv4, iface); err != psErr.OK {
+	if err = net.Transmit(ethAddr, packet, mw.IPv4, iface); err != psErr.OK {
 		return psErr.Error
 	}
 
 	return psErr.OK
 }
 
-// ParseIP parses string as IPv4 or IPv6 address by detecting its format.
-func ParseIP(s string) IP {
-	if strings.Contains(s, ".") {
-		return parseV4(s)
-	}
-	if strings.Contains(s, ":") {
-		return parseV6(s)
-	}
-	return nil
-}
-
-// The prefix for the special addresses described in RFC5952.
-//var v4InV6Prefix = []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff}
-
-// v4 creates IP from bytes.
-//func v4(a, b, c, d byte) IP {
-//	p := make(IP, V6AddrLen)
-//	copy(p, v4InV6Prefix)
-//	p[12] = a
-//	p[13] = b
-//	p[14] = c
-//	p[15] = d
-//	return p
-//}
-
-// V4 creates IP from bytes. TODO: use IPv4-mapped address above
-func V4(a, b, c, d byte) IP {
-	p := make(IP, V4AddrLen)
-	p[0] = a
-	p[1] = b
-	p[2] = c
-	p[3] = d
-	return p
-}
-
-func allFF(b []byte) bool {
-	for _, c := range b {
-		if c != 0xff {
-			return false
-		}
-	}
-	return true
-}
-
-// Computing the Internet Checksum
-// https://datatracker.ietf.org/doc/html/rfc1071
-
-func checksum(b []byte) uint16 {
-	var sum uint32
-	// sum up all fields of IP header by each 16bits (except Header Checksum and Options)
-	for i := 0; i < len(b); i += 2 {
-		sum += uint32(uint16(b[i])<<8 | uint16(b[i+1]))
-	}
-	//
-	sum = ((sum & 0xffff0000) >> 16) + (sum & 0x0000ffff)
-	return ^(uint16(sum))
-}
-
-func createIpPacket(protoNum ProtocolNumber, src IP, dst IP, payload []byte) []byte {
-	hdr := IpHdr{}
+func createIpPacket(protoNum mw.ProtocolNumber, src mw.IP, dst mw.IP, payload []byte) []byte {
+	hdr := mw.IpHdr{}
 	hdr.VHL = uint8(ipv4<<4) | uint8(IpHdrLenMin/4)
 	hdr.TotalLen = uint16(IpHdrLenMin + len(payload))
 	hdr.ID = id.Next()
@@ -225,7 +173,7 @@ func createIpPacket(protoNum ProtocolNumber, src IP, dst IP, payload []byte) []b
 	}
 	packet := buf.Bytes()
 
-	csum := checksum(packet)
+	csum := mw.Checksum(packet)
 	packet[10] = uint8((csum & 0xff00) >> 8)
 	packet[11] = uint8(csum & 0x00ff)
 
@@ -244,57 +192,57 @@ func dumpIpPacket(packet []byte) {
 	psLog.I(fmt.Sprintf("\tflags:               0b%03b", (packet[6]&0xe0)>>5))
 	psLog.I(fmt.Sprintf("\tfragment offset:     %d", uint16(packet[6]&0x1f)<<8|uint16(packet[7])))
 	psLog.I(fmt.Sprintf("\tttl:                 %d", packet[8]))
-	psLog.I(fmt.Sprintf("\tprotocol:            %s (%d)", protocolNumbers[ProtocolNumber(packet[9])], packet[9]))
+	psLog.I(fmt.Sprintf("\tprotocol:            %s (%d)", protocolNumbers[mw.ProtocolNumber(packet[9])], packet[9]))
 	psLog.I(fmt.Sprintf("\tchecksum:            0x%04x", uint16(packet[10])<<8|uint16(packet[11])))
 	psLog.I(fmt.Sprintf("\tsource address:      %d.%d.%d.%d", packet[12], packet[13], packet[14], packet[15]))
 	psLog.I(fmt.Sprintf("\tdestination address: %d.%d.%d.%d", packet[16], packet[17], packet[18], packet[19]))
 }
 
-func lookupEthAddr(iface *Iface, nextHop IP) (eth.Addr, psErr.E) {
-	var addr eth.Addr
-	if iface.Dev.Flag()&eth.DevFlagNeedArp != 0 {
-		if nextHop.Equal(iface.Broadcast) || nextHop.Equal(V4Broadcast) {
-			addr = eth.Broadcast
+func lookupEthAddr(iface *mw.Iface, nextHop mw.IP) (mw.Addr, psErr.E) {
+	var addr mw.Addr
+	if iface.Dev.Flag()&mw.DevFlagNeedArp != 0 {
+		if nextHop.Equal(iface.Broadcast) || nextHop.Equal(mw.V4Broadcast) {
+			addr = mw.Broadcast
 		} else {
-			var status ArpStatus
-			if addr, status = ARP.Resolve(iface, nextHop); status != ArpStatusComplete {
-				return eth.Addr{}, psErr.ArpIncomplete
+			var status arp.ArpStatus
+			if addr, status = arp.ARP.Resolve(iface, nextHop); status != arp.ArpStatusComplete {
+				return mw.Addr{}, psErr.ArpIncomplete
 			}
 		}
 	}
 	return addr, psErr.OK
 }
 
-func lookupRouting(dst IP, src IP) (*Iface, IP, psErr.E) {
-	var iface *Iface
-	var nextHop IP
+func lookupRouting(dst mw.IP, src mw.IP) (*mw.Iface, mw.IP, psErr.E) {
+	var iface *mw.Iface
+	var nextHop mw.IP
 
-	if src.Equal(V4Zero) {
+	if src.Equal(mw.V4Zero) {
 		// Can't determine net address (0.0.0.0 is a non-routable meta-address), so lookup appropriate interface to
 		// send IP packet.
-		route := RouteRepo.Get(dst)
+		route := repo.RouteRepo.Get(dst)
 		if route == nil {
 			psLog.E("Route to destination was not found")
-			return nil, IP{}, psErr.RouteNotFound
+			return nil, mw.IP{}, psErr.RouteNotFound
 		}
 		iface = route.Iface
-		if route.NextHop.Equal(V4Zero) {
+		if route.NextHop.Equal(mw.V4Zero) {
 			nextHop = dst
 		} else {
 			nextHop = route.NextHop
 		}
 	} else {
 		// Source address isn't equal to V4Zero means it can determine net address.
-		iface = IfaceRepo.Get(src)
+		iface = repo.IfaceRepo.Get(src)
 		if iface == nil {
 			psLog.E(fmt.Sprintf("Interface for %s was not found", src))
-			return nil, IP{}, psErr.InterfaceNotFound
+			return nil, mw.IP{}, psErr.InterfaceNotFound
 		}
 		// Don't send IP packet when net address of both destination and iface is not matched each other or
 		// destination address is not matched to the broadcast address.
-		if !dst.Mask(iface.Netmask).Equal(iface.Unicast.Mask(iface.Netmask)) && !dst.Equal(V4Broadcast) {
+		if !dst.Mask(iface.Netmask).Equal(iface.Unicast.Mask(iface.Netmask)) && !dst.Equal(mw.V4Broadcast) {
 			psLog.E(fmt.Sprintf("IP packet can't reach %s (Network address is not matched)", dst.String()))
-			return nil, IP{}, psErr.NetworkAddressNotMatch
+			return nil, mw.IP{}, psErr.NetworkAddressNotMatch
 		}
 		nextHop = dst
 	}
@@ -302,31 +250,14 @@ func lookupRouting(dst IP, src IP) (*Iface, IP, psErr.E) {
 	return iface, nextHop, psErr.OK
 }
 
-func longestIP(ip1 IP, ip2 IP) IP {
-	if len(ip1) != len(ip2) {
-		return nil
-	}
-	for i, v := range ip1 {
-		if v < ip2[i] {
-			return ip2
-		}
-	}
-	return ip1
-}
-
 const ipv4 = 4
-
-var addrFamilies = map[AddrFamily]string{
-	V4AddrFamily: "IPv4",
-	V6AddrFamily: "IPv6",
-}
 
 var id *PacketID
 
 // ASSIGNED INTERNET PROTOCOL NUMBERS
 // https://datatracker.ietf.org/doc/html/rfc790#page-6
 
-var protocolNumbers = map[ProtocolNumber]string{
+var protocolNumbers = map[mw.ProtocolNumber]string{
 	// 0: Reserved
 	1:  "ICMP",
 	3:  "Gateway-to-Gateway",
@@ -352,13 +283,30 @@ var protocolNumbers = map[ProtocolNumber]string{
 	65: "MIT Subnet Support",
 	// 66-68: Unassigned
 	69: "SATNET Monitoring",
-	71: "Internet Packet Core Utility",
+	71: "Internet EthMessage Core Utility",
 	// 72-75: Unassigned
 	76: "Backroom SATNET Monitoring",
 	78: "WIDEBAND Monitoring",
 	79: "WIDEBAND EXPAK",
 	// 80-254: Unassigned
 	// 255: Reserved
+}
+
+func StartService() {
+	go func() {
+		for {
+			select {
+			case msg := <-mw.IpRxCh:
+				if err := IpReceive(msg.Content, msg.Dev); err != psErr.OK {
+					return
+				}
+			case msg := <-mw.IpTxCh:
+				if err := IpSend(msg.ProtoNum, msg.Packet, msg.Src, msg.Dst); err != psErr.OK {
+					return
+				}
+			}
+		}
+	}()
 }
 
 func init() {

@@ -1,10 +1,10 @@
-package net
+package arp
 
 import (
 	"fmt"
 	psErr "github.com/42milez/ProtocolStack/src/error"
-	"github.com/42milez/ProtocolStack/src/eth"
 	psLog "github.com/42milez/ProtocolStack/src/log"
+	"github.com/42milez/ProtocolStack/src/mw"
 	psTime "github.com/42milez/ProtocolStack/src/time"
 	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
@@ -15,7 +15,7 @@ import (
 func TestArpCache_Add_1(t *testing.T) {
 	defer ARP.cache.Init()
 
-	ha := eth.Addr{0x11, 0x22, 0x33, 0x44, 0x55, 0x66}
+	ha := mw.Addr{0x11, 0x22, 0x33, 0x44, 0x55, 0x66}
 	pa := ArpProtoAddr{192, 168, 1, 1}
 	state := cacheStatusResolved
 
@@ -29,7 +29,7 @@ func TestArpCache_Add_1(t *testing.T) {
 func TestArpCache_Add_2(t *testing.T) {
 	defer ARP.cache.Init()
 
-	ha := eth.Addr{0x11, 0x22, 0x33, 0x44, 0x55, 0x66}
+	ha := mw.Addr{0x11, 0x22, 0x33, 0x44, 0x55, 0x66}
 	pa := ArpProtoAddr{192, 168, 1, 1}
 	state := cacheStatusResolved
 
@@ -52,8 +52,8 @@ func TestArpCache_Add_3(t *testing.T) {
 
 	m := psTime.NewMockITime(ctrl)
 	psTime.Time = m
-	for i := ArpCacheSize; i >= 0; i-- {
-		ha := eth.Addr{0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
+	for i := CacheSize; i >= 0; i-- {
+		ha := mw.Addr{0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 		pa := ArpProtoAddr{192, 168, byte(i), 1}
 		state := cacheStatusResolved
 		createdAt, _ := time.Parse(time.RFC3339, fmt.Sprintf("2021-01-01T00:%02d:00Z", i))
@@ -76,18 +76,18 @@ func TestArpCache_Renew_1(t *testing.T) {
 	m.EXPECT().Now().Return(createdAt).AnyTimes()
 	psTime.Time = m
 
-	ha1 := eth.Addr{0x11, 0x22, 0x33, 0x44, 0x55, 0x66}
+	ha1 := mw.Addr{0x11, 0x22, 0x33, 0x44, 0x55, 0x66}
 	pa := ArpProtoAddr{192, 168, 1, 1}
 	state := cacheStatusResolved
 	_ = ARP.cache.Create(ha1, pa, state)
 
-	ha2 := eth.Addr{0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f}
+	ha2 := mw.Addr{0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f}
 	_ = ARP.cache.Renew(pa, ha2, state)
 
 	want := &arpCacheEntry{
 		Status:    cacheStatusResolved,
 		CreatedAt: createdAt,
-		HA:        eth.Addr{0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f},
+		HA:        mw.Addr{0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f},
 		PA:        ArpProtoAddr{192, 168, 1, 1},
 	}
 
@@ -100,13 +100,13 @@ func TestArpCache_Renew_1(t *testing.T) {
 func TestArpCache_Renew_2(t *testing.T) {
 	defer ARP.cache.Init()
 
-	ha1 := eth.Addr{0x11, 0x22, 0x33, 0x44, 0x55, 0x66}
+	ha1 := mw.Addr{0x11, 0x22, 0x33, 0x44, 0x55, 0x66}
 	pa := ArpProtoAddr{192, 168, 1, 1}
 	state := cacheStatusResolved
 	_ = ARP.cache.Create(ha1, pa, state)
 
 	want := psErr.NotFound
-	got := ARP.cache.Renew(ArpProtoAddr{192, 0, 2, 1}, eth.Addr{}, cacheStatusResolved)
+	got := ARP.cache.Renew(ArpProtoAddr{192, 0, 2, 1}, mw.Addr{}, cacheStatusResolved)
 
 	if got != want {
 		t.Errorf("Renew() = %s; want %s", got, want)
@@ -116,7 +116,7 @@ func TestArpCache_Renew_2(t *testing.T) {
 func TestArpCache_GetEntry_1(t *testing.T) {
 	defer ARP.cache.Init()
 
-	ha := eth.Addr{0x11, 0x22, 0x33, 0x44, 0x55, 0x66}
+	ha := mw.Addr{0x11, 0x22, 0x33, 0x44, 0x55, 0x66}
 	pa := ArpProtoAddr{192, 168, 1, 1}
 	state := cacheStatusResolved
 	_ = ARP.cache.Create(ha, pa, state)
@@ -131,7 +131,7 @@ func TestArpCache_GetEntry_1(t *testing.T) {
 func TestArpCache_GetEntry_2(t *testing.T) {
 	defer ARP.cache.Init()
 
-	ha := eth.Addr{0x11, 0x22, 0x33, 0x44, 0x55, 0x66}
+	ha := mw.Addr{0x11, 0x22, 0x33, 0x44, 0x55, 0x66}
 	pa := ArpProtoAddr{192, 168, 1, 1}
 	state := cacheStatusResolved
 	_ = ARP.cache.Create(ha, pa, state)

@@ -7,7 +7,12 @@ import (
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	"github.com/42milez/ProtocolStack/src/eth"
 	psLog "github.com/42milez/ProtocolStack/src/log"
+	"github.com/42milez/ProtocolStack/src/mw"
 	"github.com/42milez/ProtocolStack/src/net"
+	"github.com/42milez/ProtocolStack/src/net/arp"
+	"github.com/42milez/ProtocolStack/src/net/icmp"
+	"github.com/42milez/ProtocolStack/src/net/ip"
+	"github.com/42milez/ProtocolStack/src/repo"
 	"os"
 	"os/signal"
 	"strconv"
@@ -43,35 +48,35 @@ func setup() psErr.E {
 	psLog.I("--------------------------------------------------")
 
 	// Create a loopback device and its iface, then link them.
-	loopbackDev := eth.GenLoopbackDevice("net" + strconv.Itoa(net.DeviceRepo.NextNumber()))
-	if err := net.DeviceRepo.Register(loopbackDev); err != psErr.OK {
+	loopbackDev := eth.GenLoopbackDevice("net" + strconv.Itoa(repo.DeviceRepo.NextNumber()))
+	if err := repo.DeviceRepo.Register(loopbackDev); err != psErr.OK {
 		return psErr.Error
 	}
 
-	iface1 := net.GenIface(net.LoopbackIpAddr, net.LoopbackNetmask, net.LoopbackBroadcast)
-	if err := net.IfaceRepo.Register(iface1, loopbackDev); err != psErr.OK {
+	iface1 := net.GenIface(mw.LoopbackIpAddr, mw.LoopbackNetmask, mw.LoopbackBroadcast)
+	if err := repo.IfaceRepo.Register(iface1, loopbackDev); err != psErr.OK {
 		return psErr.Error
 	}
 
-	net.RouteRepo.Register(net.ParseIP(net.LoopbackNetwork), net.V4Zero, iface1)
+	repo.RouteRepo.Register(mw.ParseIP(mw.LoopbackNetwork), mw.V4Zero, iface1)
 
 	// Create a TAP device and its interface, then link them.
 	tapDev := eth.GenTapDevice(
-		"net"+strconv.Itoa(net.DeviceRepo.NextNumber()),
+		"net"+strconv.Itoa(repo.DeviceRepo.NextNumber()),
 		"tap0",
-		eth.Addr{11, 22, 33, 44, 55, 66})
-	if err := net.DeviceRepo.Register(tapDev); err != psErr.OK {
+		mw.Addr{11, 22, 33, 44, 55, 66})
+	if err := repo.DeviceRepo.Register(tapDev); err != psErr.OK {
 		return psErr.Error
 	}
 
 	iface2 := net.GenIface("192.0.2.2", "255.255.255.0", "192.0.2.255")
-	if err := net.IfaceRepo.Register(iface2, tapDev); err != psErr.OK {
+	if err := repo.IfaceRepo.Register(iface2, tapDev); err != psErr.OK {
 		return psErr.Error
 	}
 
-	net.RouteRepo.Register(net.ParseIP("192.0.0.0"), net.V4Zero, iface2)
+	repo.RouteRepo.Register(mw.ParseIP("192.0.0.0"), mw.V4Zero, iface2)
 
-	net.RouteRepo.RegisterDefaultGateway(iface2, net.ParseIP("192.0.2.1"))
+	repo.RouteRepo.RegisterDefaultGateway(iface2, mw.ParseIP("192.0.2.1"))
 
 	psLog.I("--------------------------------------------------")
 	psLog.I(" START SERVER                                     ")
@@ -85,7 +90,7 @@ func setup() psErr.E {
 }
 
 func start(wg *sync.WaitGroup) psErr.E {
-	if err := net.DeviceRepo.Up(); err != psErr.OK {
+	if err := repo.DeviceRepo.Up(); err != psErr.OK {
 		return psErr.Error
 	}
 
@@ -99,7 +104,7 @@ func start(wg *sync.WaitGroup) psErr.E {
 				psLog.I("Terminating Eth worker...")
 				terminate = true
 			default:
-				if err := net.DeviceRepo.Poll(terminate); err != psErr.OK {
+				if err := repo.DeviceRepo.Poll(terminate); err != psErr.OK {
 					// TODO: notify error to main goroutine
 					// ...
 					psLog.F(err.Error())
@@ -120,14 +125,14 @@ func start(wg *sync.WaitGroup) psErr.E {
 			case <-netSigCh:
 				psLog.I("Terminating Net worker...")
 				return
-			case packet := <-eth.RxCh:
-				if err := net.InputHandler(packet); err != psErr.OK {
+			case msg := <-mw.EthRxCh:
+				if err := mw.Rx(msg); err != psErr.OK {
 					psLog.F(err.Error())
 					// TODO: notify error to main goroutine
 					// ...
 				}
-			case packet := <-eth.TxCh:
-				if err := net.OutputHandler(packet); err != psErr.OK {
+			case msg := <-mw.EthTxCh:
+				if err := mw.Tx(msg); err != psErr.OK {
 					psLog.F(err.Error())
 					// TODO: notify error to main goroutine
 					// ...
@@ -135,6 +140,10 @@ func start(wg *sync.WaitGroup) psErr.E {
 			}
 		}
 	}()
+
+	arp.StartService()
+	ip.StartService()
+	icmp.StartService()
 
 	return psErr.OK
 }

@@ -1,8 +1,4 @@
-package net
-
-import (
-	"github.com/42milez/ProtocolStack/src/eth"
-)
+package mw
 
 const LoopbackIpAddr = "127.0.0.1"
 const LoopbackBroadcast = "127.255.255.255"
@@ -15,5 +11,5 @@ type Iface struct {
 	Unicast   IP
 	Netmask   IP
 	Broadcast IP
-	Dev       eth.IDevice
+	Dev       IDevice
 }

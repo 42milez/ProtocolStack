@@ -1,9 +1,10 @@
-package net
+package repo
 
 import (
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	"github.com/42milez/ProtocolStack/src/eth"
 	psLog "github.com/42milez/ProtocolStack/src/log"
+	"github.com/42milez/ProtocolStack/src/mw"
 	"github.com/golang/mock/gomock"
 	"testing"
 )
@@ -42,8 +43,8 @@ func TestDeviceRepo_Register_2(t *testing.T) {
 	defer teardown()
 	defer reset()
 
-	dev1 := &eth.TapDevice{Device: eth.Device{Name_: "net0"}}
-	dev2 := &eth.TapDevice{Device: eth.Device{Name_: "net0"}}
+	dev1 := &eth.TapDevice{Device: mw.Device{Name_: "net0"}}
+	dev2 := &eth.TapDevice{Device: mw.Device{Name_: "net0"}}
 
 	_ = DeviceRepo.Register(dev1)
 	got := DeviceRepo.Register(dev2)
@@ -57,20 +58,20 @@ func TestIfaceRepo_Register_1(t *testing.T) {
 	defer teardown()
 	defer reset()
 
-	iface := &Iface{
-		Family:    V4AddrFamily,
-		Unicast:   ParseIP(LoopbackIpAddr),
-		Netmask:   ParseIP(LoopbackNetmask),
-		Broadcast: make(IP, 0),
+	iface := &mw.Iface{
+		Family:    mw.V4AddrFamily,
+		Unicast:   mw.ParseIP(mw.LoopbackIpAddr),
+		Netmask:   mw.ParseIP(mw.LoopbackNetmask),
+		Broadcast: make(mw.IP, 0),
 	}
 
 	dev := &eth.TapDevice{
-		Device: eth.Device{
-			Type_: eth.DevTypeEthernet,
-			MTU_:  eth.PayloadLenMax,
-			Flag_: eth.DevFlagBroadcast | eth.DevFlagNeedArp,
-			Addr_: eth.Addr{11, 12, 13, 14, 15, 16},
-			Priv_: eth.Privilege{FD: -1, Name: "tap0"},
+		Device: mw.Device{
+			Type_: mw.DevTypeEthernet,
+			MTU_:  mw.PayloadLenMax,
+			Flag_: mw.DevFlagBroadcast | mw.DevFlagNeedArp,
+			Addr_: mw.Addr{11, 12, 13, 14, 15, 16},
+			Priv_: mw.Privilege{FD: -1, Name: "tap0"},
 		},
 	}
 
@@ -86,20 +87,20 @@ func TestIfaceRepo_Register_2(t *testing.T) {
 	defer teardown()
 	defer reset()
 
-	iface := &Iface{
-		Family:    V4AddrFamily,
-		Unicast:   ParseIP(LoopbackIpAddr),
-		Netmask:   ParseIP(LoopbackNetmask),
-		Broadcast: make(IP, 0),
+	iface := &mw.Iface{
+		Family:    mw.V4AddrFamily,
+		Unicast:   mw.ParseIP(mw.LoopbackIpAddr),
+		Netmask:   mw.ParseIP(mw.LoopbackNetmask),
+		Broadcast: make(mw.IP, 0),
 	}
 
 	dev := &eth.TapDevice{
-		Device: eth.Device{
-			Type_: eth.DevTypeEthernet,
-			MTU_:  eth.PayloadLenMax,
-			Flag_: eth.DevFlagBroadcast | eth.DevFlagNeedArp,
-			Addr_: eth.Addr{11, 12, 13, 14, 15, 16},
-			Priv_: eth.Privilege{FD: -1, Name: "tap0"},
+		Device: mw.Device{
+			Type_: mw.DevTypeEthernet,
+			MTU_:  mw.PayloadLenMax,
+			Flag_: mw.DevFlagBroadcast | mw.DevFlagNeedArp,
+			Addr_: mw.Addr{11, 12, 13, 14, 15, 16},
+			Priv_: mw.Privilege{FD: -1, Name: "tap0"},
 		},
 	}
 
@@ -116,14 +117,14 @@ func TestUp_1(t *testing.T) {
 	defer teardown()
 	defer reset()
 
-	m := eth.NewMockIDevice(ctrl)
+	m := mw.NewMockIDevice(ctrl)
 	m.EXPECT().Open().Return(psErr.OK)
 	m.EXPECT().Up()
 	m.EXPECT().IsUp().Return(false)
-	m.EXPECT().Addr().Return(eth.Addr{})
-	m.EXPECT().Type().Return(eth.DevTypeEthernet).AnyTimes()
+	m.EXPECT().Addr().Return(mw.Addr{})
+	m.EXPECT().Type().Return(mw.DevTypeEthernet).AnyTimes()
 	m.EXPECT().Name().Return("net0").AnyTimes()
-	m.EXPECT().Priv().Return(eth.Privilege{Name: "tap0"}).AnyTimes()
+	m.EXPECT().Priv().Return(mw.Privilege{Name: "tap0"}).AnyTimes()
 
 	_ = DeviceRepo.Register(m)
 
@@ -139,12 +140,12 @@ func TestUp_2(t *testing.T) {
 	defer teardown()
 	defer reset()
 
-	m := eth.NewMockIDevice(ctrl)
+	m := mw.NewMockIDevice(ctrl)
 	m.EXPECT().IsUp().Return(true)
-	m.EXPECT().Type().Return(eth.DevTypeEthernet).AnyTimes()
+	m.EXPECT().Type().Return(mw.DevTypeEthernet).AnyTimes()
 	m.EXPECT().Name().Return("net0").AnyTimes()
-	m.EXPECT().Priv().Return(eth.Privilege{Name: "tap0"}).AnyTimes()
-	m.EXPECT().Addr().Return(eth.Addr{})
+	m.EXPECT().Priv().Return(mw.Privilege{Name: "tap0"}).AnyTimes()
+	m.EXPECT().Addr().Return(mw.Addr{})
 
 	_ = DeviceRepo.Register(m)
 
@@ -160,13 +161,13 @@ func TestUp_3(t *testing.T) {
 	defer teardown()
 	defer reset()
 
-	m := eth.NewMockIDevice(ctrl)
+	m := mw.NewMockIDevice(ctrl)
 	m.EXPECT().Open().Return(psErr.Error)
 	m.EXPECT().IsUp().Return(false)
-	m.EXPECT().Type().Return(eth.DevTypeEthernet).AnyTimes()
+	m.EXPECT().Type().Return(mw.DevTypeEthernet).AnyTimes()
 	m.EXPECT().Name().Return("net0").AnyTimes()
-	m.EXPECT().Priv().Return(eth.Privilege{Name: "tap0"}).AnyTimes()
-	m.EXPECT().Addr().Return(eth.Addr{})
+	m.EXPECT().Priv().Return(mw.Privilege{Name: "tap0"}).AnyTimes()
+	m.EXPECT().Addr().Return(mw.Addr{})
 
 	_ = DeviceRepo.Register(m)
 

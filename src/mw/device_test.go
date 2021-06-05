@@ -1,4 +1,4 @@
-package eth
+package mw
 
 import (
 	"github.com/golang/mock/gomock"
