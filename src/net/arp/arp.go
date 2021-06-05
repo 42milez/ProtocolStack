@@ -16,13 +16,10 @@ import (
 
 const CacheSize = 32
 
-var ARP *arp
 var ArpCondCh chan timer.Condition
 var ArpSigCh chan timer.Signal
 
-type arp struct{}
-
-func (p *arp) Receive(packet []byte, dev mw.IDevice) psErr.E {
+func Receive(packet []byte, dev mw.IDevice) psErr.E {
 	if len(packet) < ArpPacketLen {
 		psLog.E(fmt.Sprintf("ARP packet length is too short: %d bytes", len(packet)))
 		return psErr.InvalidPacket
@@ -62,7 +59,7 @@ func (p *arp) Receive(packet []byte, dev mw.IDevice) psErr.E {
 			psLog.I(fmt.Sprintf("\tsha: %s", arpPacket.SHA))
 		}
 		if arpPacket.Opcode == ArpOpRequest {
-			if err := p.Reply(arpPacket.SHA, arpPacket.SPA, iface); err != psErr.OK {
+			if err := Reply(arpPacket.SHA, arpPacket.SPA, iface); err != psErr.OK {
 				return psErr.Error
 			}
 		}
@@ -73,7 +70,7 @@ func (p *arp) Receive(packet []byte, dev mw.IDevice) psErr.E {
 	return psErr.OK
 }
 
-func (p *arp) Reply(tha mw.Addr, tpa ArpProtoAddr, iface *mw.Iface) psErr.E {
+func Reply(tha mw.Addr, tpa ArpProtoAddr, iface *mw.Iface) psErr.E {
 	packet := Packet{
 		Hdr: Hdr{
 			HT:     ArpHwTypeEthernet,
@@ -104,7 +101,7 @@ func (p *arp) Reply(tha mw.Addr, tpa ArpProtoAddr, iface *mw.Iface) psErr.E {
 	return psErr.OK
 }
 
-func (p *arp) Request(iface *mw.Iface, ip mw.IP) psErr.E {
+func Request(iface *mw.Iface, ip mw.IP) psErr.E {
 	packet := Packet{
 		Hdr: Hdr{
 			HT:     ArpHwTypeEthernet,
@@ -135,7 +132,7 @@ func (p *arp) Request(iface *mw.Iface, ip mw.IP) psErr.E {
 	return psErr.OK
 }
 
-func (p *arp) Resolve(iface *mw.Iface, ip mw.IP) (mw.Addr, ArpStatus) {
+func Resolve(iface *mw.Iface, ip mw.IP) (mw.Addr, ArpStatus) {
 	if iface.Dev.Type() != mw.DevTypeEthernet {
 		psLog.E(fmt.Sprintf("Unsupported device type: %s", iface.Dev.Type()))
 		return mw.Addr{}, ArpStatusError
@@ -151,7 +148,7 @@ func (p *arp) Resolve(iface *mw.Iface, ip mw.IP) (mw.Addr, ArpStatus) {
 		if err := cache.Create(mw.Addr{}, ip.ToV4(), cacheStatusIncomplete); err != psErr.OK {
 			return mw.Addr{}, ArpStatusError
 		}
-		if err := p.Request(iface, ip); err != psErr.OK {
+		if err := Request(iface, ip); err != psErr.OK {
 			return mw.Addr{}, ArpStatusError
 		}
 		return mw.Addr{}, ArpStatusIncomplete
@@ -160,7 +157,7 @@ func (p *arp) Resolve(iface *mw.Iface, ip mw.IP) (mw.Addr, ArpStatus) {
 	return entry.HA, ArpStatusComplete
 }
 
-func (p *arp) RunTimer(wg *sync.WaitGroup) {
+func RunTimer(wg *sync.WaitGroup) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -187,7 +184,7 @@ func (p *arp) RunTimer(wg *sync.WaitGroup) {
 	}()
 }
 
-func (p *arp) StopTimer() {
+func StopTimer() {
 	ArpSigCh <- timer.Stop
 }
 
@@ -207,7 +204,7 @@ func StartService() {
 	go func() {
 		for {
 			packet := <-mw.ArpRxCh
-			if err := ARP.Receive(packet.Content, packet.Dev); err != psErr.OK {
+			if err := Receive(packet.Content, packet.Dev); err != psErr.OK {
 				return
 			}
 		}
@@ -215,7 +212,6 @@ func StartService() {
 }
 
 func init() {
-	ARP = &arp{}
 	ArpCondCh = make(chan timer.Condition)
 	ArpSigCh = make(chan timer.Signal)
 }
