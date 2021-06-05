@@ -165,9 +165,10 @@ func Send(protoNum mw.ProtocolNumber, payload []byte, src mw.IP, dst mw.IP) psEr
 	return psErr.OK
 }
 
-func StartService() {
-	go receiver()
-	go sender()
+func StartService(wg *sync.WaitGroup) {
+	wg.Add(2)
+	go receiver(wg)
+	go sender(wg)
 }
 
 func createPacket(protoNum mw.ProtocolNumber, src mw.IP, dst mw.IP, payload []byte) []byte {
@@ -266,10 +267,13 @@ func lookupRoute(dst mw.IP, src mw.IP) (*mw.Iface, mw.IP, psErr.E) {
 	return iface, nextHop, psErr.OK
 }
 
-func receiver() {
+func receiver(wg *sync.WaitGroup) {
+	defer wg.Done()
+
 	RcvTxCh <- &worker.Message{
 		Current: worker.Running,
 	}
+
 	for {
 		select {
 		case msg := <-RcvRxCh:
@@ -287,10 +291,13 @@ func receiver() {
 	}
 }
 
-func sender() {
+func sender(wg *sync.WaitGroup) {
+	defer wg.Done()
+
 	SndTxCh <- &worker.Message{
 		Current: worker.Running,
 	}
+
 	for {
 		select {
 		case msg := <-SndRxCh:

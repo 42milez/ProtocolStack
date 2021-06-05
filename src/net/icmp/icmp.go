@@ -10,6 +10,7 @@ import (
 	"github.com/42milez/ProtocolStack/src/net/ip"
 	"github.com/42milez/ProtocolStack/src/repo"
 	"github.com/42milez/ProtocolStack/src/worker"
+	"sync"
 )
 
 const Echo = 0x08
@@ -154,9 +155,10 @@ func Send(typ uint8, code uint8, content uint32, payload []byte, src mw.IP, dst 
 	return psErr.OK
 }
 
-func StartService() {
-	go receiver()
-	go sender()
+func StartService(wg *sync.WaitGroup) {
+	wg.Add(2)
+	go receiver(wg)
+	go sender(wg)
 }
 
 func dump(hdr *Hdr, payload []byte) {
@@ -187,10 +189,13 @@ func dump(hdr *Hdr, payload []byte) {
 	}
 }
 
-func receiver() {
+func receiver(wg *sync.WaitGroup) {
+	defer wg.Done()
+
 	RcvTxCh <- &worker.Message{
 		Current: worker.Running,
 	}
+
 	for {
 		select {
 		case msg := <-RcvRxCh:
@@ -208,10 +213,13 @@ func receiver() {
 	}
 }
 
-func sender() {
+func sender(wg *sync.WaitGroup) {
+	defer wg.Done()
+
 	SndTxCh <- &worker.Message{
 		Current: worker.Running,
 	}
+
 	for {
 		select {
 		case msg := <-SndRxCh:

@@ -21,13 +21,14 @@ import (
 	"time"
 )
 
+var arpWg sync.WaitGroup
+var ipWg sync.WaitGroup
+var icmpWg sync.WaitGroup
 var wg sync.WaitGroup
-
 var ethSigCh chan os.Signal
 var mainSigCh chan os.Signal
 var netSigCh chan os.Signal
 var sigCh chan os.Signal
-
 var terminate bool
 
 func handleSignal(sigCh <-chan os.Signal, wg *sync.WaitGroup) {
@@ -141,9 +142,9 @@ func start(wg *sync.WaitGroup) psErr.E {
 		}
 	}()
 
-	arp.StartService()
-	ip.StartService()
-	icmp.StartService()
+	arp.StartService(&arpWg)
+	ip.StartService(&ipWg)
+	icmp.StartService(&icmpWg)
 
 	return psErr.OK
 }
