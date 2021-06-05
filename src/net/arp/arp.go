@@ -291,11 +291,12 @@ func Resolve(iface *mw.Iface, ip mw.IP) (mw.EthAddr, Status) {
 	return entry.HA, Complete
 }
 
-func StartService(wg *sync.WaitGroup) {
+func StartService(wg *sync.WaitGroup) psErr.E {
 	wg.Add(3)
 	go receiver(wg)
 	go sender(wg)
 	go timer(wg)
+	return psErr.OK
 }
 
 func StopService() {

@@ -200,9 +200,15 @@ func (p *routeRepo) RegisterDefaultGateway(iface *mw.Iface, nextHop mw.IP) {
 	psLog.I(fmt.Sprintf("\tdevice:   %s (%s)", iface.Dev.Name(), iface.Dev.Priv().Name))
 }
 
-func StartService(wg *sync.WaitGroup) {
+func StartService(wg *sync.WaitGroup) psErr.E {
+	if err := DeviceRepo.Up(); err != psErr.OK {
+		return psErr.Error
+	}
+
 	wg.Add(1)
 	go watcher(wg)
+
+	return psErr.OK
 }
 
 func watcher(wg *sync.WaitGroup) {

@@ -2,6 +2,7 @@ package eth
 
 import (
 	"fmt"
+	psErr "github.com/42milez/ProtocolStack/src/error"
 	psLog "github.com/42milez/ProtocolStack/src/log"
 	"github.com/42milez/ProtocolStack/src/mw"
 	"github.com/42milez/ProtocolStack/src/worker"
@@ -15,10 +16,11 @@ var RcvTxCh chan *worker.Message
 var SndRxCh chan *worker.Message
 var SndTxCh chan *worker.Message
 
-func StartService(wg *sync.WaitGroup) {
+func StartService(wg *sync.WaitGroup) psErr.E {
 	wg.Add(2)
 	go receiver(wg)
 	go sender(wg)
+	return psErr.OK
 }
 
 func receiver(wg *sync.WaitGroup) {

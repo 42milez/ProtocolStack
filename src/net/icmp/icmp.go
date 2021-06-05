@@ -155,10 +155,11 @@ func Send(typ uint8, code uint8, content uint32, payload []byte, src mw.IP, dst 
 	return psErr.OK
 }
 
-func StartService(wg *sync.WaitGroup) {
+func StartService(wg *sync.WaitGroup) psErr.E {
 	wg.Add(2)
 	go receiver(wg)
 	go sender(wg)
+	return psErr.OK
 }
 
 func dump(hdr *Hdr, payload []byte) {

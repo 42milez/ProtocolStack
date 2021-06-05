@@ -234,7 +234,7 @@ func TestTapDevice_Poll_1(t *testing.T) {
 
 	tapDev := TapDevice{}
 
-	got := tapDev.Poll(false)
+	got := tapDev.Poll()
 	if got != psErr.OK {
 		t.Errorf("TapDevice.Poll() = %v; want %v", got, psErr.OK)
 	}
@@ -253,27 +253,9 @@ func TestTapDevice_Poll_2(t *testing.T) {
 
 	tapDev := TapDevice{}
 
-	got := tapDev.Poll(false)
+	got := tapDev.Poll()
 	if got != psErr.OK {
 		t.Errorf("TapDevice.Poll() = %v; want %v", got, psErr.OK)
-	}
-}
-
-// Success when Poll() is terminated.
-func TestTapDevice_Poll_3(t *testing.T) {
-	ctrl, teardown := setupTapLinuxTest(t)
-	defer teardown()
-
-	m := psSyscall.NewMockISyscall(ctrl)
-	m.EXPECT().Close(any).Return(nil)
-
-	psSyscall.Syscall = m
-
-	tapDev := TapDevice{}
-
-	got := tapDev.Poll(true)
-	if got != psErr.Terminated {
-		t.Errorf("TapDevice.Poll() = %v; want %v", got, psErr.Terminated)
 	}
 }
 
@@ -289,7 +271,7 @@ func TestTapDevice_Poll_4(t *testing.T) {
 
 	tapDev := TapDevice{}
 
-	got := tapDev.Poll(false)
+	got := tapDev.Poll()
 	if got != psErr.Interrupted {
 		t.Errorf("TapDevice.Poll() = %v; want %v", got, psErr.Interrupted)
 	}
@@ -307,7 +289,7 @@ func TestTapDevice_Poll_5(t *testing.T) {
 
 	tapDev := TapDevice{}
 
-	got := tapDev.Poll(false)
+	got := tapDev.Poll()
 	if got != psErr.SyscallError {
 		t.Errorf("TapDevice.Poll() = %v; want %v", got, psErr.SyscallError)
 	}
@@ -326,7 +308,7 @@ func TestTapDevice_Poll_6(t *testing.T) {
 
 	tapDev := TapDevice{}
 
-	got := tapDev.Poll(false)
+	got := tapDev.Poll()
 	if got != psErr.Error {
 		t.Errorf("TapDevice.Poll() = %v; want %v", got, psErr.Error)
 	}

@@ -28,12 +28,8 @@ var ipWg sync.WaitGroup
 var icmpWg sync.WaitGroup
 var repoWg sync.WaitGroup
 
-var ethSigCh chan os.Signal
-var mainSigCh chan os.Signal
-var netSigCh chan os.Signal
+var mainRxCh chan os.Signal
 var sigCh chan os.Signal
-
-var terminate bool
 
 func handleSignal(sigCh <-chan os.Signal, wg *sync.WaitGroup) {
 	wg.Add(1)
@@ -41,9 +37,7 @@ func handleSignal(sigCh <-chan os.Signal, wg *sync.WaitGroup) {
 		defer wg.Done()
 		sig := <-sigCh
 		psLog.I(fmt.Sprintf("Signal: %s", sig))
-		ethSigCh <-syscall.SIGUSR1
-		mainSigCh <-syscall.SIGUSR1
-		netSigCh <-syscall.SIGUSR1
+		mainRxCh <-syscall.SIGUSR1
 	}()
 }
 
@@ -95,45 +89,31 @@ func setup() psErr.E {
 }
 
 func start(wg *sync.WaitGroup) psErr.E {
-	if err := repo.DeviceRepo.Up(); err != psErr.OK {
+	if err := arp.StartService(&arpWg); err != psErr.OK {
 		return psErr.Error
 	}
 
-	// worker for watching I/O resource
-	//wg.Add(1)
-	//go func() {
-	//	defer wg.Done()
-	//	for {
-	//		select {
-	//		case <-ethSigCh:
-	//			psLog.I("Terminating Eth worker...")
-	//			terminate = true
-	//		default:
-	//			if err := repo.DeviceRepo.Poll(terminate); err != psErr.OK {
-	//				// TODO: notify error to main goroutine
-	//				// ...
-	//				psLog.F(err.Error())
-	//			}
-	//		}
-	//		if terminate {
-	//			return
-	//		}
-	//	}
-	//}()
+	if err := eth.StartService(&ethWg); err != psErr.OK {
+		return psErr.Error
+	}
 
-	arp.StartService(&arpWg)
-	eth.StartService(&ethWg)
-	ip.StartService(&ipWg)
-	icmp.StartService(&icmpWg)
-	repo.StartService(&repoWg)
+	if err := ip.StartService(&ipWg); err != psErr.OK {
+		return psErr.Error
+	}
+
+	if err := icmp.StartService(&icmpWg); err != psErr.OK {
+		return psErr.Error
+	}
+
+	if err := repo.StartService(&repoWg); err != psErr.OK {
+		return psErr.Error
+	}
 
 	return psErr.OK
 }
 
 func init() {
-	mainSigCh = make(chan os.Signal)
-	ethSigCh = make(chan os.Signal)
-	netSigCh = make(chan os.Signal)
+	mainRxCh = make(chan os.Signal)
 	sigCh = make(chan os.Signal, 1)
 	// https://pkg.go.dev/os/signal#Notify
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
@@ -151,7 +131,7 @@ func main() {
 		defer wg.Done()
 		for {
 			select {
-			case <-mainSigCh:
+			case <-mainRxCh:
 				return
 			default:
 				time.Sleep(time.Second * 1)

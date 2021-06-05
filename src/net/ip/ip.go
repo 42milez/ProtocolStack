@@ -165,10 +165,11 @@ func Send(protoNum mw.ProtocolNumber, payload []byte, src mw.IP, dst mw.IP) psEr
 	return psErr.OK
 }
 
-func StartService(wg *sync.WaitGroup) {
+func StartService(wg *sync.WaitGroup) psErr.E {
 	wg.Add(2)
 	go receiver(wg)
 	go sender(wg)
+	return psErr.OK
 }
 
 func createPacket(protoNum mw.ProtocolNumber, src mw.IP, dst mw.IP, payload []byte) []byte {

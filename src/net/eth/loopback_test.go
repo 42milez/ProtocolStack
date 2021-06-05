@@ -47,20 +47,6 @@ func TestLoopbackDevice_Close(t *testing.T) {
 	}
 }
 
-func TestLoopbackDevice_Poll(t *testing.T) {
-	ctrl, teardown := setupLoopbackTest(t)
-	defer teardown()
-
-	psSyscall.Syscall = psSyscall.NewMockISyscall(ctrl)
-
-	loopbackDev := LoopbackDevice{}
-
-	got := loopbackDev.Poll(false)
-	if got != psErr.OK {
-		t.Errorf("LoopbackDevice.Poll() = %v; want %v", got, psErr.OK)
-	}
-}
-
 func TestLoopbackDevice_Transmit(t *testing.T) {
 	ctrl, teardown := setupLoopbackTest(t)
 	defer teardown()

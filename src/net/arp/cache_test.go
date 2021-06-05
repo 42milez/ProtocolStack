@@ -158,7 +158,7 @@ func TestTimer_1(t *testing.T) {
 	_ = cache.Create(mw.EthAddr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}, pa, resolved)
 
 	var wg sync.WaitGroup
-	StartService(&wg)
+	_ = StartService(&wg)
 	<-TimerTxCh
 	StopService()
 	wg.Wait()
@@ -175,7 +175,7 @@ func TestTimer_2(t *testing.T) {
 	defer cache.Init()
 
 	var wg sync.WaitGroup
-	StartService(&wg)
+	_ = StartService(&wg)
 	<-TimerTxCh
 	StopService()
 	wg.Wait()

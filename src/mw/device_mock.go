@@ -34,18 +34,18 @@ func (m *MockIDevice) EXPECT() *MockIDeviceMockRecorder {
 	return m.recorder
 }
 
-// EthAddr mocks base method.
+// Addr mocks base method.
 func (m *MockIDevice) Addr() EthAddr {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "EthAddr")
+	ret := m.ctrl.Call(m, "Addr")
 	ret0, _ := ret[0].(EthAddr)
 	return ret0
 }
 
-// EthAddr indicates an expected call of EthAddr.
+// Addr indicates an expected call of Addr.
 func (mr *MockIDeviceMockRecorder) Addr() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EthAddr", reflect.TypeOf((*MockIDevice)(nil).Addr))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Addr", reflect.TypeOf((*MockIDevice)(nil).Addr))
 }
 
 // Close mocks base method.
@@ -159,17 +159,17 @@ func (mr *MockIDeviceMockRecorder) Open() *gomock.Call {
 }
 
 // Poll mocks base method.
-func (m *MockIDevice) Poll(terminate bool) error.E {
+func (m *MockIDevice) Poll() error.E {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Poll", terminate)
+	ret := m.ctrl.Call(m, "Poll")
 	ret0, _ := ret[0].(error.E)
 	return ret0
 }
 
 // Poll indicates an expected call of Poll.
-func (mr *MockIDeviceMockRecorder) Poll(terminate interface{}) *gomock.Call {
+func (mr *MockIDeviceMockRecorder) Poll() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Poll", reflect.TypeOf((*MockIDevice)(nil).Poll), terminate)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Poll", reflect.TypeOf((*MockIDevice)(nil).Poll))
 }
 
 // Priv mocks base method.

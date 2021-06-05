@@ -50,17 +50,17 @@ func (mr *MockIDeviceRepoMockRecorder) NextNumber() *gomock.Call {
 }
 
 // Poll mocks base method.
-func (m *MockIDeviceRepo) Poll(terminate bool) error.E {
+func (m *MockIDeviceRepo) Poll() error.E {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Poll", terminate)
+	ret := m.ctrl.Call(m, "Poll")
 	ret0, _ := ret[0].(error.E)
 	return ret0
 }
 
 // Poll indicates an expected call of Poll.
-func (mr *MockIDeviceRepoMockRecorder) Poll(terminate interface{}) *gomock.Call {
+func (mr *MockIDeviceRepoMockRecorder) Poll() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Poll", reflect.TypeOf((*MockIDeviceRepo)(nil).Poll), terminate)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Poll", reflect.TypeOf((*MockIDeviceRepo)(nil).Poll))
 }
 
 // Register mocks base method.
