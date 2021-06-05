@@ -14,6 +14,12 @@ import (
 	"time"
 )
 
+const Ethernet HwType = 0x0001
+const (
+	Complete Status = iota
+	Incomplete
+	Error
+)
 const xChBufSize = 5
 
 var RcvRxCh chan *worker.Message
@@ -22,6 +28,127 @@ var SndRxCh chan *worker.Message
 var SndTxCh chan *worker.Message
 var TimerRxCh chan *worker.Message
 var TimerTxCh chan *worker.Message
+
+// Hardware Types
+// https://www.iana.org/assignments/arp-parameters/arp-parameters.xhtml#arp-parameters-2
+
+var arpHwTypes = map[HwType]string{
+	// 0: Reserved
+	1:  "Ethernet (10Mb)",
+	2:  "Experimental Ethernet (3Mb)",
+	3:  "Amateur Radio AX.25",
+	4:  "Proteon ProNET Token Ring",
+	5:  "Chaos",
+	6:  "IEEE 802 Networks",
+	7:  "ARCNET",
+	8:  "Hyperchannel",
+	9:  "Lanstar",
+	10: "Autonet Short Address",
+	11: "LocalTalk",
+	12: "LocalNet (IBM PCNet or SYTEK LocalNET)",
+	13: "Ultra link",
+	14: "SMDS",
+	15: "Frame Relay",
+	16: "Asynchronous Transmission Mode (ATM)",
+	17: "HDLC",
+	18: "Fibre Channel",
+	19: "Asynchronous Transmission Mode (ATM)",
+	20: "Serial Line",
+	21: "Asynchronous Transmission Mode (ATM)",
+	22: "MIL-STD-188-220",
+	23: "Metricom",
+	24: "IEEE 1394.1995",
+	25: "MAPOS",
+	26: "Twinaxial",
+	27: "EUI-64",
+	28: "HIPARP",
+	29: "IP and ARP over ISO 7816-3",
+	30: "ARPSec",
+	31: "IPsec tunnel",
+	32: "InfiniBand (TM)",
+	33: "TIA-102 Project 25 Common Air Interface (CAI)",
+	34: "Wiegand Interface",
+	35: "Pure IP",
+	36: "HW_EXP1",
+	37: "HFI",
+	// 38-255: Unassigned
+	256: "HW_EXP2",
+	257: "AEthernet",
+	// 258-65534: Unassigned
+	// 65535: Reserved
+}
+
+// Operation Codes
+// https://www.iana.org/assignments/arp-parameters/arp-parameters.xhtml#arp-parameters-1
+
+var arpOpCodes = map[Opcode]string{
+	// 0: Reserved
+	1:  "REQUEST",
+	2:  "REPLY",
+	3:  "request Reverse",
+	4:  "reply Reverse",
+	5:  "DRARP-SendRequest",
+	6:  "DRARP-SendReply",
+	7:  "DRARP-Error",
+	8:  "InARP-SendRequest",
+	9:  "InARP-SendReply",
+	10: "ARP-NAK",
+	11: "MARS-SendRequest",
+	12: "MARS-Multi",
+	13: "MARS-MServ",
+	14: "MARS-Join",
+	15: "MARS-Leave",
+	16: "MARS-NAK",
+	17: "MARS-Unserv",
+	18: "MARS-SJoin",
+	19: "MARS-SLeave",
+	20: "MARS-Grouplist-SendRequest",
+	21: "MARS-Grouplist-SendReply",
+	22: "MARS-Redirect-Map",
+	23: "MAPOS-UNARP",
+	24: "OP_EXP1",
+	25: "OP_EXP2",
+	// 26-65534: Unassigned
+	// 65535: Reserved
+}
+
+// Address Resolution Protocol (ARP) Parameters
+// https://www.iana.org/assignments/arp-parameters/arp-parameters.xhtml
+
+// EtherType
+// https://en.wikipedia.org/wiki/EtherType#Examples
+
+// Notes: Protocol Type is same as EtherType.
+
+type Hdr struct {
+	HT     HwType     // hardware type
+	PT     mw.EthType // protocol type
+	HAL    uint8      // hardware address length
+	PAL    uint8      // protocol address length
+	Opcode Opcode
+}
+
+type HwType uint16
+
+func (v HwType) String() string {
+	return arpHwTypes[v]
+}
+
+type Opcode uint16
+
+func (v Opcode) String() string {
+	return arpOpCodes[v]
+}
+
+type Packet struct {
+	Hdr
+	SHA mw.Addr      // sender hardware address
+	SPA ArpProtoAddr // sender protocol address
+	THA mw.Addr      // target hardware address
+	TPA ArpProtoAddr // target protocol address
+}
+
+type Status int
 
 func Receive(packet []byte, dev mw.IDevice) psErr.E {
 	if len(packet) < ArpPacketLen {
@@ -35,7 +162,7 @@ func Receive(packet []byte, dev mw.IDevice) psErr.E {
 		return psErr.ReadFromBufError
 	}
 
-	if arpPacket.HT != ArpHwTypeEthernet || arpPacket.HAL != mw.AddrLen {
+	if arpPacket.HT != Ethernet || arpPacket.HAL != mw.AddrLen {
 		psLog.E("Value of ARP packet header is invalid (Hardware)")
 		return psErr.InvalidPacket
 	}
@@ -63,7 +190,7 @@ func Receive(packet []byte, dev mw.IDevice) psErr.E {
 			psLog.I(fmt.Sprintf("\tsha: %s", arpPacket.SHA))
 		}
 		if arpPacket.Opcode == ArpOpRequest {
-			if err := Reply(arpPacket.SHA, arpPacket.SPA, iface); err != psErr.OK {
+			if err := SendReply(arpPacket.SHA, arpPacket.SPA, iface); err != psErr.OK {
 				return psErr.Error
 			}
 		}
@@ -74,10 +201,10 @@ func Receive(packet []byte, dev mw.IDevice) psErr.E {
 	return psErr.OK
 }
 
-func Reply(tha mw.Addr, tpa ArpProtoAddr, iface *mw.Iface) psErr.E {
+func SendReply(tha mw.Addr, tpa ArpProtoAddr, iface *mw.Iface) psErr.E {
 	packet := Packet{
 		Hdr: Hdr{
-			HT:     ArpHwTypeEthernet,
+			HT:     Ethernet,
 			PT:     mw.IPv4,
 			HAL:    mw.AddrLen,
 			PAL:    mw.V4AddrLen,
@@ -105,10 +232,10 @@ func Reply(tha mw.Addr, tpa ArpProtoAddr, iface *mw.Iface) psErr.E {
 	return psErr.OK
 }
 
-func Request(iface *mw.Iface, ip mw.IP) psErr.E {
+func SendRequest(iface *mw.Iface, ip mw.IP) psErr.E {
 	packet := Packet{
 		Hdr: Hdr{
-			HT:     ArpHwTypeEthernet,
+			HT:     Ethernet,
 			PT:     mw.IPv4,
 			HAL:    mw.AddrLen,
 			PAL:    mw.V4AddrLen,
@@ -136,29 +263,29 @@ func Request(iface *mw.Iface, ip mw.IP) psErr.E {
 	return psErr.OK
 }
 
-func Resolve(iface *mw.Iface, ip mw.IP) (mw.Addr, ArpStatus) {
+func Resolve(iface *mw.Iface, ip mw.IP) (mw.Addr, Status) {
 	if iface.Dev.Type() != mw.DevTypeEthernet {
 		psLog.E(fmt.Sprintf("Unsupported device type: %s", iface.Dev.Type()))
-		return mw.Addr{}, ArpStatusError
+		return mw.Addr{}, Error
 	}
 
 	if iface.Family != mw.V4AddrFamily {
 		psLog.E(fmt.Sprintf("Unsupported address family: %s", iface.Family))
-		return mw.Addr{}, ArpStatusError
+		return mw.Addr{}, Error
 	}
 
 	entry := cache.GetEntry(ip.ToV4())
 	if entry == nil {
 		if err := cache.Create(mw.Addr{}, ip.ToV4(), incomplete); err != psErr.OK {
-			return mw.Addr{}, ArpStatusError
+			return mw.Addr{}, Error
 		}
-		if err := Request(iface, ip); err != psErr.OK {
-			return mw.Addr{}, ArpStatusError
+		if err := SendRequest(iface, ip); err != psErr.OK {
+			return mw.Addr{}, Error
 		}
-		return mw.Addr{}, ArpStatusIncomplete
+		return mw.Addr{}, Incomplete
 	}
 
-	return entry.HA, ArpStatusComplete
+	return entry.HA, Complete
 }
 
 func StartService(wg *sync.WaitGroup) {

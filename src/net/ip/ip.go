@@ -220,8 +220,8 @@ func lookupEthAddr(iface *mw.Iface, nextHop mw.IP) (mw.Addr, psErr.E) {
 		if nextHop.Equal(iface.Broadcast) || nextHop.Equal(mw.V4Broadcast) {
 			addr = mw.Broadcast
 		} else {
-			var status arp.ArpStatus
-			if addr, status = arp.Resolve(iface, nextHop); status != arp.ArpStatusComplete {
+			var status arp.Status
+			if addr, status = arp.Resolve(iface, nextHop); status != arp.Complete {
 				return mw.Addr{}, psErr.ArpIncomplete
 			}
 		}

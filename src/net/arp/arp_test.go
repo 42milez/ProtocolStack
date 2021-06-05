@@ -236,7 +236,7 @@ type ArpPacketBuilder struct{}
 func (v ArpPacketBuilder) Default() *Packet {
 	return &Packet{
 		Hdr: Hdr{
-			HT:     ArpHwTypeEthernet,
+			HT:     Ethernet,
 			PT:     mw.IPv4,
 			HAL:    mw.AddrLen,
 			PAL:    mw.V4AddrLen,

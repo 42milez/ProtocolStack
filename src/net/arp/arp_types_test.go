@@ -144,8 +144,8 @@ func TestArpCache_GetEntry_2(t *testing.T) {
 }
 
 func TestArpHwType_String(t *testing.T) {
-	want := arpHwTypes[ArpHwTypeEthernet]
-	got := ArpHwTypeEthernet.String()
+	want := arpHwTypes[Ethernet]
+	got := Ethernet.String()
 	if got != want {
 		t.Errorf("HwType.String() = %s; want %s", got, want)
 	}

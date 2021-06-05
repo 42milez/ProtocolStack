@@ -10,8 +10,9 @@ import (
 )
 
 const cacheSize = 32
+const lifetime = 24 * time.Hour
 const (
-	free status = iota
+	free cacheStatus = iota
 	incomplete
 	resolved
 	//static
@@ -35,7 +36,7 @@ func (p *arpCache) Init() {
 	}
 }
 
-func (p *arpCache) Create(ha mw.Addr, pa ArpProtoAddr, st status) psErr.E {
+func (p *arpCache) Create(ha mw.Addr, pa ArpProtoAddr, st cacheStatus) psErr.E {
 	var entry *arpCacheEntry
 	if entry = p.GetEntry(pa); entry != nil {
 		return psErr.Exist
@@ -53,7 +54,7 @@ func (p *arpCache) Create(ha mw.Addr, pa ArpProtoAddr, st status) psErr.E {
 	return psErr.OK
 }
 
-func (p *arpCache) Renew(pa ArpProtoAddr, ha mw.Addr, st status) psErr.E {
+func (p *arpCache) Renew(pa ArpProtoAddr, ha mw.Addr, st cacheStatus) psErr.E {
 	entry := p.GetEntry(pa)
 	if entry == nil {
 		return psErr.NotFound
@@ -112,7 +113,7 @@ func (p *arpCache) Expire() (invalidations []string) {
 
 	now := time.Now()
 	for i, v := range p.entries {
-		if v.CreatedAt != time.Unix(0, 0) && now.Sub(v.CreatedAt) > arpCacheLifetime {
+		if v.CreatedAt != time.Unix(0, 0) && now.Sub(v.CreatedAt) > lifetime {
 			invalidations = append(invalidations, fmt.Sprintf("%s (%s)", v.PA, v.HA))
 			p.Clear(i)
 		}
@@ -122,13 +123,13 @@ func (p *arpCache) Expire() (invalidations []string) {
 }
 
 type arpCacheEntry struct {
-	Status    status
+	Status    cacheStatus
 	CreatedAt time.Time
 	HA        mw.Addr
 	PA        ArpProtoAddr
 }
 
-type status uint8
+type cacheStatus uint8
 
 func init() {
 	cache = &arpCache{}
