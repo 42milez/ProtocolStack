@@ -34,18 +34,18 @@ func (m *MockIDevice) EXPECT() *MockIDeviceMockRecorder {
 	return m.recorder
 }
 
-// Addr mocks base method.
-func (m *MockIDevice) Addr() Addr {
+// EthAddr mocks base method.
+func (m *MockIDevice) Addr() EthAddr {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Addr")
-	ret0, _ := ret[0].(Addr)
+	ret := m.ctrl.Call(m, "EthAddr")
+	ret0, _ := ret[0].(EthAddr)
 	return ret0
 }
 
-// Addr indicates an expected call of Addr.
+// EthAddr indicates an expected call of EthAddr.
 func (mr *MockIDeviceMockRecorder) Addr() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Addr", reflect.TypeOf((*MockIDevice)(nil).Addr))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EthAddr", reflect.TypeOf((*MockIDevice)(nil).Addr))
 }
 
 // Close mocks base method.
@@ -187,7 +187,7 @@ func (mr *MockIDeviceMockRecorder) Priv() *gomock.Call {
 }
 
 // Transmit mocks base method.
-func (m *MockIDevice) Transmit(dst Addr, payload []byte, typ EthType) error.E {
+func (m *MockIDevice) Transmit(dst EthAddr, payload []byte, typ EthType) error.E {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Transmit", dst, payload, typ)
 	ret0, _ := ret[0].(error.E)

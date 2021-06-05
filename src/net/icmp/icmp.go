@@ -113,7 +113,7 @@ func Receive(payload []byte, dst [mw.V4AddrLen]byte, src [mw.V4AddrLen]byte, dev
 			Dst:     s,
 		}
 		mw.IcmpTxCh <- msg
-		//if err := Send(EchoReply, hdr.Code, hdr.Content, payload[HdrLen:], d, s); err != psErr.OK {
+		//if err := Send(EchoReply, hdr.Code, hdr.Content, payload[EthHdrLen:], d, s); err != psErr.OK {
 		//	return psErr.Error
 		//}
 	}

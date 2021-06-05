@@ -216,7 +216,7 @@ func TestTapDevice_Transmit(t *testing.T) {
 
 	tapDev := TapDevice{}
 
-	got := tapDev.Transmit(mw.Addr{}, make([]byte, 0), mw.ARP)
+	got := tapDev.Transmit(mw.EthAddr{}, make([]byte, 0), mw.ARP)
 	if got != psErr.OK {
 		t.Errorf("TapDevice.Transmit() = %v; want %v", got, psErr.OK)
 	}
@@ -313,7 +313,7 @@ func TestTapDevice_Poll_5(t *testing.T) {
 	}
 }
 
-// Fail when ReadEthFrame() failed.
+// Fail when ReadFrame() failed.
 func TestTapDevice_Poll_6(t *testing.T) {
 	ctrl, teardown := setupTapLinuxTest(t)
 	defer teardown()

@@ -151,7 +151,7 @@ func Send(protoNum mw.ProtocolNumber, payload []byte, src mw.IP, dst mw.IP) psEr
 	dumpIpPacket(packet)
 
 	// get eth address from ip address
-	var ethAddr mw.Addr
+	var ethAddr mw.EthAddr
 	if ethAddr, err = lookupEthAddr(iface, nextHop); err != psErr.OK {
 		psLog.E(fmt.Sprintf("Ethernet address was not found: %s", err))
 		return psErr.Error
@@ -214,15 +214,15 @@ func dumpIpPacket(packet []byte) {
 	psLog.I(fmt.Sprintf("\tdestination address: %d.%d.%d.%d", packet[16], packet[17], packet[18], packet[19]))
 }
 
-func lookupEthAddr(iface *mw.Iface, nextHop mw.IP) (mw.Addr, psErr.E) {
-	var addr mw.Addr
+func lookupEthAddr(iface *mw.Iface, nextHop mw.IP) (mw.EthAddr, psErr.E) {
+	var addr mw.EthAddr
 	if iface.Dev.Flag()&mw.DevFlagNeedArp != 0 {
 		if nextHop.Equal(iface.Broadcast) || nextHop.Equal(mw.V4Broadcast) {
-			addr = mw.Broadcast
+			addr = mw.EthBroadcast
 		} else {
 			var status arp.Status
 			if addr, status = arp.Resolve(iface, nextHop); status != arp.Complete {
-				return mw.Addr{}, psErr.ArpIncomplete
+				return mw.EthAddr{}, psErr.ArpIncomplete
 			}
 		}
 	}

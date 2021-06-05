@@ -10,16 +10,14 @@ import (
 	"github.com/42milez/ProtocolStack/src/repo"
 	psTime "github.com/42milez/ProtocolStack/src/time"
 	"github.com/golang/mock/gomock"
-	"sync"
 	"testing"
-	"time"
 )
 
 func TestReceive_1(t *testing.T) {
 	ctrl, teardown := SetupReceiveTest(t)
 	defer teardown()
 
-	ethAddr := mw.Addr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}
+	ethAddr := mw.EthAddr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}
 	mockDev := mw.NewMockIDevice(ctrl)
 	mockDev.EXPECT().Addr().Return(ethAddr)
 	mockDev.EXPECT().Transmit(any, any, any).Return(psErr.OK)
@@ -34,7 +32,7 @@ func TestReceive_1(t *testing.T) {
 	})
 	repo.IfaceRepo = mockIfaceRepo
 
-	packet := Builder.Default()
+	packet := builder.Default()
 	buf := new(bytes.Buffer)
 	_ = binary.Write(buf, binary.BigEndian, packet)
 	dev := &eth.TapDevice{
@@ -43,7 +41,7 @@ func TestReceive_1(t *testing.T) {
 			Name_: "net0",
 			Addr_: ethAddr,
 			Flag_: mw.DevFlagBroadcast | mw.DevFlagNeedArp,
-			MTU_:  mw.PayloadLenMax,
+			MTU_:  mw.EthPayloadLenMax,
 			Priv_: mw.Privilege{
 				FD:   3,
 				Name: "tap0",
@@ -79,7 +77,7 @@ func TestReceive_3(t *testing.T) {
 	_, teardown := SetupReceiveTest(t)
 	defer teardown()
 
-	packet := Builder.CustomHT(HwType(0xffff))
+	packet := builder.CustomHT(HwType(0xffff))
 	buf := new(bytes.Buffer)
 	_ = binary.Write(buf, binary.BigEndian, packet)
 	dev := &eth.TapDevice{}
@@ -90,7 +88,7 @@ func TestReceive_3(t *testing.T) {
 		t.Errorf("Receive() = %s; want %s", got, want)
 	}
 
-	packet = Builder.CustomPT(mw.EthType(0xffff))
+	packet = builder.CustomPT(mw.EthType(0xffff))
 	buf = new(bytes.Buffer)
 	_ = binary.Write(buf, binary.BigEndian, packet)
 	dev = &eth.TapDevice{}
@@ -111,7 +109,7 @@ func TestReceive_4(t *testing.T) {
 	mockIfaceRepo.EXPECT().Lookup(any, any).Return(nil)
 	repo.IfaceRepo = mockIfaceRepo
 
-	packet := Builder.Default()
+	packet := builder.Default()
 	buf := new(bytes.Buffer)
 	_ = binary.Write(buf, binary.BigEndian, packet)
 	dev := &eth.TapDevice{}
@@ -123,12 +121,12 @@ func TestReceive_4(t *testing.T) {
 	}
 }
 
-// Fail when arpReply() returns error.
+// Fail when SendReply returns error.
 func TestReceive_5(t *testing.T) {
 	ctrl, teardown := SetupReceiveTest(t)
 	defer teardown()
 
-	ethAddr := mw.Addr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}
+	ethAddr := mw.EthAddr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}
 	mockDev := mw.NewMockIDevice(ctrl)
 	mockDev.EXPECT().Addr().Return(ethAddr)
 	mockDev.EXPECT().Transmit(any, any, any).Return(psErr.Error)
@@ -143,7 +141,7 @@ func TestReceive_5(t *testing.T) {
 	})
 	repo.IfaceRepo = mockIfaceRepo
 
-	packet := Builder.Default()
+	packet := builder.Default()
 	buf := new(bytes.Buffer)
 	_ = binary.Write(buf, binary.BigEndian, packet)
 	dev := &eth.TapDevice{}
@@ -170,7 +168,7 @@ func TestReceive_6(t *testing.T) {
 	})
 	repo.IfaceRepo = mockIfaceRepo
 
-	packet := Builder.CustomTPA(ArpProtoAddr{192, 168, 2, 3})
+	packet := builder.CustomTPA(mw.V4Addr{192, 168, 2, 3})
 	buf := new(bytes.Buffer)
 	_ = binary.Write(buf, binary.BigEndian, packet)
 	dev := &eth.TapDevice{
@@ -186,82 +184,56 @@ func TestReceive_6(t *testing.T) {
 	}
 }
 
-func TestTimer_1(t *testing.T) {
-	ctrl, teardown := SetupRunArpTimerTest(t)
-	defer teardown()
-	defer cache.Init()
-
-	createdAt, _ := time.Parse(time.RFC3339, "2021-01-01T00:00:00Z")
-	m := psTime.NewMockITime(ctrl)
-	m.EXPECT().Now().Return(createdAt)
-	psTime.Time = m
-
-	pa := ArpProtoAddr{192, 168, 1, 1}
-	_ = cache.Create(mw.Addr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}, pa, resolved)
-
-	var wg sync.WaitGroup
-	StartService(&wg)
-	<-TimerTxCh
-	StopService()
-	wg.Wait()
-
-	got := cache.GetEntry(pa)
-	if got != nil {
-		t.Errorf("ARP cache is not expired")
+func TestHwType_String(t *testing.T) {
+	want := arpHwTypes[Ethernet]
+	got := Ethernet.String()
+	if got != want {
+		t.Errorf("HwType.String() = %s; want %s", got, want)
 	}
 }
 
-func TestTimer_2(t *testing.T) {
-	_, teardown := SetupRunArpTimerTest(t)
-	defer teardown()
-	defer cache.Init()
-
-	var wg sync.WaitGroup
-	StartService(&wg)
-	<-TimerTxCh
-	StopService()
-	wg.Wait()
-
-	got := cache.GetEntry(ArpProtoAddr{192, 168, 0, 1})
-	if got != nil {
-		t.Errorf("ARP cache exists")
+func TestOpcode_String(t *testing.T) {
+	want := arpOpCodes[Request]
+	got := Request.String()
+	if got != want {
+		t.Errorf("Opcode.String() = %s; want %s", got, want)
 	}
 }
 
-var Builder = ArpPacketBuilder{}
 var any = gomock.Any()
+var builder = &PacketBuilder{}
 
-type ArpPacketBuilder struct{}
+type PacketBuilder struct{}
 
-func (v ArpPacketBuilder) Default() *Packet {
+func (v PacketBuilder) Default() *Packet {
 	return &Packet{
 		Hdr: Hdr{
 			HT:     Ethernet,
 			PT:     mw.IPv4,
-			HAL:    mw.AddrLen,
+			HAL:    mw.EthAddrLen,
 			PAL:    mw.V4AddrLen,
 			Opcode: Request,
 		},
-		SHA: mw.Addr{0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff},
-		SPA: ArpProtoAddr{192, 0, 2, 1},
-		THA: mw.Addr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16},
-		TPA: ArpProtoAddr{192, 0, 2, 2},
+		SHA: mw.EthAddr{0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff},
+		SPA: mw.V4Addr{192, 0, 2, 1},
+		THA: mw.EthAddr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16},
+		TPA: mw.V4Addr{192, 0, 2, 2},
 	}
 }
 
-func (v ArpPacketBuilder) CustomHT(ht HwType) (packet *Packet) {
+func (v PacketBuilder) CustomHT(ht HwType) (packet *Packet) {
 	packet = v.Default()
 	packet.HT = ht
 	return
 }
 
-func (v ArpPacketBuilder) CustomPT(pt mw.EthType) (packet *Packet) {
+func (v PacketBuilder) CustomPT(pt mw.EthType) (packet *Packet) {
 	packet = v.Default()
 	packet.PT = pt
 	return
 }
 
-func (v ArpPacketBuilder) CustomTPA(tpa ArpProtoAddr) (packet *Packet) {
+func (v PacketBuilder) CustomTPA(tpa mw.V4Addr) (packet *Packet) {
 	packet = v.Default()
 	packet.TPA = tpa
 	return
@@ -275,20 +247,6 @@ func SetupReceiveTest(t *testing.T) (ctrl *gomock.Controller, teardown func()) {
 
 	teardown = func() {
 		repo.IfaceRepo = backupIfaceRepo
-		psTime.Time = backupTime
-		ctrl.Finish()
-		psLog.EnableOutput()
-	}
-
-	return
-}
-
-func SetupRunArpTimerTest(t *testing.T) (ctrl *gomock.Controller, teardown func()) {
-	psLog.DisableOutput()
-	ctrl = gomock.NewController(t)
-	backupTime := psTime.Time
-
-	teardown = func() {
 		psTime.Time = backupTime
 		ctrl.Finish()
 		psLog.EnableOutput()

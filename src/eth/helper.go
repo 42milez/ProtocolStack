@@ -8,7 +8,7 @@ func GenLoopbackDevice(name string) *LoopbackDevice {
 		Device: mw.Device{
 			Type_: mw.DevTypeLoopback,
 			Name_: name,
-			Addr_: mw.Any,
+			Addr_: mw.EthAny,
 			Flag_: mw.DevFlagLoopback,
 			MTU_:  LoopbackMTU,
 		},
@@ -16,14 +16,14 @@ func GenLoopbackDevice(name string) *LoopbackDevice {
 }
 
 // GenTapDevice generates TAP device object.
-func GenTapDevice(devName string, privName string, addr mw.Addr) *TapDevice {
+func GenTapDevice(devName string, privName string, addr mw.EthAddr) *TapDevice {
 	return &TapDevice{
 		Device: mw.Device{
 			Type_: mw.DevTypeEthernet,
 			Name_: devName,
 			Addr_: addr,
 			Flag_: mw.DevFlagBroadcast | mw.DevFlagNeedArp,
-			MTU_:  mw.PayloadLenMax,
+			MTU_:  mw.EthPayloadLenMax,
 			Priv_: mw.Privilege{
 				FD:   -1,
 				Name: privName,

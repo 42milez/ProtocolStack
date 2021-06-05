@@ -24,6 +24,6 @@ func (p *LoopbackDevice) Poll(terminate bool) psErr.E {
 	return psErr.OK
 }
 
-func (p *LoopbackDevice) Transmit(dst mw.Addr, payload []byte, typ mw.EthType) psErr.E {
+func (p *LoopbackDevice) Transmit(dst mw.EthAddr, payload []byte, typ mw.EthType) psErr.E {
 	return psErr.OK
 }

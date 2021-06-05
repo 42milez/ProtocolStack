@@ -24,12 +24,12 @@ func TestGenLoopbackDevice(t *testing.T) {
 func TestGenTapDevice(t *testing.T) {
 	devName := "net0"
 	privName := "tap0"
-	devEthAddr := mw.Addr{11, 12, 13, 14, 15, 16}
+	devEthAddr := mw.EthAddr{11, 12, 13, 14, 15, 16}
 	want := &TapDevice{
 		Device: mw.Device{
 			Type_: mw.DevTypeEthernet,
 			Name_: devName,
-			MTU_:  mw.PayloadLenMax,
+			MTU_:  mw.EthPayloadLenMax,
 			Flag_: mw.DevFlagBroadcast | mw.DevFlagNeedArp,
 			Addr_: devEthAddr,
 			Priv_: mw.Privilege{

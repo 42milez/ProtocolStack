@@ -7,7 +7,7 @@ import (
 	"github.com/42milez/ProtocolStack/src/mw"
 )
 
-func Transmit(dst mw.Addr, payload []byte, typ mw.EthType, iface *mw.Iface) psErr.E {
+func Transmit(dst mw.EthAddr, payload []byte, typ mw.EthType, iface *mw.Iface) psErr.E {
 	if !iface.Dev.IsUp() {
 		psLog.E(fmt.Sprintf("Device %s is down", iface.Dev.Name()))
 		return psErr.DeviceNotOpened

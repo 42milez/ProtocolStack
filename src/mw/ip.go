@@ -1,6 +1,7 @@
 package mw
 
 import (
+	"fmt"
 	"github.com/google/go-cmp/cmp"
 	"reflect"
 	"strings"
@@ -100,6 +101,12 @@ type IpHdr struct {
 	Src      [V4AddrLen]byte
 	Dst      [V4AddrLen]byte
 	Options  [0]byte
+}
+
+type V4Addr [V4AddrLen]byte
+
+func (v V4Addr) String() string {
+	return fmt.Sprintf("%d.%d.%d.%d", v[0], v[1], v[2], v[3])
 }
 
 // ProtocolNumber is assigned internet protocol number

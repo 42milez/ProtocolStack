@@ -28,14 +28,14 @@ type IDevice interface {
 	Open() psErr.E
 	Close() psErr.E
 	Poll(terminate bool) psErr.E
-	Transmit(dst Addr, payload []byte, typ EthType) psErr.E
+	Transmit(dst EthAddr, payload []byte, typ EthType) psErr.E
 	Up()
 	Down()
 	Equal(dev IDevice) bool
 	IsUp() bool
 	Type() DevType
 	Name() string
-	Addr() Addr
+	Addr() EthAddr
 	Flag() DevFlag
 	MTU() uint16
 	Priv() Privilege
@@ -44,7 +44,7 @@ type IDevice interface {
 type Device struct {
 	Type_ DevType
 	Name_ string
-	Addr_ Addr
+	Addr_ EthAddr
 	Flag_ DevFlag
 	MTU_  uint16
 	Priv_ Privilege
@@ -74,7 +74,7 @@ func (p *Device) Name() string {
 	return p.Name_
 }
 
-func (p *Device) Addr() Addr {
+func (p *Device) Addr() EthAddr {
 	return p.Addr_
 }
 

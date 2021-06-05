@@ -30,13 +30,13 @@ func (p *arpCache) Init() {
 		p.entries[i] = &arpCacheEntry{
 			Status:    free,
 			CreatedAt: time.Unix(0, 0),
-			HA:        mw.Addr{},
-			PA:        ArpProtoAddr{},
+			HA:        mw.EthAddr{},
+			PA:        mw.V4Addr{},
 		}
 	}
 }
 
-func (p *arpCache) Create(ha mw.Addr, pa ArpProtoAddr, st cacheStatus) psErr.E {
+func (p *arpCache) Create(ha mw.EthAddr, pa mw.V4Addr, st cacheStatus) psErr.E {
 	var entry *arpCacheEntry
 	if entry = p.GetEntry(pa); entry != nil {
 		return psErr.Exist
@@ -54,7 +54,7 @@ func (p *arpCache) Create(ha mw.Addr, pa ArpProtoAddr, st cacheStatus) psErr.E {
 	return psErr.OK
 }
 
-func (p *arpCache) Renew(pa ArpProtoAddr, ha mw.Addr, st cacheStatus) psErr.E {
+func (p *arpCache) Renew(pa mw.V4Addr, ha mw.EthAddr, st cacheStatus) psErr.E {
 	entry := p.GetEntry(pa)
 	if entry == nil {
 		return psErr.NotFound
@@ -70,7 +70,7 @@ func (p *arpCache) Renew(pa ArpProtoAddr, ha mw.Addr, st cacheStatus) psErr.E {
 	return psErr.OK
 }
 
-func (p *arpCache) GetEntry(ip ArpProtoAddr) *arpCacheEntry {
+func (p *arpCache) GetEntry(ip mw.V4Addr) *arpCacheEntry {
 	p.mtx.Lock()
 	defer p.mtx.Unlock()
 
@@ -103,8 +103,8 @@ func (p *arpCache) GetReusableEntry() *arpCacheEntry {
 func (p *arpCache) Clear(idx int) {
 	p.entries[idx].Status = free
 	p.entries[idx].CreatedAt = time.Unix(0, 0)
-	p.entries[idx].HA = mw.Addr{}
-	p.entries[idx].PA = ArpProtoAddr{}
+	p.entries[idx].HA = mw.EthAddr{}
+	p.entries[idx].PA = mw.V4Addr{}
 }
 
 func (p *arpCache) Expire() (invalidations []string) {
@@ -125,8 +125,8 @@ func (p *arpCache) Expire() (invalidations []string) {
 type arpCacheEntry struct {
 	Status    cacheStatus
 	CreatedAt time.Time
-	HA        mw.Addr
-	PA        ArpProtoAddr
+	HA        mw.EthAddr
+	PA        mw.V4Addr
 }
 
 type cacheStatus uint8

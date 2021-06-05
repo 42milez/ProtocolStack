@@ -14,7 +14,10 @@ import (
 	"time"
 )
 
+const PacketLen = 28 // byte
 const Ethernet HwType = 0x0001
+const Request Opcode = 0x0001
+const Reply Opcode = 0x0002
 const (
 	Complete Status = iota
 	Incomplete
@@ -142,10 +145,10 @@ func (v Opcode) String() string {
 
 type Packet struct {
 	Hdr
-	SHA mw.Addr      // sender hardware address
-	SPA ArpProtoAddr // sender protocol address
-	THA mw.Addr      // target hardware address
-	TPA ArpProtoAddr // target protocol address
+	SHA mw.EthAddr // sender hardware address
+	SPA mw.V4Addr  // sender protocol address
+	THA mw.EthAddr // target hardware address
+	TPA mw.V4Addr  // target protocol address
 }
 
 type Status int
@@ -162,7 +165,7 @@ func Receive(packet []byte, dev mw.IDevice) psErr.E {
 		return psErr.ReadFromBufError
 	}
 
-	if arpPacket.HT != Ethernet || arpPacket.HAL != mw.AddrLen {
+	if arpPacket.HT != Ethernet || arpPacket.HAL != mw.EthAddrLen {
 		psLog.E("Value of ARP packet header is invalid (Hardware)")
 		return psErr.InvalidPacket
 	}
@@ -201,12 +204,12 @@ func Receive(packet []byte, dev mw.IDevice) psErr.E {
 	return psErr.OK
 }
 
-func SendReply(tha mw.Addr, tpa ArpProtoAddr, iface *mw.Iface) psErr.E {
+func SendReply(tha mw.EthAddr, tpa mw.V4Addr, iface *mw.Iface) psErr.E {
 	packet := Packet{
 		Hdr: Hdr{
 			HT:     Ethernet,
 			PT:     mw.IPv4,
-			HAL:    mw.AddrLen,
+			HAL:    mw.EthAddrLen,
 			PAL:    mw.V4AddrLen,
 			Opcode: Reply,
 		},
@@ -237,13 +240,13 @@ func SendRequest(iface *mw.Iface, ip mw.IP) psErr.E {
 		Hdr: Hdr{
 			HT:     Ethernet,
 			PT:     mw.IPv4,
-			HAL:    mw.AddrLen,
+			HAL:    mw.EthAddrLen,
 			PAL:    mw.V4AddrLen,
 			Opcode: Request,
 		},
 		SHA: iface.Dev.Addr(),
 		SPA: iface.Unicast.ToV4(),
-		THA: mw.Addr{},
+		THA: mw.EthAddr{},
 		TPA: ip.ToV4(),
 	}
 
@@ -256,33 +259,33 @@ func SendRequest(iface *mw.Iface, ip mw.IP) psErr.E {
 	psLog.I("Outgoing ARP packet")
 	dumpArpPacket(&packet)
 
-	if err := net.Transmit(mw.Broadcast, payload, mw.ARP, iface); err != psErr.OK {
+	if err := net.Transmit(mw.EthBroadcast, payload, mw.ARP, iface); err != psErr.OK {
 		return psErr.Error
 	}
 
 	return psErr.OK
 }
 
-func Resolve(iface *mw.Iface, ip mw.IP) (mw.Addr, Status) {
+func Resolve(iface *mw.Iface, ip mw.IP) (mw.EthAddr, Status) {
 	if iface.Dev.Type() != mw.DevTypeEthernet {
 		psLog.E(fmt.Sprintf("Unsupported device type: %s", iface.Dev.Type()))
-		return mw.Addr{}, Error
+		return mw.EthAddr{}, Error
 	}
 
 	if iface.Family != mw.V4AddrFamily {
 		psLog.E(fmt.Sprintf("Unsupported address family: %s", iface.Family))
-		return mw.Addr{}, Error
+		return mw.EthAddr{}, Error
 	}
 
 	entry := cache.GetEntry(ip.ToV4())
 	if entry == nil {
-		if err := cache.Create(mw.Addr{}, ip.ToV4(), incomplete); err != psErr.OK {
-			return mw.Addr{}, Error
+		if err := cache.Create(mw.EthAddr{}, ip.ToV4(), incomplete); err != psErr.OK {
+			return mw.EthAddr{}, Error
 		}
 		if err := SendRequest(iface, ip); err != psErr.OK {
-			return mw.Addr{}, Error
+			return mw.EthAddr{}, Error
 		}
-		return mw.Addr{}, Incomplete
+		return mw.EthAddr{}, Incomplete
 	}
 
 	return entry.HA, Complete

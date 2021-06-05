@@ -9,44 +9,44 @@ import (
 	psSyscall "github.com/42milez/ProtocolStack/src/syscall"
 )
 
-const AddrLen = 6
-const FrameLenMax = 1514
-const FrameLenMin = 60
-const HdrLen = 14
-const PayloadLenMax = FrameLenMax - HdrLen
-const PayloadLenMin = FrameLenMin - HdrLen
+const EthHdrLen = 14
+const EthAddrLen = 6
+const EthFrameLenMax = 1514
+const EthFrameLenMin = 60
+const EthPayloadLenMax = EthFrameLenMax - EthHdrLen
+const EthPayloadLenMin = EthFrameLenMin - EthHdrLen
 const ARP EthType = 0x0806
 const IPv4 EthType = 0x0800
 const IPv6 EthType = 0x86dd
 
-var Any = Addr{0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
-var Broadcast = Addr{0xff, 0xff, 0xff, 0xff, 0xff, 0xff}
+var EthAny = EthAddr{0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
+var EthBroadcast = EthAddr{0xff, 0xff, 0xff, 0xff, 0xff, 0xff}
 
 var rxBuf []byte
 
-type Addr [AddrLen]byte
+type EthAddr [EthAddrLen]byte
 
-func (v Addr) Equal(vv Addr) bool {
+func (v EthAddr) Equal(vv EthAddr) bool {
 	return v == vv
 }
 
-func (v Addr) String() string {
+func (v EthAddr) String() string {
 	return fmt.Sprintf("%02x:%02x:%02x:%02x:%02x:%02x", v[0], v[1], v[2], v[3], v[4], v[5])
 }
 
-type Hdr struct {
-	Dst  Addr
-	Src  Addr
+type EthHdr struct {
+	Dst  EthAddr
+	Src  EthAddr
 	Type EthType
 }
 
-func ReadEthFrame(fd int, addr Addr) (*EthMessage, psErr.E) {
+func ReadFrame(fd int, addr EthAddr) (*EthMessage, psErr.E) {
 	flen, err := psSyscall.Syscall.Read(fd, rxBuf)
 	if err != nil {
 		return nil, psErr.Error
 	}
 
-	if flen < HdrLen {
+	if flen < EthHdrLen {
 		psLog.E(fmt.Sprintf("Ethernet header length is too short: %d bytes", flen))
 		return nil, psErr.Error
 	}
@@ -54,13 +54,13 @@ func ReadEthFrame(fd int, addr Addr) (*EthMessage, psErr.E) {
 	psLog.I(fmt.Sprintf("Ethernet frame arrived: %d bytes", flen))
 
 	buf := bytes.NewBuffer(rxBuf)
-	hdr := Hdr{}
+	hdr := EthHdr{}
 	if err := binary.Read(buf, binary.BigEndian, &hdr); err != nil {
 		return nil, psErr.ReadFromBufError
 	}
 
 	if !hdr.Dst.Equal(addr) {
-		if !hdr.Dst.Equal(Broadcast) {
+		if !hdr.Dst.Equal(EthBroadcast) {
 			return nil, psErr.NoDataToRead
 		}
 	}
@@ -71,7 +71,7 @@ func ReadEthFrame(fd int, addr Addr) (*EthMessage, psErr.E) {
 	}
 
 	psLog.I("Incoming eth frame")
-	dumpEthFrame(&hdr, payload)
+	dumpFrame(&hdr, payload)
 
 	return &EthMessage{
 		Type:    hdr.Type,
@@ -79,8 +79,8 @@ func ReadEthFrame(fd int, addr Addr) (*EthMessage, psErr.E) {
 	}, psErr.OK
 }
 
-func WriteEthFrame(fd int, dst Addr, src Addr, typ EthType, payload []byte) psErr.E {
-	hdr := Hdr{
+func WriteFrame(fd int, dst EthAddr, src EthAddr, typ EthType, payload []byte) psErr.E {
+	hdr := EthHdr{
 		Dst:  dst,
 		Src:  src,
 		Type: typ,
@@ -99,7 +99,7 @@ func WriteEthFrame(fd int, dst Addr, src Addr, typ EthType, payload []byte) psEr
 	frame := buf.Bytes()
 
 	psLog.I("Outgoing Ethernet frame")
-	dumpEthFrame(&hdr, payload)
+	dumpFrame(&hdr, payload)
 
 	if n, err := psSyscall.Syscall.Write(fd, frame); err != nil {
 		return psErr.SyscallError
@@ -110,7 +110,7 @@ func WriteEthFrame(fd int, dst Addr, src Addr, typ EthType, payload []byte) psEr
 	return psErr.OK
 }
 
-func dumpEthFrame(hdr *Hdr, payload []byte) {
+func dumpFrame(hdr *EthHdr, payload []byte) {
 	psLog.I(fmt.Sprintf("\ttype:    %s (0x%04x)", hdr.Type, uint16(hdr.Type)))
 	psLog.I(fmt.Sprintf("\tdst:     %s", hdr.Dst))
 	psLog.I(fmt.Sprintf("\tsrc:     %s", hdr.Src))
@@ -126,8 +126,8 @@ func dumpEthFrame(hdr *Hdr, payload []byte) {
 }
 
 func pad(buf *bytes.Buffer) psErr.E {
-	if flen := buf.Len(); flen < FrameLenMin {
-		padLen := FrameLenMin - flen
+	if flen := buf.Len(); flen < EthFrameLenMin {
+		padLen := EthFrameLenMin - flen
 		pad := make([]byte, padLen)
 		if err := binary.Write(buf, binary.BigEndian, &pad); err != nil {
 			return psErr.WriteToBufError
@@ -137,5 +137,5 @@ func pad(buf *bytes.Buffer) psErr.E {
 }
 
 func init() {
-	rxBuf = make([]byte, FrameLenMax)
+	rxBuf = make([]byte, EthFrameLenMax)
 }
