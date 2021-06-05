@@ -14,22 +14,6 @@ import (
 	"testing"
 )
 
-func setupEthernetTest(t *testing.T) (ctrl *gomock.Controller, teardown func()) {
-	psLog.DisableOutput()
-	ctrl = gomock.NewController(t)
-	teardown = func() {
-		ctrl.Finish()
-		psLog.EnableOutput()
-	}
-	return
-}
-
-func trim(s string) string {
-	ret := strings.Replace(s, "\t", "", -1)
-	ret = strings.Replace(ret, "\n", "", -1)
-	return ret
-}
-
 func TestEthAddr_Equal(t *testing.T) {
 	ethAddr1 := EthAddr{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}
 	ethAddr2 := EthAddr{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}
@@ -65,7 +49,7 @@ func TestEthType_String(t *testing.T) {
 	}
 }
 
-func TestEthFrameDump(t *testing.T) {
+func TestDumpFrame(t *testing.T) {
 	regexpDatetime := "[0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}"
 	macDst := EthAddr{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}
 	macSrc := EthAddr{0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f}
@@ -91,14 +75,14 @@ func TestEthFrameDump(t *testing.T) {
 		}
 		dumpFrame(&hdr, payload)
 	})
-	got = trim(got)
+	got = TrimTapAndLinefeed(got)
 	if !want.MatchString(got) {
 		t.Errorf("dumpFrame() = %v; want %v", got, want)
 	}
 }
 
-func TestReadEthFrame_1(t *testing.T) {
-	ctrl, teardown := setupEthernetTest(t)
+func TestReadFrame_1(t *testing.T) {
+	ctrl, teardown := SetupReadFrameTest(t)
 	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)
@@ -126,8 +110,8 @@ func TestReadEthFrame_1(t *testing.T) {
 }
 
 // Fail when Read() returns error.
-func TestReadEthFrame_2(t *testing.T) {
-	ctrl, teardown := setupEthernetTest(t)
+func TestReadFrame_2(t *testing.T) {
+	ctrl, teardown := SetupReadFrameTest(t)
 	defer teardown()
 
 	dev := &Device{Addr_: EthAddr{11, 12, 13, 14, 15, 16}}
@@ -142,8 +126,8 @@ func TestReadEthFrame_2(t *testing.T) {
 }
 
 // Fail when header length is invalid.
-func TestReadEthFrame_3(t *testing.T) {
-	ctrl, teardown := setupEthernetTest(t)
+func TestReadFrame_3(t *testing.T) {
+	ctrl, teardown := SetupReadFrameTest(t)
 	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)
@@ -159,8 +143,8 @@ func TestReadEthFrame_3(t *testing.T) {
 }
 
 // Success when no data exits.
-func TestReadEthFrame_4(t *testing.T) {
-	ctrl, teardown := setupEthernetTest(t)
+func TestReadFrame_4(t *testing.T) {
+	ctrl, teardown := SetupReadFrameTest(t)
 	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)
@@ -176,8 +160,8 @@ func TestReadEthFrame_4(t *testing.T) {
 }
 
 // Fail when Read() system call returns error.
-func TestReadEthFrame_5(t *testing.T) {
-	ctrl, teardown := setupEthernetTest(t)
+func TestReadFrame_5(t *testing.T) {
+	ctrl, teardown := SetupReadFrameTest(t)
 	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)
@@ -190,4 +174,20 @@ func TestReadEthFrame_5(t *testing.T) {
 	if got != psErr.NoDataToRead {
 		t.Errorf("ReadFrame() = %v; want %v", got, psErr.NoDataToRead)
 	}
+}
+
+func SetupReadFrameTest(t *testing.T) (ctrl *gomock.Controller, teardown func()) {
+	psLog.DisableOutput()
+	ctrl = gomock.NewController(t)
+	teardown = func() {
+		ctrl.Finish()
+		psLog.EnableOutput()
+	}
+	return
+}
+
+func TrimTapAndLinefeed(s string) string {
+	ret := strings.Replace(s, "\t", "", -1)
+	ret = strings.Replace(ret, "\n", "", -1)
+	return ret
 }
