@@ -9,7 +9,7 @@ import (
 	"github.com/42milez/ProtocolStack/src/mw"
 	"github.com/42milez/ProtocolStack/src/net"
 	"github.com/42milez/ProtocolStack/src/net/arp"
-	eth2 "github.com/42milez/ProtocolStack/src/net/eth"
+	"github.com/42milez/ProtocolStack/src/net/eth"
 	"github.com/42milez/ProtocolStack/src/net/icmp"
 	"github.com/42milez/ProtocolStack/src/net/ip"
 	"github.com/42milez/ProtocolStack/src/repo"
@@ -21,14 +21,17 @@ import (
 	"time"
 )
 
+var wg sync.WaitGroup
 var arpWg sync.WaitGroup
+var ethWg sync.WaitGroup
 var ipWg sync.WaitGroup
 var icmpWg sync.WaitGroup
-var wg sync.WaitGroup
+
 var ethSigCh chan os.Signal
 var mainSigCh chan os.Signal
 var netSigCh chan os.Signal
 var sigCh chan os.Signal
+
 var terminate bool
 
 func handleSignal(sigCh <-chan os.Signal, wg *sync.WaitGroup) {
@@ -49,7 +52,7 @@ func setup() psErr.E {
 	psLog.I("--------------------------------------------------")
 
 	// Create a loopback device and its iface, then link them.
-	loopbackDev := eth2.GenLoopbackDevice("net" + strconv.Itoa(repo.DeviceRepo.NextNumber()))
+	loopbackDev := eth.GenLoopbackDevice("net" + strconv.Itoa(repo.DeviceRepo.NextNumber()))
 	if err := repo.DeviceRepo.Register(loopbackDev); err != psErr.OK {
 		return psErr.Error
 	}
@@ -62,7 +65,7 @@ func setup() psErr.E {
 	repo.RouteRepo.Register(mw.ParseIP(mw.LoopbackNetwork), mw.V4Any, iface1)
 
 	// Create a TAP device and its interface, then link them.
-	tapDev := eth2.GenTapDevice(
+	tapDev := eth.GenTapDevice(
 		"net"+strconv.Itoa(repo.DeviceRepo.NextNumber()),
 		"tap0",
 		mw.EthAddr{11, 22, 33, 44, 55, 66})
@@ -117,32 +120,8 @@ func start(wg *sync.WaitGroup) psErr.E {
 		}
 	}()
 
-	// worker for handling incoming/outgoing packets
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		for {
-			select {
-			case <-netSigCh:
-				psLog.I("Terminating Net worker...")
-				return
-			case msg := <-mw.EthRxCh:
-				if err := mw.Rx(msg); err != psErr.OK {
-					psLog.F(err.Error())
-					// TODO: notify error to main goroutine
-					// ...
-				}
-			case msg := <-mw.EthTxCh:
-				if err := mw.Tx(msg); err != psErr.OK {
-					psLog.F(err.Error())
-					// TODO: notify error to main goroutine
-					// ...
-				}
-			}
-		}
-	}()
-
 	arp.StartService(&arpWg)
+	eth.StartService(&ethWg)
 	ip.StartService(&ipWg)
 	icmp.StartService(&icmpWg)
 

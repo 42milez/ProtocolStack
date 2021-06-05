@@ -15,9 +15,6 @@ const EthFrameLenMax = 1514
 const EthFrameLenMin = 60
 const EthPayloadLenMax = EthFrameLenMax - EthHdrLen
 const EthPayloadLenMin = EthFrameLenMin - EthHdrLen
-const ARP EthType = 0x0806
-const IPv4 EthType = 0x0800
-const IPv6 EthType = 0x86dd
 
 var EthAny = EthAddr{0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 var EthBroadcast = EthAddr{0xff, 0xff, 0xff, 0xff, 0xff, 0xff}

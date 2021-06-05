@@ -1,11 +1,8 @@
 package mw
 
-import (
-	"fmt"
-	psErr "github.com/42milez/ProtocolStack/src/error"
-	psLog "github.com/42milez/ProtocolStack/src/log"
-)
-
+const ARP EthType = 0x0806
+const IPv4 EthType = 0x0800
+const IPv6 EthType = 0x86dd
 const xChBufSize = 10
 
 var EthRxCh chan *EthMessage // channel for receiving packets
@@ -71,25 +68,25 @@ type IcmpTxMessage struct {
 	Dst     IP
 }
 
-func Rx(packet *EthMessage) psErr.E {
-	switch packet.Type {
-	case ARP:
-		ArpRxCh <- &ArpRxMessage{
-			Packet: packet.Content,
-			Dev:    packet.Dev,
-		}
-	case IPv4:
-		IpRxCh <- packet
-	default:
-		psLog.E(fmt.Sprintf("Unknown ether type: 0x%04x", uint16(packet.Type)))
-		return psErr.Error
-	}
-	return psErr.OK
-}
+//func Rx(packet *EthMessage) psErr.E {
+//	switch packet.Type {
+//	case ARP:
+//		ArpRxCh <- &ArpRxMessage{
+//			Packet: packet.Content,
+//			Dev:    packet.Dev,
+//		}
+//	case IPv4:
+//		IpRxCh <- packet
+//	default:
+//		psLog.E(fmt.Sprintf("Unknown ether type: 0x%04x", uint16(packet.Type)))
+//		return psErr.Error
+//	}
+//	return psErr.OK
+//}
 
-func Tx(msg *EthMessage) psErr.E {
-	return psErr.OK
-}
+//func Tx(msg *EthMessage) psErr.E {
+//	return psErr.OK
+//}
 
 func init() {
 	EthRxCh = make(chan *EthMessage, xChBufSize)
