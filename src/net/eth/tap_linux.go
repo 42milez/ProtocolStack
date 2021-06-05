@@ -115,12 +115,7 @@ func (p *TapDevice) Close() psErr.E {
 	return psErr.OK
 }
 
-func (p *TapDevice) Poll(isTerminated bool) psErr.E {
-	if isTerminated {
-		_ = psSyscall.Syscall.Close(epfd)
-		return psErr.Terminated
-	}
-
+func (p *TapDevice) Poll() psErr.E {
 	var events [maxEpollEvents]syscall.EpollEvent
 	nEvents, err := psSyscall.Syscall.EpollWait(epfd, events[:], epollTimeout)
 	if err != nil {

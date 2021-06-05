@@ -32,7 +32,7 @@ func (v DevType) String() string {
 type IDevice interface {
 	Open() psErr.E
 	Close() psErr.E
-	Poll(terminate bool) psErr.E
+	Poll() psErr.E
 	Transmit(dst EthAddr, payload []byte, typ EthType) psErr.E
 	Up()
 	Down()

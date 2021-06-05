@@ -26,6 +26,7 @@ var arpWg sync.WaitGroup
 var ethWg sync.WaitGroup
 var ipWg sync.WaitGroup
 var icmpWg sync.WaitGroup
+var repoWg sync.WaitGroup
 
 var ethSigCh chan os.Signal
 var mainSigCh chan os.Signal
@@ -99,31 +100,32 @@ func start(wg *sync.WaitGroup) psErr.E {
 	}
 
 	// worker for watching I/O resource
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		for {
-			select {
-			case <-ethSigCh:
-				psLog.I("Terminating Eth worker...")
-				terminate = true
-			default:
-				if err := repo.DeviceRepo.Poll(terminate); err != psErr.OK {
-					// TODO: notify error to main goroutine
-					// ...
-					psLog.F(err.Error())
-				}
-			}
-			if terminate {
-				return
-			}
-		}
-	}()
+	//wg.Add(1)
+	//go func() {
+	//	defer wg.Done()
+	//	for {
+	//		select {
+	//		case <-ethSigCh:
+	//			psLog.I("Terminating Eth worker...")
+	//			terminate = true
+	//		default:
+	//			if err := repo.DeviceRepo.Poll(terminate); err != psErr.OK {
+	//				// TODO: notify error to main goroutine
+	//				// ...
+	//				psLog.F(err.Error())
+	//			}
+	//		}
+	//		if terminate {
+	//			return
+	//		}
+	//	}
+	//}()
 
 	arp.StartService(&arpWg)
 	eth.StartService(&ethWg)
 	ip.StartService(&ipWg)
 	icmp.StartService(&icmpWg)
+	repo.StartService(&repoWg)
 
 	return psErr.OK
 }

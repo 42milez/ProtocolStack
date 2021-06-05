@@ -7,7 +7,14 @@ import (
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	psLog "github.com/42milez/ProtocolStack/src/log"
 	"github.com/42milez/ProtocolStack/src/mw"
+	"github.com/42milez/ProtocolStack/src/worker"
+	"sync"
 )
+
+const xChBufSize = 5
+
+var WatcherRxCh chan *worker.Message
+var WatcherTxCh chan *worker.Message
 
 var DeviceRepo IDeviceRepo
 var IfaceRepo IIfaceRepo
@@ -24,7 +31,7 @@ type Route struct {
 
 type IDeviceRepo interface {
 	NextNumber() int
-	Poll(terminate bool) psErr.E
+	Poll() psErr.E
 	Register(dev mw.IDevice) psErr.E
 	Up() psErr.E
 }
@@ -37,12 +44,12 @@ func (p *deviceRepo) NextNumber() int {
 	return len(p.devices)
 }
 
-func (p *deviceRepo) Poll(terminate bool) psErr.E {
+func (p *deviceRepo) Poll() psErr.E {
 	for _, dev := range p.devices {
 		if !dev.IsUp() {
 			continue
 		}
-		if err := dev.Poll(terminate); err != psErr.OK {
+		if err := dev.Poll(); err != psErr.OK {
 			if err == psErr.Interrupted {
 				return psErr.OK
 			}
@@ -193,7 +200,39 @@ func (p *routeRepo) RegisterDefaultGateway(iface *mw.Iface, nextHop mw.IP) {
 	psLog.I(fmt.Sprintf("\tdevice:   %s (%s)", iface.Dev.Name(), iface.Dev.Priv().Name))
 }
 
+func StartService(wg *sync.WaitGroup) {
+	wg.Add(1)
+	go watcher(wg)
+}
+
+func watcher(wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	WatcherTxCh <- &worker.Message{
+		Current: worker.Running,
+	}
+
+	for {
+		select {
+		case msg := <-WatcherRxCh:
+			if msg.Desired == worker.Stopped {
+				return
+			}
+		default:
+			if err := DeviceRepo.Poll(); err != psErr.OK {
+				WatcherTxCh <- &worker.Message{
+					Current: worker.Error,
+				}
+				return
+			}
+		}
+	}
+}
+
 func init() {
+	WatcherRxCh = make(chan *worker.Message, xChBufSize)
+	WatcherTxCh = make(chan *worker.Message, xChBufSize)
+
 	DeviceRepo = &deviceRepo{}
 	IfaceRepo = &ifaceRepo{}
 	RouteRepo = &routeRepo{}

@@ -2,6 +2,7 @@ package worker
 
 const (
 	Any State = iota
+	Error
 	Running
 	Stopped
 )

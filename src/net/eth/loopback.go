@@ -20,7 +20,7 @@ func (p *LoopbackDevice) Close() psErr.E {
 	return psErr.OK
 }
 
-func (p *LoopbackDevice) Poll(terminate bool) psErr.E {
+func (p *LoopbackDevice) Poll() psErr.E {
 	return psErr.OK
 }
 
