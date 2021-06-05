@@ -87,7 +87,7 @@ func IcmpSend(typ uint8, code uint8, content uint32, payload []byte, src mw.IP, 
 	dumpIcmpPacket(&hdr, payload)
 
 	mw.IpTxCh <- &mw.IpMessage{
-		ProtoNum: ip.ProtoNumICMP,
+		ProtoNum: ip.ICMP,
 		Packet:   packet,
 		Dst:      dst,
 		Src:      src,

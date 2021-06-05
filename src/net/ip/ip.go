@@ -10,14 +10,25 @@ import (
 	"github.com/42milez/ProtocolStack/src/net"
 	"github.com/42milez/ProtocolStack/src/net/arp"
 	"github.com/42milez/ProtocolStack/src/repo"
+	"github.com/42milez/ProtocolStack/src/worker"
 	"sync"
 )
 
-const IpHdrLenMin = 20 // bytes
-const IpHdrLenMax = 60 // bytes
-const ProtoNumICMP = 1
-const ProtoNumTCP = 6
-const ProtoNumUDP = 17
+const HdrLenMax = 60 // bytes
+const HdrLenMin = 20 // bytes
+const (
+	ICMP mw.ProtocolNumber = 1
+	TCP  mw.ProtocolNumber = 6
+	UDP  mw.ProtocolNumber = 17
+)
+const ipv4 = 4
+
+var RcvRxCh chan *worker.Message
+var RcvTxCh chan *worker.Message
+var SndRxCh chan *worker.Message
+var SndTxCh chan *worker.Message
+
+var id *PacketID
 
 type PacketID struct {
 	id  uint16
@@ -32,10 +43,10 @@ func (p *PacketID) Next() (id uint16) {
 	return
 }
 
-func IpReceive(payload []byte, dev mw.IDevice) psErr.E {
+func Receive(payload []byte, dev mw.IDevice) psErr.E {
 	packetLen := len(payload)
 
-	if packetLen < IpHdrLenMin {
+	if packetLen < HdrLenMin {
 		psLog.E(fmt.Sprintf("IP packet length is too short: %d bytes", packetLen))
 		return psErr.InvalidPacket
 	}
@@ -92,7 +103,7 @@ func IpReceive(payload []byte, dev mw.IDevice) psErr.E {
 	dumpIpPacket(payload)
 
 	switch hdr.Protocol {
-	case ProtoNumICMP:
+	case ICMP:
 		msg := &mw.IcmpRxMessage{
 			Payload: payload[hdrLen:],
 			Dst:     hdr.Dst,
@@ -100,10 +111,10 @@ func IpReceive(payload []byte, dev mw.IDevice) psErr.E {
 			Dev:     dev,
 		}
 		mw.IcmpRxCh <- msg
-	case ProtoNumTCP:
+	case TCP:
 		psLog.E("Currently NOT support TCP")
 		return psErr.Error
-	case ProtoNumUDP:
+	case UDP:
 		psLog.E("Currently NOT support UDP")
 		return psErr.Error
 	default:
@@ -114,23 +125,23 @@ func IpReceive(payload []byte, dev mw.IDevice) psErr.E {
 	return psErr.OK
 }
 
-func IpSend(protoNum mw.ProtocolNumber, payload []byte, src mw.IP, dst mw.IP) psErr.E {
+func Send(protoNum mw.ProtocolNumber, payload []byte, src mw.IP, dst mw.IP) psErr.E {
 	var iface *mw.Iface
 	var nextHop mw.IP
 	var err psErr.E
 
 	// get a next hop
-	if iface, nextHop, err = lookupRouting(dst, src); err != psErr.OK {
+	if iface, nextHop, err = lookupRoute(dst, src); err != psErr.OK {
 		psLog.E(fmt.Sprintf("Route was not found: %s", err))
 		return psErr.Error
 	}
 
-	if packetLen := IpHdrLenMin + len(payload); int(iface.Dev.MTU()) < packetLen {
+	if packetLen := HdrLenMin + len(payload); int(iface.Dev.MTU()) < packetLen {
 		psLog.E(fmt.Sprintf("IP packet length is too long: %d", packetLen))
 		return psErr.PacketTooLong
 	}
 
-	packet := createIpPacket(protoNum, src, dst, payload)
+	packet := createPacket(protoNum, src, dst, payload)
 	if packet == nil {
 		psLog.E("Can't create IP packet")
 		return psErr.Error
@@ -154,10 +165,15 @@ func IpSend(protoNum mw.ProtocolNumber, payload []byte, src mw.IP, dst mw.IP) ps
 	return psErr.OK
 }
 
-func createIpPacket(protoNum mw.ProtocolNumber, src mw.IP, dst mw.IP, payload []byte) []byte {
+func StartService() {
+	go receiver()
+	go sender()
+}
+
+func createPacket(protoNum mw.ProtocolNumber, src mw.IP, dst mw.IP, payload []byte) []byte {
 	hdr := mw.IpHdr{}
-	hdr.VHL = uint8(ipv4<<4) | uint8(IpHdrLenMin/4)
-	hdr.TotalLen = uint16(IpHdrLenMin + len(payload))
+	hdr.VHL = uint8(ipv4<<4) | uint8(HdrLenMin/4)
+	hdr.TotalLen = uint16(HdrLenMin + len(payload))
 	hdr.ID = id.Next()
 	hdr.TTL = 0xff
 	hdr.Protocol = protoNum
@@ -213,7 +229,7 @@ func lookupEthAddr(iface *mw.Iface, nextHop mw.IP) (mw.Addr, psErr.E) {
 	return addr, psErr.OK
 }
 
-func lookupRouting(dst mw.IP, src mw.IP) (*mw.Iface, mw.IP, psErr.E) {
+func lookupRoute(dst mw.IP, src mw.IP) (*mw.Iface, mw.IP, psErr.E) {
 	var iface *mw.Iface
 	var nextHop mw.IP
 
@@ -250,27 +266,52 @@ func lookupRouting(dst mw.IP, src mw.IP) (*mw.Iface, mw.IP, psErr.E) {
 	return iface, nextHop, psErr.OK
 }
 
-const ipv4 = 4
-
-var id *PacketID
-
-func StartService() {
-	go func() {
-		for {
-			select {
-			case msg := <-mw.IpRxCh:
-				if err := IpReceive(msg.Content, msg.Dev); err != psErr.OK {
-					return
+func receiver() {
+	RcvTxCh <- &worker.Message{
+		Current: worker.Running,
+	}
+	for {
+		select {
+		case msg := <-RcvRxCh:
+			if msg.Desired == worker.Stopped {
+				RcvTxCh <- &worker.Message{
+					Current: worker.Stopped,
 				}
-			case msg := <-mw.IpTxCh:
-				if err := IpSend(msg.ProtoNum, msg.Packet, msg.Src, msg.Dst); err != psErr.OK {
-					return
-				}
+				return
+			}
+		case msg := <-mw.IpRxCh:
+			if err := Receive(msg.Content, msg.Dev); err != psErr.OK {
+				return
 			}
 		}
-	}()
+	}
+}
+
+func sender() {
+	SndTxCh <- &worker.Message{
+		Current: worker.Running,
+	}
+	for {
+		select {
+		case msg := <-SndRxCh:
+			if msg.Desired == worker.Stopped {
+				SndTxCh <- &worker.Message{
+					Current: worker.Stopped,
+				}
+				return
+			}
+		case msg := <-mw.IpTxCh:
+			if err := Send(msg.ProtoNum, msg.Packet, msg.Src, msg.Dst); err != psErr.OK {
+				return
+			}
+		}
+	}
 }
 
 func init() {
+	RcvRxCh = make(chan *worker.Message, 5)
+	RcvTxCh = make(chan *worker.Message, 5)
+	SndRxCh = make(chan *worker.Message, 5)
+	SndTxCh = make(chan *worker.Message, 5)
 	id = &PacketID{}
 }
