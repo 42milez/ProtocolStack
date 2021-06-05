@@ -172,8 +172,8 @@ func dump(hdr *Hdr, payload []byte) {
 	psLog.I(fmt.Sprintf("\tchecksum: 0x%04x", hdr.Checksum))
 
 	switch hdr.Type {
-	case EchoReply:
 	case Echo:
+	case EchoReply:
 		psLog.I(fmt.Sprintf("\tid:       %d", (hdr.Content&0xffff0000)>>16))
 		psLog.I(fmt.Sprintf("\tseq:      %d", hdr.Content&0x0000ffff))
 	default:
