@@ -92,23 +92,18 @@ func start(wg *sync.WaitGroup) psErr.E {
 	if err := arp.StartService(&arpWg); err != psErr.OK {
 		return psErr.Error
 	}
-
 	if err := eth.StartService(&ethWg); err != psErr.OK {
 		return psErr.Error
 	}
-
 	if err := ip.StartService(&ipWg); err != psErr.OK {
 		return psErr.Error
 	}
-
 	if err := icmp.StartService(&icmpWg); err != psErr.OK {
 		return psErr.Error
 	}
-
 	if err := repo.StartService(&repoWg); err != psErr.OK {
 		return psErr.Error
 	}
-
 	return psErr.OK
 }
 
