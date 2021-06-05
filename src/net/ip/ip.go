@@ -192,7 +192,7 @@ func dumpIpPacket(packet []byte) {
 	psLog.I(fmt.Sprintf("\tflags:               0b%03b", (packet[6]&0xe0)>>5))
 	psLog.I(fmt.Sprintf("\tfragment offset:     %d", uint16(packet[6]&0x1f)<<8|uint16(packet[7])))
 	psLog.I(fmt.Sprintf("\tttl:                 %d", packet[8]))
-	psLog.I(fmt.Sprintf("\tprotocol:            %s (%d)", protocolNumbers[mw.ProtocolNumber(packet[9])], packet[9]))
+	psLog.I(fmt.Sprintf("\tprotocol:            %s (%d)", mw.ProtocolNumber(packet[9]), packet[9]))
 	psLog.I(fmt.Sprintf("\tchecksum:            0x%04x", uint16(packet[10])<<8|uint16(packet[11])))
 	psLog.I(fmt.Sprintf("\tsource address:      %d.%d.%d.%d", packet[12], packet[13], packet[14], packet[15]))
 	psLog.I(fmt.Sprintf("\tdestination address: %d.%d.%d.%d", packet[16], packet[17], packet[18], packet[19]))
@@ -253,44 +253,6 @@ func lookupRouting(dst mw.IP, src mw.IP) (*mw.Iface, mw.IP, psErr.E) {
 const ipv4 = 4
 
 var id *PacketID
-
-// ASSIGNED INTERNET PROTOCOL NUMBERS
-// https://datatracker.ietf.org/doc/html/rfc790#page-6
-
-var protocolNumbers = map[mw.ProtocolNumber]string{
-	// 0: Reserved
-	1:  "ICMP",
-	3:  "Gateway-to-Gateway",
-	4:  "CMCC Gateway Monitoring Message",
-	5:  "ST",
-	6:  "TCP",
-	7:  "UCL",
-	9:  "Secure",
-	10: "BBN RCC Monitoring",
-	11: "NVP",
-	12: "PUP",
-	13: "Pluribus",
-	14: "Telenet",
-	15: "XNET",
-	16: "Chaos",
-	17: "User Datagram",
-	18: "Multiplexing",
-	19: "DCN",
-	20: "TAC Monitoring",
-	// 21-62: Unassigned
-	63: "any local net",
-	64: "SATNET and Backroom EXPAK",
-	65: "MIT Subnet Support",
-	// 66-68: Unassigned
-	69: "SATNET Monitoring",
-	71: "Internet EthMessage Core Utility",
-	// 72-75: Unassigned
-	76: "Backroom SATNET Monitoring",
-	78: "WIDEBAND Monitoring",
-	79: "WIDEBAND EXPAK",
-	// 80-254: Unassigned
-	// 255: Reserved
-}
 
 func StartService() {
 	go func() {

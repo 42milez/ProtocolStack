@@ -25,6 +25,44 @@ var (
 	V4Zero      = V4(0, 0, 0, 0)
 )
 
+// ASSIGNED INTERNET PROTOCOL NUMBERS
+// https://datatracker.ietf.org/doc/html/rfc790#page-6
+
+var protocolNumbers = map[ProtocolNumber]string{
+	// 0: Reserved
+	1:  "ICMP",
+	3:  "Gateway-to-Gateway",
+	4:  "CMCC Gateway Monitoring Message",
+	5:  "ST",
+	6:  "TCP",
+	7:  "UCL",
+	9:  "Secure",
+	10: "BBN RCC Monitoring",
+	11: "NVP",
+	12: "PUP",
+	13: "Pluribus",
+	14: "Telenet",
+	15: "XNET",
+	16: "Chaos",
+	17: "User Datagram",
+	18: "Multiplexing",
+	19: "DCN",
+	20: "TAC Monitoring",
+	// 21-62: Unassigned
+	63: "any local net",
+	64: "SATNET and Backroom EXPAK",
+	65: "MIT Subnet Support",
+	// 66-68: Unassigned
+	69: "SATNET Monitoring",
+	71: "Internet EthMessage Core Utility",
+	// 72-75: Unassigned
+	76: "Backroom SATNET Monitoring",
+	78: "WIDEBAND Monitoring",
+	79: "WIDEBAND EXPAK",
+	// 80-254: Unassigned
+	// 255: Reserved
+}
+
 var v4InV6Prefix = []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff}
 
 // AddrFamily is IP address family.
@@ -66,6 +104,10 @@ type IpHdr struct {
 
 // ProtocolNumber is assigned internet protocol number
 type ProtocolNumber uint8
+
+func (v ProtocolNumber) String() string {
+	return protocolNumbers[v]
+}
 
 // An IP is a single IP address.
 type IP []byte
