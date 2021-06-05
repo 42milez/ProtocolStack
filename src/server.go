@@ -13,6 +13,7 @@ import (
 	"github.com/42milez/ProtocolStack/src/net/icmp"
 	"github.com/42milez/ProtocolStack/src/net/ip"
 	"github.com/42milez/ProtocolStack/src/repo"
+	"github.com/42milez/ProtocolStack/src/worker"
 	"os"
 	"os/signal"
 	"strconv"
@@ -21,6 +22,12 @@ import (
 	"time"
 )
 
+// arp: 3
+// eth: 2
+// icmp: 2
+// ip: 2
+const nServiceWorkers = 9
+
 var wg sync.WaitGroup
 var arpWg sync.WaitGroup
 var ethWg sync.WaitGroup
@@ -28,7 +35,7 @@ var ipWg sync.WaitGroup
 var icmpWg sync.WaitGroup
 var repoWg sync.WaitGroup
 
-var mainRxCh chan os.Signal
+var rxCh chan os.Signal
 var sigCh chan os.Signal
 
 func handleSignal(sigCh <-chan os.Signal, wg *sync.WaitGroup) {
@@ -37,7 +44,7 @@ func handleSignal(sigCh <-chan os.Signal, wg *sync.WaitGroup) {
 		defer wg.Done()
 		sig := <-sigCh
 		psLog.I(fmt.Sprintf("Signal: %s", sig))
-		mainRxCh <-syscall.SIGUSR1
+		rxCh <-syscall.SIGUSR1
 	}()
 }
 
@@ -77,18 +84,14 @@ func setup() psErr.E {
 
 	repo.RouteRepo.RegisterDefaultGateway(iface2, mw.ParseIP("192.0.2.1"))
 
-	psLog.I("--------------------------------------------------")
-	psLog.I(" START SERVER                                     ")
-	psLog.I("--------------------------------------------------")
-
-	if err := start(&wg); err != psErr.OK {
+	if err := start(); err != psErr.OK {
 		return psErr.Error
 	}
 
 	return psErr.OK
 }
 
-func start(wg *sync.WaitGroup) psErr.E {
+func start() psErr.E {
 	if err := arp.StartService(&arpWg); err != psErr.OK {
 		return psErr.Error
 	}
@@ -104,11 +107,50 @@ func start(wg *sync.WaitGroup) psErr.E {
 	if err := repo.StartService(&repoWg); err != psErr.OK {
 		return psErr.Error
 	}
+
+	var nWorkers int
+	var zero = time.Now()
+	var timeout = 10*time.Second
+	for {
+		select {
+		case msg := <-arp.MonitorCh:
+			if msg.Current == worker.Running {
+				psLog.I(fmt.Sprintf("arp worker started: %d", int(msg.ID)))
+				nWorkers += 1
+			}
+		case msg := <-eth.RcvTxCh:
+			if msg.Current == worker.Running {
+				psLog.I(fmt.Sprintf("eth worker started: %d", int(msg.ID)))
+				nWorkers += 1
+			}
+		case msg := <- icmp.RcvTxCh:
+			if msg.Current == worker.Running {
+				psLog.I(fmt.Sprintf("icmp worker started: %d", int(msg.ID)))
+				nWorkers += 1
+			}
+		case msg := <-ip.RcvTxCh:
+			if msg.Current == worker.Running {
+				psLog.I(fmt.Sprintf("ip worker started: %d", int(msg.ID)))
+				nWorkers += 1
+			}
+		default:
+			time.Sleep(100*time.Millisecond)
+		}
+		if nWorkers == nServiceWorkers {
+			break
+		}
+		if time.Now().Sub(zero) > timeout {
+			return psErr.Error
+		}
+	}
+
+	psLog.I("//////////////////////////////////////////////////")
+
 	return psErr.OK
 }
 
 func init() {
-	mainRxCh = make(chan os.Signal)
+	rxCh = make(chan os.Signal)
 	sigCh = make(chan os.Signal, 1)
 	// https://pkg.go.dev/os/signal#Notify
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
@@ -126,7 +168,7 @@ func main() {
 		defer wg.Done()
 		for {
 			select {
-			case <-mainRxCh:
+			case <-rxCh:
 				return
 			default:
 				time.Sleep(time.Second * 1)

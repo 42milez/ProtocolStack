@@ -21,12 +21,14 @@ const (
 	TCP  mw.ProtocolNumber = 6
 	UDP  mw.ProtocolNumber = 17
 )
+const ReceiverID worker.ID = 1
+const SenderID worker.ID = 2
+const xChBufSize = 5
 const ipv4 = 4
 
-var RcvRxCh chan *worker.Message
-var RcvTxCh chan *worker.Message
-var SndRxCh chan *worker.Message
-var SndTxCh chan *worker.Message
+var MonitorCh chan *worker.Message
+var ReceiverSigCh chan *worker.Message
+var SenderSigCh chan *worker.Message
 
 var id *PacketID
 
@@ -271,17 +273,15 @@ func lookupRoute(dst mw.IP, src mw.IP) (*mw.Iface, mw.IP, psErr.E) {
 func receiver(wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	RcvTxCh <- &worker.Message{
+	MonitorCh <- &worker.Message{
+		ID:      ReceiverID,
 		Current: worker.Running,
 	}
 
 	for {
 		select {
-		case msg := <-RcvRxCh:
+		case msg := <-ReceiverSigCh:
 			if msg.Desired == worker.Stopped {
-				RcvTxCh <- &worker.Message{
-					Current: worker.Stopped,
-				}
 				return
 			}
 		case msg := <-mw.IpRxCh:
@@ -295,17 +295,15 @@ func receiver(wg *sync.WaitGroup) {
 func sender(wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	SndTxCh <- &worker.Message{
+	MonitorCh <- &worker.Message{
+		ID:      SenderID,
 		Current: worker.Running,
 	}
 
 	for {
 		select {
-		case msg := <-SndRxCh:
+		case msg := <-SenderSigCh:
 			if msg.Desired == worker.Stopped {
-				SndTxCh <- &worker.Message{
-					Current: worker.Stopped,
-				}
 				return
 			}
 		case msg := <-mw.IpTxCh:
@@ -317,9 +315,8 @@ func sender(wg *sync.WaitGroup) {
 }
 
 func init() {
-	RcvRxCh = make(chan *worker.Message, 5)
-	RcvTxCh = make(chan *worker.Message, 5)
-	SndRxCh = make(chan *worker.Message, 5)
-	SndTxCh = make(chan *worker.Message, 5)
+	MonitorCh = make(chan *worker.Message, xChBufSize)
+	ReceiverSigCh = make(chan *worker.Message, xChBufSize)
+	SenderSigCh = make(chan *worker.Message, xChBufSize)
 	id = &PacketID{}
 }

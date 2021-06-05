@@ -23,14 +23,15 @@ const (
 	Incomplete
 	Error
 )
+const ReceiverID worker.ID = 1
+const SenderID worker.ID = 2
+const TimerID worker.ID = 3
 const xChBufSize = 5
 
-var RcvRxCh chan *worker.Message
-var RcvTxCh chan *worker.Message
-var SndRxCh chan *worker.Message
-var SndTxCh chan *worker.Message
-var TimerRxCh chan *worker.Message
-var TimerTxCh chan *worker.Message
+var MonitorCh chan *worker.Message
+var ReceiverSigCh chan *worker.Message
+var SenderSigCh chan *worker.Message
+var TimerSigCh chan *worker.Message
 
 // Hardware Types
 // https://www.iana.org/assignments/arp-parameters/arp-parameters.xhtml#arp-parameters-2
@@ -303,9 +304,9 @@ func StopService() {
 	msg := &worker.Message{
 		Desired: worker.Stopped,
 	}
-	RcvRxCh <- msg
-	SndRxCh <- msg
-	TimerRxCh <- msg
+	ReceiverSigCh <- msg
+	SenderSigCh <- msg
+	TimerSigCh <- msg
 }
 
 func dumpArpPacket(packet *Packet) {
@@ -323,13 +324,14 @@ func dumpArpPacket(packet *Packet) {
 func receiver(wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	RcvTxCh <- &worker.Message{
+	MonitorCh <- &worker.Message{
+		ID:      ReceiverID,
 		Current: worker.Running,
 	}
 
 	for {
 		select {
-		case msg := <-RcvRxCh:
+		case msg := <-ReceiverSigCh:
 			if msg.Desired == worker.Stopped {
 				return
 			}
@@ -344,12 +346,13 @@ func receiver(wg *sync.WaitGroup) {
 func sender(wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	SndTxCh <- &worker.Message{
+	MonitorCh <- &worker.Message{
+		ID:      SenderID,
 		Current: worker.Running,
 	}
 
 	for {
-		msg := <-SndRxCh
+		msg := <-SenderSigCh
 		if msg.Desired == worker.Stopped {
 			return
 		}
@@ -359,13 +362,14 @@ func sender(wg *sync.WaitGroup) {
 func timer(wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	TimerTxCh <- &worker.Message{
+	MonitorCh <- &worker.Message{
+		ID:      TimerID,
 		Current: worker.Running,
 	}
 
 	for {
 		select {
-		case msg := <-TimerRxCh:
+		case msg := <-TimerSigCh:
 			if msg.Desired == worker.Stopped {
 				return
 			}
@@ -383,10 +387,8 @@ func timer(wg *sync.WaitGroup) {
 }
 
 func init() {
-	RcvRxCh = make(chan *worker.Message, xChBufSize)
-	RcvTxCh = make(chan *worker.Message, xChBufSize)
-	SndRxCh = make(chan *worker.Message, xChBufSize)
-	SndTxCh = make(chan *worker.Message, xChBufSize)
-	TimerRxCh = make(chan *worker.Message, xChBufSize)
-	TimerTxCh = make(chan *worker.Message, xChBufSize)
+	MonitorCh = make(chan *worker.Message, xChBufSize)
+	ReceiverSigCh = make(chan *worker.Message, xChBufSize)
+	SenderSigCh = make(chan *worker.Message, xChBufSize)
+	TimerSigCh = make(chan *worker.Message, xChBufSize)
 }

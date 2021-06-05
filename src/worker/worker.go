@@ -7,9 +7,11 @@ const (
 	Stopped
 )
 
+type ID int
 type State int
 
 type Message struct {
+	ID      ID
 	Current State
 	Desired State
 }

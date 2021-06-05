@@ -16,12 +16,13 @@ import (
 const Echo = 0x08
 const EchoReply = 0x00
 const HdrLen = 8 // byte
+const ReceiverID worker.ID = 1
+const SenderID worker.ID = 2
 const xChBufSize = 5
 
-var RcvRxCh chan *worker.Message
-var RcvTxCh chan *worker.Message
-var SndRxCh chan *worker.Message
-var SndTxCh chan *worker.Message
+var MonitorCh chan *worker.Message
+var ReceiverSigCh chan *worker.Message
+var SenderSigCh chan *worker.Message
 
 // ICMP Type Numbers
 // https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml#icmp-parameters-types
@@ -193,17 +194,15 @@ func dump(hdr *Hdr, payload []byte) {
 func receiver(wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	RcvTxCh <- &worker.Message{
+	MonitorCh <- &worker.Message{
+		ID:      ReceiverID,
 		Current: worker.Running,
 	}
 
 	for {
 		select {
-		case msg := <-RcvRxCh:
+		case msg := <-ReceiverSigCh:
 			if msg.Desired == worker.Stopped {
-				RcvTxCh <- &worker.Message{
-					Current: worker.Stopped,
-				}
 				return
 			}
 		case msg := <-mw.IcmpRxCh:
@@ -217,17 +216,15 @@ func receiver(wg *sync.WaitGroup) {
 func sender(wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	SndTxCh <- &worker.Message{
+	MonitorCh <- &worker.Message{
+		ID:      SenderID,
 		Current: worker.Running,
 	}
 
 	for {
 		select {
-		case msg := <-SndRxCh:
+		case msg := <-SenderSigCh:
 			if msg.Desired == worker.Stopped {
-				SndTxCh <- &worker.Message{
-					Current: worker.Stopped,
-				}
 				return
 			}
 		case msg := <-mw.IcmpTxCh:
@@ -239,8 +236,7 @@ func sender(wg *sync.WaitGroup) {
 }
 
 func init() {
-	RcvRxCh = make(chan *worker.Message, xChBufSize)
-	RcvTxCh = make(chan *worker.Message, xChBufSize)
-	SndRxCh = make(chan *worker.Message, xChBufSize)
-	SndTxCh = make(chan *worker.Message, xChBufSize)
+	MonitorCh = make(chan *worker.Message, xChBufSize)
+	ReceiverSigCh = make(chan *worker.Message, xChBufSize)
+	SenderSigCh = make(chan *worker.Message, xChBufSize)
 }
