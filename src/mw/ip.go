@@ -39,9 +39,6 @@ var addrFamilies = map[AddrFamily]string{
 	V6AddrFamily: "IPv6",
 }
 
-// An IP is a single IP address.
-type IP []byte
-
 // INTERNET PROTOCOL
 // https://datatracker.ietf.org/doc/html/rfc791#page-13
 // The number 576 is selected to allow a reasonable sized data block to be transmitted in addition to the required
@@ -69,6 +66,9 @@ type IpHdr struct {
 
 // ProtocolNumber is assigned internet protocol number
 type ProtocolNumber uint8
+
+// An IP is a single IP address.
+type IP []byte
 
 func (v IP) Equal(x IP) bool {
 	if len(v) == len(x) {
@@ -139,6 +139,18 @@ func (v IP) ToV4() (ip [V4AddrLen]byte) {
 	return
 }
 
+func LongestIP(ip1 IP, ip2 IP) IP {
+	if len(ip1) != len(ip2) {
+		return nil
+	}
+	for i, v := range ip1 {
+		if v < ip2[i] {
+			return ip2
+		}
+	}
+	return ip1
+}
+
 // ParseIP parses string as IPv4 or IPv6 address by detecting its format.
 func ParseIP(s string) IP {
 	if strings.Contains(s, ".") {
@@ -191,18 +203,6 @@ func isZeros(ip IP) bool {
 		}
 	}
 	return true
-}
-
-func LongestIP(ip1 IP, ip2 IP) IP {
-	if len(ip1) != len(ip2) {
-		return nil
-	}
-	for i, v := range ip1 {
-		if v < ip2[i] {
-			return ip2
-		}
-	}
-	return ip1
 }
 
 // parseV4 parses string as IPv4 address.
