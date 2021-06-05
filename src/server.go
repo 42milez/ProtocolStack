@@ -6,6 +6,7 @@ import (
 	"fmt"
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	psLog "github.com/42milez/ProtocolStack/src/log"
+	"github.com/42milez/ProtocolStack/src/monitor"
 	"github.com/42milez/ProtocolStack/src/mw"
 	"github.com/42milez/ProtocolStack/src/net"
 	"github.com/42milez/ProtocolStack/src/net/arp"
@@ -13,7 +14,6 @@ import (
 	"github.com/42milez/ProtocolStack/src/net/icmp"
 	"github.com/42milez/ProtocolStack/src/net/ip"
 	"github.com/42milez/ProtocolStack/src/repo"
-	"github.com/42milez/ProtocolStack/src/worker"
 	"os"
 	"os/signal"
 	"strconv"
@@ -22,10 +22,6 @@ import (
 	"time"
 )
 
-// arp: 3
-// eth: 2
-// icmp: 2
-// ip: 2
 const nServiceWorkers = 9
 
 var wg sync.WaitGroup
@@ -34,6 +30,7 @@ var ethWg sync.WaitGroup
 var ipWg sync.WaitGroup
 var icmpWg sync.WaitGroup
 var repoWg sync.WaitGroup
+var monitorWg sync.WaitGroup
 
 var rxCh chan os.Signal
 var sigCh chan os.Signal
@@ -107,44 +104,23 @@ func start() psErr.E {
 	if err := repo.StartService(&repoWg); err != psErr.OK {
 		return psErr.Error
 	}
+	if err := monitor.StartService(&monitorWg); err != psErr.OK {
+		return psErr.Error
+	}
 
-	var nWorkers int
 	var zero = time.Now()
-	var timeout = 10*time.Second
+	var timeout = 3*time.Second
 	for {
-		select {
-		case msg := <-arp.MonitorCh:
-			if msg.Current == worker.Running {
-				psLog.I(fmt.Sprintf("arp worker started: %d", int(msg.ID)))
-				nWorkers += 1
-			}
-		case msg := <-eth.RcvTxCh:
-			if msg.Current == worker.Running {
-				psLog.I(fmt.Sprintf("eth worker started: %d", int(msg.ID)))
-				nWorkers += 1
-			}
-		case msg := <- icmp.RcvTxCh:
-			if msg.Current == worker.Running {
-				psLog.I(fmt.Sprintf("icmp worker started: %d", int(msg.ID)))
-				nWorkers += 1
-			}
-		case msg := <-ip.RcvTxCh:
-			if msg.Current == worker.Running {
-				psLog.I(fmt.Sprintf("ip worker started: %d", int(msg.ID)))
-				nWorkers += 1
-			}
-		default:
-			time.Sleep(100*time.Millisecond)
-		}
-		if nWorkers == nServiceWorkers {
+		if monitor.Status() == monitor.Green {
 			break
 		}
 		if time.Now().Sub(zero) > timeout {
+			psLog.E("Some services didn't ready within the time")
 			return psErr.Error
 		}
 	}
 
-	psLog.I("//////////////////////////////////////////////////")
+	psLog.I("All service workers started")
 
 	return psErr.OK
 }
@@ -158,7 +134,7 @@ func init() {
 
 func main() {
 	if err := setup(); err != psErr.OK {
-		psLog.F("Setup failed")
+		psLog.F("Initialization failed")
 	}
 
 	handleSignal(sigCh, &wg)

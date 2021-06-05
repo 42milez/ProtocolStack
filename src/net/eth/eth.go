@@ -4,18 +4,20 @@ import (
 	"fmt"
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	psLog "github.com/42milez/ProtocolStack/src/log"
+	"github.com/42milez/ProtocolStack/src/monitor"
 	"github.com/42milez/ProtocolStack/src/mw"
 	"github.com/42milez/ProtocolStack/src/worker"
 	"sync"
 )
 
-const ReceiverID worker.ID = 1
-const SenderID worker.ID = 2
-const xChBufSize = 5
+var rcvMonCh chan *worker.Message
+var rcvSigCh chan *worker.Message
+var sndMonCh chan *worker.Message
+var sndSigCh chan *worker.Message
 
-var MonitorCh chan *worker.Message
-var ReceiverSigCh chan *worker.Message
-var SenderSigCh chan *worker.Message
+var receiverID uint32
+var senderID uint32
+var xChBufSize = 5
 
 func StartService(wg *sync.WaitGroup) psErr.E {
 	wg.Add(2)
@@ -27,14 +29,14 @@ func StartService(wg *sync.WaitGroup) psErr.E {
 func receiver(wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	MonitorCh <- &worker.Message{
-		ID:      ReceiverID,
+	rcvMonCh <- &worker.Message{
+		ID:      receiverID,
 		Current: worker.Running,
 	}
 
 	for {
 		select {
-		case msg := <-ReceiverSigCh:
+		case msg := <-rcvSigCh:
 			if msg.Desired == worker.Stopped {
 				return
 			}
@@ -60,13 +62,13 @@ func receiver(wg *sync.WaitGroup) {
 func sender(wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	MonitorCh <- &worker.Message{
-		ID:      SenderID,
+	sndMonCh <- &worker.Message{
+		ID:      senderID,
 		Current: worker.Running,
 	}
 
 	for {
-		msg := <-SenderSigCh
+		msg := <-sndSigCh
 		if msg.Desired == worker.Stopped {
 			return
 		}
@@ -74,7 +76,11 @@ func sender(wg *sync.WaitGroup) {
 }
 
 func init() {
-	MonitorCh = make(chan *worker.Message, xChBufSize)
-	ReceiverSigCh = make(chan *worker.Message, xChBufSize)
-	SenderSigCh = make(chan *worker.Message, xChBufSize)
+	rcvMonCh = make(chan *worker.Message, xChBufSize)
+	rcvSigCh = make(chan *worker.Message, xChBufSize)
+	receiverID = monitor.Register("Eth Receiver", rcvMonCh, rcvSigCh)
+
+	sndMonCh = make(chan *worker.Message, xChBufSize)
+	sndSigCh = make(chan *worker.Message, xChBufSize)
+	senderID = monitor.Register("Eth Sender", sndMonCh, sndSigCh)
 }

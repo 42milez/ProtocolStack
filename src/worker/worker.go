@@ -7,11 +7,10 @@ const (
 	Stopped
 )
 
-type ID int
-type State int
+type State uint32
 
 type Message struct {
-	ID      ID
+	ID      uint32
 	Current State
 	Desired State
 }

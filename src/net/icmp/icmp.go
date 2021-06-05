@@ -6,6 +6,7 @@ import (
 	"fmt"
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	psLog "github.com/42milez/ProtocolStack/src/log"
+	"github.com/42milez/ProtocolStack/src/monitor"
 	"github.com/42milez/ProtocolStack/src/mw"
 	"github.com/42milez/ProtocolStack/src/net/ip"
 	"github.com/42milez/ProtocolStack/src/repo"
@@ -16,13 +17,15 @@ import (
 const Echo = 0x08
 const EchoReply = 0x00
 const HdrLen = 8 // byte
-const ReceiverID worker.ID = 1
-const SenderID worker.ID = 2
 const xChBufSize = 5
 
-var MonitorCh chan *worker.Message
-var ReceiverSigCh chan *worker.Message
-var SenderSigCh chan *worker.Message
+var rcvMonCh chan *worker.Message
+var rcvSigCh chan *worker.Message
+var sndMonCh chan *worker.Message
+var sndSigCh chan *worker.Message
+
+var receiverID uint32
+var senderID uint32
 
 // ICMP Type Numbers
 // https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml#icmp-parameters-types
@@ -194,14 +197,14 @@ func dump(hdr *Hdr, payload []byte) {
 func receiver(wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	MonitorCh <- &worker.Message{
-		ID:      ReceiverID,
+	rcvMonCh <- &worker.Message{
+		ID:      receiverID,
 		Current: worker.Running,
 	}
 
 	for {
 		select {
-		case msg := <-ReceiverSigCh:
+		case msg := <-rcvSigCh:
 			if msg.Desired == worker.Stopped {
 				return
 			}
@@ -216,14 +219,14 @@ func receiver(wg *sync.WaitGroup) {
 func sender(wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	MonitorCh <- &worker.Message{
-		ID:      SenderID,
+	sndMonCh <- &worker.Message{
+		ID:      senderID,
 		Current: worker.Running,
 	}
 
 	for {
 		select {
-		case msg := <-SenderSigCh:
+		case msg := <-sndSigCh:
 			if msg.Desired == worker.Stopped {
 				return
 			}
@@ -236,7 +239,11 @@ func sender(wg *sync.WaitGroup) {
 }
 
 func init() {
-	MonitorCh = make(chan *worker.Message, xChBufSize)
-	ReceiverSigCh = make(chan *worker.Message, xChBufSize)
-	SenderSigCh = make(chan *worker.Message, xChBufSize)
+	rcvMonCh = make(chan *worker.Message, xChBufSize)
+	rcvSigCh = make(chan *worker.Message, xChBufSize)
+	receiverID = monitor.Register("ICMP Receiver", rcvMonCh, rcvSigCh)
+
+	sndMonCh = make(chan *worker.Message, xChBufSize)
+	sndSigCh = make(chan *worker.Message, xChBufSize)
+	senderID = monitor.Register("ICMP Sender", sndMonCh, sndSigCh)
 }

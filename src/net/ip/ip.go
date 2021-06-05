@@ -6,6 +6,7 @@ import (
 	"fmt"
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	psLog "github.com/42milez/ProtocolStack/src/log"
+	"github.com/42milez/ProtocolStack/src/monitor"
 	"github.com/42milez/ProtocolStack/src/mw"
 	"github.com/42milez/ProtocolStack/src/net"
 	"github.com/42milez/ProtocolStack/src/net/arp"
@@ -21,16 +22,17 @@ const (
 	TCP  mw.ProtocolNumber = 6
 	UDP  mw.ProtocolNumber = 17
 )
-const ReceiverID worker.ID = 1
-const SenderID worker.ID = 2
 const xChBufSize = 5
 const ipv4 = 4
 
-var MonitorCh chan *worker.Message
-var ReceiverSigCh chan *worker.Message
-var SenderSigCh chan *worker.Message
+var rcvMonCh chan *worker.Message
+var rcvSigCh chan *worker.Message
+var sndMonCh chan *worker.Message
+var sndSigCh chan *worker.Message
 
 var id *PacketID
+var receiverID uint32
+var senderID uint32
 
 type PacketID struct {
 	id  uint16
@@ -273,14 +275,14 @@ func lookupRoute(dst mw.IP, src mw.IP) (*mw.Iface, mw.IP, psErr.E) {
 func receiver(wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	MonitorCh <- &worker.Message{
-		ID:      ReceiverID,
+	rcvMonCh <- &worker.Message{
+		ID:      receiverID,
 		Current: worker.Running,
 	}
 
 	for {
 		select {
-		case msg := <-ReceiverSigCh:
+		case msg := <-rcvSigCh:
 			if msg.Desired == worker.Stopped {
 				return
 			}
@@ -295,14 +297,14 @@ func receiver(wg *sync.WaitGroup) {
 func sender(wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	MonitorCh <- &worker.Message{
-		ID:      SenderID,
+	sndMonCh <- &worker.Message{
+		ID:      senderID,
 		Current: worker.Running,
 	}
 
 	for {
 		select {
-		case msg := <-SenderSigCh:
+		case msg := <-sndSigCh:
 			if msg.Desired == worker.Stopped {
 				return
 			}
@@ -315,8 +317,13 @@ func sender(wg *sync.WaitGroup) {
 }
 
 func init() {
-	MonitorCh = make(chan *worker.Message, xChBufSize)
-	ReceiverSigCh = make(chan *worker.Message, xChBufSize)
-	SenderSigCh = make(chan *worker.Message, xChBufSize)
+	rcvMonCh = make(chan *worker.Message, xChBufSize)
+	rcvSigCh = make(chan *worker.Message, xChBufSize)
+	receiverID = monitor.Register("IP Receiver", rcvMonCh, rcvSigCh)
+
+	sndMonCh = make(chan *worker.Message, xChBufSize)
+	sndSigCh = make(chan *worker.Message, xChBufSize)
+	senderID = monitor.Register("IP Sender", sndMonCh, sndSigCh)
+
 	id = &PacketID{}
 }

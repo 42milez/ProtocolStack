@@ -6,6 +6,7 @@ import (
 	"fmt"
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	psLog "github.com/42milez/ProtocolStack/src/log"
+	"github.com/42milez/ProtocolStack/src/monitor"
 	"github.com/42milez/ProtocolStack/src/mw"
 	"github.com/42milez/ProtocolStack/src/worker"
 	"sync"
@@ -13,8 +14,9 @@ import (
 
 const xChBufSize = 5
 
-var WatcherRxCh chan *worker.Message
-var WatcherTxCh chan *worker.Message
+var monCh chan *worker.Message
+var sigCh chan *worker.Message
+var watcherId uint32
 
 var DeviceRepo IDeviceRepo
 var IfaceRepo IIfaceRepo
@@ -214,19 +216,19 @@ func StartService(wg *sync.WaitGroup) psErr.E {
 func watcher(wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	WatcherTxCh <- &worker.Message{
+	monCh <- &worker.Message{
 		Current: worker.Running,
 	}
 
 	for {
 		select {
-		case msg := <-WatcherRxCh:
+		case msg := <-sigCh:
 			if msg.Desired == worker.Stopped {
 				return
 			}
 		default:
 			if err := DeviceRepo.Poll(); err != psErr.OK {
-				WatcherTxCh <- &worker.Message{
+				monCh <- &worker.Message{
 					Current: worker.Error,
 				}
 				return
@@ -236,8 +238,9 @@ func watcher(wg *sync.WaitGroup) {
 }
 
 func init() {
-	WatcherRxCh = make(chan *worker.Message, xChBufSize)
-	WatcherTxCh = make(chan *worker.Message, xChBufSize)
+	monCh = make(chan *worker.Message, xChBufSize)
+	sigCh = make(chan *worker.Message, xChBufSize)
+	watcherId = monitor.Register("Repository Watcher", monCh, sigCh)
 
 	DeviceRepo = &deviceRepo{}
 	IfaceRepo = &ifaceRepo{}

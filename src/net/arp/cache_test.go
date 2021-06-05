@@ -159,9 +159,9 @@ func TestTimer_1(t *testing.T) {
 
 	var wg sync.WaitGroup
 	_ = StartService(&wg)
-	<-MonitorCh
-	<-MonitorCh
-	<-MonitorCh
+	<-rcvMonCh
+	<-sndMonCh
+	<-tmrMonCh
 	StopService()
 	wg.Wait()
 
@@ -178,9 +178,9 @@ func TestTimer_2(t *testing.T) {
 
 	var wg sync.WaitGroup
 	_ = StartService(&wg)
-	<-MonitorCh
-	<-MonitorCh
-	<-MonitorCh
+	<-rcvMonCh
+	<-sndMonCh
+	<-tmrMonCh
 	StopService()
 	wg.Wait()
 
