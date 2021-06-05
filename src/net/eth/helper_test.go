@@ -9,10 +9,10 @@ import (
 func TestGenLoopbackDevice(t *testing.T) {
 	want := &LoopbackDevice{
 		Device: mw.Device{
-			Type_: mw.DevTypeLoopback,
+			Type_: mw.LoopbackDevice,
 			Name_: "net0",
 			MTU_:  LoopbackMTU,
-			Flag_: mw.DevFlagLoopback,
+			Flag_: mw.LoopbackFlag,
 		},
 	}
 	got := GenLoopbackDevice("net0")
@@ -27,10 +27,10 @@ func TestGenTapDevice(t *testing.T) {
 	devEthAddr := mw.EthAddr{11, 12, 13, 14, 15, 16}
 	want := &TapDevice{
 		Device: mw.Device{
-			Type_: mw.DevTypeEthernet,
+			Type_: mw.EthernetDevice,
 			Name_: devName,
 			MTU_:  mw.EthPayloadLenMax,
-			Flag_: mw.DevFlagBroadcast | mw.DevFlagNeedArp,
+			Flag_: mw.BroadcastFlag | mw.NeedArpFlag,
 			Addr_: devEthAddr,
 			Priv_: mw.Privilege{
 				FD:   -1,

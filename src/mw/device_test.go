@@ -6,21 +6,21 @@ import (
 )
 
 func TestDevType_String(t *testing.T) {
-	devType := DevTypeEthernet
+	devType := EthernetDevice
 	want := "Ethernet"
 	got := devType.String()
 	if got != want {
 		t.Errorf("DevType.String() = %v; want %v", got, want)
 	}
 
-	devType = DevTypeLoopback
+	devType = LoopbackDevice
 	want = "Loopback"
 	got = devType.String()
 	if got != want {
 		t.Errorf("DevType.String() = %v; want %v", got, want)
 	}
 
-	devType = DevTypeNull
+	devType = NullDevice
 	want = "Null"
 	got = devType.String()
 	if got != want {
@@ -32,7 +32,7 @@ func TestDevice_Up_Down(t *testing.T) {
 	dev := Device{}
 
 	dev.Up()
-	want := DevFlagUp
+	want := UpFlag
 	got := dev.Flag()
 	if got != want {
 		t.Errorf("Device.Up() = %v; want %v", got, want)
@@ -82,9 +82,9 @@ func TestDevice_IsUp(t *testing.T) {
 
 func TestDevice_Type(t *testing.T) {
 	dev := Device{
-		Type_: DevTypeEthernet,
+		Type_: EthernetDevice,
 	}
-	want := DevTypeEthernet
+	want := EthernetDevice
 	got := dev.Type()
 	if got != want {
 		t.Errorf("Type() = %d; want %d", got, want)

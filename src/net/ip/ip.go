@@ -216,7 +216,7 @@ func dumpIpPacket(packet []byte) {
 
 func lookupEthAddr(iface *mw.Iface, nextHop mw.IP) (mw.EthAddr, psErr.E) {
 	var addr mw.EthAddr
-	if iface.Dev.Flag()&mw.DevFlagNeedArp != 0 {
+	if iface.Dev.Flag()&mw.NeedArpFlag != 0 {
 		if nextHop.Equal(iface.Broadcast) || nextHop.Equal(mw.V4Broadcast) {
 			addr = mw.EthBroadcast
 		} else {

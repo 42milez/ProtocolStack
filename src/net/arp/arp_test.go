@@ -37,10 +37,10 @@ func TestReceive_1(t *testing.T) {
 	_ = binary.Write(buf, binary.BigEndian, packet)
 	dev := &eth2.TapDevice{
 		Device: mw.Device{
-			Type_: mw.DevTypeEthernet,
+			Type_: mw.EthernetDevice,
 			Name_: "net0",
 			Addr_: ethAddr,
-			Flag_: mw.DevFlagBroadcast | mw.DevFlagNeedArp,
+			Flag_: mw.BroadcastFlag | mw.NeedArpFlag,
 			MTU_:  mw.EthPayloadLenMax,
 			Priv_: mw.Privilege{
 				FD:   3,

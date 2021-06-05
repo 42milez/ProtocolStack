@@ -6,10 +6,10 @@ import "github.com/42milez/ProtocolStack/src/mw"
 func GenLoopbackDevice(name string) *LoopbackDevice {
 	return &LoopbackDevice{
 		Device: mw.Device{
-			Type_: mw.DevTypeLoopback,
+			Type_: mw.LoopbackDevice,
 			Name_: name,
 			Addr_: mw.EthAny,
-			Flag_: mw.DevFlagLoopback,
+			Flag_: mw.LoopbackFlag,
 			MTU_:  LoopbackMTU,
 		},
 	}
@@ -19,10 +19,10 @@ func GenLoopbackDevice(name string) *LoopbackDevice {
 func GenTapDevice(devName string, privName string, addr mw.EthAddr) *TapDevice {
 	return &TapDevice{
 		Device: mw.Device{
-			Type_: mw.DevTypeEthernet,
+			Type_: mw.EthernetDevice,
 			Name_: devName,
 			Addr_: addr,
-			Flag_: mw.DevFlagBroadcast | mw.DevFlagNeedArp,
+			Flag_: mw.BroadcastFlag | mw.NeedArpFlag,
 			MTU_:  mw.EthPayloadLenMax,
 			Priv_: mw.Privilege{
 				FD:   -1,

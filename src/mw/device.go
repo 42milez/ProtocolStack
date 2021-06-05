@@ -6,16 +6,21 @@ import (
 	psErr "github.com/42milez/ProtocolStack/src/error"
 )
 
-const DevFlagUp DevFlag = 0x0001
-const DevFlagLoopback DevFlag = 0x0010
-const DevFlagBroadcast DevFlag = 0x0020
-const DevFlagNeedArp DevFlag = 0x0100
-
+const UpFlag DevFlag = 0x0001
+const LoopbackFlag DevFlag = 0x0010
+const BroadcastFlag DevFlag = 0x0020
+const NeedArpFlag DevFlag = 0x0100
 const (
-	DevTypeEthernet DevType = iota
-	DevTypeLoopback
-	DevTypeNull
+	EthernetDevice DevType = iota
+	LoopbackDevice
+	NullDevice
 )
+
+var devTypes = [...]string{
+	0: "Ethernet",
+	1: "Loopback",
+	2: "Null",
+}
 
 type DevFlag uint16
 type DevType int
@@ -51,11 +56,11 @@ type Device struct {
 }
 
 func (p *Device) Up() {
-	p.Flag_ |= DevFlagUp
+	p.Flag_ |= UpFlag
 }
 
 func (p *Device) Down() {
-	p.Flag_ &= ^DevFlagUp
+	p.Flag_ &= ^UpFlag
 }
 
 func (p *Device) Equal(pp IDevice) bool {
@@ -63,7 +68,7 @@ func (p *Device) Equal(pp IDevice) bool {
 }
 
 func (p *Device) IsUp() bool {
-	return p.Flag_&DevFlagUp == 1
+	return p.Flag_&UpFlag == 1
 }
 
 func (p *Device) Type() DevType {
@@ -93,10 +98,4 @@ func (p *Device) Priv() Privilege {
 type Privilege struct {
 	Name string
 	FD   int
-}
-
-var devTypes = [...]string{
-	0: "Ethernet",
-	1: "Loopback",
-	2: "Null",
 }

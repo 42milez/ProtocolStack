@@ -267,7 +267,7 @@ func SendRequest(iface *mw.Iface, ip mw.IP) psErr.E {
 }
 
 func Resolve(iface *mw.Iface, ip mw.IP) (mw.EthAddr, Status) {
-	if iface.Dev.Type() != mw.DevTypeEthernet {
+	if iface.Dev.Type() != mw.EthernetDevice {
 		psLog.E(fmt.Sprintf("Unsupported device type: %s", iface.Dev.Type()))
 		return mw.EthAddr{}, Error
 	}
