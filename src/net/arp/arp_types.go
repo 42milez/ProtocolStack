@@ -12,9 +12,9 @@ const (
 	cacheStatusResolved
 	//cacheStatusStatic
 )
-const ArpHwTypeEthernet ArpHwType = 0x0001
-const ArpOpRequest ArpOpcode = 0x0001
-const ArpOpReply ArpOpcode = 0x0002
+const ArpHwTypeEthernet HwType = 0x0001
+const ArpOpRequest Opcode = 0x0001
+const ArpOpReply Opcode = 0x0002
 const ArpPacketLen = 28 // byte
 const (
 	ArpStatusComplete ArpStatus = iota
@@ -29,7 +29,7 @@ const arpCacheLifetime = 24 * time.Hour
 // Operation Codes
 // https://www.iana.org/assignments/arp-parameters/arp-parameters.xhtml#arp-parameters-1
 
-var arpHwTypes = map[ArpHwType]string{
+var arpHwTypes = map[HwType]string{
 	// 0: Reserved
 	1:  "Ethernet (10Mb)",
 	2:  "Experimental Ethernet (3Mb)",
@@ -74,7 +74,7 @@ var arpHwTypes = map[ArpHwType]string{
 	// 258-65534: Unassigned
 	// 65535: Reserved
 }
-var arpOpCodes = map[ArpOpcode]string{
+var arpOpCodes = map[Opcode]string{
 	// 0: Reserved
 	1:  "REQUEST",
 	2:  "REPLY",
@@ -115,28 +115,28 @@ type CacheStatus uint8
 
 // Notes: Protocol Type is same as EtherType.
 
-type ArpHdr struct {
-	HT     ArpHwType  // hardware type
+type Hdr struct {
+	HT     HwType     // hardware type
 	PT     mw.EthType // protocol type
 	HAL    uint8      // hardware address length
 	PAL    uint8      // protocol address length
-	Opcode ArpOpcode
+	Opcode Opcode
 }
 
-type ArpHwType uint16
+type HwType uint16
 
-func (v ArpHwType) String() string {
+func (v HwType) String() string {
 	return arpHwTypes[v]
 }
 
-type ArpOpcode uint16
+type Opcode uint16
 
-func (v ArpOpcode) String() string {
+func (v Opcode) String() string {
 	return arpOpCodes[v]
 }
 
-type ArpPacket struct {
-	ArpHdr
+type Packet struct {
+	Hdr
 	SHA mw.Addr      // sender hardware address
 	SPA ArpProtoAddr // sender protocol address
 	THA mw.Addr      // target hardware address

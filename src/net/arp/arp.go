@@ -9,7 +9,6 @@ import (
 	"github.com/42milez/ProtocolStack/src/mw"
 	"github.com/42milez/ProtocolStack/src/net"
 	"github.com/42milez/ProtocolStack/src/repo"
-	psTime "github.com/42milez/ProtocolStack/src/time"
 	"github.com/42milez/ProtocolStack/src/timer"
 	"sync"
 	"time"
@@ -21,9 +20,7 @@ var ARP *arp
 var ArpCondCh chan timer.Condition
 var ArpSigCh chan timer.Signal
 
-type arp struct {
-	cache arpCache
-}
+type arp struct{}
 
 func (p *arp) Receive(packet []byte, dev mw.IDevice) psErr.E {
 	if len(packet) < ArpPacketLen {
@@ -32,7 +29,7 @@ func (p *arp) Receive(packet []byte, dev mw.IDevice) psErr.E {
 	}
 
 	buf := bytes.NewBuffer(packet)
-	arpPacket := ArpPacket{}
+	arpPacket := Packet{}
 	if err := binary.Read(buf, binary.BigEndian, &arpPacket); err != nil {
 		return psErr.ReadFromBufError
 	}
@@ -57,8 +54,8 @@ func (p *arp) Receive(packet []byte, dev mw.IDevice) psErr.E {
 	}
 
 	if iface.Unicast.EqualV4(arpPacket.TPA) {
-		if err := p.cache.Renew(arpPacket.SPA, arpPacket.SHA, cacheStatusResolved); err == psErr.NotFound {
-			_ = p.cache.Create(arpPacket.SHA, arpPacket.SPA, cacheStatusResolved)
+		if err := cache.Renew(arpPacket.SPA, arpPacket.SHA, cacheStatusResolved); err == psErr.NotFound {
+			_ = cache.Create(arpPacket.SHA, arpPacket.SPA, cacheStatusResolved)
 		} else {
 			psLog.I("ARP entry was renewed")
 			psLog.I(fmt.Sprintf("\tspa: %s", arpPacket.SPA))
@@ -77,8 +74,8 @@ func (p *arp) Receive(packet []byte, dev mw.IDevice) psErr.E {
 }
 
 func (p *arp) Reply(tha mw.Addr, tpa ArpProtoAddr, iface *mw.Iface) psErr.E {
-	packet := ArpPacket{
-		ArpHdr: ArpHdr{
+	packet := Packet{
+		Hdr: Hdr{
 			HT:     ArpHwTypeEthernet,
 			PT:     mw.IPv4,
 			HAL:    mw.AddrLen,
@@ -108,8 +105,8 @@ func (p *arp) Reply(tha mw.Addr, tpa ArpProtoAddr, iface *mw.Iface) psErr.E {
 }
 
 func (p *arp) Request(iface *mw.Iface, ip mw.IP) psErr.E {
-	packet := ArpPacket{
-		ArpHdr: ArpHdr{
+	packet := Packet{
+		Hdr: Hdr{
 			HT:     ArpHwTypeEthernet,
 			PT:     mw.IPv4,
 			HAL:    mw.AddrLen,
@@ -149,9 +146,9 @@ func (p *arp) Resolve(iface *mw.Iface, ip mw.IP) (mw.Addr, ArpStatus) {
 		return mw.Addr{}, ArpStatusError
 	}
 
-	entry := p.cache.GetEntry(ip.ToV4())
+	entry := cache.GetEntry(ip.ToV4())
 	if entry == nil {
-		if err := p.cache.Create(mw.Addr{}, ip.ToV4(), cacheStatusIncomplete); err != psErr.OK {
+		if err := cache.Create(mw.Addr{}, ip.ToV4(), cacheStatusIncomplete); err != psErr.OK {
 			return mw.Addr{}, ArpStatusError
 		}
 		if err := p.Request(iface, ip); err != psErr.OK {
@@ -177,7 +174,7 @@ func (p *arp) RunTimer(wg *sync.WaitGroup) {
 					return
 				}
 			default:
-				ret := p.cache.Expire()
+				ret := cache.Expire()
 				if len(ret) != 0 {
 					psLog.I("ARP cache entries were expired:")
 					for i, v := range ret {
@@ -194,116 +191,7 @@ func (p *arp) StopTimer() {
 	ArpSigCh <- timer.Stop
 }
 
-type arpCacheEntry struct {
-	Status    CacheStatus
-	CreatedAt time.Time
-	HA        mw.Addr
-	PA        ArpProtoAddr
-}
-
-type arpCache struct {
-	entries [CacheSize]*arpCacheEntry
-	mtx     sync.Mutex
-}
-
-func (p *arpCache) Init() {
-	for i := range p.entries {
-		p.entries[i] = &arpCacheEntry{
-			Status:    cacheStatusFree,
-			CreatedAt: time.Unix(0, 0),
-			HA:        mw.Addr{},
-			PA:        ArpProtoAddr{},
-		}
-	}
-}
-
-func (p *arpCache) Create(ha mw.Addr, pa ArpProtoAddr, state CacheStatus) psErr.E {
-	var entry *arpCacheEntry
-	if entry = p.GetEntry(pa); entry != nil {
-		return psErr.Exist
-	}
-	entry = p.GetReusableEntry()
-
-	p.mtx.Lock()
-	defer p.mtx.Unlock()
-
-	entry.Status = state
-	entry.CreatedAt = psTime.Time.Now()
-	entry.HA = ha
-	entry.PA = pa
-
-	return psErr.OK
-}
-
-func (p *arpCache) Renew(pa ArpProtoAddr, ha mw.Addr, state CacheStatus) psErr.E {
-	entry := p.GetEntry(pa)
-	if entry == nil {
-		return psErr.NotFound
-	}
-
-	p.mtx.Lock()
-	defer p.mtx.Unlock()
-
-	entry.Status = state
-	entry.CreatedAt = psTime.Time.Now()
-	entry.HA = ha
-
-	return psErr.OK
-}
-
-func (p *arpCache) GetEntry(ip ArpProtoAddr) *arpCacheEntry {
-	p.mtx.Lock()
-	defer p.mtx.Unlock()
-
-	for i, v := range p.entries {
-		if v.PA == ip {
-			return p.entries[i]
-		}
-	}
-
-	return nil
-}
-
-func (p *arpCache) GetReusableEntry() *arpCacheEntry {
-	p.mtx.Lock()
-	defer p.mtx.Unlock()
-
-	oldest := p.entries[0]
-	for _, entry := range p.entries {
-		if entry.Status == cacheStatusFree {
-			return entry
-		}
-		if oldest.CreatedAt.After(entry.CreatedAt) {
-			oldest = entry
-		}
-	}
-
-	return oldest
-}
-
-func (p *arpCache) Clear(idx int) {
-	p.entries[idx].Status = cacheStatusFree
-	p.entries[idx].CreatedAt = time.Unix(0, 0)
-	p.entries[idx].HA = mw.Addr{}
-	p.entries[idx].PA = ArpProtoAddr{}
-}
-
-func (p *arpCache) Expire() (invalidations []string) {
-	p.mtx.Lock()
-	defer p.mtx.Unlock()
-
-	now := time.Now()
-	for i, v := range p.entries {
-		if v.CreatedAt != time.Unix(0, 0) && now.Sub(v.CreatedAt) > arpCacheLifetime {
-			invalidations = append(invalidations, fmt.Sprintf("%s (%s)", v.PA, v.HA))
-			p.Clear(i)
-		}
-	}
-
-	return
-}
-
-func dumpArpPacket(packet *ArpPacket) {
+func dumpArpPacket(packet *Packet) {
 	psLog.I(fmt.Sprintf("\thardware type:           %s", packet.HT))
 	psLog.I(fmt.Sprintf("\tprotocol Type:           %s", packet.PT))
 	psLog.I(fmt.Sprintf("\thardware address length: %d", packet.HAL))
@@ -328,7 +216,6 @@ func StartService() {
 
 func init() {
 	ARP = &arp{}
-	ARP.cache.Init()
 	ArpCondCh = make(chan timer.Condition)
 	ArpSigCh = make(chan timer.Signal)
 }

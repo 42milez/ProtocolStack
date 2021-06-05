@@ -79,7 +79,7 @@ func TestArpInputHandler_3(t *testing.T) {
 	_, teardown := SetupArpInputHandlerTest(t)
 	defer teardown()
 
-	packet := Builder.CustomHT(ArpHwType(0xffff))
+	packet := Builder.CustomHT(HwType(0xffff))
 	buf := new(bytes.Buffer)
 	_ = binary.Write(buf, binary.BigEndian, packet)
 	dev := &eth.TapDevice{}
@@ -189,7 +189,7 @@ func TestArpInputHandler_6(t *testing.T) {
 func TestRunArpTimer_1(t *testing.T) {
 	ctrl, teardown := SetupRunArpTimerTest(t)
 	defer teardown()
-	defer ARP.cache.Init()
+	defer cache.Init()
 
 	createdAt, _ := time.Parse(time.RFC3339, "2021-01-01T00:00:00Z")
 	m := psTime.NewMockITime(ctrl)
@@ -197,7 +197,7 @@ func TestRunArpTimer_1(t *testing.T) {
 	psTime.Time = m
 
 	pa := ArpProtoAddr{192, 168, 1, 1}
-	_ = ARP.cache.Create(mw.Addr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}, pa, cacheStatusResolved)
+	_ = cache.Create(mw.Addr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}, pa, cacheStatusResolved)
 
 	var wg sync.WaitGroup
 	ARP.RunTimer(&wg)
@@ -205,7 +205,7 @@ func TestRunArpTimer_1(t *testing.T) {
 	ARP.StopTimer()
 	wg.Wait()
 
-	got := ARP.cache.GetEntry(pa)
+	got := cache.GetEntry(pa)
 	if got != nil {
 		t.Errorf("ARP cache is not expired")
 	}
@@ -214,7 +214,7 @@ func TestRunArpTimer_1(t *testing.T) {
 func TestRunArpTimer_2(t *testing.T) {
 	_, teardown := SetupRunArpTimerTest(t)
 	defer teardown()
-	defer ARP.cache.Init()
+	defer cache.Init()
 
 	var wg sync.WaitGroup
 	ARP.RunTimer(&wg)
@@ -222,7 +222,7 @@ func TestRunArpTimer_2(t *testing.T) {
 	ARP.StopTimer()
 	wg.Wait()
 
-	got := ARP.cache.GetEntry(ArpProtoAddr{192, 168, 0, 1})
+	got := cache.GetEntry(ArpProtoAddr{192, 168, 0, 1})
 	if got != nil {
 		t.Errorf("ARP cache exists")
 	}
@@ -233,9 +233,9 @@ var any = gomock.Any()
 
 type ArpPacketBuilder struct{}
 
-func (v ArpPacketBuilder) Default() *ArpPacket {
-	return &ArpPacket{
-		ArpHdr: ArpHdr{
+func (v ArpPacketBuilder) Default() *Packet {
+	return &Packet{
+		Hdr: Hdr{
 			HT:     ArpHwTypeEthernet,
 			PT:     mw.IPv4,
 			HAL:    mw.AddrLen,
@@ -249,19 +249,19 @@ func (v ArpPacketBuilder) Default() *ArpPacket {
 	}
 }
 
-func (v ArpPacketBuilder) CustomHT(ht ArpHwType) (packet *ArpPacket) {
+func (v ArpPacketBuilder) CustomHT(ht HwType) (packet *Packet) {
 	packet = v.Default()
 	packet.HT = ht
 	return
 }
 
-func (v ArpPacketBuilder) CustomPT(pt mw.EthType) (packet *ArpPacket) {
+func (v ArpPacketBuilder) CustomPT(pt mw.EthType) (packet *Packet) {
 	packet = v.Default()
 	packet.PT = pt
 	return
 }
 
-func (v ArpPacketBuilder) CustomTPA(tpa ArpProtoAddr) (packet *ArpPacket) {
+func (v ArpPacketBuilder) CustomTPA(tpa ArpProtoAddr) (packet *Packet) {
 	packet = v.Default()
 	packet.TPA = tpa
 	return
