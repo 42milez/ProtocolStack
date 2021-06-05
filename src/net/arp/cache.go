@@ -9,10 +9,12 @@ import (
 	"time"
 )
 
+const cacheSize = 32
+
 var cache *arpCache
 
 type arpCache struct {
-	entries [CacheSize]*arpCacheEntry
+	entries [cacheSize]*arpCacheEntry
 	mtx     sync.Mutex
 }
 

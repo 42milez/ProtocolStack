@@ -52,7 +52,7 @@ func TestArpCache_Add_3(t *testing.T) {
 
 	m := psTime.NewMockITime(ctrl)
 	psTime.Time = m
-	for i := CacheSize; i >= 0; i-- {
+	for i := cacheSize; i >= 0; i-- {
 		ha := mw.Addr{0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 		pa := ArpProtoAddr{192, 168, byte(i), 1}
 		state := cacheStatusResolved

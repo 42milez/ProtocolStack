@@ -14,8 +14,6 @@ import (
 	"time"
 )
 
-const CacheSize = 32
-
 var ArpCondCh chan timer.Condition
 var ArpSigCh chan timer.Signal
 
@@ -203,8 +201,8 @@ func dumpArpPacket(packet *Packet) {
 func StartService() {
 	go func() {
 		for {
-			packet := <-mw.ArpRxCh
-			if err := Receive(packet.Content, packet.Dev); err != psErr.OK {
+			msg := <-mw.ArpRxCh
+			if err := Receive(msg.Packet, msg.Dev); err != psErr.OK {
 				return
 			}
 		}
