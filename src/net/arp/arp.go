@@ -151,7 +151,7 @@ type Packet struct {
 type Status int
 
 func Receive(packet []byte, dev mw.IDevice) psErr.E {
-	if len(packet) < ArpPacketLen {
+	if len(packet) < PacketLen {
 		psLog.E(fmt.Sprintf("ARP packet length is too short: %d bytes", len(packet)))
 		return psErr.InvalidPacket
 	}
@@ -189,7 +189,7 @@ func Receive(packet []byte, dev mw.IDevice) psErr.E {
 			psLog.I(fmt.Sprintf("\tspa: %s", arpPacket.SPA))
 			psLog.I(fmt.Sprintf("\tsha: %s", arpPacket.SHA))
 		}
-		if arpPacket.Opcode == ArpOpRequest {
+		if arpPacket.Opcode == Request {
 			if err := SendReply(arpPacket.SHA, arpPacket.SPA, iface); err != psErr.OK {
 				return psErr.Error
 			}
@@ -208,7 +208,7 @@ func SendReply(tha mw.Addr, tpa ArpProtoAddr, iface *mw.Iface) psErr.E {
 			PT:     mw.IPv4,
 			HAL:    mw.AddrLen,
 			PAL:    mw.V4AddrLen,
-			Opcode: ArpOpReply,
+			Opcode: Reply,
 		},
 		THA: tha,
 		TPA: tpa,
@@ -239,7 +239,7 @@ func SendRequest(iface *mw.Iface, ip mw.IP) psErr.E {
 			PT:     mw.IPv4,
 			HAL:    mw.AddrLen,
 			PAL:    mw.V4AddrLen,
-			Opcode: ArpOpRequest,
+			Opcode: Request,
 		},
 		SHA: iface.Dev.Addr(),
 		SPA: iface.Unicast.ToV4(),

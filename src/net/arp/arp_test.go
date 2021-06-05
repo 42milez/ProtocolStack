@@ -240,7 +240,7 @@ func (v ArpPacketBuilder) Default() *Packet {
 			PT:     mw.IPv4,
 			HAL:    mw.AddrLen,
 			PAL:    mw.V4AddrLen,
-			Opcode: ArpOpRequest,
+			Opcode: Request,
 		},
 		SHA: mw.Addr{0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff},
 		SPA: ArpProtoAddr{192, 0, 2, 1},

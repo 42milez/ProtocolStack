@@ -5,9 +5,9 @@ import (
 	"github.com/42milez/ProtocolStack/src/mw"
 )
 
-const ArpOpRequest Opcode = 0x0001
-const ArpOpReply Opcode = 0x0002
-const ArpPacketLen = 28 // byte
+const PacketLen = 28 // byte
+const Request Opcode = 0x0001
+const Reply Opcode = 0x0002
 
 type ArpProtoAddr [mw.V4AddrLen]byte
 

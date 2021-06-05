@@ -152,8 +152,8 @@ func TestArpHwType_String(t *testing.T) {
 }
 
 func TestArpOpcode_String(t *testing.T) {
-	want := arpOpCodes[ArpOpRequest]
-	got := ArpOpRequest.String()
+	want := arpOpCodes[Request]
+	got := Request.String()
 	if got != want {
 		t.Errorf("Opcode.String() = %s; want %s", got, want)
 	}
