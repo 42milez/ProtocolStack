@@ -67,7 +67,7 @@ func ReadFrame(fd int, addr EthAddr) (*EthMessage, psErr.E) {
 		return nil, psErr.ReadFromBufError
 	}
 
-	psLog.I("incoming ethernet frame", dumpFrame(&hdr, payload)...)
+	psLog.I("incoming ethernet frame", dump(&hdr, payload)...)
 
 	return &EthMessage{
 		Type:    hdr.Type,
@@ -94,7 +94,7 @@ func WriteFrame(fd int, dst EthAddr, src EthAddr, typ EthType, payload []byte) p
 	}
 	frame := buf.Bytes()
 
-	psLog.I("outgoing ethernet frame", dumpFrame(&hdr, payload)...)
+	psLog.I("outgoing ethernet frame", dump(&hdr, payload)...)
 
 	if n, err := psSyscall.Syscall.Write(fd, frame); err != nil {
 		return psErr.SyscallError
@@ -105,7 +105,7 @@ func WriteFrame(fd int, dst EthAddr, src EthAddr, typ EthType, payload []byte) p
 	return psErr.OK
 }
 
-func dumpFrame(hdr *EthHdr, payload []byte) (ret []string) {
+func dump(hdr *EthHdr, payload []byte) (ret []string) {
 	ret = append(ret, fmt.Sprintf("type:    %s (0x%04x)", hdr.Type, uint16(hdr.Type)))
 	ret = append(ret, fmt.Sprintf("dst:     %s", hdr.Dst))
 	ret = append(ret, fmt.Sprintf("src:     %s", hdr.Src))
