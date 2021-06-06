@@ -180,8 +180,7 @@ func Receive(packet []byte, dev mw.IDevice) psErr.E {
 		return psErr.InvalidPacket
 	}
 
-	psLog.I("incoming arp packet")
-	dumpArpPacket(&arpPacket)
+	psLog.I("incoming arp packet", dumpArpPacket(&arpPacket)...)
 
 	iface := repo.IfaceRepo.Lookup(dev, mw.V4AddrFamily)
 	if iface == nil {
@@ -225,8 +224,7 @@ func SendReply(tha mw.EthAddr, tpa mw.V4Addr, iface *mw.Iface) psErr.E {
 	copy(packet.SHA[:], addr[:])
 	copy(packet.SPA[:], iface.Unicast[:])
 
-	psLog.I("outgoing arp packet (reply)")
-	dumpArpPacket(&packet)
+	psLog.I("outgoing arp packet", dumpArpPacket(&packet)...)
 
 	buf := new(bytes.Buffer)
 	if err := binary.Write(buf, binary.BigEndian, &packet); err != nil {
@@ -261,8 +259,7 @@ func SendRequest(iface *mw.Iface, ip mw.IP) psErr.E {
 	}
 	payload := buf.Bytes()
 
-	psLog.I("outgoing arp packet")
-	dumpArpPacket(&packet)
+	psLog.I("outgoing arp packet", dumpArpPacket(&packet)...)
 
 	if err := net.Transmit(mw.EthBroadcast, payload, mw.ARP, iface); err != psErr.OK {
 		return psErr.Error
@@ -314,16 +311,17 @@ func Stop() {
 	tmrSigCh <- msg
 }
 
-func dumpArpPacket(packet *Packet) {
-	psLog.I(fmt.Sprintf("\thardware type:           %s", packet.HT))
-	psLog.I(fmt.Sprintf("\tprotocol Type:           %s", packet.PT))
-	psLog.I(fmt.Sprintf("\thardware address length: %d", packet.HAL))
-	psLog.I(fmt.Sprintf("\tprotocol address length: %d", packet.PAL))
-	psLog.I(fmt.Sprintf("\topcode:                  %s (%d)", packet.Opcode, uint16(packet.Opcode)))
-	psLog.I(fmt.Sprintf("\tsender hardware address: %s", packet.SHA))
-	psLog.I(fmt.Sprintf("\tsender protocol address: %v", packet.SPA))
-	psLog.I(fmt.Sprintf("\ttarget hardware address: %s", packet.THA))
-	psLog.I(fmt.Sprintf("\ttarget protocol address: %v", packet.TPA))
+func dumpArpPacket(packet *Packet) (ret []string) {
+	ret = append(ret, fmt.Sprintf("hardware type:           %s", packet.HT))
+	ret = append(ret, fmt.Sprintf("protocol Type:           %s", packet.PT))
+	ret = append(ret, fmt.Sprintf("hardware address length: %d", packet.HAL))
+	ret = append(ret, fmt.Sprintf("protocol address length: %d", packet.PAL))
+	ret = append(ret, fmt.Sprintf("opcode:                  %s (%d)", packet.Opcode, uint16(packet.Opcode)))
+	ret = append(ret, fmt.Sprintf("sender hardware address: %s", packet.SHA))
+	ret = append(ret, fmt.Sprintf("sender protocol address: %v", packet.SPA))
+	ret = append(ret, fmt.Sprintf("target hardware address: %s", packet.THA))
+	ret = append(ret, fmt.Sprintf("target protocol address: %v", packet.TPA))
+	return
 }
 
 func receiver(wg *sync.WaitGroup) {
