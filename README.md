@@ -47,6 +47,11 @@ It is able to compile the application with `make` as below:
 > make compile
 ```
 
+If no argument is provided, `make` compiles the server implicitly. When you would like to compile the client, specify `BUILD_TYPE` argument below:
+```shell
+> make compile BUILD_TYPE=client
+```
+
 Note: `make` supports the commands below:
 - `build` build project
 - `clean` clean up caches
@@ -61,6 +66,8 @@ Note: `make` supports the commands below:
 
 - [x] Ethernet
 - [x] ARP
+  - [ ] Request
+  - [x] Reply
 - [x] IP
   - [x] v4
   - [ ] v6

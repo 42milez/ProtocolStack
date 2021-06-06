@@ -77,9 +77,13 @@ resolve: go-mod
 test:
 	@go test -race -covermode=atomic -coverprofile=coverage.out \
 		$(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/error \
-		$(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/eth \
 		$(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/log \
-		$(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/net
+		$(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/mw \
+		$(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/net \
+		$(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/net/arp \
+		$(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/net/eth \
+		$(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/net/ip \
+		$(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/repo \
 
 #  Go Commands
 # --------------------------------------------------

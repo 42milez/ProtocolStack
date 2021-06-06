@@ -56,7 +56,8 @@ jobs:
       - name: Upload coverage to Codecov
         run: bash <(curl -s https://codecov.io/bash)
   notify:
-    needs: [ build, test ]
+    if: always()
+    needs: [analyze, build, test]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -65,7 +66,7 @@ jobs:
         env:
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_HEAD_COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_REPOSITORY: ${{ github.repo }}
           GITHUB_REPOSITORY_REF: ${{ github.ref }}
           GITHUB_RUN_ID: ${{ github.run_id }}
           GITHUB_RUN_NUMBER: ${{ github.run_number }}
