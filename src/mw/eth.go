@@ -62,7 +62,7 @@ func ReadFrame(fd int, addr EthAddr) (*EthMessage, psErr.E) {
 		}
 	}
 
-	payload := make([]byte, flen)
+	payload := make([]byte, flen - EthHdrLen)
 	if err := binary.Read(buf, binary.BigEndian, &payload); err != nil {
 		return nil, psErr.ReadFromBufError
 	}
