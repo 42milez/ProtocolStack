@@ -2,52 +2,72 @@ package log
 
 import (
 	"bytes"
+	goFmt "fmt"
 	"io"
 	"io/ioutil"
-	goLog "log"
 	"os"
-	"regexp"
+	"sync"
+	"time"
 )
 
-func format(s string) (ret string) {
-	if m, _ := regexp.MatchString("^\\w", s); m {
-		ret = "▶ " + s
-	} else {
-		ret = s
+const dtFormat = "2006/02/01 15:04:05"
+
+var mtx sync.Mutex
+var stdout io.Writer = os.Stdout
+var stderr io.Writer = os.Stderr
+
+func I(s string, args ...string) {
+	defer mtx.Unlock()
+	mtx.Lock()
+	dt := time.Now().Format(dtFormat)
+	_, _ = goFmt.Fprintln(stdout, goFmt.Sprintf("\u001B[1;34m[I] %s %s\u001B[0m", dt, s))
+	for _, v := range args {
+		_, _ = goFmt.Fprintln(stdout, goFmt.Sprintf("                        %s", v))
 	}
-	return
 }
 
-func I(s string) {
-	i.Println(format(s))
+func W(s string, args ...string) {
+	defer mtx.Unlock()
+	mtx.Lock()
+	dt := time.Now().Format(dtFormat)
+	_, _ = goFmt.Fprintln(stdout, goFmt.Sprintf("\u001B[1;33m[W] %s %s\u001B[0m", dt, s))
+	for _, v := range args {
+		_, _ = goFmt.Fprintln(stdout, goFmt.Sprintf("                        %s", v))
+	}
 }
 
-func W(s string) {
-	w.Println(format(s))
+func E(s string, args ...string) {
+	defer mtx.Unlock()
+	mtx.Lock()
+	dt := time.Now().Format(dtFormat)
+	_, _ = goFmt.Fprintln(stderr, goFmt.Sprintf("\u001B[1;31m[E] %s %s\u001B[0m", dt, s))
+	for _, v := range args {
+		_, _ = goFmt.Fprintln(stderr, goFmt.Sprintf("                        %s", v))
+	}
 }
 
-func E(s string) {
-	e.Println(format(s))
-}
-
-func F(s string) {
-	f.Fatalln(format(s))
+func F(s string, args ...string) {
+	defer mtx.Unlock()
+	mtx.Lock()
+	dt := time.Now().Format(dtFormat)
+	_, _ = goFmt.Fprintln(stderr, goFmt.Sprintf("\u001B[1;31m[F] %s %s\u001B[0m", dt, s))
+	for _, v := range args {
+		_, _ = goFmt.Fprintln(stderr, goFmt.Sprintf("                        %s", v))
+	}
+	os.Exit(1)
 }
 
 func CaptureLogOutput(f func()) string {
+	defer resetOutput()
+
 	reader, writer, err := os.Pipe()
 	if err != nil {
 		panic(err)
 	}
 
-	defer func() {
-		resetOutput()
-	}()
-
 	setOutput(writer)
 
 	out := make(chan string)
-
 	go func() {
 		var buf bytes.Buffer
 		_, _ = io.Copy(&buf, reader)
@@ -74,27 +94,11 @@ func EnableOutput() {
 }
 
 func resetOutput() {
-	i.SetOutput(os.Stdout)
-	w.SetOutput(os.Stdout)
-	e.SetOutput(os.Stderr)
-	f.SetOutput(os.Stderr)
+	stdout = os.Stdout
+	stderr = os.Stderr
 }
 
 func setOutput(writer io.Writer) {
-	i.SetOutput(writer)
-	w.SetOutput(writer)
-	e.SetOutput(writer)
-	f.SetOutput(writer)
-}
-
-var i *goLog.Logger
-var w *goLog.Logger
-var e *goLog.Logger
-var f *goLog.Logger
-
-func init() {
-	i = goLog.New(os.Stdout, "\u001B[1;34m[I]\u001B[0m ", goLog.LstdFlags)
-	w = goLog.New(os.Stdout, "\u001B[1;33m[W]\u001B[0m ", goLog.LstdFlags)
-	e = goLog.New(os.Stderr, "\u001B[1;31m[E]\u001B[0m ", goLog.LstdFlags)
-	f = goLog.New(os.Stderr, "\u001B[1;31m[F]\u001B[0m ", goLog.LstdFlags)
+	stdout = writer
+	stderr = writer
 }
