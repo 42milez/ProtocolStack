@@ -92,12 +92,10 @@ func WriteFrame(fd int, dst EthAddr, src EthAddr, typ EthType, payload []byte) p
 	}
 	frame := buf.Bytes()
 
-	psLog.I("outgoing ethernet frame", dump(&hdr, payload)...)
+	psLog.I(fmt.Sprintf("outgoing ethernet frame (%d bytes)", EthHdrLen + len(payload)), dump(&hdr, payload)...)
 
-	if n, err := psSyscall.Syscall.Write(fd, frame); err != nil {
+	if _, err := psSyscall.Syscall.Write(fd, frame); err != nil {
 		return psErr.SyscallError
-	} else {
-		psLog.I(fmt.Sprintf("ethernet frame was sent: %d bytes (payload: %d bytes)", n, len(payload)))
 	}
 
 	return psErr.OK
