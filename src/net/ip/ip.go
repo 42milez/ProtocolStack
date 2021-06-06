@@ -51,7 +51,7 @@ func Receive(payload []byte, dev mw.IDevice) psErr.E {
 	packetLen := len(payload)
 
 	if packetLen < HdrLenMin {
-		psLog.E(fmt.Sprintf("IP packet length is too short: %d bytes", packetLen))
+		psLog.E(fmt.Sprintf("ip packet length is too short: %d bytes", packetLen))
 		return psErr.InvalidPacket
 	}
 
@@ -62,23 +62,23 @@ func Receive(payload []byte, dev mw.IDevice) psErr.E {
 	}
 
 	if version := hdr.VHL >> 4; version != ipv4 {
-		psLog.E(fmt.Sprintf("IP version %d is not supported", version))
+		psLog.E(fmt.Sprintf("ip version %d is not supported", version))
 		return psErr.InvalidProtocolVersion
 	}
 
 	hdrLen := int(hdr.VHL&0x0f) * 4
 	if packetLen < hdrLen {
-		psLog.E(fmt.Sprintf("IP packet length is too short: ihl = %d, actual = %d", hdrLen, packetLen))
+		psLog.E(fmt.Sprintf("ip packet length is too short: ihl = %d, actual = %d", hdrLen, packetLen))
 		return psErr.InvalidPacket
 	}
 
 	if totalLen := int(hdr.TotalLen); packetLen < totalLen {
-		psLog.E(fmt.Sprintf("IP packet length is too short: Total Length = %d, Actual Length = %d", totalLen, packetLen))
+		psLog.E(fmt.Sprintf("ip packet length is too short: Total Length = %d, Actual Length = %d", totalLen, packetLen))
 		return psErr.InvalidPacket
 	}
 
 	if hdr.TTL == 0 {
-		psLog.E("TTL expired")
+		psLog.E("ttl expired")
 		return psErr.TtlExpired
 	}
 
@@ -86,13 +86,13 @@ func Receive(payload []byte, dev mw.IDevice) psErr.E {
 	payload[10] = 0x00 // assign 0 to Header Checksum field (16bit)
 	payload[11] = 0x00
 	if cs2 := mw.Checksum(payload); cs2 != cs1 {
-		psLog.E(fmt.Sprintf("Checksum mismatch: Expect = 0x%04x, Actual = 0x%04x", cs1, cs2))
+		psLog.E(fmt.Sprintf("checksum mismatch: Expect = 0x%04x, Actual = 0x%04x", cs1, cs2))
 		return psErr.ChecksumMismatch
 	}
 
 	iface := repo.IfaceRepo.Lookup(dev, mw.V4AddrFamily)
 	if iface == nil {
-		psLog.E(fmt.Sprintf("Interface for %s is not registered", dev.Name()))
+		psLog.E(fmt.Sprintf("interface for %s is not registered", dev.Name()))
 		return psErr.InterfaceNotFound
 	}
 
@@ -116,13 +116,13 @@ func Receive(payload []byte, dev mw.IDevice) psErr.E {
 		}
 		mw.IcmpRxCh <- msg
 	case TCP:
-		psLog.E("Currently NOT support TCP")
+		psLog.E("currently NOT support TCP")
 		return psErr.Error
 	case UDP:
-		psLog.E("Currently NOT support UDP")
+		psLog.E("currently NOT support UDP")
 		return psErr.Error
 	default:
-		psLog.E(fmt.Sprintf("Unsupported protocol: %d", hdr.Protocol))
+		psLog.E(fmt.Sprintf("unsupported protocol: %d", hdr.Protocol))
 		return psErr.UnsupportedProtocol
 	}
 
@@ -136,18 +136,18 @@ func Send(protoNum mw.ProtocolNumber, payload []byte, src mw.IP, dst mw.IP) psEr
 
 	// get a next hop
 	if iface, nextHop, err = lookupRoute(dst, src); err != psErr.OK {
-		psLog.E(fmt.Sprintf("Route was not found: %s", err))
+		psLog.E(fmt.Sprintf("route was not found: %s", err))
 		return psErr.Error
 	}
 
 	if packetLen := HdrLenMin + len(payload); int(iface.Dev.MTU()) < packetLen {
-		psLog.E(fmt.Sprintf("IP packet length is too long: %d", packetLen))
+		psLog.E(fmt.Sprintf("ip packet length is too long: %d", packetLen))
 		return psErr.PacketTooLong
 	}
 
 	packet := createPacket(protoNum, src, dst, payload)
 	if packet == nil {
-		psLog.E("Can't create IP packet")
+		psLog.E("can't create IP packet")
 		return psErr.Error
 	}
 
@@ -157,7 +157,7 @@ func Send(protoNum mw.ProtocolNumber, payload []byte, src mw.IP, dst mw.IP) psEr
 	// get eth address from ip address
 	var ethAddr mw.EthAddr
 	if ethAddr, err = lookupEthAddr(iface, nextHop); err != psErr.OK {
-		psLog.E(fmt.Sprintf("Ethernet address was not found: %s", err))
+		psLog.E(fmt.Sprintf("ethernet address was not found: %s", err))
 		return psErr.Error
 	}
 

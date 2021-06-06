@@ -44,7 +44,7 @@ func ReadFrame(fd int, addr EthAddr) (*EthMessage, psErr.E) {
 	}
 
 	if flen < EthHdrLen {
-		psLog.E(fmt.Sprintf("Ethernet header length is too short: %d bytes", flen))
+		psLog.E(fmt.Sprintf("ethernet header length is too short: %d bytes", flen))
 		return nil, psErr.Error
 	}
 

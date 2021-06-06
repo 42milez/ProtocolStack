@@ -80,7 +80,7 @@ type Hdr struct {
 
 func Receive(payload []byte, dst [mw.V4AddrLen]byte, src [mw.V4AddrLen]byte, dev mw.IDevice) psErr.E {
 	if len(payload) < HdrLen {
-		psLog.E(fmt.Sprintf("ICMP header length is too short: %d bytes", len(payload)))
+		psLog.E(fmt.Sprintf("icmp header length is too short: %d bytes", len(payload)))
 		return psErr.InvalidPacket
 	}
 
@@ -94,7 +94,7 @@ func Receive(payload []byte, dst [mw.V4AddrLen]byte, src [mw.V4AddrLen]byte, dev
 	payload[2] = 0x00 // assign 0 to Checksum field (16bit)
 	payload[3] = 0x00
 	if checksum2 := mw.Checksum(payload); checksum2 != checksum1 {
-		psLog.E(fmt.Sprintf("Checksum mismatch: Expect = 0x%04x, Actual = 0x%04x", checksum1, checksum2))
+		psLog.E(fmt.Sprintf("checksum mismatch: Expect = 0x%04x, Actual = 0x%04x", checksum1, checksum2))
 		return psErr.ChecksumMismatch
 	}
 

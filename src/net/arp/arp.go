@@ -160,7 +160,7 @@ type Status int
 
 func Receive(packet []byte, dev mw.IDevice) psErr.E {
 	if len(packet) < PacketLen {
-		psLog.E(fmt.Sprintf("ARP packet length is too short: %d bytes", len(packet)))
+		psLog.E(fmt.Sprintf("arp packet length is too short: %d bytes", len(packet)))
 		return psErr.InvalidPacket
 	}
 
@@ -171,12 +171,12 @@ func Receive(packet []byte, dev mw.IDevice) psErr.E {
 	}
 
 	if arpPacket.HT != Ethernet || arpPacket.HAL != mw.EthAddrLen {
-		psLog.E("Value of ARP packet header is invalid (Hardware)")
+		psLog.E("invalid arp header field (Hardware)")
 		return psErr.InvalidPacket
 	}
 
 	if arpPacket.PT != mw.IPv4 || arpPacket.PAL != mw.V4AddrLen {
-		psLog.E("Value of ARP packet header is invalid (Protocol)")
+		psLog.E("invalid arp header field (Protocol)")
 		return psErr.InvalidPacket
 	}
 
@@ -273,12 +273,12 @@ func SendRequest(iface *mw.Iface, ip mw.IP) psErr.E {
 
 func Resolve(iface *mw.Iface, ip mw.IP) (mw.EthAddr, Status) {
 	if iface.Dev.Type() != mw.EthernetDevice {
-		psLog.E(fmt.Sprintf("Unsupported device type: %s", iface.Dev.Type()))
+		psLog.E(fmt.Sprintf("unsupported device type: %s", iface.Dev.Type()))
 		return mw.EthAddr{}, Error
 	}
 
 	if iface.Family != mw.V4AddrFamily {
-		psLog.E(fmt.Sprintf("Unsupported address family: %s", iface.Family))
+		psLog.E(fmt.Sprintf("unsupported address family: %s", iface.Family))
 		return mw.EthAddr{}, Error
 	}
 

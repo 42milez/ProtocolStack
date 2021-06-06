@@ -87,7 +87,7 @@ func (p *deviceRepo) Up() psErr.E {
 			return psErr.Error
 		}
 		if err := dev.Open(); err != psErr.OK {
-			psLog.E(fmt.Sprintf("Can't open device: %s", err))
+			psLog.E(fmt.Sprintf("can't open device: %s", err))
 			psLog.E(fmt.Sprintf("\ttype: %s", dev.Type()))
 			psLog.E(fmt.Sprintf("\tname: %s (%s)", dev.Name(), dev.Priv().Name))
 			return psErr.Error

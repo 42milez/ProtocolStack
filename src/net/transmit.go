@@ -9,12 +9,12 @@ import (
 
 func Transmit(dst mw.EthAddr, payload []byte, typ mw.EthType, iface *mw.Iface) psErr.E {
 	if !iface.Dev.IsUp() {
-		psLog.E(fmt.Sprintf("Device %s is down", iface.Dev.Name()))
+		psLog.E(fmt.Sprintf("device %s is down", iface.Dev.Name()))
 		return psErr.DeviceNotOpened
 	}
 
 	if len(payload) > int(iface.Dev.MTU()) {
-		psLog.E(fmt.Sprintf("EthMessage is too long: mtu = %d, actual = %d", iface.Dev.MTU(), len(payload)))
+		psLog.E(fmt.Sprintf("ethMessage is too long: mtu = %d, actual = %d", iface.Dev.MTU(), len(payload)))
 		return psErr.PacketTooLong
 	}
 
