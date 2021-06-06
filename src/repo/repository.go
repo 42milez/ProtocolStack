@@ -74,8 +74,7 @@ func (p *deviceRepo) Register(dev mw.IDevice) psErr.E {
 	psLog.I("device was registered",
 		fmt.Sprintf("type: %s", dev.Type()),
 		fmt.Sprintf("name: %s (%s)", dev.Name(), dev.Priv().Name),
-		fmt.Sprintf("addr: %s", dev.Addr()),
-	)
+		fmt.Sprintf("addr: %s", dev.Addr()))
 	return psErr.OK
 }
 
