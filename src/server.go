@@ -27,10 +27,10 @@ const nServiceWorkers = 9
 var wg sync.WaitGroup
 var arpWg sync.WaitGroup
 var ethWg sync.WaitGroup
-var ipWg sync.WaitGroup
 var icmpWg sync.WaitGroup
-var repoWg sync.WaitGroup
+var ipWg sync.WaitGroup
 var monitorWg sync.WaitGroup
+var repoWg sync.WaitGroup
 
 var rxCh chan os.Signal
 var sigCh chan os.Signal
@@ -39,8 +39,8 @@ func handleSignal(sigCh <-chan os.Signal, wg *sync.WaitGroup) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		sig := <-sigCh
-		psLog.I(fmt.Sprintf("Signal: %s", sig))
+		psLog.I(fmt.Sprintf("Signal: %s", <-sigCh))
+		stop()
 		rxCh <-syscall.SIGUSR1
 	}()
 }
@@ -95,16 +95,16 @@ func start() psErr.E {
 	if err := eth.StartService(&ethWg); err != psErr.OK {
 		return psErr.Error
 	}
-	if err := ip.StartService(&ipWg); err != psErr.OK {
-		return psErr.Error
-	}
 	if err := icmp.StartService(&icmpWg); err != psErr.OK {
 		return psErr.Error
 	}
-	if err := repo.StartService(&repoWg); err != psErr.OK {
+	if err := ip.StartService(&ipWg); err != psErr.OK {
 		return psErr.Error
 	}
 	if err := monitor.StartService(&monitorWg); err != psErr.OK {
+		return psErr.Error
+	}
+	if err := repo.StartService(&repoWg); err != psErr.OK {
 		return psErr.Error
 	}
 
@@ -123,6 +123,23 @@ func start() psErr.E {
 	psLog.I("All service workers started")
 
 	return psErr.OK
+}
+
+func stop() {
+	arp.StopService()
+	eth.StopService()
+	icmp.StopService()
+	ip.StopService()
+	monitor.StopService()
+	repo.StopService()
+	repo.StopService()
+
+	arpWg.Wait()
+	ethWg.Wait()
+	icmpWg.Wait()
+	ipWg.Wait()
+	monitorWg.Wait()
+	repoWg.Wait()
 }
 
 func init() {
@@ -147,7 +164,7 @@ func main() {
 			case <-rxCh:
 				return
 			default:
-				time.Sleep(time.Second * 1)
+				time.Sleep(500*time.Millisecond)
 			}
 		}
 	}()

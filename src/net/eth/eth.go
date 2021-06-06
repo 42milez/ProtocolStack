@@ -23,7 +23,16 @@ func StartService(wg *sync.WaitGroup) psErr.E {
 	wg.Add(2)
 	go receiver(wg)
 	go sender(wg)
+	psLog.I("Ethernet service started")
 	return psErr.OK
+}
+
+func StopService() {
+	msg := &worker.Message{
+		Desired: worker.Stopped,
+	}
+	rcvSigCh <- msg
+	sndSigCh <- msg
 }
 
 func receiver(wg *sync.WaitGroup) {

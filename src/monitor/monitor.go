@@ -2,6 +2,7 @@ package monitor
 
 import (
 	psErr "github.com/42milez/ProtocolStack/src/error"
+	psLog "github.com/42milez/ProtocolStack/src/log"
 	"github.com/42milez/ProtocolStack/src/worker"
 	"sync"
 	"time"
@@ -94,6 +95,7 @@ func Status() ServiceStatus {
 func StartService(wg *sync.WaitGroup) psErr.E {
 	wg.Add(1)
 	go watcher(wg)
+	psLog.I("Monitor service started")
 	return psErr.OK
 }
 

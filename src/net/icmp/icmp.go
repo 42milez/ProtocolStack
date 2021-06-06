@@ -163,7 +163,16 @@ func StartService(wg *sync.WaitGroup) psErr.E {
 	wg.Add(2)
 	go receiver(wg)
 	go sender(wg)
+	psLog.I("ICMP service started")
 	return psErr.OK
+}
+
+func StopService() {
+	msg := &worker.Message{
+		Desired: worker.Stopped,
+	}
+	rcvSigCh <- msg
+	sndSigCh <- msg
 }
 
 func dump(hdr *Hdr, payload []byte) {

@@ -301,6 +301,7 @@ func StartService(wg *sync.WaitGroup) psErr.E {
 	go receiver(wg)
 	go sender(wg)
 	go timer(wg)
+	psLog.I("ARP service started")
 	return psErr.OK
 }
 

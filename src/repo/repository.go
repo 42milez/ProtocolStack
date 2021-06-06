@@ -213,6 +213,13 @@ func StartService(wg *sync.WaitGroup) psErr.E {
 	return psErr.OK
 }
 
+func StopService() {
+	msg := &worker.Message{
+		Desired: worker.Stopped,
+	}
+	sigCh <- msg
+}
+
 func watcher(wg *sync.WaitGroup) {
 	defer wg.Done()
 
