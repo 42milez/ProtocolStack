@@ -103,8 +103,7 @@ func Receive(payload []byte, dev mw.IDevice) psErr.E {
 		}
 	}
 
-	psLog.I("incoming ip packet")
-	dumpIpPacket(payload)
+	psLog.I("incoming ip packet", dump(payload)...)
 
 	switch hdr.Protocol {
 	case ICMP:
@@ -151,8 +150,7 @@ func Send(protoNum mw.ProtocolNumber, payload []byte, src mw.IP, dst mw.IP) psEr
 		return psErr.Error
 	}
 
-	psLog.I("outgoing ip packet")
-	dumpIpPacket(packet)
+	psLog.I("outgoing ip packet", dump(packet)...)
 
 	// get eth address from ip address
 	var ethAddr mw.EthAddr
@@ -211,22 +209,23 @@ func createPacket(protoNum mw.ProtocolNumber, src mw.IP, dst mw.IP, payload []by
 	return packet
 }
 
-func dumpIpPacket(packet []byte) {
+func dump(packet []byte) (ret []string) {
 	ihl := packet[0] & 0x0f
 	totalLen := uint16(packet[2])<<8 | uint16(packet[3])
 	payloadLen := totalLen - uint16(4*ihl)
-	psLog.I(fmt.Sprintf("version:             %d", packet[0]>>4))
-	psLog.I(fmt.Sprintf("ihl:                 %d", ihl))
-	psLog.I(fmt.Sprintf("type of service:     0b%08b", packet[1]))
-	psLog.I(fmt.Sprintf("total length:        %d bytes (payload: %d bytes)", totalLen, payloadLen))
-	psLog.I(fmt.Sprintf("id:                  %d", uint16(packet[4])<<8|uint16(packet[5])))
-	psLog.I(fmt.Sprintf("flags:               0b%03b", (packet[6]&0xe0)>>5))
-	psLog.I(fmt.Sprintf("fragment offset:     %d", uint16(packet[6]&0x1f)<<8|uint16(packet[7])))
-	psLog.I(fmt.Sprintf("ttl:                 %d", packet[8]))
-	psLog.I(fmt.Sprintf("protocol:            %s (%d)", mw.ProtocolNumber(packet[9]), packet[9]))
-	psLog.I(fmt.Sprintf("checksum:            0x%04x", uint16(packet[10])<<8|uint16(packet[11])))
-	psLog.I(fmt.Sprintf("source address:      %d.%d.%d.%d", packet[12], packet[13], packet[14], packet[15]))
-	psLog.I(fmt.Sprintf("destination address: %d.%d.%d.%d", packet[16], packet[17], packet[18], packet[19]))
+	ret = append(ret, fmt.Sprintf("version:             %d", packet[0]>>4))
+	ret = append(ret, fmt.Sprintf("ihl:                 %d", ihl))
+	ret = append(ret, fmt.Sprintf("type of service:     0b%08b", packet[1]))
+	ret = append(ret, fmt.Sprintf("total length:        %d bytes (payload: %d bytes)", totalLen, payloadLen))
+	ret = append(ret, fmt.Sprintf("id:                  %d", uint16(packet[4])<<8|uint16(packet[5])))
+	ret = append(ret, fmt.Sprintf("flags:               0b%03b", (packet[6]&0xe0)>>5))
+	ret = append(ret, fmt.Sprintf("fragment offset:     %d", uint16(packet[6]&0x1f)<<8|uint16(packet[7])))
+	ret = append(ret, fmt.Sprintf("ttl:                 %d", packet[8]))
+	ret = append(ret, fmt.Sprintf("protocol:            %s (%d)", mw.ProtocolNumber(packet[9]), packet[9]))
+	ret = append(ret, fmt.Sprintf("checksum:            0x%04x", uint16(packet[10])<<8|uint16(packet[11])))
+	ret = append(ret, fmt.Sprintf("source address:      %d.%d.%d.%d", packet[12], packet[13], packet[14], packet[15]))
+	ret = append(ret, fmt.Sprintf("destination address: %d.%d.%d.%d", packet[16], packet[17], packet[18], packet[19]))
+	return
 }
 
 func lookupEthAddr(iface *mw.Iface, nextHop mw.IP) (mw.EthAddr, psErr.E) {
