@@ -213,6 +213,7 @@ func dump(packet []byte) (ret []string) {
 	ihl := packet[0] & 0x0f
 	totalLen := uint16(packet[2])<<8 | uint16(packet[3])
 	payloadLen := totalLen - uint16(4*ihl)
+
 	ret = append(ret, fmt.Sprintf("version:             %d", packet[0]>>4))
 	ret = append(ret, fmt.Sprintf("ihl:                 %d", ihl))
 	ret = append(ret, fmt.Sprintf("type of service:     0b%08b", packet[1]))
@@ -225,6 +226,16 @@ func dump(packet []byte) (ret []string) {
 	ret = append(ret, fmt.Sprintf("checksum:            0x%04x", uint16(packet[10])<<8|uint16(packet[11])))
 	ret = append(ret, fmt.Sprintf("source address:      %d.%d.%d.%d", packet[12], packet[13], packet[14], packet[15]))
 	ret = append(ret, fmt.Sprintf("destination address: %d.%d.%d.%d", packet[16], packet[17], packet[18], packet[19]))
+
+	s := "payload:             "
+	for i, v := range packet[ihl:] {
+		s += fmt.Sprintf("%02x ", v)
+		if (i+1)%20 == 0 {
+			s += "\n                                             "
+		}
+	}
+	ret = append(ret, s)
+
 	return
 }
 
