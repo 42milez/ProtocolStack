@@ -64,38 +64,39 @@ func (p *deviceRepo) Poll() psErr.E {
 func (p *deviceRepo) Register(dev mw.IDevice) psErr.E {
 	for _, d := range p.devices {
 		if d.Equal(dev) {
-			psLog.W("Device is already registered")
-			psLog.W(fmt.Sprintf("\ttype: %s", d.Type()))
-			psLog.W(fmt.Sprintf("\tname: %s (%s)", d.Name(), d.Priv().Name))
+			psLog.W("Device is already registered",
+				fmt.Sprintf("type: %s", d.Type()),
+				fmt.Sprintf("name: %s (%s)", d.Name(), d.Priv().Name))
 			return psErr.Error
 		}
 	}
 	p.devices = append(p.devices, dev)
-	psLog.I("device was registered")
-	psLog.I(fmt.Sprintf("\ttype:      %s", dev.Type()))
-	psLog.I(fmt.Sprintf("\tname:      %s (%s)", dev.Name(), dev.Priv().Name))
-	psLog.I(fmt.Sprintf("\taddr:      %s", dev.Addr()))
+	psLog.I("device was registered",
+		fmt.Sprintf("type: %s", dev.Type()),
+		fmt.Sprintf("name: %s (%s)", dev.Name(), dev.Priv().Name),
+		fmt.Sprintf("addr: %s", dev.Addr()),
+	)
 	return psErr.OK
 }
 
 func (p *deviceRepo) Up() psErr.E {
 	for _, dev := range p.devices {
 		if dev.IsUp() {
-			psLog.W("Device is already up")
-			psLog.W(fmt.Sprintf("\ttype: %s", dev.Type()))
-			psLog.W(fmt.Sprintf("\tname: %s (%s)", dev.Name(), dev.Priv().Name))
+			psLog.W("Device is already up",
+				fmt.Sprintf("type: %s", dev.Type()),
+				fmt.Sprintf("name: %s (%s)", dev.Name(), dev.Priv().Name))
 			return psErr.Error
 		}
 		if err := dev.Open(); err != psErr.OK {
-			psLog.E(fmt.Sprintf("can't open device: %s", err))
-			psLog.E(fmt.Sprintf("\ttype: %s", dev.Type()))
-			psLog.E(fmt.Sprintf("\tname: %s (%s)", dev.Name(), dev.Priv().Name))
+			psLog.E(fmt.Sprintf("can't open device: %s", err),
+				fmt.Sprintf("type: %s", dev.Type()),
+				fmt.Sprintf("name: %s (%s)", dev.Name(), dev.Priv().Name))
 			return psErr.Error
 		}
 		dev.Up()
-		psLog.I("device was opened")
-		psLog.I(fmt.Sprintf("\ttype: %s", dev.Type()))
-		psLog.I(fmt.Sprintf("\tname: %s (%s)", dev.Name(), dev.Priv().Name))
+		psLog.I("device was opened",
+			fmt.Sprintf("type: %s", dev.Type()),
+			fmt.Sprintf("name: %s (%s)", dev.Name(), dev.Priv().Name))
 	}
 	return psErr.OK
 }
@@ -139,9 +140,9 @@ func (p *ifaceRepo) Register(iface *mw.Iface, dev mw.IDevice) psErr.E {
 	p.ifaces = append(p.ifaces, iface)
 	iface.Dev = dev
 
-	psLog.I("interface was attached")
-	psLog.I(fmt.Sprintf("\tip:     %s", iface.Unicast))
-	psLog.I(fmt.Sprintf("\tdevice: %s (%s)", dev.Name(), dev.Priv().Name))
+	psLog.I("interface was attached",
+		fmt.Sprintf("ip:     %s", iface.Unicast),
+		fmt.Sprintf("device: %s (%s)", dev.Name(), dev.Priv().Name))
 
 	return psErr.OK
 }
@@ -178,12 +179,12 @@ func (p *routeRepo) Register(network mw.IP, nextHop mw.IP, iface *mw.Iface) {
 		Iface:   iface,
 	}
 	p.routes = append(p.routes, route)
-	psLog.I("route was registered")
-	psLog.I(fmt.Sprintf("\tnetwork:  %s", route.Network))
-	psLog.I(fmt.Sprintf("\tnetmask:  %s", route.Netmask))
-	psLog.I(fmt.Sprintf("\tunicast:  %s", iface.Unicast))
-	psLog.I(fmt.Sprintf("\tnext hop: %s", nextHop))
-	psLog.I(fmt.Sprintf("\tdevice:   %s (%s)", iface.Dev.Name(), iface.Dev.Priv().Name))
+	psLog.I("route was registered",
+		fmt.Sprintf("network:  %s", route.Network),
+		fmt.Sprintf("netmask:  %s", route.Netmask),
+		fmt.Sprintf("unicast:  %s", iface.Unicast),
+		fmt.Sprintf("next hop: %s", nextHop),
+		fmt.Sprintf("device:   %s (%s)", iface.Dev.Name(), iface.Dev.Priv().Name))
 }
 
 func (p *routeRepo) RegisterDefaultGateway(iface *mw.Iface, nextHop mw.IP) {
@@ -194,12 +195,12 @@ func (p *routeRepo) RegisterDefaultGateway(iface *mw.Iface, nextHop mw.IP) {
 		Iface:   iface,
 	}
 	p.routes = append(p.routes, route)
-	psLog.I("default gateway was registered")
-	psLog.I(fmt.Sprintf("\tnetwork:  %s", route.Network))
-	psLog.I(fmt.Sprintf("\tnetmask:  %s", route.Netmask))
-	psLog.I(fmt.Sprintf("\tunicast:  %s", iface.Unicast))
-	psLog.I(fmt.Sprintf("\tnext hop: %s", nextHop))
-	psLog.I(fmt.Sprintf("\tdevice:   %s (%s)", iface.Dev.Name(), iface.Dev.Priv().Name))
+	psLog.I("default gateway was registered",
+		fmt.Sprintf("network:  %s", route.Network),
+		fmt.Sprintf("netmask:  %s", route.Netmask),
+		fmt.Sprintf("unicast:  %s", iface.Unicast),
+		fmt.Sprintf("next hop: %s", nextHop),
+		fmt.Sprintf("device:   %s (%s)", iface.Dev.Name(), iface.Dev.Priv().Name))
 }
 
 func Start(wg *sync.WaitGroup) psErr.E {
