@@ -55,7 +55,7 @@ If no argument is provided, `make` compiles the server implicitly. When you woul
 Note: `make` supports the commands below:
 - `build` build project
 - `clean` clean up caches
-- `compile` clean up caches, resolve dependencies, and build the program
+- `compile` resolve dependencies, and build the program
 - `fmt` run formatter
 - `gen` generate source code
 - `lint` run linters (golangci-lint)
