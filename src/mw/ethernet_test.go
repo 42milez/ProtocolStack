@@ -50,21 +50,15 @@ func TestEthType_String(t *testing.T) {
 }
 
 func TestDumpFrame(t *testing.T) {
-	regexpDatetime := "[0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}"
 	macDst := EthAddr{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}
 	macSrc := EthAddr{0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f}
 	ethType := EthType(0x0800)
 	want, _ := regexp.Compile(fmt.Sprintf(
-		"^.+ %s type:    %s \\(0x%04x\\).+ %s dst:     %s.+ %s src:     %s.+ %s payload: 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 .+ %s  15 16 17 18 19 1a 1b 1c 1d 1e 1f 20 21 22 23 24 25 26 27 28 $",
-		regexpDatetime,
+		"^type:%s\\(0x%04x\\)dst:%ssrc:%spayload:0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728$",
 		ethType.String(),
 		uint16(ethType),
-		regexpDatetime,
 		macDst,
-		regexpDatetime,
-		macSrc,
-		regexpDatetime,
-		regexpDatetime))
+		macSrc))
 	got := psLog.CaptureLogOutput(func() {
 		hdr := EthHdr{Dst: macDst, Src: macSrc, Type: ethType}
 		payload := []byte{
@@ -73,9 +67,9 @@ func TestDumpFrame(t *testing.T) {
 			0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e,
 			0x1f, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28,
 		}
-		dumpFrame(&hdr, payload)
+		psLog.I("", dumpFrame(&hdr, payload)...)
 	})
-	got = TrimTapAndLinefeed(got)
+	got = Trim(got)
 	if !want.MatchString(got) {
 		t.Errorf("dumpFrame() = %v; want %v", got, want)
 	}
@@ -186,8 +180,9 @@ func SetupReadFrameTest(t *testing.T) (ctrl *gomock.Controller, teardown func())
 	return
 }
 
-func TrimTapAndLinefeed(s string) string {
+func Trim(s string) string {
 	ret := strings.Replace(s, "\t", "", -1)
 	ret = strings.Replace(ret, "\n", "", -1)
+	ret = strings.Replace(ret, " ", "", -1)
 	return ret
 }
