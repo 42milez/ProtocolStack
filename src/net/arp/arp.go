@@ -180,7 +180,7 @@ func Receive(packet []byte, dev mw.IDevice) psErr.E {
 		return psErr.InvalidPacket
 	}
 
-	psLog.I("incoming arp packet", dumpArpPacket(&arpPacket)...)
+	psLog.I("incoming arp packet", dump(&arpPacket)...)
 
 	iface := repo.IfaceRepo.Lookup(dev, mw.V4AddrFamily)
 	if iface == nil {
@@ -224,7 +224,7 @@ func SendReply(tha mw.EthAddr, tpa mw.V4Addr, iface *mw.Iface) psErr.E {
 	copy(packet.SHA[:], addr[:])
 	copy(packet.SPA[:], iface.Unicast[:])
 
-	psLog.I("outgoing arp packet", dumpArpPacket(&packet)...)
+	psLog.I("outgoing arp packet", dump(&packet)...)
 
 	buf := new(bytes.Buffer)
 	if err := binary.Write(buf, binary.BigEndian, &packet); err != nil {
@@ -259,7 +259,7 @@ func SendRequest(iface *mw.Iface, ip mw.IP) psErr.E {
 	}
 	payload := buf.Bytes()
 
-	psLog.I("outgoing arp packet", dumpArpPacket(&packet)...)
+	psLog.I("outgoing arp packet", dump(&packet)...)
 
 	if err := net.Transmit(mw.EthBroadcast, payload, mw.ARP, iface); err != psErr.OK {
 		return psErr.Error
@@ -311,7 +311,7 @@ func Stop() {
 	tmrSigCh <- msg
 }
 
-func dumpArpPacket(packet *Packet) (ret []string) {
+func dump(packet *Packet) (ret []string) {
 	ret = append(ret, fmt.Sprintf("hardware type:           %s", packet.HT))
 	ret = append(ret, fmt.Sprintf("protocol Type:           %s", packet.PT))
 	ret = append(ret, fmt.Sprintf("hardware address length: %d", packet.HAL))
