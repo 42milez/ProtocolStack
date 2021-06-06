@@ -193,8 +193,8 @@ func Receive(packet []byte, dev mw.IDevice) psErr.E {
 			_ = cache.Create(arpPacket.SHA, arpPacket.SPA, resolved)
 		} else {
 			psLog.I("arp cache entry was renewed",
-				fmt.Sprintf("\tspa: %s", arpPacket.SPA),
-				fmt.Sprintf("\tsha: %s", arpPacket.SHA))
+				fmt.Sprintf("spa: %s", arpPacket.SPA),
+				fmt.Sprintf("sha: %s", arpPacket.SHA))
 		}
 		if arpPacket.Opcode == Request {
 			if err := SendReply(arpPacket.SHA, arpPacket.SPA, iface); err != psErr.OK {
@@ -381,7 +381,7 @@ func timer(wg *sync.WaitGroup) {
 			if len(ret) != 0 {
 				psLog.I("arp cache entries were expired")
 				for i, v := range ret {
-					psLog.I(fmt.Sprintf("\t%d: %s", i+1, v))
+					psLog.I(fmt.Sprintf("%d: %s", i+1, v))
 				}
 			}
 		}

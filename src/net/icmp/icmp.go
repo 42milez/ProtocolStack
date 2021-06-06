@@ -174,29 +174,28 @@ func Stop() {
 }
 
 func dump(hdr *Hdr, payload []byte) (ret []string) {
-	ret = append(ret, fmt.Sprintf("\ttype:     %s (%d)", types[hdr.Type], hdr.Type))
-	ret = append(ret, fmt.Sprintf("\tcode:     %d", hdr.Code))
-	ret = append(ret, fmt.Sprintf("\tchecksum: 0x%04x", hdr.Checksum))
+	ret = append(ret, fmt.Sprintf("type:     %s (%d)", types[hdr.Type], hdr.Type))
+	ret = append(ret, fmt.Sprintf("code:     %d", hdr.Code))
+	ret = append(ret, fmt.Sprintf("checksum: 0x%04x", hdr.Checksum))
 
 	switch hdr.Type {
 	case Echo:
 	case EchoReply:
-		ret = append(ret, fmt.Sprintf("\tid:       %d", (hdr.Content&0xffff0000)>>16))
-		ret = append(ret, fmt.Sprintf("\tseq:      %d", hdr.Content&0x0000ffff))
+		ret = append(ret, fmt.Sprintf("id:       %d", (hdr.Content&0xffff0000)>>16))
+		ret = append(ret, fmt.Sprintf("seq:      %d", hdr.Content&0x0000ffff))
 	default:
-		ret = append(ret, fmt.Sprintf("\tcontent:  %02x %02x %02x %02x",
+		ret = append(ret, fmt.Sprintf("content:  %02x %02x %02x %02x",
 			uint8((hdr.Content&0xf000)>>24),
 			uint8((hdr.Content&0x0f00)>>16),
 			uint8((hdr.Content&0x00f0)>>8),
 			uint8(hdr.Content&0x000f)))
 	}
 
-	s := "\tpayload:  "
+	s := "payload:  "
 	for i, v := range payload {
 		s += fmt.Sprintf("%02x ", v)
 		if (i+1)%20 == 0 {
-			psLog.I(s)
-			s = "\t\t  "
+			s += "\n                                 "
 		}
 	}
 	ret = append(ret, s)

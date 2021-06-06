@@ -71,7 +71,7 @@ func TestF(t *testing.T) {
 }
 
 func Trim(s string) (ret string) {
-	ret = strings.Replace(s, "\t", "", -1)
+	ret = strings.Replace(s, "", "", -1)
 	ret = strings.Replace(ret, "\n", "", -1)
 	ret = strings.Replace(ret, "                        ", "", -1)
 	return

@@ -181,7 +181,7 @@ func SetupReadFrameTest(t *testing.T) (ctrl *gomock.Controller, teardown func())
 }
 
 func Trim(s string) string {
-	ret := strings.Replace(s, "\t", "", -1)
+	ret := strings.Replace(s, "", "", -1)
 	ret = strings.Replace(ret, "\n", "", -1)
 	ret = strings.Replace(ret, " ", "", -1)
 	return ret
