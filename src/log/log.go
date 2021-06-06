@@ -20,7 +20,7 @@ func I(s string, args ...string) {
 	defer mtx.Unlock()
 	mtx.Lock()
 	dt := time.Now().Format(dtFormat)
-	_, _ = goFmt.Fprintln(stdout, goFmt.Sprintf("\u001B[1;34m[I] %s %s\u001B[0m", dt, s))
+	_, _ = goFmt.Fprintln(stdout, goFmt.Sprintf("[I] %s %s", dt, s))
 	for _, v := range args {
 		_, _ = goFmt.Fprintln(stdout, goFmt.Sprintf("                        %s", v))
 	}
@@ -32,7 +32,7 @@ func W(s string, args ...string) {
 	dt := time.Now().Format(dtFormat)
 	_, _ = goFmt.Fprintln(stdout, goFmt.Sprintf("\u001B[1;33m[W] %s %s\u001B[0m", dt, s))
 	for _, v := range args {
-		_, _ = goFmt.Fprintln(stdout, goFmt.Sprintf("                        %s", v))
+		_, _ = goFmt.Fprintln(stdout, goFmt.Sprintf("\u001B[1;33m                        %s\u001B[0m", v))
 	}
 }
 
@@ -42,7 +42,7 @@ func E(s string, args ...string) {
 	dt := time.Now().Format(dtFormat)
 	_, _ = goFmt.Fprintln(stderr, goFmt.Sprintf("\u001B[1;31m[E] %s %s\u001B[0m", dt, s))
 	for _, v := range args {
-		_, _ = goFmt.Fprintln(stderr, goFmt.Sprintf("                        %s", v))
+		_, _ = goFmt.Fprintln(stderr, goFmt.Sprintf("\u001B[1;31m                        %s\u001B[0m", v))
 	}
 }
 
@@ -52,7 +52,7 @@ func F(s string, args ...string) {
 	dt := time.Now().Format(dtFormat)
 	_, _ = goFmt.Fprintln(stderr, goFmt.Sprintf("\u001B[1;31m[F] %s %s\u001B[0m", dt, s))
 	for _, v := range args {
-		_, _ = goFmt.Fprintln(stderr, goFmt.Sprintf("                        %s", v))
+		_, _ = goFmt.Fprintln(stderr, goFmt.Sprintf("\u001B[1;31m                        %s\u001B[0", v))
 	}
 	os.Exit(1)
 }

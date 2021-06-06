@@ -7,7 +7,7 @@ import (
 )
 
 func TestI(t *testing.T) {
-	want, _ := regexp.Compile("^\u001B\\[1;34m\\[I] [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} info\u001B\\[0m$")
+	want, _ := regexp.Compile("^\\[I] [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} info$")
 	got := CaptureLogOutput(func() {
 		I("info")
 	})
@@ -16,9 +16,9 @@ func TestI(t *testing.T) {
 		t.Errorf("I() = %v; want %v", got, want.String())
 	}
 
-	want, _ = regexp.Compile("^\u001B\\[1;34m\\[I] [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} info\u001B\\[0m                        a                        b$")
+	want, _ = regexp.Compile("^\\[I] [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} InfoHelloWorld$")
 	got = CaptureLogOutput(func() {
-		I("info", "a", "b")
+		I("Info", "Hello", "World")
 	})
 	got = Trim(got)
 	if !want.MatchString(got) {
@@ -27,18 +27,18 @@ func TestI(t *testing.T) {
 }
 
 func TestW(t *testing.T) {
-	want, _ := regexp.Compile("^\u001B\\[1;33m\\[W] [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} warning\u001B\\[0m$")
+	want, _ := regexp.Compile("^\u001B\\[1;33m\\[W] [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} Warning\u001B\\[0m$")
 	got := CaptureLogOutput(func() {
-		W("warning")
+		W("Warning")
 	})
 	got = Trim(got)
 	if !want.MatchString(got) {
 		t.Errorf("W() = %v; want %v", got, want.String())
 	}
 
-	want, _ = regexp.Compile("^\u001B\\[1;33m\\[W] [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} warning\u001B\\[0m                        a                        b$")
+	want, _ = regexp.Compile("^\u001B\\[1;33m\\[W] [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} Warning\u001B\\[0m\u001B\\[1;33mHello\u001B\\[0m\u001B\\[1;33mWorld\u001B\\[0m$")
 	got = CaptureLogOutput(func() {
-		W("warning", "a", "b")
+		W("Warning", "Hello", "World")
 	})
 	got = Trim(got)
 	if !want.MatchString(got) {
@@ -47,18 +47,18 @@ func TestW(t *testing.T) {
 }
 
 func TestE(t *testing.T) {
-	want, _ := regexp.Compile("^\u001B\\[1;31m\\[E] [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} error\u001B\\[0m$")
+	want, _ := regexp.Compile("^\u001B\\[1;31m\\[E] [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} Error\u001B\\[0m$")
 	got := CaptureLogOutput(func() {
-		E("error")
+		E("Error")
 	})
 	got = Trim(got)
 	if !want.MatchString(got) {
 		t.Errorf("E() = %v; want %v", got, want.String())
 	}
 
-	want, _ = regexp.Compile("^\u001B\\[1;31m\\[E] [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} error\u001B\\[0m                        a                        b$")
+	want, _ = regexp.Compile("^\u001B\\[1;31m\\[E] [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} Error\u001B\\[0m\u001B\\[1;31mHello\u001B\\[0m\u001B\\[1;31mWorld\u001B\\[0m$")
 	got = CaptureLogOutput(func() {
-		E("\terror", "a", "b")
+		E("Error", "Hello", "World")
 	})
 	got = Trim(got)
 	if !want.MatchString(got) {
@@ -73,5 +73,6 @@ func TestF(t *testing.T) {
 func Trim(s string) (ret string) {
 	ret = strings.Replace(s, "\t", "", -1)
 	ret = strings.Replace(ret, "\n", "", -1)
+	ret = strings.Replace(ret, "                        ", "", -1)
 	return
 }
