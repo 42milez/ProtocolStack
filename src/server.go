@@ -45,9 +45,10 @@ func run(sigCh <-chan os.Signal) {
 }
 
 func setup() psErr.E {
-	psLog.I("-------------------------------------------------------\n" +
-		"\t\t\t          I N I T I A L I Z E   D E V I C E S          \n" +
-		"\t\t\t-------------------------------------------------------")
+	psLog.I(
+		"-------------------------------------------------------",
+		"          I N I T I A L I Z E   D E V I C E S          ",
+		"-------------------------------------------------------")
 
 	// Create a loopback device and its iface, then link them.
 	loopbackDev := eth.GenLoopbackDevice("net" + strconv.Itoa(repo.DeviceRepo.NextNumber()))
@@ -80,17 +81,19 @@ func setup() psErr.E {
 
 	repo.RouteRepo.RegisterDefaultGateway(iface2, mw.ParseIP("192.0.2.1"))
 
-	psLog.I("-------------------------------------------------------\n" +
-		"\t\t\t              S T A R T   S E R V I C E S              \n" +
-		"\t\t\t-------------------------------------------------------")
+	psLog.I(
+		"-------------------------------------------------------",
+		"              S T A R T   S E R V I C E S              ",
+		"-------------------------------------------------------")
 
 	if err := startServices(); err != psErr.OK {
 		return psErr.Error
 	}
 
-	psLog.I("/////////////////////////////////////////////////////////\n" +
-		"\t\t\t               S E R V E R   S T A R T E D               \n" +
-		"\t\t\t/////////////////////////////////////////////////////////")
+	psLog.I(
+		"///////////////////////////////////////////////////////",
+		"              S E R V E R   S T A R T E D              ",
+		"///////////////////////////////////////////////////////")
 
 	return psErr.OK
 }
