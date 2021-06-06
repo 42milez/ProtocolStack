@@ -110,7 +110,7 @@ func watcher(wg *sync.WaitGroup) {
 
 	for {
 		select {
-		case msg := <- sigCh:
+		case msg := <-sigCh:
 			if msg.Desired == worker.Stopped {
 				return
 			}

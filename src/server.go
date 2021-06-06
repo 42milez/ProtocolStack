@@ -24,8 +24,6 @@ import (
 
 const serviceTimeout = 3 * time.Second
 
-var wg sync.WaitGroup
-var rxCh chan os.Signal
 var sigCh chan os.Signal
 
 var arpWg sync.WaitGroup
@@ -35,21 +33,21 @@ var ipWg sync.WaitGroup
 var monitorWg sync.WaitGroup
 var repoWg sync.WaitGroup
 
-func handleSignal(sigCh <-chan os.Signal, wg *sync.WaitGroup) {
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+func run(sigCh <-chan os.Signal) {
+	for {
 		sig := <-sigCh
-		psLog.I(fmt.Sprintf("Signal: %s", sig))
-		stopServices()
-		rxCh <-syscall.SIGUSR1
-	}()
+		psLog.I(fmt.Sprintf("signal: %s", sig))
+		if sig == syscall.SIGINT || sig == syscall.SIGTERM {
+			stopServices()
+			return
+		}
+	}
 }
 
 func setup() psErr.E {
-	psLog.I("--------------------------------------------------")
-	psLog.I(" INITIALIZE DEVICES                               ")
-	psLog.I("--------------------------------------------------")
+	psLog.I("-------------------------------------------------------\n" +
+		"\t\t\t          I N I T I A L I Z E   D E V I C E S          \n" +
+		"\t\t\t-------------------------------------------------------")
 
 	// Create a loopback device and its iface, then link them.
 	loopbackDev := eth.GenLoopbackDevice("net" + strconv.Itoa(repo.DeviceRepo.NextNumber()))
@@ -82,9 +80,17 @@ func setup() psErr.E {
 
 	repo.RouteRepo.RegisterDefaultGateway(iface2, mw.ParseIP("192.0.2.1"))
 
+	psLog.I("-------------------------------------------------------\n" +
+		"\t\t\t              S T A R T   S E R V I C E S              \n" +
+		"\t\t\t-------------------------------------------------------")
+
 	if err := startServices(); err != psErr.OK {
 		return psErr.Error
 	}
+
+	psLog.I("/////////////////////////////////////////////////////////\n" +
+		"\t\t\t               S E R V E R   S T A R T E D               \n" +
+		"\t\t\t/////////////////////////////////////////////////////////")
 
 	return psErr.OK
 }
@@ -115,12 +121,12 @@ func startServices() psErr.E {
 			break
 		}
 		if time.Now().Sub(zero) > serviceTimeout {
-			psLog.E("Some services didn't ready within the time")
+			psLog.E("some services didn't ready within the time")
 			return psErr.Error
 		}
 	}
 
-	psLog.I("All service workers started")
+	psLog.I("all service workers started")
 
 	return psErr.OK
 }
@@ -142,7 +148,6 @@ func stopServices() {
 }
 
 func init() {
-	rxCh = make(chan os.Signal)
 	sigCh = make(chan os.Signal, 1)
 	// https://pkg.go.dev/os/signal#Notify
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
@@ -150,25 +155,10 @@ func init() {
 
 func main() {
 	if err := setup(); err != psErr.OK {
-		psLog.F("Initialization failed")
+		psLog.F("initialization failed")
 	}
 
-	handleSignal(sigCh, &wg)
+	run(sigCh)
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		for {
-			select {
-			case <-rxCh:
-				return
-			default:
-				time.Sleep(500*time.Millisecond)
-			}
-		}
-	}()
-
-	wg.Wait()
-
-	psLog.I("Server stopped")
+	psLog.I("server stopped")
 }

@@ -224,6 +224,7 @@ func watcher(wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	monCh <- &worker.Message{
+		ID:      watcherId + 999,
 		Current: worker.Running,
 	}
 
