@@ -48,8 +48,6 @@ func ReadFrame(fd int, addr EthAddr) (*EthMessage, psErr.E) {
 		return nil, psErr.Error
 	}
 
-	psLog.I(fmt.Sprintf("ethernet frame arrived: %d bytes", flen))
-
 	buf := bytes.NewBuffer(rxBuf)
 	hdr := EthHdr{}
 	if err := binary.Read(buf, binary.BigEndian, &hdr); err != nil {
@@ -67,7 +65,7 @@ func ReadFrame(fd int, addr EthAddr) (*EthMessage, psErr.E) {
 		return nil, psErr.ReadFromBufError
 	}
 
-	psLog.I("incoming ethernet frame", dump(&hdr, payload)...)
+	psLog.I(fmt.Sprintf("incoming ethernet frame (%d bytes)", flen), dump(&hdr, payload)...)
 
 	return &EthMessage{
 		Type:    hdr.Type,
