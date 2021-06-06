@@ -98,8 +98,7 @@ func Receive(payload []byte, dst [mw.V4AddrLen]byte, src [mw.V4AddrLen]byte, dev
 		return psErr.ChecksumMismatch
 	}
 
-	psLog.I("incoming icmp packet")
-	dump(&hdr, payload[HdrLen:])
+	psLog.I("incoming icmp packet", dump(&hdr, payload[HdrLen:])...)
 
 	switch hdr.Type {
 	case Echo:
@@ -146,8 +145,7 @@ func Send(typ uint8, code uint8, content uint32, payload []byte, src mw.IP, dst 
 	packet[2] = uint8((hdr.Checksum & 0xff00) >> 8)
 	packet[3] = uint8(hdr.Checksum & 0x00ff)
 
-	psLog.I("outgoing icmp packet")
-	dump(&hdr, payload)
+	psLog.I("outgoing icmp packet", dump(&hdr, payload)...)
 
 	mw.IpTxCh <- &mw.IpMessage{
 		ProtoNum: ip.ICMP,
@@ -175,18 +173,18 @@ func Stop() {
 	sndSigCh <- msg
 }
 
-func dump(hdr *Hdr, payload []byte) {
-	psLog.I(fmt.Sprintf("\ttype:     %s (%d)", types[hdr.Type], hdr.Type),)
-	psLog.I(fmt.Sprintf("\tcode:     %d", hdr.Code))
-	psLog.I(fmt.Sprintf("\tchecksum: 0x%04x", hdr.Checksum))
+func dump(hdr *Hdr, payload []byte) (ret []string) {
+	ret = append(ret, fmt.Sprintf("\ttype:     %s (%d)", types[hdr.Type], hdr.Type))
+	ret = append(ret, fmt.Sprintf("\tcode:     %d", hdr.Code))
+	ret = append(ret, fmt.Sprintf("\tchecksum: 0x%04x", hdr.Checksum))
 
 	switch hdr.Type {
 	case Echo:
 	case EchoReply:
-		psLog.I(fmt.Sprintf("\tid:       %d", (hdr.Content&0xffff0000)>>16))
-		psLog.I(fmt.Sprintf("\tseq:      %d", hdr.Content&0x0000ffff))
+		ret = append(ret, fmt.Sprintf("\tid:       %d", (hdr.Content&0xffff0000)>>16))
+		ret = append(ret, fmt.Sprintf("\tseq:      %d", hdr.Content&0x0000ffff))
 	default:
-		psLog.I(fmt.Sprintf("\tcontent:  %02x %02x %02x %02x",
+		ret = append(ret, fmt.Sprintf("\tcontent:  %02x %02x %02x %02x",
 			uint8((hdr.Content&0xf000)>>24),
 			uint8((hdr.Content&0x0f00)>>16),
 			uint8((hdr.Content&0x00f0)>>8),
@@ -201,6 +199,9 @@ func dump(hdr *Hdr, payload []byte) {
 			s = "\t\t  "
 		}
 	}
+	ret = append(ret, s)
+
+	return
 }
 
 func receiver(wg *sync.WaitGroup) {
