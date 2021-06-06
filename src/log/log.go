@@ -2,7 +2,7 @@ package log
 
 import (
 	"bytes"
-	goFmt "fmt"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -21,10 +21,10 @@ func I(s string, args ...string) {
 	mtx.Lock()
 	dt := time.Now().Format(dtFormat)
 	if s != "" {
-		_, _ = goFmt.Fprintln(stdout, goFmt.Sprintf("[I] %s %s", dt, s))
+		_, _ = fmt.Fprintf(stdout, "[I] %s %s\n", dt, s)
 	}
 	for _, v := range args {
-		_, _ = goFmt.Fprintln(stdout, goFmt.Sprintf("                        %s", v))
+		_, _ = fmt.Fprintf(stdout, "                        %s\n", v)
 	}
 }
 
@@ -33,10 +33,10 @@ func W(s string, args ...string) {
 	mtx.Lock()
 	dt := time.Now().Format(dtFormat)
 	if s != "" {
-		_, _ = goFmt.Fprintln(stdout, goFmt.Sprintf("\u001B[1;33m[W] %s %s\u001B[0m", dt, s))
+		_, _ = fmt.Fprintf(stdout, "\u001B[1;33m[W] %s %s\u001B[0m\n", dt, s)
 	}
 	for _, v := range args {
-		_, _ = goFmt.Fprintln(stdout, goFmt.Sprintf("\u001B[1;33m                        %s\u001B[0m", v))
+		_, _ = fmt.Fprintf(stdout, "\u001B[1;33m                        %s\u001B[0m\n", v)
 	}
 }
 
@@ -45,10 +45,10 @@ func E(s string, args ...string) {
 	mtx.Lock()
 	dt := time.Now().Format(dtFormat)
 	if s != "" {
-		_, _ = goFmt.Fprintln(stderr, goFmt.Sprintf("\u001B[1;31m[E] %s %s\u001B[0m", dt, s))
+		_, _ = fmt.Fprintf(stderr, "\u001B[1;31m[E] %s %s\u001B[0m\n", dt, s)
 	}
 	for _, v := range args {
-		_, _ = goFmt.Fprintln(stderr, goFmt.Sprintf("\u001B[1;31m                        %s\u001B[0m", v))
+		_, _ = fmt.Fprintf(stderr, "\u001B[1;31m                        %s\u001B[0m\n", v)
 	}
 }
 
@@ -57,10 +57,10 @@ func F(s string, args ...string) {
 	mtx.Lock()
 	dt := time.Now().Format(dtFormat)
 	if s != "" {
-		_, _ = goFmt.Fprintln(stderr, goFmt.Sprintf("\u001B[1;31m[F] %s %s\u001B[0m", dt, s))
+		_, _ = fmt.Fprintf(stderr, "\u001B[1;31m[F] %s %s\u001B[0m\n", dt, s)
 	}
 	for _, v := range args {
-		_, _ = goFmt.Fprintln(stderr, goFmt.Sprintf("\u001B[1;31m                        %s\u001B[0", v))
+		_, _ = fmt.Fprintf(stderr, "\u001B[1;31m                        %s\u001B[0\n", v)
 	}
 	os.Exit(1)
 }

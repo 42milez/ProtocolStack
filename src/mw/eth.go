@@ -60,7 +60,7 @@ func ReadFrame(fd int, addr EthAddr) (*EthMessage, psErr.E) {
 		}
 	}
 
-	payload := make([]byte, flen - EthHdrLen)
+	payload := make([]byte, flen-EthHdrLen)
 	if err := binary.Read(buf, binary.BigEndian, &payload); err != nil {
 		return nil, psErr.ReadFromBufError
 	}
@@ -92,7 +92,7 @@ func WriteFrame(fd int, dst EthAddr, src EthAddr, typ EthType, payload []byte) p
 	}
 	frame := buf.Bytes()
 
-	psLog.I(fmt.Sprintf("outgoing ethernet frame (%d bytes)", EthHdrLen + len(payload)), dump(&hdr, payload)...)
+	psLog.I(fmt.Sprintf("outgoing ethernet frame (%d bytes)", EthHdrLen+len(payload)), dump(&hdr, payload)...)
 
 	if _, err := psSyscall.Syscall.Write(fd, frame); err != nil {
 		return psErr.SyscallError
