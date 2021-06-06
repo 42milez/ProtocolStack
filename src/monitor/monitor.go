@@ -92,14 +92,14 @@ func Status() ServiceStatus {
 	return Green
 }
 
-func StartService(wg *sync.WaitGroup) psErr.E {
+func Start(wg *sync.WaitGroup) psErr.E {
 	wg.Add(1)
 	go watcher(wg)
 	psLog.I("Monitor service started")
 	return psErr.OK
 }
 
-func StopService() {
+func Stop() {
 	sigCh <- &worker.Message{
 		Desired: worker.Stopped,
 	}

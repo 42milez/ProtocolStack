@@ -296,7 +296,7 @@ func Resolve(iface *mw.Iface, ip mw.IP) (mw.EthAddr, Status) {
 	return entry.HA, Complete
 }
 
-func StartService(wg *sync.WaitGroup) psErr.E {
+func Start(wg *sync.WaitGroup) psErr.E {
 	wg.Add(3)
 	go receiver(wg)
 	go sender(wg)
@@ -305,7 +305,7 @@ func StartService(wg *sync.WaitGroup) psErr.E {
 	return psErr.OK
 }
 
-func StopService() {
+func Stop() {
 	msg := &worker.Message{
 		Desired: worker.Stopped,
 	}

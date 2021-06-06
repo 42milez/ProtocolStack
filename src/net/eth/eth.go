@@ -19,7 +19,7 @@ var receiverID uint32
 var senderID uint32
 var xChBufSize = 5
 
-func StartService(wg *sync.WaitGroup) psErr.E {
+func Start(wg *sync.WaitGroup) psErr.E {
 	wg.Add(2)
 	go receiver(wg)
 	go sender(wg)
@@ -27,7 +27,7 @@ func StartService(wg *sync.WaitGroup) psErr.E {
 	return psErr.OK
 }
 
-func StopService() {
+func Stop() {
 	msg := &worker.Message{
 		Desired: worker.Stopped,
 	}

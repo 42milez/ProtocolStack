@@ -158,11 +158,11 @@ func TestTimer_1(t *testing.T) {
 	_ = cache.Create(mw.EthAddr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}, pa, resolved)
 
 	var wg sync.WaitGroup
-	_ = StartService(&wg)
+	_ = Start(&wg)
 	<-rcvMonCh
 	<-sndMonCh
 	<-tmrMonCh
-	StopService()
+	Stop()
 	wg.Wait()
 
 	got := cache.GetEntry(pa)
@@ -177,11 +177,11 @@ func TestTimer_2(t *testing.T) {
 	defer cache.Init()
 
 	var wg sync.WaitGroup
-	_ = StartService(&wg)
+	_ = Start(&wg)
 	<-rcvMonCh
 	<-sndMonCh
 	<-tmrMonCh
-	StopService()
+	Stop()
 	wg.Wait()
 
 	got := cache.GetEntry(mw.V4Addr{192, 168, 0, 1})

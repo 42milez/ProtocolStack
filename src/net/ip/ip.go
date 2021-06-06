@@ -169,7 +169,7 @@ func Send(protoNum mw.ProtocolNumber, payload []byte, src mw.IP, dst mw.IP) psEr
 	return psErr.OK
 }
 
-func StartService(wg *sync.WaitGroup) psErr.E {
+func Start(wg *sync.WaitGroup) psErr.E {
 	wg.Add(2)
 	go receiver(wg)
 	go sender(wg)
@@ -177,7 +177,7 @@ func StartService(wg *sync.WaitGroup) psErr.E {
 	return psErr.OK
 }
 
-func StopService() {
+func Stop() {
 	msg := &worker.Message{
 		Desired: worker.Stopped,
 	}

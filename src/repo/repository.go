@@ -202,7 +202,7 @@ func (p *routeRepo) RegisterDefaultGateway(iface *mw.Iface, nextHop mw.IP) {
 	psLog.I(fmt.Sprintf("\tdevice:   %s (%s)", iface.Dev.Name(), iface.Dev.Priv().Name))
 }
 
-func StartService(wg *sync.WaitGroup) psErr.E {
+func Start(wg *sync.WaitGroup) psErr.E {
 	if err := DeviceRepo.Up(); err != psErr.OK {
 		return psErr.Error
 	}
@@ -213,7 +213,7 @@ func StartService(wg *sync.WaitGroup) psErr.E {
 	return psErr.OK
 }
 
-func StopService() {
+func Stop() {
 	msg := &worker.Message{
 		Desired: worker.Stopped,
 	}

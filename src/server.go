@@ -22,9 +22,12 @@ import (
 	"time"
 )
 
-const nServiceWorkers = 9
+const serviceTimeout = 3 * time.Second
 
 var wg sync.WaitGroup
+var rxCh chan os.Signal
+var sigCh chan os.Signal
+
 var arpWg sync.WaitGroup
 var ethWg sync.WaitGroup
 var icmpWg sync.WaitGroup
@@ -32,15 +35,13 @@ var ipWg sync.WaitGroup
 var monitorWg sync.WaitGroup
 var repoWg sync.WaitGroup
 
-var rxCh chan os.Signal
-var sigCh chan os.Signal
-
 func handleSignal(sigCh <-chan os.Signal, wg *sync.WaitGroup) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		psLog.I(fmt.Sprintf("Signal: %s", <-sigCh))
-		stop()
+		sig := <-sigCh
+		psLog.I(fmt.Sprintf("Signal: %s", sig))
+		stopServices()
 		rxCh <-syscall.SIGUSR1
 	}()
 }
@@ -81,40 +82,39 @@ func setup() psErr.E {
 
 	repo.RouteRepo.RegisterDefaultGateway(iface2, mw.ParseIP("192.0.2.1"))
 
-	if err := start(); err != psErr.OK {
+	if err := startServices(); err != psErr.OK {
 		return psErr.Error
 	}
 
 	return psErr.OK
 }
 
-func start() psErr.E {
-	if err := arp.StartService(&arpWg); err != psErr.OK {
+func startServices() psErr.E {
+	if err := arp.Start(&arpWg); err != psErr.OK {
 		return psErr.Error
 	}
-	if err := eth.StartService(&ethWg); err != psErr.OK {
+	if err := eth.Start(&ethWg); err != psErr.OK {
 		return psErr.Error
 	}
-	if err := icmp.StartService(&icmpWg); err != psErr.OK {
+	if err := icmp.Start(&icmpWg); err != psErr.OK {
 		return psErr.Error
 	}
-	if err := ip.StartService(&ipWg); err != psErr.OK {
+	if err := ip.Start(&ipWg); err != psErr.OK {
 		return psErr.Error
 	}
-	if err := monitor.StartService(&monitorWg); err != psErr.OK {
+	if err := monitor.Start(&monitorWg); err != psErr.OK {
 		return psErr.Error
 	}
-	if err := repo.StartService(&repoWg); err != psErr.OK {
+	if err := repo.Start(&repoWg); err != psErr.OK {
 		return psErr.Error
 	}
 
 	var zero = time.Now()
-	var timeout = 3*time.Second
 	for {
 		if monitor.Status() == monitor.Green {
 			break
 		}
-		if time.Now().Sub(zero) > timeout {
+		if time.Now().Sub(zero) > serviceTimeout {
 			psLog.E("Some services didn't ready within the time")
 			return psErr.Error
 		}
@@ -125,14 +125,13 @@ func start() psErr.E {
 	return psErr.OK
 }
 
-func stop() {
-	arp.StopService()
-	eth.StopService()
-	icmp.StopService()
-	ip.StopService()
-	monitor.StopService()
-	repo.StopService()
-	repo.StopService()
+func stopServices() {
+	arp.Stop()
+	eth.Stop()
+	icmp.Stop()
+	ip.Stop()
+	monitor.Stop()
+	repo.Stop()
 
 	arpWg.Wait()
 	ethWg.Wait()
