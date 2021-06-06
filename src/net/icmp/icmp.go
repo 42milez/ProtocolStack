@@ -176,7 +176,7 @@ func Stop() {
 }
 
 func dump(hdr *Hdr, payload []byte) {
-	psLog.I(fmt.Sprintf("\ttype:     %s (%d)", types[hdr.Type], hdr.Type))
+	psLog.I(fmt.Sprintf("\ttype:     %s (%d)", types[hdr.Type], hdr.Type),)
 	psLog.I(fmt.Sprintf("\tcode:     %d", hdr.Code))
 	psLog.I(fmt.Sprintf("\tchecksum: 0x%04x", hdr.Checksum))
 

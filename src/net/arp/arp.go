@@ -180,7 +180,7 @@ func Receive(packet []byte, dev mw.IDevice) psErr.E {
 		return psErr.InvalidPacket
 	}
 
-	psLog.I("incoming ARP packet")
+	psLog.I("incoming arp packet")
 	dumpArpPacket(&arpPacket)
 
 	iface := repo.IfaceRepo.Lookup(dev, mw.V4AddrFamily)
@@ -193,9 +193,9 @@ func Receive(packet []byte, dev mw.IDevice) psErr.E {
 		if err := cache.Renew(arpPacket.SPA, arpPacket.SHA, resolved); err == psErr.NotFound {
 			_ = cache.Create(arpPacket.SHA, arpPacket.SPA, resolved)
 		} else {
-			psLog.I("arp cache entry was renewed")
-			psLog.I(fmt.Sprintf("\tspa: %s", arpPacket.SPA))
-			psLog.I(fmt.Sprintf("\tsha: %s", arpPacket.SHA))
+			psLog.I("arp cache entry was renewed",
+				fmt.Sprintf("\tspa: %s", arpPacket.SPA),
+				fmt.Sprintf("\tsha: %s", arpPacket.SHA))
 		}
 		if arpPacket.Opcode == Request {
 			if err := SendReply(arpPacket.SHA, arpPacket.SPA, iface); err != psErr.OK {
@@ -225,7 +225,7 @@ func SendReply(tha mw.EthAddr, tpa mw.V4Addr, iface *mw.Iface) psErr.E {
 	copy(packet.SHA[:], addr[:])
 	copy(packet.SPA[:], iface.Unicast[:])
 
-	psLog.I("outgoing arp packet (REPLY)")
+	psLog.I("outgoing arp packet (reply)")
 	dumpArpPacket(&packet)
 
 	buf := new(bytes.Buffer)
