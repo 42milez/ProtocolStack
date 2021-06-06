@@ -83,11 +83,8 @@ func CaptureLogOutput(f func()) string {
 	}()
 
 	f()
-
 	_ = writer.Close()
-
 	ret := <-out
-
 	_ = reader.Close()
 
 	return ret
