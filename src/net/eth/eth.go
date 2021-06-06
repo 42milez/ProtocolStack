@@ -23,7 +23,7 @@ func Start(wg *sync.WaitGroup) psErr.E {
 	wg.Add(2)
 	go receiver(wg)
 	go sender(wg)
-	psLog.I("Ethernet service started")
+	psLog.I("ethernet service started")
 	return psErr.OK
 }
 

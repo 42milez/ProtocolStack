@@ -98,12 +98,12 @@ func Receive(payload []byte, dev mw.IDevice) psErr.E {
 
 	if !iface.Unicast.EqualV4(hdr.Dst) {
 		if !iface.Broadcast.EqualV4(hdr.Dst) && mw.V4Broadcast.EqualV4(hdr.Dst) {
-			psLog.I("IP packet was ignored (It was sent to different address)")
+			psLog.I("ip packet was ignored (it was sent to different address)")
 			return psErr.OK
 		}
 	}
 
-	psLog.I("Incoming IP packet")
+	psLog.I("incoming ip packet")
 	dumpIpPacket(payload)
 
 	switch hdr.Protocol {
@@ -151,7 +151,7 @@ func Send(protoNum mw.ProtocolNumber, payload []byte, src mw.IP, dst mw.IP) psEr
 		return psErr.Error
 	}
 
-	psLog.I("Outgoing IP packet")
+	psLog.I("outgoing ip packet")
 	dumpIpPacket(packet)
 
 	// get eth address from ip address
@@ -173,7 +173,7 @@ func Start(wg *sync.WaitGroup) psErr.E {
 	wg.Add(2)
 	go receiver(wg)
 	go sender(wg)
-	psLog.I("IP service started")
+	psLog.I("ip service started")
 	return psErr.OK
 }
 

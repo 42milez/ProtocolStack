@@ -180,7 +180,7 @@ func Receive(packet []byte, dev mw.IDevice) psErr.E {
 		return psErr.InvalidPacket
 	}
 
-	psLog.I("Incoming ARP packet")
+	psLog.I("incoming ARP packet")
 	dumpArpPacket(&arpPacket)
 
 	iface := repo.IfaceRepo.Lookup(dev, mw.V4AddrFamily)
@@ -193,7 +193,7 @@ func Receive(packet []byte, dev mw.IDevice) psErr.E {
 		if err := cache.Renew(arpPacket.SPA, arpPacket.SHA, resolved); err == psErr.NotFound {
 			_ = cache.Create(arpPacket.SHA, arpPacket.SPA, resolved)
 		} else {
-			psLog.I("ARP entry was renewed")
+			psLog.I("arp cache entry was renewed")
 			psLog.I(fmt.Sprintf("\tspa: %s", arpPacket.SPA))
 			psLog.I(fmt.Sprintf("\tsha: %s", arpPacket.SHA))
 		}
@@ -203,7 +203,7 @@ func Receive(packet []byte, dev mw.IDevice) psErr.E {
 			}
 		}
 	} else {
-		psLog.I("ARP packet was ignored (It was sent to different address)")
+		psLog.I("arp packet was ignored (it was sent to different address)")
 	}
 
 	return psErr.OK
@@ -225,7 +225,7 @@ func SendReply(tha mw.EthAddr, tpa mw.V4Addr, iface *mw.Iface) psErr.E {
 	copy(packet.SHA[:], addr[:])
 	copy(packet.SPA[:], iface.Unicast[:])
 
-	psLog.I("Outgoing ARP packet (REPLY):")
+	psLog.I("outgoing arp packet (REPLY)")
 	dumpArpPacket(&packet)
 
 	buf := new(bytes.Buffer)
@@ -261,7 +261,7 @@ func SendRequest(iface *mw.Iface, ip mw.IP) psErr.E {
 	}
 	payload := buf.Bytes()
 
-	psLog.I("Outgoing ARP packet")
+	psLog.I("outgoing arp packet")
 	dumpArpPacket(&packet)
 
 	if err := net.Transmit(mw.EthBroadcast, payload, mw.ARP, iface); err != psErr.OK {
@@ -301,7 +301,7 @@ func Start(wg *sync.WaitGroup) psErr.E {
 	go receiver(wg)
 	go sender(wg)
 	go timer(wg)
-	psLog.I("ARP service started")
+	psLog.I("arp service started")
 	return psErr.OK
 }
 
@@ -381,7 +381,7 @@ func timer(wg *sync.WaitGroup) {
 		default:
 			ret := cache.Expire()
 			if len(ret) != 0 {
-				psLog.I("ARP cache entries were expired:")
+				psLog.I("arp cache entries were expired")
 				for i, v := range ret {
 					psLog.I(fmt.Sprintf("\t%d: %s", i+1, v))
 				}
