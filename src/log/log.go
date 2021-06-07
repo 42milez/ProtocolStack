@@ -10,58 +10,54 @@ import (
 	"time"
 )
 
+const red = "31"
+const yellow = "33"
 const dtFormat = "2006/02/01 15:04:05"
 
 var mtx sync.Mutex
 var stdout io.Writer = os.Stdout
 var stderr io.Writer = os.Stderr
 
-func I(s string, args ...string) {
-	defer mtx.Unlock()
-	mtx.Lock()
-	dt := time.Now().Format(dtFormat)
+func doPrint(prefix string, s string, dt string, args ...string) {
 	if s != "" {
-		_, _ = fmt.Fprintf(stdout, "[I] %s %s\n", dt, s)
+		_, _ = fmt.Fprintf(stdout, "%s %s %s\n", prefix, dt, s)
 	}
 	for _, v := range args {
 		_, _ = fmt.Fprintf(stdout, "                        %s\n", v)
 	}
 }
 
-func W(s string, args ...string) {
-	defer mtx.Unlock()
-	mtx.Lock()
-	dt := time.Now().Format(dtFormat)
+func doColorPrint(color string, prefix string, s string, dt string, args ...string) {
 	if s != "" {
-		_, _ = fmt.Fprintf(stdout, "\u001B[1;33m[W] %s %s\u001B[0m\n", dt, s)
+		_, _ = fmt.Fprintf(stdout, "\u001B[1;%sm%s %s %s\u001B[0m\n", color, prefix, dt, s)
 	}
 	for _, v := range args {
-		_, _ = fmt.Fprintf(stdout, "\u001B[1;33m                        %s\u001B[0m\n", v)
+		_, _ = fmt.Fprintf(stdout, "\u001B[1;%sm                        %s\u001B[0m\n", color, v)
 	}
+}
+
+func I(s string, args []string) {
+	defer mtx.Unlock()
+	mtx.Lock()
+	doPrint("[I]", s, time.Now().Format(dtFormat), args...)
+}
+
+func W(s string, args []string) {
+	defer mtx.Unlock()
+	mtx.Lock()
+	doColorPrint(yellow, "[W]", s, time.Now().Format(dtFormat), args...)
 }
 
 func E(s string, args ...string) {
 	defer mtx.Unlock()
 	mtx.Lock()
-	dt := time.Now().Format(dtFormat)
-	if s != "" {
-		_, _ = fmt.Fprintf(stderr, "\u001B[1;31m[E] %s %s\u001B[0m\n", dt, s)
-	}
-	for _, v := range args {
-		_, _ = fmt.Fprintf(stderr, "\u001B[1;31m                        %s\u001B[0m\n", v)
-	}
+	doColorPrint(red, "[E]", s, time.Now().Format(dtFormat), args...)
 }
 
 func F(s string, args ...string) {
 	defer mtx.Unlock()
 	mtx.Lock()
-	dt := time.Now().Format(dtFormat)
-	if s != "" {
-		_, _ = fmt.Fprintf(stderr, "\u001B[1;31m[F] %s %s\u001B[0m\n", dt, s)
-	}
-	for _, v := range args {
-		_, _ = fmt.Fprintf(stderr, "\u001B[1;31m                        %s\u001B[0\n", v)
-	}
+	doColorPrint(red, "[F]", s, time.Now().Format(dtFormat), args...)
 	os.Exit(1)
 }
 
