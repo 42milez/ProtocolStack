@@ -1,5 +1,5 @@
 ## ProtocolStack
-[![CI](https://github.com/42milez/ProtocolStack/actions/workflows/ci.yml/badge.svg)](https://github.com/42milez/ProtocolStack/actions/workflows/ci.yml) [![codecov](https://codecov.io/gh/42milez/ProtocolStack/branch/main/graph/badge.svg?token=ALHDIWP6KH)](https://codecov.io/gh/42milez/ProtocolStack)  
+[![CI](https://github.com/42milez/ProtocolStack/actions/workflows/ci.yml/badge.svg)](https://github.com/42milez/ProtocolStack/actions/workflows/ci.yml) [![codecov](https://codecov.io/gh/42milez/ProtocolStack/branch/main/graph/badge.svg?token=ALHDIWP6KH)](https://codecov.io/gh/42milez/ProtocolStack) [![License: MIT](https://img.shields.io/badge/License-MIT-informational.svg)](https://github.com/42milez/ProtocolStack/blob/main/LICENSE)  
 This repository is for learning network programming in Go and mainly aims to implement TCP/IP stack.
 
 ## Requirements
@@ -47,9 +47,9 @@ It is able to compile the application with `make` as below:
 > make compile
 ```
 
-If no argument is provided, `make` compiles the server implicitly. When you would like to compile the client, specify `BUILD_TYPE` argument below:
+If no argument is provided, `make` compiles the server implicitly. When you would like to compile the other applications, specify `BUILD_TYPE` argument like below:
 ```shell
-> make compile BUILD_TYPE=client
+> make compile BUILD_TYPE=ping
 ```
 
 Note: `make` supports the commands below:
