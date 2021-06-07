@@ -28,13 +28,16 @@ var pingCmd = &cobra.Command{
 		if err := setup(); err != psErr.OK {
 			psLog.F("initialization failed")
 		}
-		send()
 		for {
-			sig := <-sigCh
-			psLog.I(fmt.Sprintf("signal: %s", sig))
-			if sig == syscall.SIGINT || sig == syscall.SIGTERM {
-				stopServices()
-				break
+			select {
+			case sig := <-sigCh:
+				psLog.I(fmt.Sprintf("signal: %s", sig))
+				if sig == syscall.SIGINT || sig == syscall.SIGTERM {
+					stopServices()
+					break
+				}
+			default:
+				send()
 			}
 		}
 	},
