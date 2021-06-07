@@ -8,22 +8,8 @@ GOBIN := ./bin
 STDERR := /tmp/$(PROJECT_NAME)-stderr.txt
 MAKEFLAGS += --silent
 
-SERVER_SRC_FILE := src/server.go
-SERVER_BIN_NAME := server
-PING_SRC_FILE := src/ping.go
-PING_BIN_NAME := ping
-
-ifeq ($(BUILD_TYPE), ping)
-	SOURCE_FILE := $(PING_SRC_FILE)
-	BIN_NAME := $(PING_BIN_NAME)
-else ifeq ($(BUILD_TYPE), server)
-	SOURCE_FILE := $(SERVER_SRC_FILE)
-	BIN_NAME := $(SERVER_BIN_NAME)
-else
-	BUILD_TYPE := server
-	SOURCE_FILE := $(SERVER_SRC_FILE)
-	BIN_NAME := $(SERVER_BIN_NAME)
-endif
+MAIN_FILENAME := src/main.go
+BINARY_FILENAME := pstack
 
 # https://golang.org/cmd/compile/#hdr-Command_Line
 # https://golang.org/doc/gdb#Introduction
@@ -91,9 +77,9 @@ test:
 # --------------------------------------------------
 .PHONY: go-build
 go-build:
-	@echo "▶ building binary: BUILD_TYPE = $(BUILD_TYPE), BUILD_FLAGS = $(BUILD_FLAGS)"
+	@echo "▶ building binary: BUILD_FLAGS = $(BUILD_FLAGS)"
 	@mkdir -p $(GOBIN)
-	@go build $(BUILD_FLAGS) -tags $(BUILD_TYPE) -o $(GOBIN)/$(BIN_NAME) $(SOURCE_FILE)
+	@go build $(BUILD_FLAGS) -o $(GOBIN)/$(BINARY_FILENAME) $(MAIN_FILENAME)
 
 .PHONY: go-clean
 go-clean:
