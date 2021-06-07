@@ -47,7 +47,7 @@ It is able to compile the application with `make`:
 ```
 
 ### 4. Running application
-#### Start as server
+#### Start as echo server
 ```shell
 ./bin/pstack server
 ```
