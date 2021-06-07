@@ -10,54 +10,54 @@ import (
 	"time"
 )
 
-const red = "31"
-const yellow = "33"
+const red = "1;31"
+const yellow = "1;33"
 const dtFormat = "2006/02/01 15:04:05"
 
 var mtx sync.Mutex
 var stdout io.Writer = os.Stdout
 var stderr io.Writer = os.Stderr
 
-func doPrint(prefix string, s string, dt string, args ...string) {
+func doPrint(w io.Writer, prefix string, s string, dt string, args ...string) {
 	if s != "" {
-		_, _ = fmt.Fprintf(stdout, "%s %s %s\n", prefix, dt, s)
+		_, _ = fmt.Fprintf(w, "%s %s %s\n", prefix, dt, s)
 	}
 	for _, v := range args {
-		_, _ = fmt.Fprintf(stdout, "                        %s\n", v)
+		_, _ = fmt.Fprintf(w, "                        %s\n", v)
 	}
 }
 
-func doColorPrint(color string, prefix string, s string, dt string, args ...string) {
+func doColorPrint(w io.Writer, color string, prefix string, s string, dt string, args ...string) {
 	if s != "" {
-		_, _ = fmt.Fprintf(stdout, "\u001B[1;%sm%s %s %s\u001B[0m\n", color, prefix, dt, s)
+		_, _ = fmt.Fprintf(w, "\u001B[%sm%s %s %s\u001B[0m\n", color, prefix, dt, s)
 	}
 	for _, v := range args {
-		_, _ = fmt.Fprintf(stdout, "\u001B[1;%sm                        %s\u001B[0m\n", color, v)
+		_, _ = fmt.Fprintf(w, "\u001B[%sm                        %s\u001B[0m\n", color, v)
 	}
 }
 
-func I(s string, args []string) {
+func I(s string, args ...string) {
 	defer mtx.Unlock()
 	mtx.Lock()
-	doPrint("[I]", s, time.Now().Format(dtFormat), args...)
+	doPrint(stdout, "[I]", s, time.Now().Format(dtFormat), args...)
 }
 
-func W(s string, args []string) {
+func W(s string, args ...string) {
 	defer mtx.Unlock()
 	mtx.Lock()
-	doColorPrint(yellow, "[W]", s, time.Now().Format(dtFormat), args...)
+	doColorPrint(stderr, yellow, "[W]", s, time.Now().Format(dtFormat), args...)
 }
 
 func E(s string, args ...string) {
 	defer mtx.Unlock()
 	mtx.Lock()
-	doColorPrint(red, "[E]", s, time.Now().Format(dtFormat), args...)
+	doColorPrint(stderr, red, "[E]", s, time.Now().Format(dtFormat), args...)
 }
 
 func F(s string, args ...string) {
 	defer mtx.Unlock()
 	mtx.Lock()
-	doColorPrint(red, "[F]", s, time.Now().Format(dtFormat), args...)
+	doColorPrint(stderr, red, "[F]", s, time.Now().Format(dtFormat), args...)
 	os.Exit(1)
 }
 
