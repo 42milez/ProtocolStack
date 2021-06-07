@@ -18,7 +18,8 @@ var mtx sync.Mutex
 var stdout io.Writer = os.Stdout
 var stderr io.Writer = os.Stderr
 
-func doPrint(w io.Writer, prefix string, s string, dt string, args ...string) {
+func doPrint(w io.Writer, prefix string, s string, args ...string) {
+	dt := time.Now().Format(dtFormat)
 	if s != "" {
 		_, _ = fmt.Fprintf(w, "%s %s %s\n", prefix, dt, s)
 	}
@@ -27,7 +28,8 @@ func doPrint(w io.Writer, prefix string, s string, dt string, args ...string) {
 	}
 }
 
-func doColorPrint(w io.Writer, color string, prefix string, s string, dt string, args ...string) {
+func doColorPrint(w io.Writer, color string, prefix string, s string, args ...string) {
+	dt := time.Now().Format(dtFormat)
 	if s != "" {
 		_, _ = fmt.Fprintf(w, "\u001B[%sm%s %s %s\u001B[0m\n", color, prefix, dt, s)
 	}
@@ -39,25 +41,25 @@ func doColorPrint(w io.Writer, color string, prefix string, s string, dt string,
 func I(s string, args ...string) {
 	defer mtx.Unlock()
 	mtx.Lock()
-	doPrint(stdout, "[I]", s, time.Now().Format(dtFormat), args...)
+	doPrint(stdout, "[I]", s, args...)
 }
 
 func W(s string, args ...string) {
 	defer mtx.Unlock()
 	mtx.Lock()
-	doColorPrint(stderr, yellow, "[W]", s, time.Now().Format(dtFormat), args...)
+	doColorPrint(stderr, yellow, "[W]", s, args...)
 }
 
 func E(s string, args ...string) {
 	defer mtx.Unlock()
 	mtx.Lock()
-	doColorPrint(stderr, red, "[E]", s, time.Now().Format(dtFormat), args...)
+	doColorPrint(stderr, red, "[E]", s, args...)
 }
 
 func F(s string, args ...string) {
 	defer mtx.Unlock()
 	mtx.Lock()
-	doColorPrint(stderr, red, "[F]", s, time.Now().Format(dtFormat), args...)
+	doColorPrint(stderr, red, "[F]", s, args...)
 	os.Exit(1)
 }
 
