@@ -8,20 +8,8 @@ GOBIN := ./bin
 STDERR := /tmp/$(PROJECT_NAME)-stderr.txt
 MAKEFLAGS += --silent
 
-CLIENT_SRC_FILE := src/client.go
-CLIENT_BIN_NAME := client
-SERVER_SRC_FILE := src/server.go
-SERVER_BIN_NAME := server
-
-BUILD_TYPE := server
-
-ifeq ($(BUILD_TYPE), server)
-	SOURCE_FILE := $(SERVER_SRC_FILE)
-	BIN_NAME := $(SERVER_BIN_NAME)
-else
-	SOURCE_FILE := $(CLIENT_SRC_FILE)
-	BIN_NAME := $(CLIENT_BIN_NAME)
-endif
+MAIN_FILENAME := src/main.go
+BINARY_FILENAME := pstack
 
 # https://golang.org/cmd/compile/#hdr-Command_Line
 # https://golang.org/doc/gdb#Introduction
@@ -83,15 +71,15 @@ test:
 		$(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/net/arp \
 		$(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/net/eth \
 		$(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/net/ip \
-		$(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/repo \
+		$(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/repo
 
 #  Go Commands
 # --------------------------------------------------
 .PHONY: go-build
 go-build:
-	@echo "▶ building binary: BUILD_TYPE = $(BUILD_TYPE), BUILD_FLAGS = $(BUILD_FLAGS)"
+	@echo "▶ building binary: BUILD_FLAGS = $(BUILD_FLAGS)"
 	@mkdir -p $(GOBIN)
-	@go build $(BUILD_FLAGS) -tags $(BUILD_TYPE) -o $(GOBIN)/$(BIN_NAME) $(SOURCE_FILE)
+	@go build $(BUILD_FLAGS) -o $(GOBIN)/$(BINARY_FILENAME) $(MAIN_FILENAME)
 
 .PHONY: go-clean
 go-clean:

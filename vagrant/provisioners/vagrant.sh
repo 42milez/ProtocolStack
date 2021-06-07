@@ -20,10 +20,12 @@ if ! type go > /dev/null 2>&1; then
   {
     echo ""
     echo "# Go"
+    echo "export CC=/usr/bin/gcc"
+    echo "export CXX=/usr/bin/g++"
     echo "export GO111MODULE=on"
-    echo 'export GOBIN="${HOME}/.bin"'
     echo 'export GOMODCACHE="${HOME}/.cache/go_mod"'
     echo 'export GOPATH="${HOME}/.go"'
+    echo 'export GOBIN="${HOME}/.bin"'
     echo 'PATH="${PATH}:${GOBIN}"'
     echo "export PATH"
     echo ""
@@ -34,6 +36,11 @@ fi
 
 #  Go - Modules
 # --------------------------------------------------
+# cobra
+if ! type cobra > /dev/null 2>&1; then
+  go get -u github.com/spf13/cobra/cobra@latest
+fi
+
 # dlv
 if ! type dlv > /dev/null 2>&1; then
   go install github.com/go-delve/delve/cmd/dlv@latest

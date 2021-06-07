@@ -13,18 +13,18 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-go@v2
         with:
-          go-version: "1.16"
+          go-version: "1.16.x"
       - name: Compile
         run: make compile RELEASE=true
       - name: Archive
         run: |
-          tar -zcvf ./bin/server-linux64.tar.gz ./bin/server
+          tar -zcvf ./bin/pstack-linux64.tar.gz ./bin/pstack
       - name: Create release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            ./bin/server-linux64.tar.gz
+            ./bin/pstack-linux64.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   notify:
