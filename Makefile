@@ -13,14 +13,16 @@ SERVER_BIN_NAME := server
 PING_SRC_FILE := src/ping.go
 PING_BIN_NAME := ping
 
-BUILD_TYPE := server
-
-ifeq ($(BUILD_TYPE), server)
+ifeq ($(BUILD_TYPE), ping)
+	SOURCE_FILE := $(PING_SRC_FILE)
+	BIN_NAME := $(PING_BIN_NAME)
+else ifeq ($(BUILD_TYPE), server)
 	SOURCE_FILE := $(SERVER_SRC_FILE)
 	BIN_NAME := $(SERVER_BIN_NAME)
 else
-	SOURCE_FILE := $(PING_SRC_FILE)
-	BIN_NAME := $(PING_BIN_NAME)
+	BUILD_TYPE := server
+	SOURCE_FILE := $(SERVER_SRC_FILE)
+	BIN_NAME := $(SERVER_BIN_NAME)
 endif
 
 # https://golang.org/cmd/compile/#hdr-Command_Line
