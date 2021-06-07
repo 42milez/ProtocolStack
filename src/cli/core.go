@@ -1,9 +1,6 @@
-// +build server
-
-package main
+package cli
 
 import (
-	"fmt"
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	psLog "github.com/42milez/ProtocolStack/src/log"
 	"github.com/42milez/ProtocolStack/src/monitor"
@@ -32,17 +29,6 @@ var icmpWg sync.WaitGroup
 var ipWg sync.WaitGroup
 var monitorWg sync.WaitGroup
 var repoWg sync.WaitGroup
-
-func run(sigCh <-chan os.Signal) {
-	for {
-		sig := <-sigCh
-		psLog.I(fmt.Sprintf("signal: %s", sig))
-		if sig == syscall.SIGINT || sig == syscall.SIGTERM {
-			stopServices()
-			return
-		}
-	}
-}
 
 func setup() psErr.E {
 	psLog.I(
@@ -92,7 +78,7 @@ func setup() psErr.E {
 
 	psLog.I(
 		"///////////////////////////////////////////////////////",
-		"              S E R V E R   S T A R T E D              ",
+		"         A P P L I C A T I O N   S T A R T E D         ",
 		"///////////////////////////////////////////////////////")
 
 	return psErr.OK
@@ -123,7 +109,7 @@ func startServices() psErr.E {
 		if monitor.Status() == monitor.Green {
 			break
 		}
-		if time.Now().Sub(zero) > serviceTimeout {
+		if time.Since(zero) > serviceTimeout {
 			psLog.E("some services didn't ready within the time")
 			return psErr.Error
 		}
@@ -154,14 +140,4 @@ func init() {
 	sigCh = make(chan os.Signal, 1)
 	// https://pkg.go.dev/os/signal#Notify
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
-}
-
-func main() {
-	if err := setup(); err != psErr.OK {
-		psLog.F("initialization failed")
-	}
-
-	run(sigCh)
-
-	psLog.I("server stopped")
 }
