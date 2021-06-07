@@ -31,5 +31,5 @@ var pingCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(pingCmd)
-	rootCmd.PersistentFlags().Uint32VarP(&count, "count", "c", 0, "stop after <count> replies")
+	pingCmd.PersistentFlags().Uint32VarP(&count, "count", "c", 0, "stop after <count> replies")
 }
