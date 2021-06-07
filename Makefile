@@ -83,7 +83,7 @@ test:
 		$(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/net/arp \
 		$(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/net/eth \
 		$(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/net/ip \
-		$(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/repo \
+		$(dir $(abspath $(firstword $(MAKEFILE_LIST))))src/repo
 
 #  Go Commands
 # --------------------------------------------------
