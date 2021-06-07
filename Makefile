@@ -8,10 +8,10 @@ GOBIN := ./bin
 STDERR := /tmp/$(PROJECT_NAME)-stderr.txt
 MAKEFLAGS += --silent
 
-CLIENT_SRC_FILE := src/client.go
-CLIENT_BIN_NAME := client
 SERVER_SRC_FILE := src/server.go
 SERVER_BIN_NAME := server
+PING_SRC_FILE := src/ping.go
+PING_BIN_NAME := ping
 
 BUILD_TYPE := server
 
@@ -19,8 +19,8 @@ ifeq ($(BUILD_TYPE), server)
 	SOURCE_FILE := $(SERVER_SRC_FILE)
 	BIN_NAME := $(SERVER_BIN_NAME)
 else
-	SOURCE_FILE := $(CLIENT_SRC_FILE)
-	BIN_NAME := $(CLIENT_BIN_NAME)
+	SOURCE_FILE := $(PING_SRC_FILE)
+	BIN_NAME := $(PING_BIN_NAME)
 endif
 
 # https://golang.org/cmd/compile/#hdr-Command_Line

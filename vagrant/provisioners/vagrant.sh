@@ -34,6 +34,11 @@ fi
 
 #  Go - Modules
 # --------------------------------------------------
+# cobra
+if ! type cobra > /dev/null 2>&1; then
+  go get -u github.com/spf13/cobra/cobra@latest
+fi
+
 # dlv
 if ! type dlv > /dev/null 2>&1; then
   go install github.com/go-delve/delve/cmd/dlv@latest
