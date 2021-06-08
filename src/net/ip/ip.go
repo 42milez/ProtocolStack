@@ -171,7 +171,7 @@ func Start(wg *sync.WaitGroup) psErr.E {
 	wg.Add(2)
 	go receiver(wg)
 	go sender(wg)
-	psLog.I("ip service started")
+	psLog.D("ip service started")
 	return psErr.OK
 }
 

@@ -298,7 +298,7 @@ func Start(wg *sync.WaitGroup) psErr.E {
 	go receiver(wg)
 	go sender(wg)
 	go timer(wg)
-	psLog.I("arp service started")
+	psLog.D("arp service started")
 	return psErr.OK
 }
 

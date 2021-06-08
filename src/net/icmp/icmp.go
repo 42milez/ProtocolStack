@@ -186,7 +186,7 @@ func Start(wg *sync.WaitGroup) psErr.E {
 	wg.Add(2)
 	go receiver(wg)
 	go sender(wg)
-	psLog.I("icmp service started")
+	psLog.D("icmp service started")
 	return psErr.OK
 }
 

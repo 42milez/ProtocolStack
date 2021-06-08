@@ -71,7 +71,7 @@ func (p *deviceRepo) Register(dev mw.IDevice) psErr.E {
 		}
 	}
 	p.devices = append(p.devices, dev)
-	psLog.I("device was registered",
+	psLog.D("device was registered",
 		fmt.Sprintf("type: %s", dev.Type()),
 		fmt.Sprintf("name: %s (%s)", dev.Name(), dev.Priv().Name),
 		fmt.Sprintf("addr: %s", dev.Addr()))
@@ -93,7 +93,7 @@ func (p *deviceRepo) Up() psErr.E {
 			return psErr.Error
 		}
 		dev.Up()
-		psLog.I("device was opened",
+		psLog.D("device was opened",
 			fmt.Sprintf("type: %s", dev.Type()),
 			fmt.Sprintf("name: %s (%s)", dev.Name(), dev.Priv().Name))
 	}
@@ -139,7 +139,7 @@ func (p *ifaceRepo) Register(iface *mw.Iface, dev mw.IDevice) psErr.E {
 	p.ifaces = append(p.ifaces, iface)
 	iface.Dev = dev
 
-	psLog.I("interface was attached",
+	psLog.D("interface was attached",
 		fmt.Sprintf("ip:     %s", iface.Unicast),
 		fmt.Sprintf("device: %s (%s)", dev.Name(), dev.Priv().Name))
 
@@ -178,7 +178,7 @@ func (p *routeRepo) Register(network mw.IP, nextHop mw.IP, iface *mw.Iface) {
 		Iface:   iface,
 	}
 	p.routes = append(p.routes, route)
-	psLog.I("route was registered",
+	psLog.D("route was registered",
 		fmt.Sprintf("network:  %s", route.Network),
 		fmt.Sprintf("netmask:  %s", route.Netmask),
 		fmt.Sprintf("unicast:  %s", iface.Unicast),
@@ -194,7 +194,7 @@ func (p *routeRepo) RegisterDefaultGateway(iface *mw.Iface, nextHop mw.IP) {
 		Iface:   iface,
 	}
 	p.routes = append(p.routes, route)
-	psLog.I("default gateway was registered",
+	psLog.D("default gateway was registered",
 		fmt.Sprintf("network:  %s", route.Network),
 		fmt.Sprintf("netmask:  %s", route.Netmask),
 		fmt.Sprintf("unicast:  %s", iface.Unicast),

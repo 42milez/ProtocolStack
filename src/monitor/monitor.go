@@ -95,7 +95,7 @@ func Status() ServiceStatus {
 func Start(wg *sync.WaitGroup) psErr.E {
 	wg.Add(1)
 	go watcher(wg)
-	psLog.I("monitor service started")
+	psLog.D("monitor service started")
 	return psErr.OK
 }
 

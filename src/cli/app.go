@@ -31,7 +31,7 @@ var monitorWg sync.WaitGroup
 var repoWg sync.WaitGroup
 
 func setup() psErr.E {
-	psLog.I(
+	psLog.D(
 		"-------------------------------------------------------",
 		"          I N I T I A L I Z E   D E V I C E S          ",
 		"-------------------------------------------------------")
@@ -67,7 +67,7 @@ func setup() psErr.E {
 
 	repo.RouteRepo.RegisterDefaultGateway(iface2, mw.ParseIP("192.0.2.1"))
 
-	psLog.I(
+	psLog.D(
 		"-------------------------------------------------------",
 		"              S T A R T   S E R V I C E S              ",
 		"-------------------------------------------------------")
@@ -76,7 +76,7 @@ func setup() psErr.E {
 		return psErr.Error
 	}
 
-	psLog.I(
+	psLog.D(
 		"///////////////////////////////////////////////////////",
 		"         A P P L I C A T I O N   S T A R T E D         ",
 		"///////////////////////////////////////////////////////")
@@ -115,7 +115,7 @@ func startServices() psErr.E {
 		}
 	}
 
-	psLog.I("all service workers started")
+	psLog.D("all service workers started")
 
 	return psErr.OK
 }
