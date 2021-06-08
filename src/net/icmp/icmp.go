@@ -106,7 +106,7 @@ func Receive(payload []byte, dst [mw.V4AddrLen]byte, src [mw.V4AddrLen]byte, dev
 		return psErr.ChecksumMismatch
 	}
 
-	psLog.I("incoming icmp packet", dump(hdr, payload[HdrLen:])...)
+	psLog.D("incoming icmp packet", dump(hdr, payload[HdrLen:])...)
 
 	switch hdr.Type {
 	case Echo:
@@ -158,7 +158,7 @@ func Send(typ uint8, code uint8, content uint32, payload []byte, src mw.IP, dst 
 	packet[2] = uint8((hdr.Checksum & 0xff00) >> 8)
 	packet[3] = uint8(hdr.Checksum & 0x00ff)
 
-	psLog.I("outgoing icmp packet", dump(&hdr, payload)...)
+	psLog.D("outgoing icmp packet", dump(&hdr, payload)...)
 
 	mw.IpTxCh <- &mw.IpMessage{
 		ProtoNum: ip.ICMP,

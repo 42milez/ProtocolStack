@@ -103,7 +103,7 @@ func Receive(payload []byte, dev mw.IDevice) psErr.E {
 		}
 	}
 
-	psLog.I("incoming ip packet", dump(payload)...)
+	psLog.D("incoming ip packet", dump(payload)...)
 
 	switch hdr.Protocol {
 	case ICMP:
@@ -150,7 +150,7 @@ func Send(protoNum mw.ProtocolNumber, payload []byte, src mw.IP, dst mw.IP) psEr
 		return psErr.Error
 	}
 
-	psLog.I("outgoing ip packet", dump(packet)...)
+	psLog.D("outgoing ip packet", dump(packet)...)
 
 	// get eth address from ip address
 	var ethAddr mw.EthAddr
