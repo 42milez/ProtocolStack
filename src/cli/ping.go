@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	psErr "github.com/42milez/ProtocolStack/src/error"
@@ -8,14 +9,14 @@ import (
 	"github.com/42milez/ProtocolStack/src/mw"
 	"github.com/42milez/ProtocolStack/src/net/icmp"
 	"github.com/spf13/cobra"
-	"math/rand"
 	"syscall"
 	"time"
 )
 
+var provider provider_
 var count int
 var dst string
-var provider provider_
+var skipNextRequest bool
 
 var pingCmd = &cobra.Command{
 	Use:   "ping <destination> [flags]",
@@ -33,7 +34,13 @@ var pingCmd = &cobra.Command{
 		}
 		var nReplied int
 		for {
-			send(provider.ID(), provider.SeqNumber(), provider.Payload())
+			if !skipNextRequest {
+				id := provider.ID()
+				seq := provider.SeqNum()
+				send(id, seq, provider.Payload())
+				psLog.N(fmt.Sprintf("sent icmp packet: id = %d, seq = %d", id, seq))
+			}
+
 			select {
 			case sig := <-sigCh:
 				psLog.I(fmt.Sprintf("signal: %s", sig))
@@ -42,20 +49,20 @@ var pingCmd = &cobra.Command{
 					return
 				}
 			case reply := <-icmp.ReplyQueue:
-				psLog.I(fmt.Sprintf("id, seq: %d, %d", reply.ID, reply.Seq))
+				handleReply(reply)
 				nReplied += 1
-				time.Sleep(time.Second)
+				skipNextRequest = false
 			case letter := <-mw.IcmpDeadLetterQueue:
-				psLog.W("dead letter detected")
 				time.Sleep(100 * time.Millisecond)
-				id := uint16(letter.Payload[5])<<8 | uint16(letter.Payload[6])
-				seq := uint16(letter.Payload[7])<<8 | uint16(letter.Payload[8])
-				send(id, seq, letter.Payload[icmp.HdrLen:])
+				handleDeadLetter(letter)
+				skipNextRequest = true
 			}
 
 			if nReplied == count {
 				return
 			}
+
+			time.Sleep(time.Second)
 		}
 	},
 }
@@ -65,13 +72,13 @@ type provider_ struct {
 }
 
 func (p *provider_) ID() (id uint16) {
-	id = uint16(rand.Int())
+	id = mw.RandU16()
 	return
 }
 
-func (p *provider_) SeqNumber() (seq uint16) {
+func (p *provider_) SeqNum() (seq uint16) {
 	seq = p.seqNumber
-	seq += 1
+	p.seqNumber += 1
 	return
 }
 
@@ -79,11 +86,10 @@ func (p *provider_) Payload() (payload []byte) {
 	var size = 56
 	payload = make([]byte, size)
 	for i := 0; i < size; i += 4 {
-		v := rand.Uint32()
-		payload[i] = uint8(v)
-		payload[i+1] = uint8(v >> 8)
-		payload[i+2] = uint8(v >> 16)
-		payload[i+3] = uint8(v >> 24)
+		payload[i] = mw.RandU8()
+		payload[i+1] = mw.RandU8()
+		payload[i+2] = mw.RandU8()
+		payload[i+3] = mw.RandU8()
 	}
 	return
 }
@@ -98,6 +104,17 @@ func send(id uint16, seq uint16, payload []byte) {
 		Dst:     mw.ParseIP(dst),
 	}
 	mw.IcmpTxCh <- msg
+}
+
+func handleDeadLetter(letter *mw.IcmpQueueEntry) {
+	hdr, _ := icmp.ReadHeader(bytes.NewBuffer(letter.Payload))
+	id, seq := icmp.SplitContent(hdr.Content)
+	send(id, seq, letter.Payload[icmp.HdrLen:])
+	psLog.W(fmt.Sprintf("sent icmp packet again (dead letter detected): id = %d, seq = %d", id, seq))
+}
+
+func handleReply(reply *icmp.Reply) {
+	psLog.N(fmt.Sprintf("icmp packet received: id = %d, seq = %d", reply.ID, reply.Seq))
 }
 
 func init() {

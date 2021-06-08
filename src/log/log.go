@@ -11,6 +11,7 @@ import (
 )
 
 const red = "1;31"
+const green = "1;32"
 const yellow = "1;33"
 const dtFormat = "2006/02/01 15:04:05"
 
@@ -61,6 +62,12 @@ func F(s string, args ...string) {
 	mtx.Lock()
 	doColorPrint(stderr, red, "[F]", s, args...)
 	os.Exit(1)
+}
+
+func N(s string, args ...string) {
+	defer mtx.Unlock()
+	mtx.Lock()
+	doColorPrint(stderr, green, "[N]", s, args...)
 }
 
 func CaptureLogOutput(f func()) string {

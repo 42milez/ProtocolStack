@@ -1,5 +1,10 @@
 package mw
 
+import (
+	"math/rand"
+	"time"
+)
+
 const ARP EthType = 0x0806
 const IPv4 EthType = 0x0800
 const IPv6 EthType = 0x86dd
@@ -71,6 +76,18 @@ type IcmpTxMessage struct {
 	Payload []byte
 	Src     IP
 	Dst     IP
+}
+
+func RandU8() uint8 {
+	rand.Seed(time.Now().UnixNano())
+	endpoint := 256
+	return uint8(rand.Intn(endpoint))
+}
+
+func RandU16() uint16 {
+	rand.Seed(time.Now().UnixNano())
+	endpoint := 65536
+	return uint16(rand.Intn(endpoint))
 }
 
 func init() {

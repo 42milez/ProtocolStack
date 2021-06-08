@@ -93,8 +93,8 @@ func Receive(payload []byte, dst [mw.V4AddrLen]byte, src [mw.V4AddrLen]byte, dev
 	}
 
 	buf := bytes.NewBuffer(payload)
-	hdr := Hdr{}
-	if err := binary.Read(buf, binary.BigEndian, &hdr); err != nil {
+	hdr, err := ReadHeader(buf)
+	if err != nil {
 		return psErr.ReadFromBufError
 	}
 
@@ -106,7 +106,7 @@ func Receive(payload []byte, dst [mw.V4AddrLen]byte, src [mw.V4AddrLen]byte, dev
 		return psErr.ChecksumMismatch
 	}
 
-	psLog.I("incoming icmp packet", dump(&hdr, payload[HdrLen:])...)
+	psLog.I("incoming icmp packet", dump(hdr, payload[HdrLen:])...)
 
 	switch hdr.Type {
 	case Echo:
@@ -127,7 +127,7 @@ func Receive(payload []byte, dst [mw.V4AddrLen]byte, src [mw.V4AddrLen]byte, dev
 		mw.IcmpTxCh <- msg
 	case EchoReply:
 		ReplyQueue <- &Reply{
-			ID:  uint16(hdr.Content & 0xffff0000),
+			ID:  uint16((hdr.Content & 0xffff0000) >> 16),
 			Seq: uint16(hdr.Content & 0x0000ffff),
 		}
 	default:
@@ -168,6 +168,18 @@ func Send(typ uint8, code uint8, content uint32, payload []byte, src mw.IP, dst 
 	}
 
 	return psErr.OK
+}
+
+func ReadHeader(buf *bytes.Buffer) (hdr *Hdr, err error) {
+	hdr = &Hdr{}
+	err = binary.Read(buf, binary.BigEndian, hdr)
+	return
+}
+
+func SplitContent(content uint32) (id uint16, seq uint16) {
+	id = uint16((content & 0xffff0000) >> 16)
+	seq = uint16(content & 0x0000ffff)
+	return
 }
 
 func Start(wg *sync.WaitGroup) psErr.E {
