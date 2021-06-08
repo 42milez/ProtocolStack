@@ -11,11 +11,11 @@ MAKEFLAGS += --silent
 MAIN_FILENAME := src/main.go
 BINARY_FILENAME := pstack
 
-# https://golang.org/cmd/compile/#hdr-Command_Line
-# https://golang.org/doc/gdb#Introduction
 ifeq ($(RELEASE), true)
-	BUILD_FLAGS :=
+	BUILD_FLAGS := -ldflags "-X main.release=true"
 else
+	# https://golang.org/cmd/compile/#hdr-Command_Line
+	# https://golang.org/doc/gdb#Introduction
 	BUILD_FLAGS := -gcflags=all="-N -l"
 endif
 
