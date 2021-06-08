@@ -39,10 +39,16 @@ func doColorPrint(w io.Writer, color string, prefix string, s string, args ...st
 	}
 }
 
+func D(s string, args ...string) {
+	defer mtx.Unlock()
+	mtx.Lock()
+	doPrint(stdout, "[D]", s, args...)
+}
+
 func I(s string, args ...string) {
 	defer mtx.Unlock()
 	mtx.Lock()
-	doPrint(stdout, "[I]", s, args...)
+	doColorPrint(stdout, green, "[I]", s, args...)
 }
 
 func W(s string, args ...string) {
@@ -62,12 +68,6 @@ func F(s string, args ...string) {
 	mtx.Lock()
 	doColorPrint(stderr, red, "[F]", s, args...)
 	os.Exit(1)
-}
-
-func N(s string, args ...string) {
-	defer mtx.Unlock()
-	mtx.Lock()
-	doColorPrint(stderr, green, "[N]", s, args...)
 }
 
 func CaptureLogOutput(f func()) string {

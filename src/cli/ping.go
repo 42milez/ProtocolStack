@@ -38,7 +38,7 @@ var pingCmd = &cobra.Command{
 				id := provider.ID()
 				seq := provider.SeqNum()
 				send(id, seq, provider.Payload())
-				psLog.N(fmt.Sprintf("sent icmp packet: id = %d, seq = %d", id, seq))
+				psLog.I(fmt.Sprintf("sent icmp packet: id = %d, seq = %d", id, seq))
 			}
 
 			select {
@@ -114,7 +114,7 @@ func handleDeadLetter(letter *mw.IcmpQueueEntry) {
 }
 
 func handleReply(reply *icmp.Reply) {
-	psLog.N(fmt.Sprintf("icmp packet received: id = %d, seq = %d", reply.ID, reply.Seq))
+	psLog.I(fmt.Sprintf("icmp packet received: id = %d, seq = %d", reply.ID, reply.Seq))
 }
 
 func init() {
