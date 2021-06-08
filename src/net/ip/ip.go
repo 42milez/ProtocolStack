@@ -103,7 +103,7 @@ func Receive(payload []byte, dev mw.IDevice) psErr.E {
 		}
 	}
 
-	psLog.I("incoming ip packet", dump(payload)...)
+	psLog.D("incoming ip packet", dump(payload)...)
 
 	switch hdr.Protocol {
 	case ICMP:
@@ -135,8 +135,8 @@ func Send(protoNum mw.ProtocolNumber, payload []byte, src mw.IP, dst mw.IP) psEr
 
 	// get a next hop
 	if iface, nextHop, err = lookupRoute(dst, src); err != psErr.OK {
-		psLog.E(fmt.Sprintf("route was not found: %s", err))
-		return psErr.Error
+		psLog.E(fmt.Sprintf("route to %s not found", dst))
+		return psErr.RouteNotFound
 	}
 
 	if packetLen := HdrLenMin + len(payload); int(iface.Dev.MTU()) < packetLen {
@@ -150,13 +150,13 @@ func Send(protoNum mw.ProtocolNumber, payload []byte, src mw.IP, dst mw.IP) psEr
 		return psErr.Error
 	}
 
-	psLog.I("outgoing ip packet", dump(packet)...)
+	psLog.D("outgoing ip packet", dump(packet)...)
 
 	// get eth address from ip address
 	var ethAddr mw.EthAddr
 	if ethAddr, err = lookupEthAddr(iface, nextHop); err != psErr.OK {
 		psLog.E(fmt.Sprintf("ethernet address was not found: %s", err))
-		return psErr.Error
+		return psErr.NeedRetry
 	}
 
 	// send ip packet
@@ -171,7 +171,7 @@ func Start(wg *sync.WaitGroup) psErr.E {
 	wg.Add(2)
 	go receiver(wg)
 	go sender(wg)
-	psLog.I("ip service started")
+	psLog.D("ip service started")
 	return psErr.OK
 }
 
@@ -328,7 +328,23 @@ func sender(wg *sync.WaitGroup) {
 				return
 			}
 		case msg := <-mw.IpTxCh:
-			if err := Send(msg.ProtoNum, msg.Packet, msg.Src, msg.Dst); err != psErr.OK {
+			switch Send(msg.ProtoNum, msg.Packet, msg.Src, msg.Dst) {
+			case psErr.OK:
+			case psErr.RouteNotFound:
+			case psErr.NeedRetry:
+				switch msg.ProtoNum {
+				case ICMP:
+					mw.IcmpDeadLetterQueue <- &mw.IcmpQueueEntry{
+						Payload: msg.Packet,
+					}
+				default:
+					psLog.W(fmt.Sprintf("currently NOT support to process unsent message of protocol number %d", msg.ProtoNum))
+				}
+			default:
+				sndMonCh <- &worker.Message{
+					ID:      senderID,
+					Current: worker.Stopped,
+				}
 				return
 			}
 		}

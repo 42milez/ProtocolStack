@@ -7,9 +7,9 @@ This repository is for learning network programming in Go and mainly aims to imp
 - Go: 1.14.x or higher
 
 ## Instructions
-ProtocolStack needs a TAP device for its capability. For the reason, this project uses a virtual machine (Linux) to run the application. Also, you can perform debugging remotely with the VM if you use GoLand.
+ProtocolStack needs a TAP device for its capability. For the reason, this project uses a virtual machine (Linux) to run the application.
 
-### 1. Prepare virtual machine
+### 1. Preparing for using the virtual machine
 Software required is as follows: 
 
 - [Mutagen](https://github.com/mutagen-io/mutagen)
@@ -18,38 +18,44 @@ Software required is as follows:
 
 Note: Mutagen synchronizes files between local system and virtual machine.
 
-### 2. Control virtual machine
+### 2. Controlling the virtual machine
 `vm.sh` controls the virtual machine. The available commands are as follows:
 
-- `start` start the virtual machine
-- `stop` stop the virtual machine
-- `restart` restart the virtual machine
+- `start`
+- `stop`
+- `restart`
 
 You can perform the commands below:
 
 ```shell
-> ./vm.sh start   # Start a VM and create a Mutagen session.
+> ./vm.sh start   # Start the VM and create a Mutagen session.
 > ./vm.sh stop    # Stop the VM and terminate the Mutagen session.
 > ./vm.sh restart # Restart the VM and recreate the Mutagen session.
 ```
 
-### 3. Remote debugging with GoLand
-See the [instruction](https://github.com/42milez/ProtocolStack/wiki/Remote-Debugging-with-GoLand) for more detail.
+#### Note: Remote debugging with GoLand
+- See the [instruction](https://github.com/42milez/ProtocolStack/wiki/Remote-Debugging-with-GoLand) for more detail.
+- Related information:
+  - [What Are Run Targets & How To Run Code Anywhere](https://blog.jetbrains.com/go/2021/04/29/what-are-run-targets-and-how-to-run-code-anywhere/)
+  - [How to use Docker to compile and run Go code from GoLand](https://blog.jetbrains.com/go/2021/04/30/how-to-use-docker-to-compile-go-from-goland/)
+  - [Compile and run Go code using WSL 2 and GoLand](https://blog.jetbrains.com/go/2021/05/05/compile-and-run-go-code-using-wsl-2-and-goland/)
 
-Related information:
-- [What Are Run Targets & How To Run Code Anywhere](https://blog.jetbrains.com/go/2021/04/29/what-are-run-targets-and-how-to-run-code-anywhere/)
-- [How to use Docker to compile and run Go code from GoLand](https://blog.jetbrains.com/go/2021/04/30/how-to-use-docker-to-compile-go-from-goland/)
-- [Compile and run Go code using WSL 2 and GoLand](https://blog.jetbrains.com/go/2021/05/05/compile-and-run-go-code-using-wsl-2-and-goland/)
-
-### 4. Compile
-It is able to compile the application with `make` as below:
+### 3. Compile
+It is able to compile the application with `make`:
 ```shell
 > make compile
 ```
 
-If no argument is provided, `make` compiles the server implicitly. When you would like to compile the other applications, specify `BUILD_TYPE` argument like below:
+### 4. Running application
+#### Start as echo server
 ```shell
-> make compile BUILD_TYPE=ping
+./bin/pstack server
+```
+
+#### Start as client
+###### Send ICMP request:
+```shell
+./bin/pstack ping -c 192.0.2.1
 ```
 
 Note: `make` supports the commands below:
@@ -148,7 +154,6 @@ Note: `make` supports the commands below:
   - [793: Transmission Control Protocol](https://tools.ietf.org/html/rfc793)
   - [5952: 5. Text Representation of Special Addresses](https://tools.ietf.org/html/rfc5952#section-5)
 - Open Source Software
-  - [avelino / awesome-go](https://github.com/avelino/awesome-go)
   - [pandax381 / microps](https://github.com/pandax381/microps)
   - [torvalds / linux](https://github.com/torvalds/linux)
     - [net / ethernet](https://github.com/torvalds/linux/tree/master/net/ethernet)

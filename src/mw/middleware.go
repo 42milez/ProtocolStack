@@ -1,5 +1,10 @@
 package mw
 
+import (
+	"math/rand"
+	"time"
+)
+
 const ARP EthType = 0x0806
 const IPv4 EthType = 0x0800
 const IPv6 EthType = 0x86dd
@@ -11,6 +16,7 @@ var ArpRxCh chan *ArpRxMessage
 var ArpTxCh chan *ArpTxMessage
 var IpRxCh chan *EthMessage
 var IpTxCh chan *IpMessage
+var IcmpDeadLetterQueue chan *IcmpQueueEntry
 var IcmpRxCh chan *IcmpRxMessage
 var IcmpTxCh chan *IcmpTxMessage
 
@@ -52,6 +58,10 @@ type IpMessage struct {
 	Src      IP
 }
 
+type IcmpQueueEntry struct {
+	Payload []byte
+}
+
 type IcmpRxMessage struct {
 	Payload []byte
 	Dst     [V4AddrLen]byte
@@ -68,25 +78,17 @@ type IcmpTxMessage struct {
 	Dst     IP
 }
 
-//func Rx(packet *EthMessage) psErr.E {
-//	switch packet.Type {
-//	case ARP:
-//		ArpRxCh <- &ArpRxMessage{
-//			Packet: packet.Content,
-//			Dev:    packet.Dev,
-//		}
-//	case IPv4:
-//		IpRxCh <- packet
-//	default:
-//		psLog.E(fmt.Sprintf("Unknown ether type: 0x%04x", uint16(packet.Type)))
-//		return psErr.Error
-//	}
-//	return psErr.OK
-//}
+func RandU8() uint8 {
+	rand.Seed(time.Now().UnixNano())
+	endpoint := 256
+	return uint8(rand.Intn(endpoint))
+}
 
-//func Tx(msg *EthMessage) psErr.E {
-//	return psErr.OK
-//}
+func RandU16() uint16 {
+	rand.Seed(time.Now().UnixNano())
+	endpoint := 65536
+	return uint16(rand.Intn(endpoint))
+}
 
 func init() {
 	EthRxCh = make(chan *EthMessage, xChBufSize)
@@ -95,6 +97,7 @@ func init() {
 	ArpTxCh = make(chan *ArpTxMessage, xChBufSize)
 	IpRxCh = make(chan *EthMessage, xChBufSize)
 	IpTxCh = make(chan *IpMessage, xChBufSize)
+	IcmpDeadLetterQueue = make(chan *IcmpQueueEntry, xChBufSize)
 	IcmpRxCh = make(chan *IcmpRxMessage, xChBufSize)
 	IcmpTxCh = make(chan *IcmpTxMessage, xChBufSize)
 }

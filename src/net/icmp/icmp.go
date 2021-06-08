@@ -17,6 +17,7 @@ import (
 const Echo = 0x08
 const EchoReply = 0x00
 const HdrLen = 8 // byte
+const replyQueueSize = 5
 const xChBufSize = 5
 
 var rcvMonCh chan *worker.Message
@@ -26,6 +27,8 @@ var sndSigCh chan *worker.Message
 
 var receiverID uint32
 var senderID uint32
+
+var ReplyQueue chan *Reply
 
 // ICMP Type Numbers
 // https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml#icmp-parameters-types
@@ -71,6 +74,11 @@ var types = map[uint8]string{
 	// 255: Reserved
 }
 
+type Reply struct {
+	ID  uint16
+	Seq uint16
+}
+
 type Hdr struct {
 	Type     uint8
 	Code     uint8
@@ -85,8 +93,8 @@ func Receive(payload []byte, dst [mw.V4AddrLen]byte, src [mw.V4AddrLen]byte, dev
 	}
 
 	buf := bytes.NewBuffer(payload)
-	hdr := Hdr{}
-	if err := binary.Read(buf, binary.BigEndian, &hdr); err != nil {
+	hdr, err := ReadHeader(buf)
+	if err != nil {
 		return psErr.ReadFromBufError
 	}
 
@@ -98,7 +106,7 @@ func Receive(payload []byte, dst [mw.V4AddrLen]byte, src [mw.V4AddrLen]byte, dev
 		return psErr.ChecksumMismatch
 	}
 
-	psLog.I("incoming icmp packet", dump(&hdr, payload[HdrLen:])...)
+	psLog.D("incoming icmp packet", dump(hdr, payload[HdrLen:])...)
 
 	switch hdr.Type {
 	case Echo:
@@ -117,9 +125,14 @@ func Receive(payload []byte, dst [mw.V4AddrLen]byte, src [mw.V4AddrLen]byte, dev
 			Dst:     s,
 		}
 		mw.IcmpTxCh <- msg
-		//if err := Send(EchoReply, hdr.Code, hdr.Content, payload[EthHdrLen:], d, s); err != psErr.OK {
-		//	return psErr.Error
-		//}
+	case EchoReply:
+		ReplyQueue <- &Reply{
+			ID:  uint16((hdr.Content & 0xffff0000) >> 16),
+			Seq: uint16(hdr.Content & 0x0000ffff),
+		}
+	default:
+		psLog.E(fmt.Sprintf("unsupported icmp type: %d", hdr.Type))
+		return psErr.Error
 	}
 
 	return psErr.OK
@@ -145,7 +158,7 @@ func Send(typ uint8, code uint8, content uint32, payload []byte, src mw.IP, dst 
 	packet[2] = uint8((hdr.Checksum & 0xff00) >> 8)
 	packet[3] = uint8(hdr.Checksum & 0x00ff)
 
-	psLog.I("outgoing icmp packet", dump(&hdr, payload)...)
+	psLog.D("outgoing icmp packet", dump(&hdr, payload)...)
 
 	mw.IpTxCh <- &mw.IpMessage{
 		ProtoNum: ip.ICMP,
@@ -157,11 +170,23 @@ func Send(typ uint8, code uint8, content uint32, payload []byte, src mw.IP, dst 
 	return psErr.OK
 }
 
+func ReadHeader(buf *bytes.Buffer) (hdr *Hdr, err error) {
+	hdr = &Hdr{}
+	err = binary.Read(buf, binary.BigEndian, hdr)
+	return
+}
+
+func SplitContent(content uint32) (id uint16, seq uint16) {
+	id = uint16((content & 0xffff0000) >> 16)
+	seq = uint16(content & 0x0000ffff)
+	return
+}
+
 func Start(wg *sync.WaitGroup) psErr.E {
 	wg.Add(2)
 	go receiver(wg)
 	go sender(wg)
-	psLog.I("icmp service started")
+	psLog.D("icmp service started")
 	return psErr.OK
 }
 
@@ -255,4 +280,6 @@ func init() {
 	sndMonCh = make(chan *worker.Message, xChBufSize)
 	sndSigCh = make(chan *worker.Message, xChBufSize)
 	senderID = monitor.Register("ICMP Sender", sndMonCh, sndSigCh)
+
+	ReplyQueue = make(chan *Reply, replyQueueSize)
 }

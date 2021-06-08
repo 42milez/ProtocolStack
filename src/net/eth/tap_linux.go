@@ -128,7 +128,7 @@ func (p *TapDevice) Poll() psErr.E {
 	}
 
 	if nEvents > 0 {
-		psLog.I("event occurred",
+		psLog.D("event occurred",
 			fmt.Sprintf("events: %v", nEvents),
 			fmt.Sprintf("device: %v (%v)", p.Name_, p.Priv_.Name))
 		if msg, err := mw.ReadFrame(p.Priv_.FD, p.Addr_); err != psErr.OK {

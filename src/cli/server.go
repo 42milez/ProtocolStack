@@ -20,9 +20,10 @@ var serverCmd = &cobra.Command{
 			psLog.I(fmt.Sprintf("signal: %s", sig))
 			if sig == syscall.SIGINT || sig == syscall.SIGTERM {
 				stopServices()
-				return
+				break
 			}
 		}
+		psLog.I("stopped")
 	},
 }
 

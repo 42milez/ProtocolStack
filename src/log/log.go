@@ -11,12 +11,15 @@ import (
 )
 
 const red = "1;31"
+const green = "1;32"
 const yellow = "1;33"
 const dtFormat = "2006/02/01 15:04:05"
 
 var mtx sync.Mutex
 var stdout io.Writer = os.Stdout
 var stderr io.Writer = os.Stderr
+
+var debug = true
 
 func doPrint(w io.Writer, prefix string, s string, args ...string) {
 	dt := time.Now().Format(dtFormat)
@@ -38,10 +41,19 @@ func doColorPrint(w io.Writer, color string, prefix string, s string, args ...st
 	}
 }
 
+func D(s string, args ...string) {
+	if !debug {
+		return
+	}
+	defer mtx.Unlock()
+	mtx.Lock()
+	doPrint(stdout, "[D]", s, args...)
+}
+
 func I(s string, args ...string) {
 	defer mtx.Unlock()
 	mtx.Lock()
-	doPrint(stdout, "[I]", s, args...)
+	doColorPrint(stdout, green, "[I]", s, args...)
 }
 
 func W(s string, args ...string) {
@@ -88,12 +100,20 @@ func CaptureLogOutput(f func()) string {
 	return ret
 }
 
+func EnableOutput() {
+	resetOutput()
+}
+
 func DisableOutput() {
 	setOutput(ioutil.Discard)
 }
 
-func EnableOutput() {
-	resetOutput()
+func EnableDebug() {
+	debug = true
+}
+
+func DisableDebug() {
+	debug = false
 }
 
 func resetOutput() {
