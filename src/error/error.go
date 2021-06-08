@@ -15,6 +15,7 @@ const (
 	Interrupted                   E = "INTERRUPTED"
 	InvalidPacket                 E = "INVALID_PACKET"
 	InvalidProtocolVersion        E = "INVALID_PROTOCOL_VERSION"
+	NeedRetry                     E = "NEED_RETRY"
 	NetworkAddressNotMatch        E = "NETWORK_ADDRESS_NOT_MATCH"
 	NoDataToRead                  E = "NO_DATA_TO_READ"
 	NotFound                      E = "NOT_FOUND"

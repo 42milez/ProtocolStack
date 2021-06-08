@@ -11,6 +11,7 @@ var ArpRxCh chan *ArpRxMessage
 var ArpTxCh chan *ArpTxMessage
 var IpRxCh chan *EthMessage
 var IpTxCh chan *IpMessage
+var IcmpDeadLetterQueue chan *IcmpQueueEntry
 var IcmpRxCh chan *IcmpRxMessage
 var IcmpTxCh chan *IcmpTxMessage
 
@@ -52,6 +53,10 @@ type IpMessage struct {
 	Src      IP
 }
 
+type IcmpQueueEntry struct {
+	Payload []byte
+}
+
 type IcmpRxMessage struct {
 	Payload []byte
 	Dst     [V4AddrLen]byte
@@ -68,26 +73,6 @@ type IcmpTxMessage struct {
 	Dst     IP
 }
 
-//func Rx(packet *EthMessage) psErr.E {
-//	switch packet.Type {
-//	case ARP:
-//		ArpRxCh <- &ArpRxMessage{
-//			Packet: packet.Content,
-//			Dev:    packet.Dev,
-//		}
-//	case IPv4:
-//		IpRxCh <- packet
-//	default:
-//		psLog.E(fmt.Sprintf("Unknown ether type: 0x%04x", uint16(packet.Type)))
-//		return psErr.Error
-//	}
-//	return psErr.OK
-//}
-
-//func Tx(msg *EthMessage) psErr.E {
-//	return psErr.OK
-//}
-
 func init() {
 	EthRxCh = make(chan *EthMessage, xChBufSize)
 	EthTxCh = make(chan *EthMessage, xChBufSize)
@@ -95,6 +80,7 @@ func init() {
 	ArpTxCh = make(chan *ArpTxMessage, xChBufSize)
 	IpRxCh = make(chan *EthMessage, xChBufSize)
 	IpTxCh = make(chan *IpMessage, xChBufSize)
+	IcmpDeadLetterQueue = make(chan *IcmpQueueEntry, xChBufSize)
 	IcmpRxCh = make(chan *IcmpRxMessage, xChBufSize)
 	IcmpTxCh = make(chan *IcmpTxMessage, xChBufSize)
 }

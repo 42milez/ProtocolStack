@@ -17,6 +17,7 @@ import (
 const Echo = 0x08
 const EchoReply = 0x00
 const HdrLen = 8 // byte
+const replyQueueSize = 5
 const xChBufSize = 5
 
 var rcvMonCh chan *worker.Message
@@ -26,6 +27,8 @@ var sndSigCh chan *worker.Message
 
 var receiverID uint32
 var senderID uint32
+
+var ReplyQueue chan *Reply
 
 // ICMP Type Numbers
 // https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml#icmp-parameters-types
@@ -69,6 +72,11 @@ var types = map[uint8]string{
 	253: "RFC3692-style Experiment 1",
 	254: "RFC3692-style Experiment 2",
 	// 255: Reserved
+}
+
+type Reply struct {
+	ID  uint16
+	Seq uint16
 }
 
 type Hdr struct {
@@ -117,6 +125,14 @@ func Receive(payload []byte, dst [mw.V4AddrLen]byte, src [mw.V4AddrLen]byte, dev
 			Dst:     s,
 		}
 		mw.IcmpTxCh <- msg
+	case EchoReply:
+		ReplyQueue <- &Reply{
+			ID:  uint16(hdr.Content & 0xffff0000),
+			Seq: uint16(hdr.Content & 0x0000ffff),
+		}
+	default:
+		psLog.E(fmt.Sprintf("unsupported icmp type: %d", hdr.Type))
+		return psErr.Error
 	}
 
 	return psErr.OK
@@ -252,4 +268,6 @@ func init() {
 	sndMonCh = make(chan *worker.Message, xChBufSize)
 	sndSigCh = make(chan *worker.Message, xChBufSize)
 	senderID = monitor.Register("ICMP Sender", sndMonCh, sndSigCh)
+
+	ReplyQueue = make(chan *Reply, replyQueueSize)
 }

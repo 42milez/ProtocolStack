@@ -135,8 +135,8 @@ func Send(protoNum mw.ProtocolNumber, payload []byte, src mw.IP, dst mw.IP) psEr
 
 	// get a next hop
 	if iface, nextHop, err = lookupRoute(dst, src); err != psErr.OK {
-		psLog.E(fmt.Sprintf("route was not found: %s", err))
-		return psErr.Error
+		psLog.E(fmt.Sprintf("route to %s not found", dst))
+		return psErr.RouteNotFound
 	}
 
 	if packetLen := HdrLenMin + len(payload); int(iface.Dev.MTU()) < packetLen {
@@ -156,7 +156,7 @@ func Send(protoNum mw.ProtocolNumber, payload []byte, src mw.IP, dst mw.IP) psEr
 	var ethAddr mw.EthAddr
 	if ethAddr, err = lookupEthAddr(iface, nextHop); err != psErr.OK {
 		psLog.E(fmt.Sprintf("ethernet address was not found: %s", err))
-		return psErr.Error
+		return psErr.NeedRetry
 	}
 
 	// send ip packet
@@ -328,7 +328,23 @@ func sender(wg *sync.WaitGroup) {
 				return
 			}
 		case msg := <-mw.IpTxCh:
-			if err := Send(msg.ProtoNum, msg.Packet, msg.Src, msg.Dst); err != psErr.OK {
+			switch Send(msg.ProtoNum, msg.Packet, msg.Src, msg.Dst) {
+			case psErr.OK:
+			case psErr.RouteNotFound:
+			case psErr.NeedRetry:
+				switch msg.ProtoNum {
+				case ICMP:
+					mw.IcmpDeadLetterQueue <- &mw.IcmpQueueEntry{
+						Payload: msg.Packet,
+					}
+				default:
+					psLog.W(fmt.Sprintf("currently NOT support to process unsent message of protocol number %d", msg.ProtoNum))
+				}
+			default:
+				sndMonCh <- &worker.Message{
+					ID:      senderID,
+					Current: worker.Stopped,
+				}
 				return
 			}
 		}
