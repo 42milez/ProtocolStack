@@ -81,7 +81,13 @@ type IcmpTxMessage struct {
 	Dst     IP
 }
 
-type TcpRxMessage struct {}
+type TcpRxMessage struct {
+	Payload []byte
+	Dst     [V4AddrLen]byte
+	Src     [V4AddrLen]byte
+	Dev     IDevice
+}
+
 type TcpTxMessage struct {}
 
 func RandU8() uint8 {

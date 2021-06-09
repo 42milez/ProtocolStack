@@ -19,6 +19,17 @@ var sndSigCh chan *worker.Message
 var receiverID uint32
 var senderID uint32
 
+type Hdr struct {
+	Src uint16
+	Dst uint16
+	Seq uint32
+	Ack uint32
+	Offset uint8
+	Flag uint8
+	Wnd uint16
+	Checksum uint16
+	UrgPtr uint16
+}
 
 func Receive() psErr.E {
 	return psErr.OK

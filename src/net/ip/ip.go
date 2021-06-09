@@ -107,15 +107,19 @@ func Receive(payload []byte, dev mw.IDevice) psErr.E {
 
 	switch hdr.Protocol {
 	case ICMP:
-		msg := &mw.IcmpRxMessage{
+		mw.IcmpRxCh <- &mw.IcmpRxMessage{
 			Payload: payload[hdrLen:],
 			Dst:     hdr.Dst,
 			Src:     hdr.Src,
 			Dev:     dev,
 		}
-		mw.IcmpRxCh <- msg
 	case TCP:
-		psLog.E("currently NOT support TCP")
+		mw.TcpRxCh <- &mw.TcpRxMessage{
+			Payload: payload[hdrLen:],
+			Dst:     hdr.Dst,
+			Src:     hdr.Src,
+			Dev:     dev,
+		}
 		return psErr.Error
 	case UDP:
 		psLog.E("currently NOT support UDP")
