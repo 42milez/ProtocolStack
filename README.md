@@ -152,6 +152,7 @@ Note: `make` supports the commands below:
 - RFC
   - [791: Internet Protocol](https://tools.ietf.org/html/rfc791)
   - [793: Transmission Control Protocol](https://tools.ietf.org/html/rfc793)
+  - [1071: Computing the Internet Checksum](https://datatracker.ietf.org/doc/html/rfc1071)
   - [5952: 5. Text Representation of Special Addresses](https://tools.ietf.org/html/rfc5952#section-5)
 - Open Source Software
   - [pandax381 / microps](https://github.com/pandax381/microps)
