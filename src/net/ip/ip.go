@@ -113,10 +113,10 @@ func Receive(payload []byte, dev mw.IDevice) psErr.E {
 	case TCP:
 		mw.TcpRxCh <- &mw.TcpRxMessage{
 			ProtoNum: uint8(TCP),
-			Payload:  payload[hdrLen:],
+			Segment:  payload[hdrLen:],
 			Dst:      hdr.Dst,
 			Src:      hdr.Src,
-			Dev:      dev,
+			Iface:    iface,
 		}
 		return psErr.Error
 	case UDP:

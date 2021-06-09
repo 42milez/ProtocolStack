@@ -1,6 +1,9 @@
 package tcp
 
 import (
+	"bytes"
+	"encoding/binary"
+	"fmt"
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	psLog "github.com/42milez/ProtocolStack/src/log"
 	"github.com/42milez/ProtocolStack/src/monitor"
@@ -26,8 +29,8 @@ type Hdr struct {
 	Dst      uint16
 	Seq      uint32
 	Ack      uint32
-	Offset   uint8
-	Flag     uint8
+	Offset   uint8 // offset (4bits), reserved (3bits), ns (1bit)
+	Flag     uint8 // cwr, ece, urg, ack, psh, rst, syn, fin
 	Wnd      uint16
 	Checksum uint16
 	UrgPtr   uint16
@@ -37,33 +40,46 @@ type Hdr struct {
 // https://www.edn.com/pseudo-headers-a-source-of-controversy
 
 type PseudoHdr struct {
-	Src   [mw.V4AddrLen]byte
-	Dst   [mw.V4AddrLen]byte
+	Src   mw.V4Addr
+	Dst   mw.V4Addr
 	Zero  uint8
 	Proto uint8
 	Len   uint16
 }
 
 func Receive(msg *mw.TcpRxMessage) psErr.E {
-	//if len(msg.Payload) < HdrLenMin {
-	//	return psErr.InvalidPacket
-	//}
-	//
-	//hdr := Hdr{}
-	//buf := bytes.NewBuffer(msg.Payload)
-	//if err := binary.Read(buf, binary.BigEndian, &hdr); err != nil {
-	//	return psErr.Error
-	//}
-	//
-	//pHdr := PseudoHdr{
-	//	Src: msg.Src,
-	//	Dst: msg.Dst,
-	//	Proto: msg.ProtoNum,
-	//	Len: uint16(len(msg.Payload)),
-	//}
-	//
-	//
-	//mw.Checksum(pHdr)
+	if len(msg.Segment) < HdrLenMin {
+		return psErr.InvalidPacket
+	}
+
+	pseudoHdr := PseudoHdr{
+		Src: msg.Src,
+		Dst: msg.Dst,
+		Proto: msg.ProtoNum,
+		Len: uint16(len(msg.Segment)),
+	}
+	pseudoHdrBuf := new(bytes.Buffer)
+	if err := binary.Write(pseudoHdrBuf, binary.BigEndian, &pseudoHdr); err != nil {
+		return psErr.Error
+	}
+	if mw.Checksum(msg.Segment, uint32(^mw.Checksum(pseudoHdrBuf.Bytes(), 0))) != 0 {
+		psLog.E("checksum mismatch")
+		return psErr.ChecksumMismatch
+	}
+
+	// TODO: handle broadcast
+	if mw.V4Broadcast.EqualV4(msg.Dst) || msg.Iface.Broadcast.EqualV4(msg.Dst) {
+		psLog.W("can't address broadcast (not supported)")
+		return psErr.OK
+	}
+
+	hdr := Hdr{}
+	if err := binary.Read(bytes.NewBuffer(msg.Segment), binary.BigEndian, &hdr); err != nil {
+		return psErr.Error
+	}
+
+	offset := 4*((hdr.Flag&0xf0)>>4)
+	psLog.D("", dump(&hdr, msg.Segment[offset:])...)
 
 	return psErr.OK
 }
@@ -86,6 +102,40 @@ func Stop() {
 	}
 	rcvSigCh <- msg
 	sndSigCh <- msg
+}
+
+func dump(hdr *Hdr, data []byte) (ret []string) {
+	var flag uint16
+	flag |= uint16(hdr.Offset&0x01) << 8
+	flag |= uint16(hdr.Flag&0b10000000)
+	flag |= uint16(hdr.Flag&0b01000000)
+	flag |= uint16(hdr.Flag&0b00100000)
+	flag |= uint16(hdr.Flag&0b00010000)
+	flag |= uint16(hdr.Flag&0b00001000)
+	flag |= uint16(hdr.Flag&0b00000100)
+	flag |= uint16(hdr.Flag&0b00000010)
+	flag |= uint16(hdr.Flag&0b00000001)
+
+	ret = append(ret, fmt.Sprintf("src port: %d", hdr.Src))
+	ret = append(ret, fmt.Sprintf("dst port: %d", hdr.Dst))
+	ret = append(ret, fmt.Sprintf("seq:      %d", hdr.Seq))
+	ret = append(ret, fmt.Sprintf("ack:      %d", hdr.Ack))
+	ret = append(ret, fmt.Sprintf("offset:   %d", (hdr.Offset&0xf0)>>4))
+	ret = append(ret, fmt.Sprintf("ns:       0b%09b", flag))
+	ret = append(ret, fmt.Sprintf("window:   %d", hdr.Wnd))
+	ret = append(ret, fmt.Sprintf("checksum: %d", hdr.Checksum))
+	ret = append(ret, fmt.Sprintf("urg:      %d", hdr.UrgPtr))
+
+	s := "data:     "
+	for i, v := range data {
+		s += fmt.Sprintf("%02x ", v)
+		if (i+1)%20 == 0 {
+			s += "\n                                  "
+		}
+	}
+	ret = append(ret, s)
+
+	return
 }
 
 func receiver(wg *sync.WaitGroup) {
