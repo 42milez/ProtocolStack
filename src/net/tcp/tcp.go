@@ -9,6 +9,8 @@ import (
 	"sync"
 )
 
+const HdrLenMax = 60 // byte
+const HdrLenMin = 20
 const xChBufSize = 5
 
 var rcvMonCh chan *worker.Message
@@ -31,7 +33,38 @@ type Hdr struct {
 	UrgPtr uint16
 }
 
-func Receive() psErr.E {
+// Pseudo-Headers: A Source of Controversy
+// https://www.edn.com/pseudo-headers-a-source-of-controversy
+
+type PseudoHdr struct {
+	Src [mw.V4AddrLen]byte
+	Dst [mw.V4AddrLen]byte
+	Zero uint8
+	Proto uint8
+	Len uint16
+}
+
+func Receive(msg *mw.TcpRxMessage) psErr.E {
+	//if len(msg.Payload) < HdrLenMin {
+	//	return psErr.InvalidPacket
+	//}
+	//
+	//hdr := Hdr{}
+	//buf := bytes.NewBuffer(msg.Payload)
+	//if err := binary.Read(buf, binary.BigEndian, &hdr); err != nil {
+	//	return psErr.Error
+	//}
+	//
+	//pHdr := PseudoHdr{
+	//	Src: msg.Src,
+	//	Dst: msg.Dst,
+	//	Proto: msg.ProtoNum,
+	//	Len: uint16(len(msg.Payload)),
+	//}
+	//
+	//
+	//mw.Checksum(pHdr)
+
 	return psErr.OK
 }
 
@@ -69,8 +102,8 @@ func receiver(wg *sync.WaitGroup) {
 			if msg.Desired == worker.Stopped {
 				return
 			}
-		case <-mw.TcpRxCh:
-			if err := Receive(); err != psErr.OK {
+		case msg := <-mw.TcpRxCh:
+			if err := Receive(msg); err != psErr.OK {
 				return
 			}
 		}
