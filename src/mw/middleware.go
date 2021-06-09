@@ -19,6 +19,9 @@ var IpTxCh chan *IpMessage
 var IcmpDeadLetterQueue chan *IcmpQueueEntry
 var IcmpRxCh chan *IcmpRxMessage
 var IcmpTxCh chan *IcmpTxMessage
+var TcpRxCh chan *TcpRxMessage
+var TcpTxCh chan *TcpTxMessage
+
 
 // Ethertypes
 // https://www.iana.org/assignments/ieee-802-numbers/ieee-802-numbers.xhtml#ieee-802-numbers-1
@@ -77,6 +80,9 @@ type IcmpTxMessage struct {
 	Src     IP
 	Dst     IP
 }
+
+type TcpRxMessage struct {}
+type TcpTxMessage struct {}
 
 func RandU8() uint8 {
 	rand.Seed(time.Now().UnixNano())
