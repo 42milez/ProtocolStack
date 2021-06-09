@@ -191,14 +191,24 @@ func (v IP) ToV4() (ip [V4AddrLen]byte) {
 // Computing the Internet Checksum
 // https://datatracker.ietf.org/doc/html/rfc1071
 
-func Checksum(b []byte) uint16 {
-	var sum uint32
-	// sum up all fields of IP header by each 16bits (except Header Checksum and Options)
+func Checksum(b []byte, init uint32) uint16 {
+	sum := init
+
+	// sum up all fields of IP header by each 16bits
 	for i := 0; i < len(b); i += 2 {
 		sum += uint32(uint16(b[i])<<8 | uint16(b[i+1]))
 	}
-	//
-	sum = ((sum & 0xffff0000) >> 16) + (sum & 0x0000ffff)
+
+	// add last 8bits if exists
+	if len(b)%2 != 0 {
+		sum += uint32(b[len(b)-1])
+	}
+
+	// fold sum to 16bits
+	if (sum >> 16) != 0 {
+		sum = (sum & 0x0000ffff) + (sum >> 16)
+	}
+
 	return ^(uint16(sum))
 }
 

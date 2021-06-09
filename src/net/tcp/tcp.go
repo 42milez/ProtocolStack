@@ -22,26 +22,26 @@ var receiverID uint32
 var senderID uint32
 
 type Hdr struct {
-	Src uint16
-	Dst uint16
-	Seq uint32
-	Ack uint32
-	Offset uint8
-	Flag uint8
-	Wnd uint16
+	Src      uint16
+	Dst      uint16
+	Seq      uint32
+	Ack      uint32
+	Offset   uint8
+	Flag     uint8
+	Wnd      uint16
 	Checksum uint16
-	UrgPtr uint16
+	UrgPtr   uint16
 }
 
 // Pseudo-Headers: A Source of Controversy
 // https://www.edn.com/pseudo-headers-a-source-of-controversy
 
 type PseudoHdr struct {
-	Src [mw.V4AddrLen]byte
-	Dst [mw.V4AddrLen]byte
-	Zero uint8
+	Src   [mw.V4AddrLen]byte
+	Dst   [mw.V4AddrLen]byte
+	Zero  uint8
 	Proto uint8
-	Len uint16
+	Len   uint16
 }
 
 func Receive(msg *mw.TcpRxMessage) psErr.E {

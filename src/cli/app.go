@@ -109,7 +109,6 @@ func startServices() psErr.E {
 		return psErr.Error
 	}
 
-
 	var zero = time.Now()
 	for {
 		if monitor.Status() == monitor.Green {

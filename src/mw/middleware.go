@@ -22,7 +22,6 @@ var IcmpTxCh chan *IcmpTxMessage
 var TcpRxCh chan *TcpRxMessage
 var TcpTxCh chan *TcpTxMessage
 
-
 // Ethertypes
 // https://www.iana.org/assignments/ieee-802-numbers/ieee-802-numbers.xhtml#ieee-802-numbers-1
 
@@ -89,7 +88,7 @@ type TcpRxMessage struct {
 	Dev      IDevice
 }
 
-type TcpTxMessage struct {}
+type TcpTxMessage struct{}
 
 func RandU8() uint8 {
 	rand.Seed(time.Now().UnixNano())
