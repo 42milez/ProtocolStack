@@ -86,14 +86,12 @@ type TcpTxMessage struct {}
 
 func RandU8() uint8 {
 	rand.Seed(time.Now().UnixNano())
-	endpoint := 256
-	return uint8(rand.Intn(endpoint))
+	return uint8(rand.Intn(256))
 }
 
 func RandU16() uint16 {
 	rand.Seed(time.Now().UnixNano())
-	endpoint := 65536
-	return uint16(rand.Intn(endpoint))
+	return uint16(rand.Intn(65536))
 }
 
 func init() {
