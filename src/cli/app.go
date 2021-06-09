@@ -10,6 +10,7 @@ import (
 	"github.com/42milez/ProtocolStack/src/net/eth"
 	"github.com/42milez/ProtocolStack/src/net/icmp"
 	"github.com/42milez/ProtocolStack/src/net/ip"
+	"github.com/42milez/ProtocolStack/src/net/tcp"
 	"github.com/42milez/ProtocolStack/src/repo"
 	"os"
 	"os/signal"
@@ -29,6 +30,7 @@ var icmpWg sync.WaitGroup
 var ipWg sync.WaitGroup
 var monitorWg sync.WaitGroup
 var repoWg sync.WaitGroup
+var tcpWg sync.WaitGroup
 
 func setup() psErr.E {
 	psLog.D(
@@ -103,6 +105,10 @@ func startServices() psErr.E {
 	if err := repo.Start(&repoWg); err != psErr.OK {
 		return psErr.Error
 	}
+	if err := tcp.Start(&tcpWg); err != psErr.OK {
+		return psErr.Error
+	}
+
 
 	var zero = time.Now()
 	for {
@@ -127,6 +133,7 @@ func stopServices() {
 	ip.Stop()
 	monitor.Stop()
 	repo.Stop()
+	tcp.Stop()
 
 	arpWg.Wait()
 	ethWg.Wait()
@@ -134,6 +141,7 @@ func stopServices() {
 	ipWg.Wait()
 	monitorWg.Wait()
 	repoWg.Wait()
+	tcpWg.Wait()
 }
 
 func init() {

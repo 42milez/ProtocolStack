@@ -106,4 +106,6 @@ func init() {
 	IcmpDeadLetterQueue = make(chan *IcmpQueueEntry, xChBufSize)
 	IcmpRxCh = make(chan *IcmpRxMessage, xChBufSize)
 	IcmpTxCh = make(chan *IcmpTxMessage, xChBufSize)
+	TcpRxCh = make(chan *TcpRxMessage, xChBufSize)
+	TcpTxCh = make(chan *TcpTxMessage, xChBufSize)
 }
