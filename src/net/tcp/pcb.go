@@ -33,8 +33,8 @@ type PCB struct {
 	Local   EndPoint
 	Foreign EndPoint
 	Backlog int
-	MTU uint16
-	MSS uint16
+	MTU     uint16
+	MSS     uint16
 	SND     struct {
 		UNA uint32
 		NXT uint32
