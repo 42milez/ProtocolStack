@@ -1,6 +1,7 @@
 package error
 
 const (
+	AlreadyBound                  E = "ALREADY_BOUND"
 	ArpIncomplete                 E = "ARP_INCOMPLETE"
 	CantAllocatePcb               E = "CANT_ALLOCATE_PCB"
 	CantCloseIOResource           E = "CANT_CLOSE_IO_RESOURCE"
@@ -22,6 +23,7 @@ const (
 	NotFound                      E = "NOT_FOUND"
 	OK                            E = "OK"
 	PacketTooLong                 E = "PACKET_TOO_LONG"
+	PcbNotFound                   E = "PCB_NOT_FOUND"
 	ReadFromBufError              E = "READ_FROM_BUFFER_ERROR"
 	RouteNotFound                 E = "ROUTE_NOT_FOUND"
 	SyscallError                  E = "SYSTEM_CALL_ERROR"

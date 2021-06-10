@@ -56,6 +56,25 @@ func Open() (int, psErr.E) {
 	return idx, psErr.OK
 }
 
+func Bind(id int, local EndPoint) psErr.E {
+	if PcbRepo.Have(&local) {
+		psLog.E(fmt.Sprintf("already bound: addr = %s, port = %d", local.Addr, local.Port))
+		return psErr.AlreadyBound
+	}
+
+	pcb := PcbRepo.Get(id)
+	if pcb == nil {
+		psLog.E("pcb not found")
+		return psErr.PcbNotFound
+	}
+
+	pcb.Local = local
+
+	psLog.D(fmt.Sprintf("address and port assigned: addr = %s, port = %d", local.Addr, local.Port))
+
+	return psErr.OK
+}
+
 func Receive(msg *mw.TcpRxMessage) psErr.E {
 	if len(msg.Segment) < HdrLenMin {
 		return psErr.InvalidPacket
