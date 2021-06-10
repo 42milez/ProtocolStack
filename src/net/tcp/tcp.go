@@ -75,6 +75,12 @@ func Bind(id int, local EndPoint) psErr.E {
 	return psErr.OK
 }
 
+func Listen() psErr.E {
+	
+
+	return psErr.OK
+}
+
 func Receive(msg *mw.TcpRxMessage) psErr.E {
 	if len(msg.Segment) < HdrLenMin {
 		return psErr.InvalidPacket
