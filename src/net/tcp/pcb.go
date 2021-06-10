@@ -7,17 +7,17 @@ import (
 
 const (
 	freeState int = iota
-	closedState
-	listenState
-	synSentState
-	synReceivedState
-	establishedState
-	finWait1State
-	finWait2State
-	closingState
-	timeWaitState
-	closeWaitState
-	lastAckState
+	//closedState
+	//listenState
+	//synSentState
+	//synReceivedState
+	//establishedState
+	//finWait1State
+	//finWait2State
+	//closingState
+	//timeWaitState
+	//closeWaitState
+	//lastAckState
 )
 const tcpConnMax = 32
 
@@ -29,14 +29,14 @@ type EndPoint struct {
 }
 
 type PCB struct {
-	State int
-	Local EndPoint
+	State   int
+	Local   EndPoint
 	Foreign EndPoint
-	SND struct {
+	SND     struct {
 		UNA uint32
 		NXT uint32
 		WND uint16
-		UP uint16
+		UP  uint16
 		WL1 uint32
 		WL2 uint32
 	}
@@ -44,7 +44,7 @@ type PCB struct {
 	RCV struct {
 		NXT uint32
 		WND uint16
-		UP uint16
+		UP  uint16
 	}
 	IRS uint32
 	MTU uint16
@@ -52,7 +52,7 @@ type PCB struct {
 }
 
 type pcbRepo struct {
-	mtx sync.Mutex
+	mtx  sync.Mutex
 	pcbs [tcpConnMax]*PCB
 }
 

@@ -76,7 +76,6 @@ func Bind(id int, local EndPoint) psErr.E {
 }
 
 func Listen() psErr.E {
-	
 
 	return psErr.OK
 }
@@ -87,10 +86,10 @@ func Receive(msg *mw.TcpRxMessage) psErr.E {
 	}
 
 	pseudoHdr := PseudoHdr{
-		Src: msg.Src,
-		Dst: msg.Dst,
+		Src:   msg.Src,
+		Dst:   msg.Dst,
 		Proto: msg.ProtoNum,
-		Len: uint16(len(msg.Segment)),
+		Len:   uint16(len(msg.Segment)),
 	}
 	pseudoHdrBuf := new(bytes.Buffer)
 	if err := binary.Write(pseudoHdrBuf, binary.BigEndian, &pseudoHdr); err != nil {
@@ -112,7 +111,7 @@ func Receive(msg *mw.TcpRxMessage) psErr.E {
 		return psErr.Error
 	}
 
-	offset := 4*((hdr.Flag&0xf0)>>4)
+	offset := 4 * ((hdr.Flag & 0xf0) >> 4)
 	psLog.D("", dump(&hdr, msg.Segment[offset:])...)
 
 	// TODO:
@@ -144,14 +143,14 @@ func Stop() {
 func dump(hdr *Hdr, data []byte) (ret []string) {
 	var flag uint16
 	flag |= uint16(hdr.Offset&0x01) << 8
-	flag |= uint16(hdr.Flag&0b10000000)
-	flag |= uint16(hdr.Flag&0b01000000)
-	flag |= uint16(hdr.Flag&0b00100000)
-	flag |= uint16(hdr.Flag&0b00010000)
-	flag |= uint16(hdr.Flag&0b00001000)
-	flag |= uint16(hdr.Flag&0b00000100)
-	flag |= uint16(hdr.Flag&0b00000010)
-	flag |= uint16(hdr.Flag&0b00000001)
+	flag |= uint16(hdr.Flag & 0b10000000)
+	flag |= uint16(hdr.Flag & 0b01000000)
+	flag |= uint16(hdr.Flag & 0b00100000)
+	flag |= uint16(hdr.Flag & 0b00010000)
+	flag |= uint16(hdr.Flag & 0b00001000)
+	flag |= uint16(hdr.Flag & 0b00000100)
+	flag |= uint16(hdr.Flag & 0b00000010)
+	flag |= uint16(hdr.Flag & 0b00000001)
 
 	ret = append(ret, fmt.Sprintf("src port: %d", hdr.Src))
 	ret = append(ret, fmt.Sprintf("dst port: %d", hdr.Dst))
