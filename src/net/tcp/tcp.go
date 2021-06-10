@@ -47,6 +47,10 @@ type PseudoHdr struct {
 	Len   uint16
 }
 
+func Open() int {
+	return -1
+}
+
 func Receive(msg *mw.TcpRxMessage) psErr.E {
 	if len(msg.Segment) < HdrLenMin {
 		return psErr.InvalidPacket
@@ -124,7 +128,7 @@ func dump(hdr *Hdr, data []byte) (ret []string) {
 	ret = append(ret, fmt.Sprintf("seq:      %d", hdr.Seq))
 	ret = append(ret, fmt.Sprintf("ack:      %d", hdr.Ack))
 	ret = append(ret, fmt.Sprintf("offset:   %d", (hdr.Offset&0xf0)>>4))
-	ret = append(ret, fmt.Sprintf("ns:       0b%09b", flag))
+	ret = append(ret, fmt.Sprintf("flag:       0b%09b", flag))
 	ret = append(ret, fmt.Sprintf("window:   %d", hdr.Wnd))
 	ret = append(ret, fmt.Sprintf("checksum: %d", hdr.Checksum))
 	ret = append(ret, fmt.Sprintf("urg:      %d", hdr.UrgPtr))
