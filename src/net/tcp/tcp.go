@@ -75,7 +75,15 @@ func Bind(id int, local EndPoint) psErr.E {
 	return psErr.OK
 }
 
-func Listen() psErr.E {
+func Listen(id int, backlog int) psErr.E {
+	pcb := PcbRepo.Get(id)
+	if pcb == nil {
+		psLog.E("pcb not found")
+		return psErr.PcbNotFound
+	}
+
+	pcb.State = listenState
+	pcb.Backlog = backlog
 
 	return psErr.OK
 }

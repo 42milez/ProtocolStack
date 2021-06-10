@@ -8,7 +8,7 @@ import (
 const (
 	freeState int = iota
 	//closedState
-	//listenState
+	listenState
 	//synSentState
 	//synReceivedState
 	//establishedState
@@ -32,6 +32,9 @@ type PCB struct {
 	State   int
 	Local   EndPoint
 	Foreign EndPoint
+	Backlog int
+	MTU uint16
+	MSS uint16
 	SND     struct {
 		UNA uint32
 		NXT uint32
@@ -47,8 +50,6 @@ type PCB struct {
 		UP  uint16
 	}
 	IRS uint32
-	MTU uint16
-	MSS uint16
 }
 
 type pcbRepo struct {
