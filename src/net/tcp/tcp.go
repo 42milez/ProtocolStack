@@ -47,8 +47,13 @@ type PseudoHdr struct {
 	Len   uint16
 }
 
-func Open() int {
-	return -1
+func Open() (int, psErr.E) {
+	pcb, idx := PcbRepo.UnusedPcb()
+	if pcb == nil {
+		psLog.E("all pcb is in used")
+		return idx, psErr.CantAllocatePcb
+	}
+	return idx, psErr.OK
 }
 
 func Receive(msg *mw.TcpRxMessage) psErr.E {

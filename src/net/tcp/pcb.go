@@ -1,8 +1,27 @@
 package tcp
 
-import "github.com/42milez/ProtocolStack/src/mw"
+import (
+	"github.com/42milez/ProtocolStack/src/mw"
+	"sync"
+)
 
-var PcbRepo []*PCB
+const (
+	freeState int = iota
+	closedState
+	listenState
+	synSentState
+	synReceivedState
+	establishedState
+	finWait1State
+	finWait2State
+	closingState
+	timeWaitState
+	closeWaitState
+	lastAckState
+)
+const tcpConnMax = 32
+
+var PcbRepo *pcbRepo
 
 type EndPoint struct {
 	Addr mw.V4Addr
@@ -10,6 +29,7 @@ type EndPoint struct {
 }
 
 type PCB struct {
+	State int
 	Local EndPoint
 	Foreign EndPoint
 	SND struct {
@@ -29,4 +49,26 @@ type PCB struct {
 	IRS uint32
 	MTU uint16
 	MSS uint16
+}
+
+type pcbRepo struct {
+	mtx sync.Mutex
+	pcbs [tcpConnMax]PCB
+}
+
+func (p *pcbRepo) UnusedPcb() (*PCB, int) {
+	defer p.mtx.Unlock()
+	p.mtx.Lock()
+
+	for i := 0; i < tcpConnMax; i++ {
+		if p.pcbs[i].State == freeState {
+			return &p.pcbs[i], i
+		}
+	}
+
+	return nil, -1
+}
+
+func init() {
+	PcbRepo = &pcbRepo{}
 }
