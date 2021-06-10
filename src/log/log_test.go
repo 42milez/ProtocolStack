@@ -7,7 +7,7 @@ import (
 )
 
 func TestI(t *testing.T) {
-	want, _ := regexp.Compile(`^\[1;32m\[I] [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} Info\[0m$`)
+	want, _ := regexp.Compile(`^\[I] [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} Info$`)
 	got := CaptureLogOutput(func() {
 		I("Info")
 	})
@@ -16,7 +16,7 @@ func TestI(t *testing.T) {
 		t.Errorf("I() = %v; want %v", got, want.String())
 	}
 
-	want, _ = regexp.Compile(`^\[1;32m\[I] [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} Info\[0m\[1;32mHello\[0m\[1;32mWorld\[0m$`)
+	want, _ = regexp.Compile(`^\[I] [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} InfoHelloWorld$`)
 	got = CaptureLogOutput(func() {
 		I("Info", "Hello", "World")
 	})

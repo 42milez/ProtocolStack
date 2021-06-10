@@ -11,7 +11,6 @@ import (
 )
 
 const red = "1;31"
-const green = "1;32"
 const yellow = "1;33"
 const dtFormat = "2006/02/01 15:04:05"
 
@@ -53,7 +52,7 @@ func D(s string, args ...string) {
 func I(s string, args ...string) {
 	defer mtx.Unlock()
 	mtx.Lock()
-	doColorPrint(stdout, green, "[I]", s, args...)
+	doPrint(stdout, "[I]", s, args...)
 }
 
 func W(s string, args ...string) {

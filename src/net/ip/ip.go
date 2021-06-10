@@ -82,11 +82,8 @@ func Receive(payload []byte, dev mw.IDevice) psErr.E {
 		return psErr.TtlExpired
 	}
 
-	cs1 := uint16(payload[10])<<8 | uint16(payload[11])
-	payload[10] = 0x00 // assign 0 to Header Checksum field (16bit)
-	payload[11] = 0x00
-	if cs2 := mw.Checksum(payload); cs2 != cs1 {
-		psLog.E(fmt.Sprintf("checksum mismatch: Expect = 0x%04x, Actual = 0x%04x", cs1, cs2))
+	if mw.Checksum(payload, 0) != 0 {
+		psLog.E("checksum mismatch")
 		return psErr.ChecksumMismatch
 	}
 
@@ -107,15 +104,20 @@ func Receive(payload []byte, dev mw.IDevice) psErr.E {
 
 	switch hdr.Protocol {
 	case ICMP:
-		msg := &mw.IcmpRxMessage{
+		mw.IcmpRxCh <- &mw.IcmpRxMessage{
 			Payload: payload[hdrLen:],
 			Dst:     hdr.Dst,
 			Src:     hdr.Src,
 			Dev:     dev,
 		}
-		mw.IcmpRxCh <- msg
 	case TCP:
-		psLog.E("currently NOT support TCP")
+		mw.TcpRxCh <- &mw.TcpRxMessage{
+			ProtoNum: uint8(TCP),
+			Segment:  payload[hdrLen:],
+			Dst:      hdr.Dst,
+			Src:      hdr.Src,
+			Iface:    iface,
+		}
 		return psErr.Error
 	case UDP:
 		psLog.E("currently NOT support UDP")
@@ -202,7 +204,7 @@ func createPacket(protoNum mw.ProtocolNumber, src mw.IP, dst mw.IP, payload []by
 	}
 	packet := buf.Bytes()
 
-	csum := mw.Checksum(packet)
+	csum := mw.Checksum(packet, 0)
 	packet[10] = uint8((csum & 0xff00) >> 8)
 	packet[11] = uint8(csum & 0x00ff)
 

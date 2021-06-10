@@ -98,11 +98,8 @@ func Receive(payload []byte, dst [mw.V4AddrLen]byte, src [mw.V4AddrLen]byte, dev
 		return psErr.ReadFromBufError
 	}
 
-	checksum1 := uint16(payload[2])<<8 | uint16(payload[3])
-	payload[2] = 0x00 // assign 0 to Checksum field (16bit)
-	payload[3] = 0x00
-	if checksum2 := mw.Checksum(payload); checksum2 != checksum1 {
-		psLog.E(fmt.Sprintf("checksum mismatch: Expect = 0x%04x, Actual = 0x%04x", checksum1, checksum2))
+	if mw.Checksum(payload, 0) != 0 {
+		psLog.E("checksum mismatch")
 		return psErr.ChecksumMismatch
 	}
 
@@ -154,7 +151,7 @@ func Send(typ uint8, code uint8, content uint32, payload []byte, src mw.IP, dst 
 	}
 
 	packet := buf.Bytes()
-	hdr.Checksum = mw.Checksum(packet)
+	hdr.Checksum = mw.Checksum(packet, 0)
 	packet[2] = uint8((hdr.Checksum & 0xff00) >> 8)
 	packet[3] = uint8(hdr.Checksum & 0x00ff)
 

@@ -13,8 +13,8 @@ ProtocolStack needs a TAP device for its capability. For the reason, this projec
 Software required is as follows: 
 
 - [Mutagen](https://github.com/mutagen-io/mutagen)
-- [Vagrant](https://www.vagrantup.com/)
-- [VirtualBox](https://www.virtualbox.org/)
+- [Vagrant](https://www.vagrantup.com)
+- [VirtualBox](https://www.virtualbox.org)
 
 Note: Mutagen synchronizes files between local system and virtual machine.
 
@@ -36,9 +36,9 @@ You can perform the commands below:
 #### Note: Remote debugging with GoLand
 - See the [instruction](https://github.com/42milez/ProtocolStack/wiki/Remote-Debugging-with-GoLand) for more detail.
 - Related information:
-  - [What Are Run Targets & How To Run Code Anywhere](https://blog.jetbrains.com/go/2021/04/29/what-are-run-targets-and-how-to-run-code-anywhere/)
-  - [How to use Docker to compile and run Go code from GoLand](https://blog.jetbrains.com/go/2021/04/30/how-to-use-docker-to-compile-go-from-goland/)
-  - [Compile and run Go code using WSL 2 and GoLand](https://blog.jetbrains.com/go/2021/05/05/compile-and-run-go-code-using-wsl-2-and-goland/)
+  - [What Are Run Targets & How To Run Code Anywhere](https://blog.jetbrains.com/go/2021/04/29/what-are-run-targets-and-how-to-run-code-anywhere)
+  - [How to use Docker to compile and run Go code from GoLand](https://blog.jetbrains.com/go/2021/04/30/how-to-use-docker-to-compile-go-from-goland)
+  - [Compile and run Go code using WSL 2 and GoLand](https://blog.jetbrains.com/go/2021/05/05/compile-and-run-go-code-using-wsl-2-and-goland)
 
 ### 3. Compile
 It is able to compile the application with `make`:
@@ -102,12 +102,12 @@ Note: `make` supports the commands below:
     - [About the Codecov yaml](https://docs.codecov.io/docs/codecov-yaml)
     - [Codecov Delta](https://docs.codecov.io/docs/codecov-delta)
   - Docker
-    - [Compose file](https://docs.docker.com/compose/compose-file/)
-    - [Dockerfile](https://docs.docker.com/engine/reference/builder/)
-    - [Overview of Docker Compose](https://docs.docker.com/compose/)
+    - [Compose file](https://docs.docker.com/compose/compose-file)
+    - [Dockerfile](https://docs.docker.com/engine/reference/builder)
+    - [Overview of Docker Compose](https://docs.docker.com/compose)
   - fedora
       - [DNF, the next-generation replacement for YUM](https://dnf.readthedocs.io/en/latest/index.html)
-      - [Understanding and administering systemd](https://docs.fedoraproject.org/en-US/quick-docs/understanding-and-administering-systemd/)
+      - [Understanding and administering systemd](https://docs.fedoraproject.org/en-US/quick-docs/understanding-and-administering-systemd)
   - GitHub Actions
     - [Reference](https://docs.github.com/en/actions/reference)
   - Mutagen
@@ -126,10 +126,10 @@ Note: `make` supports the commands below:
   - Articles
     - [A Closer Look at Golang From an Architect’s Perspective](https://thenewstack.io/a-closer-look-at-golang-from-an-architects-perspective)
     - [Go at Google: Language Design in the Service of Software Engineering](https://talks.golang.org/2012/splash.article)
-    - [Go talks](https://talks.golang.org/)
+    - [Go talks](https://talks.golang.org)
     - [Golang tips: why pointers to slices are useful and how ignoring them can lead to tricky bugs](https://medium.com/swlh/golang-tips-why-pointers-to-slices-are-useful-and-how-ignoring-them-can-lead-to-tricky-bugs-cac90f72e77b)
   - Docs
-      - [Command compile](https://golang.org/cmd/compile/)
+      - [Command compile](https://golang.org/cmd/compile)
       - [Command vet](https://golang.org/cmd/vet)
       - [Compiler And Runtime Optimizations](https://github.com/golang/go/wiki/CompilerOptimizations)
       - [Data Race Detector](https://golang.org/doc/articles/race_detector)
@@ -137,8 +137,8 @@ Note: `make` supports the commands below:
       - [Frequently Asked Questions (FAQ)](https://golang.org/doc/faq)
         - [Should I define methods on values or pointers?](https://golang.org/doc/faq#methods_on_values_or_pointers)
           - [Value vs Pointer Receivers](https://h12.io/article/value-vs-pointer-receivers)
-      - [Getting Started with Code Coverage for Golang](https://about.codecov.io/blog/getting-started-with-code-coverage-for-golang/)
-      - [Go by Example](https://gobyexample.com/)
+      - [Getting Started with Code Coverage for Golang](https://about.codecov.io/blog/getting-started-with-code-coverage-for-golang)
+      - [Go by Example](https://gobyexample.com)
       - [Package testing](https://golang.org/pkg/testing)
       - [The Go Memory Model](https://golang.org/ref/mem)
       - [The Go Programming Language Specification](https://golang.org/ref/spec)
@@ -146,12 +146,13 @@ Note: `make` supports the commands below:
     - [github.com/google/go-cmp/cmp](https://pkg.go.dev/github.com/google/go-cmp/cmp)
 - Makefile
   - [A Good Makefile for Go](https://kodfabrik.com/journal/a-good-makefile-for-go)
-  - [GNU Make Manual](https://www.gnu.org/software/make/manual/)
+  - [GNU Make Manual](https://www.gnu.org/software/make/manual)
 - Papers
   - [Fifty Shades of Congestion Control: A Performance and Interactions Evaluation](https://arxiv.org/abs/1903.03852)
 - RFC
   - [791: Internet Protocol](https://tools.ietf.org/html/rfc791)
   - [793: Transmission Control Protocol](https://tools.ietf.org/html/rfc793)
+  - [1071: Computing the Internet Checksum](https://datatracker.ietf.org/doc/html/rfc1071)
   - [5952: 5. Text Representation of Special Addresses](https://tools.ietf.org/html/rfc5952#section-5)
 - Open Source Software
   - [pandax381 / microps](https://github.com/pandax381/microps)
@@ -199,6 +200,8 @@ Note: `make` supports the commands below:
     - [Work stealing](https://en.wikipedia.org/wiki/Work_stealing)
 
 ## Notes
+- Computer Network
+  - [Pseudo-Headers: A Source of Controversy](https://www.edn.com/pseudo-headers-a-source-of-controversy)
 - GO
   - Asynchronous Preemption
     - [Go: Goroutine and Preemption](https://medium.com/a-journey-with-go/go-goroutine-and-preemption-d6bc2aa2f4b7)

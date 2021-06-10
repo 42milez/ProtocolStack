@@ -19,6 +19,8 @@ var IpTxCh chan *IpMessage
 var IcmpDeadLetterQueue chan *IcmpQueueEntry
 var IcmpRxCh chan *IcmpRxMessage
 var IcmpTxCh chan *IcmpTxMessage
+var TcpRxCh chan *TcpRxMessage
+var TcpTxCh chan *TcpTxMessage
 
 // Ethertypes
 // https://www.iana.org/assignments/ieee-802-numbers/ieee-802-numbers.xhtml#ieee-802-numbers-1
@@ -78,16 +80,24 @@ type IcmpTxMessage struct {
 	Dst     IP
 }
 
+type TcpRxMessage struct {
+	ProtoNum uint8
+	Segment  []byte
+	Dst      [V4AddrLen]byte
+	Src      [V4AddrLen]byte
+	Iface    *Iface
+}
+
+type TcpTxMessage struct{}
+
 func RandU8() uint8 {
 	rand.Seed(time.Now().UnixNano())
-	endpoint := 256
-	return uint8(rand.Intn(endpoint))
+	return uint8(rand.Intn(256))
 }
 
 func RandU16() uint16 {
 	rand.Seed(time.Now().UnixNano())
-	endpoint := 65536
-	return uint16(rand.Intn(endpoint))
+	return uint16(rand.Intn(65536))
 }
 
 func init() {
@@ -100,4 +110,6 @@ func init() {
 	IcmpDeadLetterQueue = make(chan *IcmpQueueEntry, xChBufSize)
 	IcmpRxCh = make(chan *IcmpRxMessage, xChBufSize)
 	IcmpTxCh = make(chan *IcmpTxMessage, xChBufSize)
+	TcpRxCh = make(chan *TcpRxMessage, xChBufSize)
+	TcpTxCh = make(chan *TcpTxMessage, xChBufSize)
 }
