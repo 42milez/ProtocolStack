@@ -96,6 +96,8 @@ func (p *pcbRepo) UnusedPcb() (*PCB, int) {
 }
 
 func (p *pcbRepo) init() {
+	defer p.mtx.Unlock()
+	p.mtx.Lock()
 	for i := range p.pcbs {
 		p.pcbs[i] = &PCB{}
 	}

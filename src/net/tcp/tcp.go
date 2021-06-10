@@ -47,6 +47,10 @@ type PseudoHdr struct {
 	Len   uint16
 }
 
+func Accept(id int, foreign *EndPoint) psErr.E {
+	return psErr.OK
+}
+
 func Open() (int, psErr.E) {
 	pcb, idx := PcbRepo.UnusedPcb()
 	if pcb == nil {
