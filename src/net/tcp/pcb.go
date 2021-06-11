@@ -23,6 +23,8 @@ const tcpConnMax = 32
 
 var PcbRepo *pcbRepo
 
+type BacklogEntry struct{}
+
 type EndPoint struct {
 	Addr mw.V4Addr
 	Port uint16
@@ -32,7 +34,6 @@ type PCB struct {
 	State   int
 	Local   EndPoint
 	Foreign EndPoint
-	Backlog int
 	MTU     uint16
 	MSS     uint16
 	SND     struct {
@@ -49,7 +50,8 @@ type PCB struct {
 		WND uint16
 		UP  uint16
 	}
-	IRS uint32
+	IRS     uint32
+	Backlog []*BacklogEntry
 }
 
 type pcbRepo struct {

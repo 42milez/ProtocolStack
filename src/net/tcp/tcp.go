@@ -48,6 +48,17 @@ type PseudoHdr struct {
 }
 
 func Accept(id int, foreign *EndPoint) psErr.E {
+	pcb := PcbRepo.Get(id)
+	if pcb == nil {
+		psLog.E("pcb not found")
+		return psErr.PcbNotFound
+	}
+
+	if pcb.State != listenState {
+		psLog.E("pcb is NOT in LISTEN state")
+		return psErr.InvalidPcbState
+	}
+
 	return psErr.OK
 }
 
@@ -79,7 +90,7 @@ func Bind(id int, local EndPoint) psErr.E {
 	return psErr.OK
 }
 
-func Listen(id int, backlog int) psErr.E {
+func Listen(id int, backlogSize int) psErr.E {
 	pcb := PcbRepo.Get(id)
 	if pcb == nil {
 		psLog.E("pcb not found")
@@ -87,7 +98,7 @@ func Listen(id int, backlog int) psErr.E {
 	}
 
 	pcb.State = listenState
-	pcb.Backlog = backlog
+	pcb.Backlog = make([]*BacklogEntry, backlogSize)
 
 	return psErr.OK
 }

@@ -16,6 +16,7 @@ const (
 	InterfaceNotFound             E = "INTERFACE_NOT_FOUND"
 	Interrupted                   E = "INTERRUPTED"
 	InvalidPacket                 E = "INVALID_PACKET"
+	InvalidPcbState               E = "INVALID_PCB_STATE"
 	InvalidProtocolVersion        E = "INVALID_PROTOCOL_VERSION"
 	NeedRetry                     E = "NEED_RETRY"
 	NetworkAddressNotMatch        E = "NETWORK_ADDRESS_NOT_MATCH"
