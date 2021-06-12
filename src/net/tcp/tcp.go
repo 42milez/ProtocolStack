@@ -175,6 +175,7 @@ func dump(hdr *Hdr, data []byte) (ret []string) {
 	flag |= uint16(hdr.Flag & 0b00000010)
 	flag |= uint16(hdr.Flag & 0b00000001)
 
+	ret = make([]string, 10)
 	ret = append(ret, fmt.Sprintf("src port: %d", hdr.Src))
 	ret = append(ret, fmt.Sprintf("dst port: %d", hdr.Dst))
 	ret = append(ret, fmt.Sprintf("seq:      %d", hdr.Seq))
