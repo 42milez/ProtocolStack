@@ -59,6 +59,9 @@ func Accept(id int, foreign *EndPoint) psErr.E {
 		return psErr.InvalidPcbState
 	}
 
+	// TODO: return id of pcb which accepted incoming connection
+	// ...
+
 	return psErr.OK
 }
 
