@@ -140,13 +140,13 @@ func Receive(msg *mw.TcpRxMessage) psErr.E {
 		return psErr.OK
 	}
 
-	hdr := Hdr{}
+	hdr := &Hdr{}
 	if err := binary.Read(bytes.NewBuffer(msg.Segment), binary.BigEndian, &hdr); err != nil {
 		return psErr.Error
 	}
 
 	offset := 4 * ((hdr.Flag & 0xf0) >> 4)
-	psLog.D("", dump(&hdr, msg.Segment[offset:])...)
+	psLog.D("", dump(hdr, msg.Segment[offset:])...)
 
 	local := EndPoint{
 		Addr: msg.Dst,
@@ -160,15 +160,7 @@ func Receive(msg *mw.TcpRxMessage) psErr.E {
 
 	hdrLen := int(hdr.Offset >> 4)
 
-	segment := &Segment{
-		Seq: hdr.Seq,
-		Ack: hdr.Ack,
-		Wnd: hdr.Wnd,
-		Urg: hdr.Urg,
-		Data: msg.Segment[hdrLen:],
-	}
-
-	if err := incomingSegment(segment); err != psErr.OK {
+	if err := incomingSegment(hdr, msg.Segment[hdrLen:], local, foreign); err != psErr.OK {
 		// TODO: output error message
 		// ...
 		return psErr.Error
@@ -232,7 +224,7 @@ func dump(hdr *Hdr, data []byte) (ret []string) {
 	return
 }
 
-func incomingSegment(segment *Segment) psErr.E {
+func incomingSegment(hdr *Hdr, data []byte, local EndPoint, foreign EndPoint) psErr.E {
 	return psErr.OK
 }
 
