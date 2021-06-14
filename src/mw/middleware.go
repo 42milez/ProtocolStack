@@ -8,6 +8,8 @@ import (
 const ARP EthType = 0x0806
 const IPv4 EthType = 0x0800
 const IPv6 EthType = 0x86dd
+const maxUint8 = ^uint8(0)
+const maxUint16 = ^uint16(0)
 const xChBufSize = 10
 
 var EthRxCh chan *EthMessage // channel for receiving packets
@@ -92,12 +94,17 @@ type TcpTxMessage struct{}
 
 func RandU8() uint8 {
 	rand.Seed(time.Now().UnixNano())
-	return uint8(rand.Intn(256))
+	return uint8(rand.Intn(int(maxUint8) + 1))
 }
 
 func RandU16() uint16 {
 	rand.Seed(time.Now().UnixNano())
-	return uint16(rand.Intn(65536))
+	return uint16(rand.Intn(int(maxUint16) + 1))
+}
+
+func RandU32() uint32 {
+	rand.Seed(time.Now().UnixNano())
+	return rand.Uint32()
 }
 
 func init() {

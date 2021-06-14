@@ -1,17 +1,20 @@
 package tcp
 
 import (
+	"container/list"
 	"github.com/42milez/ProtocolStack/src/mw"
+	"reflect"
 	"sync"
+	"time"
 )
 
 const (
 	freeState int = iota
-	//closedState
+	closedState
 	listenState
-	//synSentState
-	//synReceivedState
-	//establishedState
+	synSentState
+	synReceivedState
+	establishedState
 	//finWait1State
 	//finWait2State
 	//closingState
@@ -19,6 +22,7 @@ const (
 	//closeWaitState
 	//lastAckState
 )
+const windowSize = 65535
 const tcpConnMax = 32
 
 var PcbRepo *pcbRepo
@@ -26,32 +30,53 @@ var PcbRepo *pcbRepo
 type BacklogEntry struct{}
 
 type EndPoint struct {
-	Addr mw.V4Addr
-	Port uint16
+	Addr mw.V4Addr // ipv4 address
+	Port uint16    // port number
 }
 
 type PCB struct {
-	State   int
-	Local   EndPoint
-	Foreign EndPoint
-	MTU     uint16
-	MSS     uint16
+	State   int      // tcp state
+	Local   EndPoint // local address/port
+	Foreign EndPoint // foreign address/port
+	MTU     uint16   // maximum transmission unit
+	MSS     uint16   // maximum segment size
 	SND     struct {
-		UNA uint32
-		NXT uint32
-		WND uint16
-		UP  uint16
-		WL1 uint32
-		WL2 uint32
+		UNA uint32 // oldest unacknowledged sequence number
+		NXT uint32 // next sequence number to be sent
+		WND uint16 // window size
+		UP  uint16 // urgent pointer to be sent
+		WL1 uint32 // segment sequence number at last window update
+		WL2 uint32 // segment acknowledgment number at last window update
 	}
 	ISS uint32
 	RCV struct {
-		NXT uint32
-		WND uint16
-		UP  uint16
+		NXT uint32 // next sequence number to receive
+		WND uint16 // window size
+		UP  uint16 // urgent pointer to receive
 	}
-	IRS     uint32
-	Backlog []*BacklogEntry
+	IRS       uint32           // initial receive sequence number
+	RcvBuf    [windowSize]byte // receive buffer
+	ResendBuf list.List        // resend buffer
+	Backlog   []*BacklogEntry
+	Parent    *PCB // parent pcb
+}
+
+func (p *PCB) RefreshSndBuf() {
+	for entry := p.ResendBuf.Front(); entry != nil; entry.Next() {
+		if entry.Value.(*ResendBufEntry).Seq >= p.SND.UNA {
+			break
+		}
+		p.ResendBuf.Remove(entry)
+	}
+}
+
+type ResendBufEntry struct {
+	First time.Time
+	Last  time.Time
+	RTO   uint32
+	Seq   uint32
+	Flag  uint8
+	Data  []byte
 }
 
 type pcbRepo struct {
@@ -69,21 +94,35 @@ func (p *pcbRepo) Have(local *EndPoint) bool {
 	defer p.mtx.Unlock()
 	p.mtx.Lock()
 
-	isSameAddr := func(pcb *PCB, ep2 *EndPoint) bool {
-		return mw.V4Any.EqualV4(pcb.Local.Addr) || pcb.Local.Addr == ep2.Addr
-	}
-
-	isSamePort := func(pcb *PCB, ep2 *EndPoint) bool {
-		return pcb.Local.Port == ep2.Port
-	}
-
 	for _, pcb := range p.pcbs {
-		if isSameAddr(pcb, local) && isSamePort(pcb, local) {
+		if isSameLocalEndpoint(pcb, local) {
 			return true
 		}
 	}
 
 	return false
+}
+
+func (p *pcbRepo) LookUp(local *EndPoint, foreign *EndPoint) *PCB {
+	if local == nil || foreign == nil {
+		return nil
+	}
+
+	defer p.mtx.Unlock()
+	p.mtx.Lock()
+
+	var ret *PCB
+	for _, pcb := range p.pcbs {
+		if isSameLocalEndpoint(pcb, local) {
+			if isSameForeignEndpoint(pcb, foreign) {
+				return pcb
+			}
+			if isListen(pcb) {
+				ret = pcb
+			}
+		}
+	}
+	return ret
 }
 
 func (p *pcbRepo) UnusedPcb() (*PCB, int) {
@@ -103,6 +142,28 @@ func (p *pcbRepo) init() {
 	for i := range p.pcbs {
 		p.pcbs[i] = &PCB{}
 	}
+}
+
+func isSameLocalEndpoint(pcb *PCB, ep *EndPoint) bool {
+	return (mw.V4Any.EqualV4(pcb.Local.Addr) || pcb.Local.Addr == ep.Addr) && pcb.Local.Port == ep.Port
+}
+
+func isSameForeignEndpoint(pcb *PCB, ep *EndPoint) bool {
+	return pcb.Foreign.Addr == ep.Addr && pcb.Foreign.Port == ep.Port
+}
+
+func isListen(pcb *PCB) bool {
+	if pcb.State == listenState {
+		if mw.V4Any.EqualV4(pcb.Foreign.Addr) || pcb.Foreign.Port == 0 {
+			return true
+		}
+	}
+	return false
+}
+
+func releasePCB(v *PCB) {
+	p := reflect.ValueOf(v).Elem()
+	p.Set(reflect.Zero(p.Type()))
 }
 
 func init() {

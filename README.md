@@ -213,6 +213,7 @@ Note: `make` supports the commands below:
   - [History of programming languages](https://en.wikipedia.org/wiki/History_of_programming_languages)
 - Question and answer site
   - [C++ : how to close a tcp socket (server) when receiving SIGKILL](https://stackoverflow.com/questions/21329861/c-how-to-close-a-tcp-socket-server-when-receiving-sigkill)
+  - [How to clear values of a instance of a type struct dynamically](https://stackoverflow.com/questions/29168905/how-to-clear-values-of-a-instance-of-a-type-struct-dynamically)
   - [Understanding INADDR_ANY for socket programming](https://stackoverflow.com/questions/16508685/understanding-inaddr-any-for-socket-programming)
   - [What is the difference between AF_INET and PF_INET in socket programming?](https://stackoverflow.com/questions/6729366/what-is-the-difference-between-af-inet-and-pf-inet-in-socket-programming)
 
