@@ -33,7 +33,7 @@ type Hdr struct {
 	Flag     uint8 // cwr, ece, urg, ack, psh, rst, syn, fin
 	Wnd      uint16
 	Checksum uint16
-	UrgPtr   uint16
+	Urg      uint16
 }
 
 // Pseudo-Headers: A Source of Controversy
@@ -45,6 +45,14 @@ type PseudoHdr struct {
 	Zero  uint8
 	Proto uint8
 	Len   uint16
+}
+
+type Segment struct {
+	Seq uint32
+	Ack uint32
+	Wnd uint16
+	Urg uint16
+	Data []byte
 }
 
 func Accept(id int, foreign *EndPoint) psErr.E {
@@ -140,8 +148,31 @@ func Receive(msg *mw.TcpRxMessage) psErr.E {
 	offset := 4 * ((hdr.Flag & 0xf0) >> 4)
 	psLog.D("", dump(&hdr, msg.Segment[offset:])...)
 
-	// TODO:
-	// ...
+	local := EndPoint{
+		Addr: msg.Dst,
+		Port: hdr.Dst,
+	}
+
+	foreign := EndPoint{
+		Addr: msg.Src,
+		Port: hdr.Src,
+	}
+
+	hdrLen := int(hdr.Offset >> 4)
+
+	segment := &Segment{
+		Seq: hdr.Seq,
+		Ack: hdr.Ack,
+		Wnd: hdr.Wnd,
+		Urg: hdr.Urg,
+		Data: msg.Segment[hdrLen:],
+	}
+
+	if err := incomingSegment(segment); err != psErr.OK {
+		// TODO: output error message
+		// ...
+		return psErr.Error
+	}
 
 	return psErr.OK
 }
@@ -187,7 +218,7 @@ func dump(hdr *Hdr, data []byte) (ret []string) {
 	ret = append(ret, fmt.Sprintf("flag:       0b%09b", flag))
 	ret = append(ret, fmt.Sprintf("window:   %d", hdr.Wnd))
 	ret = append(ret, fmt.Sprintf("checksum: %d", hdr.Checksum))
-	ret = append(ret, fmt.Sprintf("urg:      %d", hdr.UrgPtr))
+	ret = append(ret, fmt.Sprintf("urg:      %d", hdr.Urg))
 
 	s := "data:     "
 	for i, v := range data {
@@ -199,6 +230,14 @@ func dump(hdr *Hdr, data []byte) (ret []string) {
 	ret = append(ret, s)
 
 	return
+}
+
+func incomingSegment(segment *Segment) psErr.E {
+	return psErr.OK
+}
+
+func outgoingSegment(segment *Segment) psErr.E {
+	return psErr.OK
 }
 
 func receiver(wg *sync.WaitGroup) {
