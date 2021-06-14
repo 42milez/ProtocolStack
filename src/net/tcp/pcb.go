@@ -14,7 +14,7 @@ const (
 	listenState
 	synSentState
 	synReceivedState
-	//establishedState
+	establishedState
 	//finWait1State
 	//finWait2State
 	//closingState
@@ -58,7 +58,7 @@ type PCB struct {
 	RcvBuf    [windowSize]byte // receive buffer
 	ResendBuf list.List        // resend buffer
 	Backlog   []*BacklogEntry
-	Parent    *PCB             // parent pcb
+	Parent    *PCB // parent pcb
 }
 
 func (p *PCB) RefreshSndBuf() {
@@ -72,11 +72,11 @@ func (p *PCB) RefreshSndBuf() {
 
 type ResendBufEntry struct {
 	First time.Time
-	Last time.Time
-	RTO uint32
-	Seq uint32
-	Flag uint8
-	Data []byte
+	Last  time.Time
+	RTO   uint32
+	Seq   uint32
+	Flag  uint8
+	Data  []byte
 }
 
 type pcbRepo struct {

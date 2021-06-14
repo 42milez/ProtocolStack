@@ -94,12 +94,12 @@ type TcpTxMessage struct{}
 
 func RandU8() uint8 {
 	rand.Seed(time.Now().UnixNano())
-	return uint8(rand.Intn(int(maxUint8 + 1)))
+	return uint8(rand.Intn(int(maxUint8) + 1))
 }
 
 func RandU16() uint16 {
 	rand.Seed(time.Now().UnixNano())
-	return uint16(rand.Intn(int(maxUint16 + 1)))
+	return uint16(rand.Intn(int(maxUint16) + 1))
 }
 
 func RandU32() uint32 {

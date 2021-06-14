@@ -13,15 +13,17 @@ import (
 )
 
 const (
-	finFlag = 0x01
+	//finFlag = 0x01
 	synFlag = 0x02
 	rstFlag = 0x04
-	pshFlag = 0x08
+	//pshFlag = 0x08
 	ackFlag = 0x10
-	urgFlag = 0x20
+	//urgFlag = 0x20
 )
-const HdrLenMax = 60 // byte
-const HdrLenMin = 20
+const (
+	HdrLenMax = 60 // byte
+	HdrLenMin = 20
+)
 const xChBufSize = 5
 
 var rcvMonCh chan *worker.Message
@@ -246,13 +248,13 @@ func incomingSegment(hdr *Hdr, data []byte, local *EndPoint, foreign *EndPoint) 
 			return psErr.OK
 		}
 		// An incoming segment not containing a RST causes a RST to be sent in response.
-		if hdr.Flag.IsSet(ackFlag) {
-			// TODO: send RST
-			// ...
-		} else {
-			// TODO: send RST,ACK
-			// ...
-		}
+		//if hdr.Flag.IsSet(ackFlag) {
+		//	// TODO: send RST
+		//	// ...
+		//} else {
+		//	// TODO: send RST,ACK
+		//	// ...
+		//}
 	}
 
 	/* in LISTEN state */
@@ -355,7 +357,7 @@ func incomingSegment(hdr *Hdr, data []byte, local *EndPoint, foreign *EndPoint) 
 				pcb.RefreshSndBuf()
 			}
 			if pcb.SND.UNA > pcb.ISS {
-
+				pcb.State = establishedState
 			}
 		}
 
@@ -365,9 +367,9 @@ func incomingSegment(hdr *Hdr, data []byte, local *EndPoint, foreign *EndPoint) 
 	return psErr.OK
 }
 
-func outgoingSegment(segment *Segment) psErr.E {
-	return psErr.OK
-}
+//func outgoingSegment(segment *Segment) psErr.E {
+//	return psErr.OK
+//}
 
 func receiver(wg *sync.WaitGroup) {
 	defer wg.Done()
