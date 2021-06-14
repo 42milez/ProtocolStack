@@ -12,6 +12,14 @@ import (
 	"sync"
 )
 
+const (
+	finFlag = 0x01
+	synFlag = 0x02
+	rstFlag = 0x04
+	pshFlag = 0x08
+	ackFlag = 0x10
+	urgFlag = 0x20
+)
 const HdrLenMax = 60 // byte
 const HdrLenMin = 20
 const xChBufSize = 5
@@ -24,13 +32,19 @@ var sndSigCh chan *worker.Message
 var receiverID uint32
 var senderID uint32
 
+type Flag uint8
+
+func (v Flag) IsSet(flag uint8) bool {
+	return uint8(v)&flag == flag
+}
+
 type Hdr struct {
 	Src      uint16
 	Dst      uint16
 	Seq      uint32
 	Ack      uint32
 	Offset   uint8 // offset (4bits), reserved (3bits), ns (1bit)
-	Flag     uint8 // cwr, ece, urg, ack, psh, rst, syn, fin
+	Flag     Flag  // cwr, ece, urg, ack, psh, rst, syn, fin
 	Wnd      uint16
 	Checksum uint16
 	Urg      uint16
@@ -148,8 +162,8 @@ func Receive(msg *mw.TcpRxMessage) psErr.E {
 	offset := ((hdr.Flag & 0xf0) >> 4) << 2
 	psLog.D("", dump(hdr, msg.Segment[offset:])...)
 
-	local := EndPoint{Addr: msg.Dst, Port: hdr.Dst}
-	foreign := EndPoint{Addr: msg.Src, Port: hdr.Src}
+	local := &EndPoint{Addr: msg.Dst, Port: hdr.Dst}
+	foreign := &EndPoint{Addr: msg.Src, Port: hdr.Src}
 
 	if err := incomingSegment(hdr, msg.Segment[offset:], local, foreign); err != psErr.OK {
 		psLog.E(fmt.Sprintf("can't process incoming segment: %s", err))
@@ -214,7 +228,86 @@ func dump(hdr *Hdr, data []byte) (ret []string) {
 	return
 }
 
-func incomingSegment(hdr *Hdr, data []byte, local EndPoint, foreign EndPoint) psErr.E {
+// SEGMENT ARRIVES
+// https://datatracker.ietf.org/doc/html/rfc793#page-65
+
+func incomingSegment(hdr *Hdr, data []byte, local *EndPoint, foreign *EndPoint) psErr.E {
+	pcb := PcbRepo.LookUp(local, foreign)
+
+	if pcb == nil {
+		return psErr.Error
+	}
+
+	/* in CLOSED state */
+
+	if pcb.State == closedState {
+		// An incoming segment containing a RST is discarded.
+		if hdr.Flag.IsSet(rstFlag) {
+			return psErr.OK
+		}
+		// An incoming segment not containing a RST causes a RST to be sent in response.
+		if hdr.Flag.IsSet(ackFlag) {
+			// TODO: send RST
+			// ...
+		} else {
+			// TODO: send RST,ACK
+			// ...
+		}
+	}
+
+	/* in LISTEN state */
+
+	switch pcb.State {
+	case listenState:
+		// 1st:
+		if hdr.Flag.IsSet(rstFlag) {
+			return psErr.OK
+		}
+
+		// 2nd
+		if hdr.Flag.IsSet(ackFlag) {
+			// TODO: send RST
+			// ...
+			return psErr.OK
+		}
+
+		// 3rd
+		if hdr.Flag.IsSet(synFlag) {
+			// TODO: check security and compartment
+			// TODO: check precedence
+			// ...
+
+			newPcb, _ := PcbRepo.UnusedPcb()
+			if newPcb == nil {
+				return psErr.CantAllocatePcb
+			}
+			newPcb.BelongsTo(pcb)
+			newPcb.Local = *local
+			newPcb.Foreign = *foreign
+			newPcb.RCV.WND = bufSize
+			newPcb.RCV.NXT = hdr.Seq + 1
+			newPcb.IRS = hdr.Seq
+			newPcb.ISS = mw.RandU32()
+
+			// TODO: send SYN,ACK
+			// ...
+
+			newPcb.SND.NXT = newPcb.ISS + 1
+			newPcb.SND.UNA = newPcb.ISS
+			newPcb.State = synReceivedState
+
+			return psErr.OK
+		}
+
+		// 4th: referenced from RFC793
+		// Any other control or text-bearing segment (not containing SYN) must have an ACK and thus would be discarded
+		// by the ACK processing. An incoming RST segment could not be valid, since it could not have been sent in
+		// response to anything sent by this incarnation of the connection. So you are unlikely to get here, but if you
+		// do, drop the segment, and return.
+		return psErr.OK
+	case synSentState:
+	}
+
 	return psErr.OK
 }
 

@@ -7,10 +7,10 @@ import (
 
 const (
 	freeState int = iota
-	//closedState
+	closedState
 	listenState
-	//synSentState
-	//synReceivedState
+	synSentState
+	synReceivedState
 	//establishedState
 	//finWait1State
 	//finWait2State
@@ -19,6 +19,7 @@ const (
 	//closeWaitState
 	//lastAckState
 )
+const bufSize = 65535
 const tcpConnMax = 32
 
 var PcbRepo *pcbRepo
@@ -51,7 +52,15 @@ type PCB struct {
 		UP  uint16
 	}
 	IRS     uint32
+	Buf     [bufSize]byte
 	Backlog []*BacklogEntry
+	Child   []*PCB
+	Parent  *PCB
+}
+
+func (p *PCB) BelongsTo(pcb *PCB) {
+	p.Parent = pcb
+	pcb.Child = append(pcb.Child, p)
 }
 
 type pcbRepo struct {
@@ -69,21 +78,35 @@ func (p *pcbRepo) Have(local *EndPoint) bool {
 	defer p.mtx.Unlock()
 	p.mtx.Lock()
 
-	isSameAddr := func(pcb *PCB, ep2 *EndPoint) bool {
-		return mw.V4Any.EqualV4(pcb.Local.Addr) || pcb.Local.Addr == ep2.Addr
-	}
-
-	isSamePort := func(pcb *PCB, ep2 *EndPoint) bool {
-		return pcb.Local.Port == ep2.Port
-	}
-
 	for _, pcb := range p.pcbs {
-		if isSameAddr(pcb, local) && isSamePort(pcb, local) {
+		if isSameLocalEndpoint(pcb, local) {
 			return true
 		}
 	}
 
 	return false
+}
+
+func (p *pcbRepo) LookUp(local *EndPoint, foreign *EndPoint) *PCB {
+	if local == nil || foreign == nil {
+		return nil
+	}
+
+	defer p.mtx.Unlock()
+	p.mtx.Lock()
+
+	var ret *PCB
+	for _, pcb := range p.pcbs {
+		if isSameLocalEndpoint(pcb, local) {
+			if isSameForeignEndpoint(pcb, foreign) {
+				return pcb
+			}
+			if isListen(pcb) {
+				ret = pcb
+			}
+		}
+	}
+	return ret
 }
 
 func (p *pcbRepo) UnusedPcb() (*PCB, int) {
@@ -95,6 +118,23 @@ func (p *pcbRepo) UnusedPcb() (*PCB, int) {
 		}
 	}
 	return nil, -1
+}
+
+func isSameLocalEndpoint(pcb *PCB, ep *EndPoint) bool {
+	return (mw.V4Any.EqualV4(pcb.Local.Addr) || pcb.Local.Addr == ep.Addr) && pcb.Local.Port == ep.Port
+}
+
+func isSameForeignEndpoint(pcb *PCB, ep *EndPoint) bool {
+	return pcb.Foreign.Addr == ep.Addr && pcb.Foreign.Port == ep.Port
+}
+
+func isListen(pcb *PCB) bool {
+	if pcb.State == listenState {
+		if mw.V4Any.EqualV4(pcb.Foreign.Addr) || pcb.Foreign.Port == 0 {
+			return true
+		}
+	}
+	return false
 }
 
 func (p *pcbRepo) init() {
