@@ -48,10 +48,10 @@ type PseudoHdr struct {
 }
 
 type Segment struct {
-	Seq uint32
-	Ack uint32
-	Wnd uint16
-	Urg uint16
+	Seq  uint32
+	Ack  uint32
+	Wnd  uint16
+	Urg  uint16
 	Data []byte
 }
 
@@ -145,24 +145,14 @@ func Receive(msg *mw.TcpRxMessage) psErr.E {
 		return psErr.Error
 	}
 
-	offset := 4 * ((hdr.Flag & 0xf0) >> 4)
+	offset := ((hdr.Flag & 0xf0) >> 4) << 2
 	psLog.D("", dump(hdr, msg.Segment[offset:])...)
 
-	local := EndPoint{
-		Addr: msg.Dst,
-		Port: hdr.Dst,
-	}
+	local := EndPoint{Addr: msg.Dst, Port: hdr.Dst}
+	foreign := EndPoint{Addr: msg.Src, Port: hdr.Src}
 
-	foreign := EndPoint{
-		Addr: msg.Src,
-		Port: hdr.Src,
-	}
-
-	hdrLen := int(hdr.Offset >> 4)
-
-	if err := incomingSegment(hdr, msg.Segment[hdrLen:], local, foreign); err != psErr.OK {
-		// TODO: output error message
-		// ...
+	if err := incomingSegment(hdr, msg.Segment[offset:], local, foreign); err != psErr.OK {
+		psLog.E(fmt.Sprintf("can't process incoming segment: %s", err))
 		return psErr.Error
 	}
 
