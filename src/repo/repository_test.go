@@ -51,6 +51,14 @@ func TestDeviceRepo_Register_2(t *testing.T) {
 	}
 }
 
+func TestDeviceRepo_NextNumber(t *testing.T) {
+	want := 0
+	got := DeviceRepo.NextNumber()
+	if got != want {
+		t.Errorf("DeviceRepo.NextNumber() = %d; want %d", got, want)
+	}
+}
+
 func TestIfaceRepo_Register_1(t *testing.T) {
 	_, teardown := setupRepositoryTest(t)
 	defer teardown()
