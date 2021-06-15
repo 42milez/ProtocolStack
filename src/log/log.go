@@ -99,20 +99,20 @@ func CaptureLogOutput(f func()) string {
 	return ret
 }
 
-func EnableOutput() {
-	resetOutput()
-}
-
-func DisableOutput() {
-	setOutput(ioutil.Discard)
-}
-
 func EnableDebug() {
 	debug = true
 }
 
 func DisableDebug() {
 	debug = false
+}
+
+func EnableOutput() {
+	resetOutput()
+}
+
+func DisableOutput() {
+	setOutput(ioutil.Discard)
 }
 
 func resetOutput() {
