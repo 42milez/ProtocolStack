@@ -28,11 +28,8 @@ func TestD_1(t *testing.T) {
 
 // return early when the debug flag is false
 func TestD_2(t *testing.T) {
-	defer func() {
-		debug = true
-	}()
-
-	debug = false
+	defer EnableDebug()
+	DisableDebug()
 
 	want := ""
 	got := CaptureLogOutput(func() {
