@@ -9,23 +9,16 @@ import (
 	"testing"
 )
 
-func setupRepositoryTest(t *testing.T) (ctrl *gomock.Controller, teardown func()) {
-	ctrl = gomock.NewController(t)
-	psLog.DisableOutput()
-	reset := func() {
-		psLog.EnableOutput()
-		DeviceRepo = &deviceRepo{}
-		IfaceRepo = &ifaceRepo{}
+func TestDeviceRepo_NextNumber(t *testing.T) {
+	want := 0
+	got := DeviceRepo.NextNumber()
+	if got != want {
+		t.Errorf("DeviceRepo.NextNumber() = %d; want %d", got, want)
 	}
-	teardown = func() {
-		ctrl.Finish()
-		reset()
-	}
-	return
 }
 
 func TestDeviceRepo_Register_1(t *testing.T) {
-	_, teardown := setupRepositoryTest(t)
+	_, teardown := setup(t)
 	defer teardown()
 
 	dev := &eth2.TapDevice{}
@@ -38,7 +31,7 @@ func TestDeviceRepo_Register_1(t *testing.T) {
 
 // Fail when it's trying to register same device.
 func TestDeviceRepo_Register_2(t *testing.T) {
-	_, teardown := setupRepositoryTest(t)
+	_, teardown := setup(t)
 	defer teardown()
 
 	dev1 := &eth2.TapDevice{Device: mw.Device{Name_: "net0"}}
@@ -51,16 +44,8 @@ func TestDeviceRepo_Register_2(t *testing.T) {
 	}
 }
 
-func TestDeviceRepo_NextNumber(t *testing.T) {
-	want := 0
-	got := DeviceRepo.NextNumber()
-	if got != want {
-		t.Errorf("DeviceRepo.NextNumber() = %d; want %d", got, want)
-	}
-}
-
 func TestIfaceRepo_Register_1(t *testing.T) {
-	_, teardown := setupRepositoryTest(t)
+	_, teardown := setup(t)
 	defer teardown()
 
 	iface := &mw.Iface{
@@ -88,7 +73,7 @@ func TestIfaceRepo_Register_1(t *testing.T) {
 
 // Fail when it's trying to register same interface.
 func TestIfaceRepo_Register_2(t *testing.T) {
-	_, teardown := setupRepositoryTest(t)
+	_, teardown := setup(t)
 	defer teardown()
 
 	iface := &mw.Iface{
@@ -117,7 +102,7 @@ func TestIfaceRepo_Register_2(t *testing.T) {
 }
 
 func TestUp_1(t *testing.T) {
-	ctrl, teardown := setupRepositoryTest(t)
+	ctrl, teardown := setup(t)
 	defer teardown()
 
 	m := mw.NewMockIDevice(ctrl)
@@ -139,7 +124,7 @@ func TestUp_1(t *testing.T) {
 
 // Fail when device is already opened.
 func TestUp_2(t *testing.T) {
-	ctrl, teardown := setupRepositoryTest(t)
+	ctrl, teardown := setup(t)
 	defer teardown()
 
 	m := mw.NewMockIDevice(ctrl)
@@ -159,7 +144,7 @@ func TestUp_2(t *testing.T) {
 
 // Fail when it could not get device up.
 func TestUp_3(t *testing.T) {
-	ctrl, teardown := setupRepositoryTest(t)
+	ctrl, teardown := setup(t)
 	defer teardown()
 
 	m := mw.NewMockIDevice(ctrl)
@@ -176,4 +161,19 @@ func TestUp_3(t *testing.T) {
 	if got != psErr.Error {
 		t.Errorf("Up() = %s; want %s", got, psErr.Error)
 	}
+}
+
+func setup(t *testing.T) (ctrl *gomock.Controller, teardown func()) {
+	ctrl = gomock.NewController(t)
+	psLog.DisableOutput()
+	reset := func() {
+		psLog.EnableOutput()
+		DeviceRepo = &deviceRepo{}
+		IfaceRepo = &ifaceRepo{}
+	}
+	teardown = func() {
+		ctrl.Finish()
+		reset()
+	}
+	return
 }
