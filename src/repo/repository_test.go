@@ -17,6 +17,26 @@ func TestDeviceRepo_NextNumber(t *testing.T) {
 	}
 }
 
+func TestDeviceRepo_Poll_1(t *testing.T) {
+	ctrl, teardown := setup(t)
+	defer teardown()
+
+	m := mw.NewMockIDevice(ctrl)
+	m.EXPECT().IsUp().Return(true)
+	m.EXPECT().Poll().Return(psErr.OK)
+	m.EXPECT().Type().Return(mw.EthernetDevice)
+	m.EXPECT().Name().Return("net0")
+	m.EXPECT().Priv().Return(mw.Privilege{Name: "tap0"})
+	m.EXPECT().Addr().Return(mw.EthAddr{})
+	_ = DeviceRepo.Register(m)
+
+	want := psErr.OK
+	got := DeviceRepo.Poll()
+	if got != want {
+		t.Errorf("DeviceRepo.Poll() = %s; want %s", got, want)
+	}
+}
+
 func TestDeviceRepo_Register_1(t *testing.T) {
 	_, teardown := setup(t)
 	defer teardown()
