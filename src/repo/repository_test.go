@@ -126,6 +126,86 @@ func TestDeviceRepo_Register_2(t *testing.T) {
 	}
 }
 
+func TestIfaceRepo_Get_1(t *testing.T) {
+	_, teardown := setup(t)
+	defer teardown()
+
+	iface := &mw.Iface{
+		Family:    mw.V4AddrFamily,
+		Unicast:   mw.ParseIP(mw.LoopbackIpAddr),
+		Netmask:   mw.ParseIP(mw.LoopbackNetmask),
+		Broadcast: make(mw.IP, 0),
+	}
+	dev := &eth2.TapDevice{
+		Device: mw.Device{
+			Type_: mw.EthernetDevice,
+			MTU_:  mw.EthPayloadLenMax,
+			Flag_: mw.BroadcastFlag | mw.NeedArpFlag,
+			Addr_: mw.EthAddr{11, 12, 13, 14, 15, 16},
+			Priv_: mw.Privilege{FD: -1, Name: "tap0"},
+		},
+	}
+	_= IfaceRepo.Register(iface, dev)
+
+	if IfaceRepo.Get(iface.Unicast) != iface {
+		t.Errorf("IfaceRepo.Get() returns invalid Iface")
+	}
+}
+
+func TestIfaceRepo_Get_2(t *testing.T) {
+	_, teardown := setup(t)
+	defer teardown()
+
+	if IfaceRepo.Get(mw.ParseIP(mw.LoopbackIpAddr)) != nil {
+		t.Errorf("IfaceRepo.Get() returns invalid Iface")
+	}
+}
+
+func TestIfaceRepo_Lookup_1(t *testing.T) {
+	_, teardown := setup(t)
+	defer teardown()
+
+	iface := &mw.Iface{
+		Family:    mw.V4AddrFamily,
+		Unicast:   mw.ParseIP(mw.LoopbackIpAddr),
+		Netmask:   mw.ParseIP(mw.LoopbackNetmask),
+		Broadcast: make(mw.IP, 0),
+	}
+	dev := &eth2.TapDevice{
+		Device: mw.Device{
+			Type_: mw.EthernetDevice,
+			MTU_:  mw.EthPayloadLenMax,
+			Flag_: mw.BroadcastFlag | mw.NeedArpFlag,
+			Addr_: mw.EthAddr{11, 12, 13, 14, 15, 16},
+			Priv_: mw.Privilege{FD: -1, Name: "tap0"},
+		},
+	}
+	_= IfaceRepo.Register(iface, dev)
+
+	if IfaceRepo.Lookup(dev, mw.V4AddrFamily) != iface {
+		t.Errorf("IfaceRepo.Lookup() returns invalid Iface")
+	}
+}
+
+func TestIfaceRepo_Lookup_2(t *testing.T) {
+	_, teardown := setup(t)
+	defer teardown()
+
+	dev := &eth2.TapDevice{
+		Device: mw.Device{
+			Type_: mw.EthernetDevice,
+			MTU_:  mw.EthPayloadLenMax,
+			Flag_: mw.BroadcastFlag | mw.NeedArpFlag,
+			Addr_: mw.EthAddr{11, 12, 13, 14, 15, 16},
+			Priv_: mw.Privilege{FD: -1, Name: "tap0"},
+		},
+	}
+
+	if IfaceRepo.Lookup(dev, mw.V4AddrFamily) != nil {
+		t.Errorf("IfaceRepo.Lookup() returns invalid Iface")
+	}
+}
+
 func TestIfaceRepo_Register_1(t *testing.T) {
 	_, teardown := setup(t)
 	defer teardown()
