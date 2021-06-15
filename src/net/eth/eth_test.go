@@ -14,12 +14,28 @@ func TestStart(t *testing.T) {
 
 	var wg sync.WaitGroup
 	_ = Start(&wg)
+	rcvMonMsg := <-rcvMonCh
+	sndMonMsg := <-sndMonCh
 
-	rcvStatus := <-rcvMonCh
-	sndStatus := <-sndMonCh
-
-	if rcvStatus.Current != worker.Running || sndStatus.Current != worker.Running {
+	if rcvMonMsg.Current != worker.Running || sndMonMsg.Current != worker.Running {
 		t.Errorf("Start() failed")
+	}
+}
+
+func TestStop(t *testing.T) {
+	_, teardown := setupEthTest(t)
+	defer teardown()
+
+	var wg sync.WaitGroup
+	_ = Start(&wg)
+	<-rcvMonCh
+	<-sndMonCh
+	Stop()
+	rcvMonMsg := <-rcvMonCh
+	sndMonMsg := <-sndMonCh
+
+	if rcvMonMsg.Current != worker.Stopped || sndMonMsg.Current != worker.Stopped {
+		t.Errorf("Stop() failed")
 	}
 }
 
