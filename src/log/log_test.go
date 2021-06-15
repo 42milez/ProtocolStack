@@ -6,6 +6,26 @@ import (
 	"testing"
 )
 
+func TestD(t *testing.T) {
+	want, _ := regexp.Compile(`^\[I] [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} Debug$`)
+	got := CaptureLogOutput(func() {
+		I("Debug")
+	})
+	got = Trim(got)
+	if !want.MatchString(got) {
+		t.Errorf("D() = %v; want %v", got, want.String())
+	}
+
+	want, _ = regexp.Compile(`^\[I] [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} DebugHelloWorld$`)
+	got = CaptureLogOutput(func() {
+		I("Debug", "Hello", "World")
+	})
+	got = Trim(got)
+	if !want.MatchString(got) {
+		t.Errorf("D() = %v; want %v", got, want.String())
+	}
+}
+
 func TestI(t *testing.T) {
 	want, _ := regexp.Compile(`^\[I] [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} Info$`)
 	got := CaptureLogOutput(func() {
