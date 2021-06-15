@@ -9,17 +9,17 @@ import (
 	"testing"
 )
 
-func reset() {
-	DeviceRepo = &deviceRepo{}
-	IfaceRepo = &ifaceRepo{}
-}
-
 func setupRepositoryTest(t *testing.T) (ctrl *gomock.Controller, teardown func()) {
-	psLog.DisableOutput()
 	ctrl = gomock.NewController(t)
+	psLog.DisableOutput()
+	reset := func() {
+		psLog.EnableOutput()
+		DeviceRepo = &deviceRepo{}
+		IfaceRepo = &ifaceRepo{}
+	}
 	teardown = func() {
 		ctrl.Finish()
-		psLog.EnableOutput()
+		reset()
 	}
 	return
 }
@@ -27,7 +27,6 @@ func setupRepositoryTest(t *testing.T) (ctrl *gomock.Controller, teardown func()
 func TestDeviceRepo_Register_1(t *testing.T) {
 	_, teardown := setupRepositoryTest(t)
 	defer teardown()
-	defer reset()
 
 	dev := &eth2.TapDevice{}
 
@@ -41,7 +40,6 @@ func TestDeviceRepo_Register_1(t *testing.T) {
 func TestDeviceRepo_Register_2(t *testing.T) {
 	_, teardown := setupRepositoryTest(t)
 	defer teardown()
-	defer reset()
 
 	dev1 := &eth2.TapDevice{Device: mw.Device{Name_: "net0"}}
 	dev2 := &eth2.TapDevice{Device: mw.Device{Name_: "net0"}}
@@ -56,7 +54,6 @@ func TestDeviceRepo_Register_2(t *testing.T) {
 func TestIfaceRepo_Register_1(t *testing.T) {
 	_, teardown := setupRepositoryTest(t)
 	defer teardown()
-	defer reset()
 
 	iface := &mw.Iface{
 		Family:    mw.V4AddrFamily,
@@ -85,7 +82,6 @@ func TestIfaceRepo_Register_1(t *testing.T) {
 func TestIfaceRepo_Register_2(t *testing.T) {
 	_, teardown := setupRepositoryTest(t)
 	defer teardown()
-	defer reset()
 
 	iface := &mw.Iface{
 		Family:    mw.V4AddrFamily,
@@ -115,7 +111,6 @@ func TestIfaceRepo_Register_2(t *testing.T) {
 func TestUp_1(t *testing.T) {
 	ctrl, teardown := setupRepositoryTest(t)
 	defer teardown()
-	defer reset()
 
 	m := mw.NewMockIDevice(ctrl)
 	m.EXPECT().Open().Return(psErr.OK)
@@ -138,7 +133,6 @@ func TestUp_1(t *testing.T) {
 func TestUp_2(t *testing.T) {
 	ctrl, teardown := setupRepositoryTest(t)
 	defer teardown()
-	defer reset()
 
 	m := mw.NewMockIDevice(ctrl)
 	m.EXPECT().IsUp().Return(true)
@@ -159,7 +153,6 @@ func TestUp_2(t *testing.T) {
 func TestUp_3(t *testing.T) {
 	ctrl, teardown := setupRepositoryTest(t)
 	defer teardown()
-	defer reset()
 
 	m := mw.NewMockIDevice(ctrl)
 	m.EXPECT().Open().Return(psErr.Error)
