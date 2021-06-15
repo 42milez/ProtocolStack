@@ -325,6 +325,39 @@ func TestIfaceRepo_Register_2(t *testing.T) {
 	}
 }
 
+func TestRouteRepo_Get(t *testing.T) {
+	_, teardown := setup(t)
+	defer teardown()
+
+	iface := &mw.Iface{
+		Family:    mw.V4AddrFamily,
+		Unicast:   mw.IP{192, 0, 0, 1},
+		Netmask:   mw.IP{255, 255, 255, 0},
+		Broadcast: mw.IP{192, 0, 0, 255},
+	}
+	dev := &eth2.TapDevice{
+		Device: mw.Device{
+			Type_: mw.EthernetDevice,
+			MTU_:  mw.EthPayloadLenMax,
+			Flag_: mw.BroadcastFlag | mw.NeedArpFlag,
+			Addr_: mw.EthAddr{11, 12, 13, 14, 15, 16},
+			Priv_: mw.Privilege{FD: -1, Name: "tap0"},
+		},
+	}
+	_ = IfaceRepo.Register(iface, dev)
+	RouteRepo.Register(mw.ParseIP("192.0.0.0"), mw.V4Any, iface)
+
+	// return valid route
+	if RouteRepo.Get(mw.IP{192, 0, 0, 1}) == nil {
+		t.Errorf("RouteRepo.Get() return invalid route")
+	}
+
+	// return nil (route not exist)
+	if RouteRepo.Get(mw.IP{192, 0, 2, 1}) != nil {
+		t.Errorf("RouteRepo.Get() return invalid route")
+	}
+}
+
 func setup(t *testing.T) (ctrl *gomock.Controller, teardown func()) {
 	ctrl = gomock.NewController(t)
 	psLog.DisableOutput()
