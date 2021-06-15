@@ -126,6 +126,68 @@ func TestDeviceRepo_Register_2(t *testing.T) {
 	}
 }
 
+func TestUp_1(t *testing.T) {
+	ctrl, teardown := setup(t)
+	defer teardown()
+
+	m := mw.NewMockIDevice(ctrl)
+	m.EXPECT().Open().Return(psErr.OK)
+	m.EXPECT().Up()
+	m.EXPECT().IsUp().Return(false)
+	m.EXPECT().Addr().Return(mw.EthAddr{})
+	m.EXPECT().Type().Return(mw.EthernetDevice).AnyTimes()
+	m.EXPECT().Name().Return("net0").AnyTimes()
+	m.EXPECT().Priv().Return(mw.Privilege{Name: "tap0"}).AnyTimes()
+
+	_ = DeviceRepo.Register(m)
+
+	got := DeviceRepo.Up()
+	if got != psErr.OK {
+		t.Errorf("Up() = %v; want %v", got, psErr.OK)
+	}
+}
+
+// Fail when device is already opened.
+func TestUp_2(t *testing.T) {
+	ctrl, teardown := setup(t)
+	defer teardown()
+
+	m := mw.NewMockIDevice(ctrl)
+	m.EXPECT().IsUp().Return(true)
+	m.EXPECT().Type().Return(mw.EthernetDevice).AnyTimes()
+	m.EXPECT().Name().Return("net0").AnyTimes()
+	m.EXPECT().Priv().Return(mw.Privilege{Name: "tap0"}).AnyTimes()
+	m.EXPECT().Addr().Return(mw.EthAddr{})
+
+	_ = DeviceRepo.Register(m)
+
+	got := DeviceRepo.Up()
+	if got != psErr.Error {
+		t.Errorf("Up() = %s; want %s", got, psErr.Error)
+	}
+}
+
+// Fail when it could not get device up.
+func TestUp_3(t *testing.T) {
+	ctrl, teardown := setup(t)
+	defer teardown()
+
+	m := mw.NewMockIDevice(ctrl)
+	m.EXPECT().Open().Return(psErr.Error)
+	m.EXPECT().IsUp().Return(false)
+	m.EXPECT().Type().Return(mw.EthernetDevice).AnyTimes()
+	m.EXPECT().Name().Return("net0").AnyTimes()
+	m.EXPECT().Priv().Return(mw.Privilege{Name: "tap0"}).AnyTimes()
+	m.EXPECT().Addr().Return(mw.EthAddr{})
+
+	_ = DeviceRepo.Register(m)
+
+	got := DeviceRepo.Up()
+	if got != psErr.Error {
+		t.Errorf("Up() = %s; want %s", got, psErr.Error)
+	}
+}
+
 func TestIfaceRepo_Get_1(t *testing.T) {
 	_, teardown := setup(t)
 	defer teardown()
@@ -260,68 +322,6 @@ func TestIfaceRepo_Register_2(t *testing.T) {
 	got := IfaceRepo.Register(iface, dev)
 	if got != psErr.Error {
 		t.Errorf("IfaceRepo.Register() = %s; want %s", got, psErr.Error)
-	}
-}
-
-func TestUp_1(t *testing.T) {
-	ctrl, teardown := setup(t)
-	defer teardown()
-
-	m := mw.NewMockIDevice(ctrl)
-	m.EXPECT().Open().Return(psErr.OK)
-	m.EXPECT().Up()
-	m.EXPECT().IsUp().Return(false)
-	m.EXPECT().Addr().Return(mw.EthAddr{})
-	m.EXPECT().Type().Return(mw.EthernetDevice).AnyTimes()
-	m.EXPECT().Name().Return("net0").AnyTimes()
-	m.EXPECT().Priv().Return(mw.Privilege{Name: "tap0"}).AnyTimes()
-
-	_ = DeviceRepo.Register(m)
-
-	got := DeviceRepo.Up()
-	if got != psErr.OK {
-		t.Errorf("Up() = %v; want %v", got, psErr.OK)
-	}
-}
-
-// Fail when device is already opened.
-func TestUp_2(t *testing.T) {
-	ctrl, teardown := setup(t)
-	defer teardown()
-
-	m := mw.NewMockIDevice(ctrl)
-	m.EXPECT().IsUp().Return(true)
-	m.EXPECT().Type().Return(mw.EthernetDevice).AnyTimes()
-	m.EXPECT().Name().Return("net0").AnyTimes()
-	m.EXPECT().Priv().Return(mw.Privilege{Name: "tap0"}).AnyTimes()
-	m.EXPECT().Addr().Return(mw.EthAddr{})
-
-	_ = DeviceRepo.Register(m)
-
-	got := DeviceRepo.Up()
-	if got != psErr.Error {
-		t.Errorf("Up() = %s; want %s", got, psErr.Error)
-	}
-}
-
-// Fail when it could not get device up.
-func TestUp_3(t *testing.T) {
-	ctrl, teardown := setup(t)
-	defer teardown()
-
-	m := mw.NewMockIDevice(ctrl)
-	m.EXPECT().Open().Return(psErr.Error)
-	m.EXPECT().IsUp().Return(false)
-	m.EXPECT().Type().Return(mw.EthernetDevice).AnyTimes()
-	m.EXPECT().Name().Return("net0").AnyTimes()
-	m.EXPECT().Priv().Return(mw.Privilege{Name: "tap0"}).AnyTimes()
-	m.EXPECT().Addr().Return(mw.EthAddr{})
-
-	_ = DeviceRepo.Register(m)
-
-	got := DeviceRepo.Up()
-	if got != psErr.Error {
-		t.Errorf("Up() = %s; want %s", got, psErr.Error)
 	}
 }
 
