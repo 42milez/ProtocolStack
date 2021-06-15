@@ -100,10 +100,14 @@ func CaptureLogOutput(f func()) string {
 }
 
 func EnableDebug() {
+	defer mtx.Unlock()
+	mtx.Lock()
 	debug = true
 }
 
 func DisableDebug() {
+	defer mtx.Unlock()
+	mtx.Lock()
 	debug = false
 }
 
@@ -116,11 +120,15 @@ func DisableOutput() {
 }
 
 func resetOutput() {
+	defer mtx.Unlock()
+	mtx.Lock()
 	stdout = os.Stdout
 	stderr = os.Stderr
 }
 
 func setOutput(writer io.Writer) {
+	defer mtx.Unlock()
+	mtx.Lock()
 	stdout = writer
 	stderr = writer
 }

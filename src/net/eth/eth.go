@@ -63,7 +63,7 @@ func receiver(wg *sync.WaitGroup) {
 			case mw.IPv4:
 				mw.IpRxCh <- msg
 			default:
-				psLog.W(fmt.Sprintf("Unknown ether type: 0x%04x", uint16(msg.Type)))
+				psLog.W(fmt.Sprintf("unknown ether type: 0x%04x", uint16(msg.Type)))
 			}
 		case <-mw.EthTxCh:
 			// TODO:
