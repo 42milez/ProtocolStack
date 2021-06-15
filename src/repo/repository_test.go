@@ -57,6 +57,48 @@ func TestDeviceRepo_Poll_2(t *testing.T) {
 	}
 }
 
+// DeviceRepo.Poll() returns OK when IDevice.Poll() returns Interrupted
+func TestDeviceRepo_Poll_3(t *testing.T) {
+	ctrl, teardown := setup(t)
+	defer teardown()
+
+	m := mw.NewMockIDevice(ctrl)
+	m.EXPECT().IsUp().Return(true)
+	m.EXPECT().Poll().Return(psErr.Interrupted)
+	m.EXPECT().Type().Return(mw.EthernetDevice)
+	m.EXPECT().Name().Return("net0")
+	m.EXPECT().Priv().Return(mw.Privilege{Name: "tap0"})
+	m.EXPECT().Addr().Return(mw.EthAddr{})
+	_ = DeviceRepo.Register(m)
+
+	want := psErr.OK
+	got := DeviceRepo.Poll()
+	if got != want {
+		t.Errorf("DeviceRepo.Poll() = %s; want %s", got, want)
+	}
+}
+
+// DeviceRepo.Poll() returns Error when IDevice.Poll() returns Error
+func TestDeviceRepo_Poll_4(t *testing.T) {
+	ctrl, teardown := setup(t)
+	defer teardown()
+
+	m := mw.NewMockIDevice(ctrl)
+	m.EXPECT().IsUp().Return(true)
+	m.EXPECT().Poll().Return(psErr.Error)
+	m.EXPECT().Type().Return(mw.EthernetDevice)
+	m.EXPECT().Name().Return("net0")
+	m.EXPECT().Priv().Return(mw.Privilege{Name: "tap0"})
+	m.EXPECT().Addr().Return(mw.EthAddr{})
+	_ = DeviceRepo.Register(m)
+
+	want := psErr.Error
+	got := DeviceRepo.Poll()
+	if got != want {
+		t.Errorf("DeviceRepo.Poll() = %s; want %s", got, want)
+	}
+}
+
 func TestDeviceRepo_Register_1(t *testing.T) {
 	_, teardown := setup(t)
 	defer teardown()
