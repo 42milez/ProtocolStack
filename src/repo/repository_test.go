@@ -207,7 +207,7 @@ func TestIfaceRepo_Get_1(t *testing.T) {
 			Priv_: mw.Privilege{FD: -1, Name: "tap0"},
 		},
 	}
-	_= IfaceRepo.Register(iface, dev)
+	_ = IfaceRepo.Register(iface, dev)
 
 	if IfaceRepo.Get(iface.Unicast) != iface {
 		t.Errorf("IfaceRepo.Get() returns invalid Iface")
@@ -242,7 +242,7 @@ func TestIfaceRepo_Lookup_1(t *testing.T) {
 			Priv_: mw.Privilege{FD: -1, Name: "tap0"},
 		},
 	}
-	_= IfaceRepo.Register(iface, dev)
+	_ = IfaceRepo.Register(iface, dev)
 
 	if IfaceRepo.Lookup(dev, mw.V4AddrFamily) != iface {
 		t.Errorf("IfaceRepo.Lookup() returns invalid Iface")
