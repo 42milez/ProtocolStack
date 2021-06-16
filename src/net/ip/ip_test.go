@@ -6,6 +6,7 @@ import (
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	psLog "github.com/42milez/ProtocolStack/src/log"
 	"github.com/42milez/ProtocolStack/src/mw"
+	"github.com/42milez/ProtocolStack/src/net/arp"
 	"github.com/42milez/ProtocolStack/src/net/eth"
 	"github.com/42milez/ProtocolStack/src/repo"
 	"github.com/42milez/ProtocolStack/src/worker"
@@ -39,6 +40,37 @@ func TestReceive(t *testing.T) {
 	}
 }
 
+func TestSend(t *testing.T) {
+	ctrl, teardown := setupIpTest(t)
+	defer teardown()
+
+	devMock := mw.NewMockIDevice(ctrl)
+	devMock.EXPECT().IsUp().Return(true)
+	devMock.EXPECT().Name().Return("net0")
+	devMock.EXPECT().Flag().Return(mw.BroadcastFlag|mw.NeedArpFlag)
+	devMock.EXPECT().MTU().Return(uint16(mw.EthPayloadLenMax)).AnyTimes()
+	devMock.EXPECT().Priv().Return(mw.Privilege{FD: 3, Name: "tap0"})
+	devMock.EXPECT().Transmit(any, any, any).Return(psErr.OK)
+
+	iface := createValidIface()
+	_ = repo.IfaceRepo.Register(iface, devMock)
+
+	arpMock := arp.NewMockIResolver(ctrl)
+	arpMock.EXPECT().Resolve(any, any).Return(mw.EthAddr{11, 12, 13, 14, 15, 16}, arp.Complete)
+	arp.Resolver = arpMock
+
+	payload := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+	src := mw.IP{192, 168, 0, 1}
+	dst := mw.IP{192, 168, 0, 2}
+
+	want := psErr.OK
+	got := Send(ICMP, payload, src, dst)
+
+	if got != want {
+		t.Errorf("Send() = %s; want %s", got, want)
+	}
+}
+
 func TestStart(t *testing.T) {
 	_, teardown := setupIpTest(t)
 	defer teardown()
@@ -69,6 +101,8 @@ func TestStop(t *testing.T) {
 		t.Errorf("Stop() failed")
 	}
 }
+
+var any = gomock.Any()
 
 func createValidIface() *mw.Iface {
 	return &mw.Iface{
@@ -124,6 +158,7 @@ func setupIpTest(t *testing.T) (ctrl *gomock.Controller, teardown func()) {
 	psLog.DisableOutput()
 	reset := func() {
 		psLog.EnableOutput()
+		repo.IfaceRepo.Init()
 	}
 	teardown = func() {
 		ctrl.Finish()
