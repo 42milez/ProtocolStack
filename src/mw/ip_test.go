@@ -34,6 +34,11 @@ func TestIP_Equal(t *testing.T) {
 	if !ip1.Equal(ip2) {
 		t.Errorf("IP.Equal() failed")
 	}
+
+	ip1 = IP{192, 168, 0, 2}
+	if ip1.Equal(ip2) {
+		t.Errorf("IP.Equal() failed")
+	}
 }
 
 func TestIP_String(t *testing.T) {
