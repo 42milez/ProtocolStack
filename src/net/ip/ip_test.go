@@ -47,7 +47,7 @@ func TestSend(t *testing.T) {
 	devMock := mw.NewMockIDevice(ctrl)
 	devMock.EXPECT().IsUp().Return(true)
 	devMock.EXPECT().Name().Return("net0")
-	devMock.EXPECT().Flag().Return(mw.BroadcastFlag|mw.NeedArpFlag)
+	devMock.EXPECT().Flag().Return(mw.BroadcastFlag | mw.NeedArpFlag)
 	devMock.EXPECT().MTU().Return(uint16(mw.EthPayloadLenMax)).AnyTimes()
 	devMock.EXPECT().Priv().Return(mw.Privilege{FD: 3, Name: "tap0"})
 	devMock.EXPECT().Transmit(any, any, any).Return(psErr.OK)
