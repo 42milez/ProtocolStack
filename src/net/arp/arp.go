@@ -37,6 +37,8 @@ var receiverID uint32
 var senderID uint32
 var timerID uint32
 
+var Resolver IResolver
+
 // Hardware Types
 // https://www.iana.org/assignments/arp-parameters/arp-parameters.xhtml#arp-parameters-2
 
@@ -158,6 +160,10 @@ type Packet struct {
 
 type Status int
 
+type IResolver interface {
+	Resolve(iface *mw.Iface, ip mw.IP) (mw.EthAddr, Status)
+}
+
 func Receive(packet []byte, dev mw.IDevice) psErr.E {
 	if len(packet) < PacketLen {
 		psLog.E(fmt.Sprintf("arp packet length is too short: %d bytes", len(packet)))
@@ -268,7 +274,9 @@ func SendRequest(iface *mw.Iface, ip mw.IP) psErr.E {
 	return psErr.OK
 }
 
-func Resolve(iface *mw.Iface, ip mw.IP) (mw.EthAddr, Status) {
+type resolver struct{}
+
+func (resolver) Resolve(iface *mw.Iface, ip mw.IP) (mw.EthAddr, Status) {
 	if iface.Dev.Type() != mw.EthernetDevice {
 		psLog.E(fmt.Sprintf("unsupported device type: %s", iface.Dev.Type()))
 		return mw.EthAddr{}, Error
@@ -401,4 +409,6 @@ func init() {
 	tmrMonCh = make(chan *worker.Message, xChBufSize)
 	tmrSigCh = make(chan *worker.Message, xChBufSize)
 	timerID = monitor.Register("ARP Timer", tmrMonCh, tmrSigCh)
+
+	Resolver = &resolver{}
 }

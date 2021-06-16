@@ -249,7 +249,7 @@ func lookupEthAddr(iface *mw.Iface, nextHop mw.IP) (mw.EthAddr, psErr.E) {
 			addr = mw.EthBroadcast
 		} else {
 			var status arp.Status
-			if addr, status = arp.Resolve(iface, nextHop); status != arp.Complete {
+			if addr, status = arp.Resolver.Resolve(iface, nextHop); status != arp.Complete {
 				return mw.EthAddr{}, psErr.ArpIncomplete
 			}
 		}
