@@ -32,6 +32,7 @@ type Route struct {
 }
 
 type IDeviceRepo interface {
+	Init()
 	NextNumber() int
 	Poll() psErr.E
 	Register(dev mw.IDevice) psErr.E
@@ -40,6 +41,10 @@ type IDeviceRepo interface {
 
 type deviceRepo struct {
 	devices []mw.IDevice
+}
+
+func (p *deviceRepo) Init() {
+	p.devices = make([]mw.IDevice, 0)
 }
 
 func (p *deviceRepo) NextNumber() int {
@@ -101,6 +106,7 @@ func (p *deviceRepo) Up() psErr.E {
 }
 
 type IIfaceRepo interface {
+	Init()
 	Get(unicast mw.IP) *mw.Iface
 	Lookup(dev mw.IDevice, family mw.AddrFamily) *mw.Iface
 	Register(iface *mw.Iface, dev mw.IDevice) psErr.E
@@ -108,6 +114,10 @@ type IIfaceRepo interface {
 
 type ifaceRepo struct {
 	ifaces []*mw.Iface
+}
+
+func (p *ifaceRepo) Init() {
+	p.ifaces = make([]*mw.Iface, 0)
 }
 
 func (p *ifaceRepo) Get(unicast mw.IP) *mw.Iface {
@@ -147,6 +157,7 @@ func (p *ifaceRepo) Register(iface *mw.Iface, dev mw.IDevice) psErr.E {
 }
 
 type IRouteRepo interface {
+	Init()
 	Get(ip mw.IP) *Route
 	Register(network mw.IP, nextHop mw.IP, iface *mw.Iface)
 	RegisterDefaultGateway(iface *mw.Iface, nextHop mw.IP)
@@ -154,6 +165,10 @@ type IRouteRepo interface {
 
 type routeRepo struct {
 	routes []*Route
+}
+
+func (p *routeRepo) Init() {
+	p.routes = make([]*Route, 0)
 }
 
 func (p *routeRepo) Get(ip mw.IP) *Route {

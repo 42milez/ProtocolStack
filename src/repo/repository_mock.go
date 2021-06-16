@@ -35,6 +35,18 @@ func (m *MockIDeviceRepo) EXPECT() *MockIDeviceRepoMockRecorder {
 	return m.recorder
 }
 
+// Init mocks base method.
+func (m *MockIDeviceRepo) Init() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Init")
+}
+
+// Init indicates an expected call of Init.
+func (mr *MockIDeviceRepoMockRecorder) Init() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Init", reflect.TypeOf((*MockIDeviceRepo)(nil).Init))
+}
+
 // NextNumber mocks base method.
 func (m *MockIDeviceRepo) NextNumber() int {
 	m.ctrl.T.Helper()
@@ -128,6 +140,18 @@ func (mr *MockIIfaceRepoMockRecorder) Get(unicast interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockIIfaceRepo)(nil).Get), unicast)
 }
 
+// Init mocks base method.
+func (m *MockIIfaceRepo) Init() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Init")
+}
+
+// Init indicates an expected call of Init.
+func (mr *MockIIfaceRepoMockRecorder) Init() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Init", reflect.TypeOf((*MockIIfaceRepo)(nil).Init))
+}
+
 // Lookup mocks base method.
 func (m *MockIIfaceRepo) Lookup(dev mw.IDevice, family mw.AddrFamily) *mw.Iface {
 	m.ctrl.T.Helper()
@@ -191,6 +215,18 @@ func (m *MockIRouteRepo) Get(ip mw.IP) *Route {
 func (mr *MockIRouteRepoMockRecorder) Get(ip interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockIRouteRepo)(nil).Get), ip)
+}
+
+// Init mocks base method.
+func (m *MockIRouteRepo) Init() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Init")
+}
+
+// Init indicates an expected call of Init.
+func (mr *MockIRouteRepoMockRecorder) Init() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Init", reflect.TypeOf((*MockIRouteRepo)(nil).Init))
 }
 
 // Register mocks base method.
