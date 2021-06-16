@@ -79,6 +79,15 @@ func TestReceive_2(t *testing.T) {
 	if got != want {
 		t.Errorf("Receive() = %s; want %s", got, want)
 	}
+
+	// ttl expired
+	packet = createIpPacket()
+	packet[8] = 0
+	want = psErr.TtlExpired
+	got = Receive(packet, dev)
+	if got != want {
+		t.Errorf("Receive() = %s; want %s", got, want)
+	}
 }
 
 func TestSend(t *testing.T) {
