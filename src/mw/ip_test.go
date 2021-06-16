@@ -17,6 +17,28 @@ func TestAddrFamily_String(t *testing.T) {
 	}
 }
 
+func TestIP_Equal(t *testing.T) {
+	ip1 := IP{192, 168, 0, 1}
+	ip2 := IP{192, 168, 0, 1}
+
+	if !ip1.Equal(ip2) {
+		t.Errorf("IP.Equal() failed")
+	}
+
+	ip2 = IP{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff, 192, 168, 0, 1}
+
+	if !ip1.Equal(ip2) {
+		t.Errorf("IP.Equal() failed")
+	}
+
+	ip1 = IP{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff, 192, 168, 0, 1}
+	ip2 = IP{192, 168, 0, 1}
+
+	if !ip1.Equal(ip2) {
+		t.Errorf("IP.Equal() failed")
+	}
+}
+
 func TestIP_String(t *testing.T) {
 	want := "192.168.0.1"
 	got := IP{192, 168, 0, 1}.String()

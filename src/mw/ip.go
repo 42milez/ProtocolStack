@@ -85,14 +85,25 @@ func (v IP) Equal(x IP) bool {
 	if len(v) == len(x) {
 		return reflect.DeepEqual(v, x)
 	}
-	if len(v) == V4AddrLen && len(x) == V6AddrLen {
-		return reflect.DeepEqual(x[0:12], v4InV6Prefix) && reflect.DeepEqual(v, x[12:])
-	}
-	if len(v) == V6AddrLen && len(x) == V4AddrLen {
-		return reflect.DeepEqual(v[0:12], v4InV6Prefix) && cmp.Equal(v[12:], x)
-	}
-	return false
 
+	comp := func(s1 []byte, s2 []byte) bool {
+		for i, val := range s1 {
+			if val != s2[i] {
+				return false
+			}
+		}
+		return true
+	}
+
+	if len(v) == V4AddrLen && len(x) == V6AddrLen {
+		return comp(x[0:12], v4InV6Prefix) && comp(v, x[12:])
+	}
+
+	if len(v) == V6AddrLen && len(x) == V4AddrLen {
+		return comp(v[0:12], v4InV6Prefix) && comp(v[12:], x)
+	}
+
+	return false
 }
 
 func (v IP) EqualV4(v4 [V4AddrLen]byte) bool {
