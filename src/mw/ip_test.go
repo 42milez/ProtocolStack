@@ -115,6 +115,34 @@ func TestV4Addr_String(t *testing.T) {
 	}
 }
 
+func TestChecksum(t *testing.T) {
+	b := []byte{
+		0x45, 0x00, 0x00, 0x34, 0x51, 0x25, 0x40, 0x00, 0xff, 0x06,
+		0x00, 0x00, 0x0a, 0x00, 0x0a, 0xbb, 0x0a, 0x00, 0x03, 0xc3,
+	}
+	want := uint16(0x0821)
+	got := Checksum(b, 0)
+	if got != want {
+		t.Errorf("Checksum() = 0x%04x; want 0x%04x", got, want)
+	}
+}
+
+func TestLongestIP(t *testing.T) {
+	ip1 := IP{192, 168, 0, 0}
+	ip2 := IP{192, 168, 1, 0}
+	want := ip2
+	got := LongestIP(ip1, ip2)
+	if !got.Equal(want) {
+		t.Errorf("LongestIP() = %s; want %s", got, want)
+	}
+
+	want = ip2
+	got = LongestIP(ip2, ip1)
+	if !got.Equal(want) {
+		t.Errorf("LongestIP() = %s; want %s", got, want)
+	}
+}
+
 func TestParseIP(t *testing.T) {
 	want := IP{192, 168, 0, 1}
 	got := ParseIP("192.168.0.1")
