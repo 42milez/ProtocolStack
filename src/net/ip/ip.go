@@ -216,6 +216,7 @@ func dump(packet []byte) (ret []string) {
 	totalLen := uint16(packet[2])<<8 | uint16(packet[3])
 	payloadLen := totalLen - uint16(4*ihl)
 
+	ret = make([]string, 13)
 	ret = append(ret, fmt.Sprintf("version:             %d", packet[0]>>4))
 	ret = append(ret, fmt.Sprintf("ihl:                 %d", ihl))
 	ret = append(ret, fmt.Sprintf("type of service:     0b%08b", packet[1]))
