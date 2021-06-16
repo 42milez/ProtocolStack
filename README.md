@@ -72,13 +72,13 @@ Note: `make` supports the commands below:
 
 - [x] Ethernet
 - [x] ARP
-  - [ ] Request
+  - [x] Request
   - [x] Reply
 - [x] IP
   - [x] v4
   - [ ] v6
 - [x] ICMP
-  - [ ] Echo Request
+  - [x] Echo Request
   - [x] Echo Reply
 - [ ] TCP
 - [ ] UDP
