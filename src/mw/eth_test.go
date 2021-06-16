@@ -69,14 +69,14 @@ func TestDumpFrame(t *testing.T) {
 		}
 		psLog.D("", dump(&hdr, payload)...)
 	})
-	got = Trim(got)
+	got = trim(got)
 	if !want.MatchString(got) {
 		t.Errorf("dump() = %v; want %v", got, want)
 	}
 }
 
 func TestReadFrame_1(t *testing.T) {
-	ctrl, teardown := SetupReadFrameTest(t)
+	ctrl, teardown := setupReadFrameTest(t)
 	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)
@@ -105,7 +105,7 @@ func TestReadFrame_1(t *testing.T) {
 
 // Fail when Read() returns error.
 func TestReadFrame_2(t *testing.T) {
-	ctrl, teardown := SetupReadFrameTest(t)
+	ctrl, teardown := setupReadFrameTest(t)
 	defer teardown()
 
 	dev := &Device{Addr_: EthAddr{11, 12, 13, 14, 15, 16}}
@@ -121,7 +121,7 @@ func TestReadFrame_2(t *testing.T) {
 
 // Fail when header length is invalid.
 func TestReadFrame_3(t *testing.T) {
-	ctrl, teardown := SetupReadFrameTest(t)
+	ctrl, teardown := setupReadFrameTest(t)
 	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)
@@ -138,7 +138,7 @@ func TestReadFrame_3(t *testing.T) {
 
 // Success when no data exits.
 func TestReadFrame_4(t *testing.T) {
-	ctrl, teardown := SetupReadFrameTest(t)
+	ctrl, teardown := setupReadFrameTest(t)
 	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)
@@ -155,7 +155,7 @@ func TestReadFrame_4(t *testing.T) {
 
 // Fail when Read() system call returns error.
 func TestReadFrame_5(t *testing.T) {
-	ctrl, teardown := SetupReadFrameTest(t)
+	ctrl, teardown := setupReadFrameTest(t)
 	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)
@@ -170,7 +170,7 @@ func TestReadFrame_5(t *testing.T) {
 	}
 }
 
-func SetupReadFrameTest(t *testing.T) (ctrl *gomock.Controller, teardown func()) {
+func setupReadFrameTest(t *testing.T) (ctrl *gomock.Controller, teardown func()) {
 	psLog.DisableOutput()
 	ctrl = gomock.NewController(t)
 	teardown = func() {
@@ -180,7 +180,7 @@ func SetupReadFrameTest(t *testing.T) (ctrl *gomock.Controller, teardown func())
 	return
 }
 
-func Trim(s string) string {
+func trim(s string) string {
 	ret := strings.Replace(s, "", "", -1)
 	ret = strings.Replace(ret, "\n", "", -1)
 	ret = strings.Replace(ret, " ", "", -1)
