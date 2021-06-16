@@ -305,6 +305,10 @@ func receiver(wg *sync.WaitGroup) {
 		select {
 		case msg := <-rcvSigCh:
 			if msg.Desired == worker.Stopped {
+				rcvMonCh <- &worker.Message{
+					ID:      receiverID,
+					Current: worker.Stopped,
+				}
 				return
 			}
 		case msg := <-mw.IpRxCh:
@@ -327,6 +331,10 @@ func sender(wg *sync.WaitGroup) {
 		select {
 		case msg := <-sndSigCh:
 			if msg.Desired == worker.Stopped {
+				sndMonCh <- &worker.Message{
+					ID:      senderID,
+					Current: worker.Stopped,
+				}
 				return
 			}
 		case msg := <-mw.IpTxCh:
