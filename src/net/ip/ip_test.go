@@ -88,6 +88,26 @@ func TestReceive_2(t *testing.T) {
 	if got != want {
 		t.Errorf("Receive() = %s; want %s", got, want)
 	}
+
+	// checksum mismatch
+	packet = createIpPacket()
+	packet[12] = 0x12
+	packet[13] = 0x34
+	want = psErr.ChecksumMismatch
+	got = Receive(packet, dev)
+	if got != want {
+		t.Errorf("Receive() = %s; want %s", got, want)
+	}
+
+	// iface not found
+	packet = createIpPacket()
+	want = psErr.InterfaceNotFound
+	got = Receive(packet, dev)
+	if got != want {
+		t.Errorf("Receive() = %s; want %s", got, want)
+	}
+
+	//
 }
 
 func TestSend(t *testing.T) {
