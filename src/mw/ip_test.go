@@ -38,6 +38,14 @@ func TestIP_ToV4(t *testing.T) {
 	}
 }
 
+func TestV4Addr_String(t *testing.T) {
+	want := "192.168.0.1"
+	got := V4Addr{192, 168, 0, 1}.String()
+	if got != want {
+		t.Errorf("V4Addr.String() = %s; want %s", got, want)
+	}
+}
+
 func TestParseIP(t *testing.T) {
 	want := IP{192, 168, 0, 1}
 	got := ParseIP("192.168.0.1")
