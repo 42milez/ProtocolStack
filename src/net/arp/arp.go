@@ -1,3 +1,5 @@
+//go:generate mockgen -source=arp.go -destination=arp_mock.go -package=$GOPACKAGE -self_package=github.com/42milez/ProtocolStack/src/net/$GOPACKAGE
+
 package arp
 
 import (
