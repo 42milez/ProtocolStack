@@ -4,7 +4,7 @@ import (
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	psLog "github.com/42milez/ProtocolStack/src/log"
 	"github.com/42milez/ProtocolStack/src/mw"
-	eth2 "github.com/42milez/ProtocolStack/src/net/eth"
+	"github.com/42milez/ProtocolStack/src/net/eth"
 	"github.com/golang/mock/gomock"
 	"testing"
 )
@@ -103,7 +103,7 @@ func TestDeviceRepo_Register_1(t *testing.T) {
 	_, teardown := setup(t)
 	defer teardown()
 
-	dev := &eth2.TapDevice{}
+	dev := &eth.TapDevice{}
 
 	got := DeviceRepo.Register(dev)
 	if got != psErr.OK {
@@ -116,8 +116,8 @@ func TestDeviceRepo_Register_2(t *testing.T) {
 	_, teardown := setup(t)
 	defer teardown()
 
-	dev1 := &eth2.TapDevice{Device: mw.Device{Name_: "net0"}}
-	dev2 := &eth2.TapDevice{Device: mw.Device{Name_: "net0"}}
+	dev1 := &eth.TapDevice{Device: mw.Device{Name_: "net0"}}
+	dev2 := &eth.TapDevice{Device: mw.Device{Name_: "net0"}}
 
 	_ = DeviceRepo.Register(dev1)
 	got := DeviceRepo.Register(dev2)
@@ -198,7 +198,7 @@ func TestIfaceRepo_Get_1(t *testing.T) {
 		Netmask:   mw.ParseIP(mw.LoopbackNetmask),
 		Broadcast: make(mw.IP, 0),
 	}
-	dev := &eth2.TapDevice{
+	dev := &eth.TapDevice{
 		Device: mw.Device{
 			Type_: mw.EthernetDevice,
 			MTU_:  mw.EthPayloadLenMax,
@@ -233,7 +233,7 @@ func TestIfaceRepo_Lookup_1(t *testing.T) {
 		Netmask:   mw.ParseIP(mw.LoopbackNetmask),
 		Broadcast: make(mw.IP, 0),
 	}
-	dev := &eth2.TapDevice{
+	dev := &eth.TapDevice{
 		Device: mw.Device{
 			Type_: mw.EthernetDevice,
 			MTU_:  mw.EthPayloadLenMax,
@@ -253,7 +253,7 @@ func TestIfaceRepo_Lookup_2(t *testing.T) {
 	_, teardown := setup(t)
 	defer teardown()
 
-	dev := &eth2.TapDevice{
+	dev := &eth.TapDevice{
 		Device: mw.Device{
 			Type_: mw.EthernetDevice,
 			MTU_:  mw.EthPayloadLenMax,
@@ -279,7 +279,7 @@ func TestIfaceRepo_Register_1(t *testing.T) {
 		Broadcast: make(mw.IP, 0),
 	}
 
-	dev := &eth2.TapDevice{
+	dev := &eth.TapDevice{
 		Device: mw.Device{
 			Type_: mw.EthernetDevice,
 			MTU_:  mw.EthPayloadLenMax,
@@ -307,7 +307,7 @@ func TestIfaceRepo_Register_2(t *testing.T) {
 		Broadcast: make(mw.IP, 0),
 	}
 
-	dev := &eth2.TapDevice{
+	dev := &eth.TapDevice{
 		Device: mw.Device{
 			Type_: mw.EthernetDevice,
 			MTU_:  mw.EthPayloadLenMax,
@@ -335,7 +335,7 @@ func TestRouteRepo_Get_1(t *testing.T) {
 		Netmask:   mw.IP{255, 255, 255, 0},
 		Broadcast: mw.IP{192, 0, 0, 255},
 	}
-	dev := &eth2.TapDevice{
+	dev := &eth.TapDevice{
 		Device: mw.Device{
 			Type_: mw.EthernetDevice,
 			MTU_:  mw.EthPayloadLenMax,
@@ -368,7 +368,7 @@ func TestRouteRepo_Get_2(t *testing.T) {
 		Netmask:   mw.IP{255, 255, 255, 0},
 		Broadcast: mw.IP{192, 0, 0, 255},
 	}
-	dev := &eth2.TapDevice{
+	dev := &eth.TapDevice{
 		Device: mw.Device{
 			Type_: mw.EthernetDevice,
 			MTU_:  mw.EthPayloadLenMax,
