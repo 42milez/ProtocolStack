@@ -24,12 +24,12 @@ func TestIP_Equal(t *testing.T) {
 		t.Errorf("IP.Equal() failed")
 	}
 
-	ip2 = IP{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff, 192, 168, 0, 1}
+	ip2 = IP{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 192, 168, 0, 1}
 	if !ip1.Equal(ip2) {
 		t.Errorf("IP.Equal() failed")
 	}
 
-	ip1 = IP{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff, 192, 168, 0, 1}
+	ip1 = IP{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 192, 168, 0, 1}
 	ip2 = IP{192, 168, 0, 1}
 	if !ip1.Equal(ip2) {
 		t.Errorf("IP.Equal() failed")
@@ -38,6 +38,30 @@ func TestIP_Equal(t *testing.T) {
 	ip1 = IP{192, 168, 0, 2}
 	if ip1.Equal(ip2) {
 		t.Errorf("IP.Equal() failed")
+	}
+}
+
+func TestIP_Mask(t *testing.T) {
+	ip := IP{192, 168, 0, 1}
+	mask := IP{255, 255, 255, 0}
+
+	want := IP{192, 168, 0, 0}
+	got := ip.Mask(mask)
+	if !got.Equal(want) {
+		t.Errorf("IP.Mask() = %s; want %s", got, want)
+	}
+
+	mask = IP{255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 0}
+	got = ip.Mask(mask)
+	if !got.Equal(want) {
+		t.Errorf("IP.Mask() = %s; want %s", got, want)
+	}
+
+	ip = IP{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 192, 168, 0, 1}
+	mask = IP{255, 255, 255, 0}
+	got = ip.Mask(mask)
+	if !got.Equal(want) {
+		t.Errorf("IP.Mask() = %s; want %s", got, want)
 	}
 }
 

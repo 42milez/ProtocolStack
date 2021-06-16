@@ -2,7 +2,6 @@ package mw
 
 import (
 	"fmt"
-	"github.com/google/go-cmp/cmp"
 	"reflect"
 	"strings"
 	"syscall"
@@ -86,15 +85,6 @@ func (v IP) Equal(x IP) bool {
 		return reflect.DeepEqual(v, x)
 	}
 
-	comp := func(s1 []byte, s2 []byte) bool {
-		for i, val := range s1 {
-			if val != s2[i] {
-				return false
-			}
-		}
-		return true
-	}
-
 	if len(v) == V4AddrLen && len(x) == V6AddrLen {
 		return comp(x[0:12], v4InV6Prefix) && comp(v, x[12:])
 	}
@@ -114,9 +104,11 @@ func (v IP) Mask(mask IP) IP {
 	if len(mask) == V6AddrLen && len(v) == V4AddrLen && allFF(mask[:12]) {
 		mask = mask[12:]
 	}
-	if len(mask) == V4AddrLen && len(v) == V6AddrLen && cmp.Equal(v[:12], v4InV6Prefix) {
+
+	if len(mask) == V4AddrLen && len(v) == V6AddrLen && comp(v[:12], v4InV6Prefix) {
 		v = v[12:]
 	}
+
 	n := len(v)
 	if n != len(mask) {
 		return nil
@@ -125,8 +117,8 @@ func (v IP) Mask(mask IP) IP {
 	for i := 0; i < n; i++ {
 		ret[i] = v[i] & mask[i]
 	}
-	return ret
 
+	return ret
 }
 
 // String returns the string form of IP.
@@ -273,6 +265,15 @@ func V4(a, b, c, d byte) IP {
 func allFF(b []byte) bool {
 	for _, c := range b {
 		if c != 0xff {
+			return false
+		}
+	}
+	return true
+}
+
+func comp(s1 []byte, s2 []byte) bool {
+	for i, val := range s1 {
+		if val != s2[i] {
 			return false
 		}
 	}
