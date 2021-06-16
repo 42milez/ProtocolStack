@@ -99,6 +99,18 @@ func CaptureLogOutput(f func()) string {
 	return ret
 }
 
+func EnableDebug() {
+	defer mtx.Unlock()
+	mtx.Lock()
+	debug = true
+}
+
+func DisableDebug() {
+	defer mtx.Unlock()
+	mtx.Lock()
+	debug = false
+}
+
 func EnableOutput() {
 	resetOutput()
 }
@@ -107,20 +119,16 @@ func DisableOutput() {
 	setOutput(ioutil.Discard)
 }
 
-func EnableDebug() {
-	debug = true
-}
-
-func DisableDebug() {
-	debug = false
-}
-
 func resetOutput() {
+	defer mtx.Unlock()
+	mtx.Lock()
 	stdout = os.Stdout
 	stderr = os.Stderr
 }
 
 func setOutput(writer io.Writer) {
+	defer mtx.Unlock()
+	mtx.Lock()
 	stdout = writer
 	stderr = writer
 }

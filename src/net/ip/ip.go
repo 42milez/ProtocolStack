@@ -216,6 +216,7 @@ func dump(packet []byte) (ret []string) {
 	totalLen := uint16(packet[2])<<8 | uint16(packet[3])
 	payloadLen := totalLen - uint16(4*ihl)
 
+	ret = make([]string, 13)
 	ret = append(ret, fmt.Sprintf("version:             %d", packet[0]>>4))
 	ret = append(ret, fmt.Sprintf("ihl:                 %d", ihl))
 	ret = append(ret, fmt.Sprintf("type of service:     0b%08b", packet[1]))
@@ -248,7 +249,7 @@ func lookupEthAddr(iface *mw.Iface, nextHop mw.IP) (mw.EthAddr, psErr.E) {
 			addr = mw.EthBroadcast
 		} else {
 			var status arp.Status
-			if addr, status = arp.Resolve(iface, nextHop); status != arp.Complete {
+			if addr, status = arp.Resolver.Resolve(iface, nextHop); status != arp.Complete {
 				return mw.EthAddr{}, psErr.ArpIncomplete
 			}
 		}
@@ -305,6 +306,10 @@ func receiver(wg *sync.WaitGroup) {
 		select {
 		case msg := <-rcvSigCh:
 			if msg.Desired == worker.Stopped {
+				rcvMonCh <- &worker.Message{
+					ID:      receiverID,
+					Current: worker.Stopped,
+				}
 				return
 			}
 		case msg := <-mw.IpRxCh:
@@ -327,6 +332,10 @@ func sender(wg *sync.WaitGroup) {
 		select {
 		case msg := <-sndSigCh:
 			if msg.Desired == worker.Stopped {
+				sndMonCh <- &worker.Message{
+					ID:      senderID,
+					Current: worker.Stopped,
+				}
 				return
 			}
 		case msg := <-mw.IpTxCh:

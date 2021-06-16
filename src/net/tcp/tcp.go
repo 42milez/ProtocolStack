@@ -362,6 +362,7 @@ func incomingSegment(hdr *Hdr, data []byte, local *EndPoint, foreign *EndPoint) 
 		}
 
 		// 5th, if neither of the SYN or RST bits is set then drop the segment and return
+		return psErr.OK
 	}
 
 	return psErr.OK

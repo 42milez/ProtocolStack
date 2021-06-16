@@ -47,6 +47,10 @@ func receiver(wg *sync.WaitGroup) {
 		select {
 		case msg := <-rcvSigCh:
 			if msg.Desired == worker.Stopped {
+				rcvMonCh <- &worker.Message{
+					ID:      receiverID,
+					Current: worker.Stopped,
+				}
 				return
 			}
 		case msg := <-mw.EthRxCh:
@@ -59,7 +63,7 @@ func receiver(wg *sync.WaitGroup) {
 			case mw.IPv4:
 				mw.IpRxCh <- msg
 			default:
-				psLog.W(fmt.Sprintf("Unknown ether type: 0x%04x", uint16(msg.Type)))
+				psLog.W(fmt.Sprintf("unknown ether type: 0x%04x", uint16(msg.Type)))
 			}
 		case <-mw.EthTxCh:
 			// TODO:
@@ -79,6 +83,10 @@ func sender(wg *sync.WaitGroup) {
 	for {
 		msg := <-sndSigCh
 		if msg.Desired == worker.Stopped {
+			sndMonCh <- &worker.Message{
+				ID:      senderID,
+				Current: worker.Stopped,
+			}
 			return
 		}
 	}

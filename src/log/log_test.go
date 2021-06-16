@@ -6,6 +6,41 @@ import (
 	"testing"
 )
 
+func TestD_1(t *testing.T) {
+	want, _ := regexp.Compile(`^\[D] [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} Debug$`)
+	got := CaptureLogOutput(func() {
+		D("Debug")
+	})
+	got = Trim(got)
+	if !want.MatchString(got) {
+		t.Errorf("D() = %v; want %v", got, want.String())
+	}
+
+	want, _ = regexp.Compile(`^\[D] [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} DebugHelloWorld$`)
+	got = CaptureLogOutput(func() {
+		D("Debug", "Hello", "World")
+	})
+	got = Trim(got)
+	if !want.MatchString(got) {
+		t.Errorf("D() = %v; want %v", got, want.String())
+	}
+}
+
+// return early when the debug flag is false
+func TestD_2(t *testing.T) {
+	defer EnableDebug()
+	DisableDebug()
+
+	want := ""
+	got := CaptureLogOutput(func() {
+		D("Debug")
+	})
+	got = Trim(got)
+	if got != want {
+		t.Errorf("D() = %s; want %s", got, want)
+	}
+}
+
 func TestI(t *testing.T) {
 	want, _ := regexp.Compile(`^\[I] [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} Info$`)
 	got := CaptureLogOutput(func() {
