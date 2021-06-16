@@ -41,6 +41,19 @@ func TestIP_Equal(t *testing.T) {
 	}
 }
 
+func TestIP_EqualV4(t *testing.T) {
+	ip1 := IP{192, 168, 0, 1}
+	ip2 := [V4AddrLen]byte{192, 168, 0, 1}
+	if !ip1.EqualV4(ip2) {
+		t.Errorf("IP.Equal() failed")
+	}
+
+	ip2 = [V4AddrLen]byte{192, 168, 0, 2}
+	if ip1.EqualV4(ip2) {
+		t.Errorf("IP.Equal() failed")
+	}
+}
+
 func TestIP_String(t *testing.T) {
 	want := "192.168.0.1"
 	got := IP{192, 168, 0, 1}.String()
