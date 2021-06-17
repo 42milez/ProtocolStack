@@ -30,11 +30,37 @@ func TestReceive_1(t *testing.T) {
 	dev := createTapDevice()
 	iface := createIface()
 	_ = repo.IfaceRepo.Register(iface, dev)
-	packet := createIpPacket()
 
+	// ICMP
+	packet := createIpPacket()
 	want := psErr.OK
 	got := Receive(packet, dev)
+	if got != want {
+		t.Errorf("Receive() = %s; want %s", got, want)
+	}
 
+	// TCP
+	packet[9] = uint8(TCP)
+	packet[10] = 0x00
+	packet[11] = 0x00
+	csum := mw.Checksum(packet, 0)
+	packet[10] = uint8((csum & 0xff00) >> 8)
+	packet[11] = uint8(csum & 0x00ff)
+	want = psErr.Error
+	got = Receive(packet, dev)
+	if got != want {
+		t.Errorf("Receive() = %s; want %s", got, want)
+	}
+
+	// UDP
+	packet[9] = uint8(UDP)
+	packet[10] = 0x00
+	packet[11] = 0x00
+	csum = mw.Checksum(packet, 0)
+	packet[10] = uint8((csum & 0xff00) >> 8)
+	packet[11] = uint8(csum & 0x00ff)
+	want = psErr.Error
+	got = Receive(packet, dev)
 	if got != want {
 		t.Errorf("Receive() = %s; want %s", got, want)
 	}
