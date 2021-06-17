@@ -421,8 +421,8 @@ func setupRepositoryTest(t *testing.T) (ctrl *gomock.Controller, teardown func()
 	psLog.DisableOutput()
 	reset := func() {
 		psLog.EnableOutput()
-		DeviceRepo = &deviceRepo{}
-		IfaceRepo = &ifaceRepo{}
+		DeviceRepo.Init()
+		IfaceRepo.Init()
 	}
 	teardown = func() {
 		ctrl.Finish()
