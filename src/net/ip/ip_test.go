@@ -107,7 +107,21 @@ func TestReceive_2(t *testing.T) {
 		t.Errorf("Receive() = %s; want %s", got, want)
 	}
 
-	//
+	// unsupported protocol
+	iface := createIface()
+	_ = repo.IfaceRepo.Register(iface, dev)
+	packet = createIpPacket()
+	packet[9] = 0x00
+	packet[10] = 0x00
+	packet[11] = 0x00
+	csum := mw.Checksum(packet, 0)
+	packet[10] = uint8((csum & 0xff00) >> 8)
+	packet[11] = uint8(csum & 0x00ff)
+	want = psErr.UnsupportedProtocol
+	got = Receive(packet, dev)
+	if got != want {
+		t.Errorf("Receive() = %s; want %s", got, want)
+	}
 }
 
 func TestSend(t *testing.T) {
