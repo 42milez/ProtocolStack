@@ -239,7 +239,7 @@ func watcher(wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	monCh <- &worker.Message{
-		ID:      watcherId + 999,
+		ID:      watcherId,
 		Current: worker.Running,
 	}
 
@@ -247,6 +247,10 @@ func watcher(wg *sync.WaitGroup) {
 		select {
 		case msg := <-sigCh:
 			if msg.Desired == worker.Stopped {
+				monCh <- &worker.Message{
+					ID:      watcherId,
+					Current: worker.Stopped,
+				}
 				return
 			}
 		default:
