@@ -93,17 +93,14 @@ type TcpRxMessage struct {
 type TcpTxMessage struct{}
 
 func RandU8() uint8 {
-	rand.Seed(time.Now().UnixNano())
 	return uint8(rand.Intn(int(maxUint8) + 1))
 }
 
 func RandU16() uint16 {
-	rand.Seed(time.Now().UnixNano())
 	return uint16(rand.Intn(int(maxUint16) + 1))
 }
 
 func RandU32() uint32 {
-	rand.Seed(time.Now().UnixNano())
 	return rand.Uint32()
 }
 
@@ -119,4 +116,6 @@ func init() {
 	IcmpTxCh = make(chan *IcmpTxMessage, xChBufSize)
 	TcpRxCh = make(chan *TcpRxMessage, xChBufSize)
 	TcpTxCh = make(chan *TcpTxMessage, xChBufSize)
+
+	rand.Seed(time.Now().UnixNano())
 }

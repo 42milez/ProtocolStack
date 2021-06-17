@@ -23,18 +23,128 @@ func TestPacketID_Next(t *testing.T) {
 	}
 }
 
-func TestReceive(t *testing.T) {
+func TestReceive_1(t *testing.T) {
 	_, teardown := setupIpTest(t)
 	defer teardown()
 
-	dev := createValidTapDevice()
-	iface := createValidIface()
+	dev := createTapDevice()
+	iface := createIface()
 	_ = repo.IfaceRepo.Register(iface, dev)
-	packet := createValidIpPacket()
 
+	// ICMP
+	packet := createIpPacket()
 	want := psErr.OK
 	got := Receive(packet, dev)
+	if got != want {
+		t.Errorf("Receive() = %s; want %s", got, want)
+	}
 
+	// TCP
+	packet[9] = uint8(TCP)
+	packet[10] = 0x00
+	packet[11] = 0x00
+	csum := mw.Checksum(packet, 0)
+	packet[10] = uint8((csum & 0xff00) >> 8)
+	packet[11] = uint8(csum & 0x00ff)
+	want = psErr.Error
+	got = Receive(packet, dev)
+	if got != want {
+		t.Errorf("Receive() = %s; want %s", got, want)
+	}
+
+	// UDP
+	packet[9] = uint8(UDP)
+	packet[10] = 0x00
+	packet[11] = 0x00
+	csum = mw.Checksum(packet, 0)
+	packet[10] = uint8((csum & 0xff00) >> 8)
+	packet[11] = uint8(csum & 0x00ff)
+	want = psErr.Error
+	got = Receive(packet, dev)
+	if got != want {
+		t.Errorf("Receive() = %s; want %s", got, want)
+	}
+}
+
+func TestReceive_2(t *testing.T) {
+	_, teardown := setupIpTest(t)
+	defer teardown()
+
+	// invalid packet length (packet length is less than 20bytes)
+	dev := createTapDevice()
+	want := psErr.InvalidPacketLength
+	got := Receive([]byte{}, dev)
+	if got != want {
+		t.Errorf("Receive() = %s; want %s", got, want)
+	}
+
+	// invalid protocol version
+	packet := createIpPacket()
+	packet[0] = packet[0] & 0x0f // invalid version
+	want = psErr.InvalidProtocolVersion
+	got = Receive(packet, dev)
+	if got != want {
+		t.Errorf("Receive() = %s; want %s", got, want)
+	}
+
+	// invalid packet length (IHL is greater than packet length)
+	packet = createIpPacket()
+	packet[0] = packet[0] | 0x0f // invalid IHL
+	want = psErr.InvalidPacketLength
+	got = Receive(packet, dev)
+	if got != want {
+		t.Errorf("Receive() = %s; want %s", got, want)
+	}
+
+	// invalid packet length (Total Length doesn't match actual packet length)
+	packet = createIpPacket()
+	packet[2] = packet[2] | 0xff // invalid Total Length
+	packet[3] = packet[3] | 0xff
+	want = psErr.InvalidPacketLength
+	got = Receive(packet, dev)
+	if got != want {
+		t.Errorf("Receive() = %s; want %s", got, want)
+	}
+
+	// ttl expired
+	packet = createIpPacket()
+	packet[8] = 0
+	want = psErr.TtlExpired
+	got = Receive(packet, dev)
+	if got != want {
+		t.Errorf("Receive() = %s; want %s", got, want)
+	}
+
+	// checksum mismatch
+	packet = createIpPacket()
+	packet[12] = 0x12
+	packet[13] = 0x34
+	want = psErr.ChecksumMismatch
+	got = Receive(packet, dev)
+	if got != want {
+		t.Errorf("Receive() = %s; want %s", got, want)
+	}
+
+	// iface not found
+	packet = createIpPacket()
+	want = psErr.InterfaceNotFound
+	got = Receive(packet, dev)
+	if got != want {
+		t.Errorf("Receive() = %s; want %s", got, want)
+	}
+
+	// unsupported protocol
+	iface := createIface()
+	_ = repo.IfaceRepo.Register(iface, dev)
+	packet = createIpPacket()
+	packet[9] = 0x00
+	packet[10] = 0x00
+	packet[11] = 0x00
+	csum := mw.Checksum(packet, 0)
+	packet[10] = uint8((csum & 0xff00) >> 8)
+	packet[11] = uint8(csum & 0x00ff)
+	want = psErr.UnsupportedProtocol
+	got = Receive(packet, dev)
 	if got != want {
 		t.Errorf("Receive() = %s; want %s", got, want)
 	}
@@ -47,12 +157,12 @@ func TestSend(t *testing.T) {
 	devMock := mw.NewMockIDevice(ctrl)
 	devMock.EXPECT().IsUp().Return(true)
 	devMock.EXPECT().Name().Return("net0")
-	devMock.EXPECT().Flag().Return(mw.BroadcastFlag|mw.NeedArpFlag)
+	devMock.EXPECT().Flag().Return(mw.BroadcastFlag | mw.NeedArpFlag)
 	devMock.EXPECT().MTU().Return(uint16(mw.EthPayloadLenMax)).AnyTimes()
 	devMock.EXPECT().Priv().Return(mw.Privilege{FD: 3, Name: "tap0"})
 	devMock.EXPECT().Transmit(any, any, any).Return(psErr.OK)
 
-	iface := createValidIface()
+	iface := createIface()
 	_ = repo.IfaceRepo.Register(iface, devMock)
 
 	arpMock := arp.NewMockIResolver(ctrl)
@@ -104,7 +214,7 @@ func TestStop(t *testing.T) {
 
 var any = gomock.Any()
 
-func createValidIface() *mw.Iface {
+func createIface() *mw.Iface {
 	return &mw.Iface{
 		Family:    mw.V4AddrFamily,
 		Unicast:   mw.IP{192, 168, 0, 1},
@@ -113,8 +223,9 @@ func createValidIface() *mw.Iface {
 	}
 }
 
-func createValidIpPacket() []byte {
+func createIpPacket() []byte {
 	payload := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+
 	hdr := &mw.IpHdr{}
 	hdr.VHL = uint8(ipv4<<4) | uint8(HdrLenMin/4)
 	hdr.TotalLen = uint16(HdrLenMin + len(payload))
@@ -140,7 +251,7 @@ func createValidIpPacket() []byte {
 	return packet
 }
 
-func createValidTapDevice() *eth.TapDevice {
+func createTapDevice() *eth.TapDevice {
 	return &eth.TapDevice{
 		Device: mw.Device{
 			Type_: mw.EthernetDevice,

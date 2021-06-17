@@ -2,7 +2,6 @@ package mw
 
 import (
 	"fmt"
-	"github.com/google/go-cmp/cmp"
 	"reflect"
 	"strings"
 	"syscall"
@@ -78,44 +77,6 @@ var addrFamilies = map[AddrFamily]string{
 	V6AddrFamily: "IPv6",
 }
 
-// INTERNET PROTOCOL
-// https://datatracker.ietf.org/doc/html/rfc791#page-13
-// The number 576 is selected to allow a reasonable sized data block to be transmitted in addition to the required
-// header information. For example, this size allows a data block of 512 octets plus 64 header octets to fit in a
-// datagram. The maximal internet header is 60 octets, and a typical internet header is 20 octets, allowing a margin for
-// headers of higher level protocols.
-
-// Internet Header Format
-// https://datatracker.ietf.org/doc/html/rfc791#section-3.1
-
-// IpHdr is an internet protocol header
-type IpHdr struct {
-	VHL      uint8
-	TOS      uint8
-	TotalLen uint16
-	ID       uint16
-	Offset   uint16
-	TTL      uint8
-	Protocol ProtocolNumber
-	Checksum uint16
-	Src      [V4AddrLen]byte
-	Dst      [V4AddrLen]byte
-	Options  [0]byte
-}
-
-type V4Addr [V4AddrLen]byte
-
-func (v V4Addr) String() string {
-	return fmt.Sprintf("%d.%d.%d.%d", v[0], v[1], v[2], v[3])
-}
-
-// ProtocolNumber is assigned internet protocol number
-type ProtocolNumber uint8
-
-func (v ProtocolNumber) String() string {
-	return protocolNumbers[v]
-}
-
 // An IP is a single IP address.
 type IP []byte
 
@@ -123,14 +84,16 @@ func (v IP) Equal(x IP) bool {
 	if len(v) == len(x) {
 		return reflect.DeepEqual(v, x)
 	}
-	if len(v) == V4AddrLen && len(x) == V6AddrLen {
-		return reflect.DeepEqual(x[0:12], v4InV6Prefix) && reflect.DeepEqual(v, x[12:])
-	}
-	if len(v) == V6AddrLen && len(x) == V4AddrLen {
-		return reflect.DeepEqual(v[0:12], v4InV6Prefix) && cmp.Equal(v[12:], x)
-	}
-	return false
 
+	if len(v) == V4AddrLen && len(x) == V6AddrLen {
+		return comp(x[0:12], v4InV6Prefix) && comp(v, x[12:])
+	}
+
+	if len(v) == V6AddrLen && len(x) == V4AddrLen {
+		return comp(v[0:12], v4InV6Prefix) && comp(v[12:], x)
+	}
+
+	return false
 }
 
 func (v IP) EqualV4(v4 [V4AddrLen]byte) bool {
@@ -141,9 +104,11 @@ func (v IP) Mask(mask IP) IP {
 	if len(mask) == V6AddrLen && len(v) == V4AddrLen && allFF(mask[:12]) {
 		mask = mask[12:]
 	}
-	if len(mask) == V4AddrLen && len(v) == V6AddrLen && cmp.Equal(v[:12], v4InV6Prefix) {
+
+	if len(mask) == V4AddrLen && len(v) == V6AddrLen && comp(v[:12], v4InV6Prefix) {
 		v = v[12:]
 	}
+
 	n := len(v)
 	if n != len(mask) {
 		return nil
@@ -152,8 +117,8 @@ func (v IP) Mask(mask IP) IP {
 	for i := 0; i < n; i++ {
 		ret[i] = v[i] & mask[i]
 	}
-	return ret
 
+	return ret
 }
 
 // String returns the string form of IP.
@@ -186,6 +151,44 @@ func (v IP) ToV4() (ip [V4AddrLen]byte) {
 	}
 	copy(ip[:], v)
 	return
+}
+
+// INTERNET PROTOCOL
+// https://datatracker.ietf.org/doc/html/rfc791#page-13
+// The number 576 is selected to allow a reasonable sized data block to be transmitted in addition to the required
+// header information. For example, this size allows a data block of 512 octets plus 64 header octets to fit in a
+// datagram. The maximal internet header is 60 octets, and a typical internet header is 20 octets, allowing a margin for
+// headers of higher level protocols.
+
+// Internet Header Format
+// https://datatracker.ietf.org/doc/html/rfc791#section-3.1
+
+// IpHdr is an internet protocol header
+type IpHdr struct {
+	VHL      uint8
+	TOS      uint8
+	TotalLen uint16
+	ID       uint16
+	Offset   uint16
+	TTL      uint8
+	Protocol ProtocolNumber
+	Checksum uint16
+	Src      [V4AddrLen]byte
+	Dst      [V4AddrLen]byte
+	Options  [0]byte
+}
+
+// ProtocolNumber is assigned internet protocol number
+type ProtocolNumber uint8
+
+func (v ProtocolNumber) String() string {
+	return protocolNumbers[v]
+}
+
+type V4Addr [V4AddrLen]byte
+
+func (v V4Addr) String() string {
+	return fmt.Sprintf("%d.%d.%d.%d", v[0], v[1], v[2], v[3])
 }
 
 // Computing the Internet Checksum
@@ -262,6 +265,15 @@ func V4(a, b, c, d byte) IP {
 func allFF(b []byte) bool {
 	for _, c := range b {
 		if c != 0xff {
+			return false
+		}
+	}
+	return true
+}
+
+func comp(s1 []byte, s2 []byte) bool {
+	for i, val := range s1 {
+		if val != s2[i] {
 			return false
 		}
 	}

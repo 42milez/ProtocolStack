@@ -41,17 +41,25 @@ type IDeviceRepo interface {
 
 type deviceRepo struct {
 	devices []mw.IDevice
+	mtx     sync.Mutex
 }
 
 func (p *deviceRepo) Init() {
+	defer p.mtx.Unlock()
+	p.mtx.Lock()
 	p.devices = make([]mw.IDevice, 0)
 }
 
 func (p *deviceRepo) NextNumber() int {
+	defer p.mtx.Unlock()
+	p.mtx.Lock()
 	return len(p.devices)
 }
 
 func (p *deviceRepo) Poll() psErr.E {
+	defer p.mtx.Unlock()
+	p.mtx.Lock()
+
 	for _, dev := range p.devices {
 		if !dev.IsUp() {
 			continue
@@ -63,10 +71,14 @@ func (p *deviceRepo) Poll() psErr.E {
 			return psErr.Error
 		}
 	}
+
 	return psErr.OK
 }
 
 func (p *deviceRepo) Register(dev mw.IDevice) psErr.E {
+	defer p.mtx.Unlock()
+	p.mtx.Lock()
+
 	for _, d := range p.devices {
 		if d.Equal(dev) {
 			psLog.W("Device is already registered",
@@ -76,14 +88,19 @@ func (p *deviceRepo) Register(dev mw.IDevice) psErr.E {
 		}
 	}
 	p.devices = append(p.devices, dev)
+
 	psLog.D("device was registered",
 		fmt.Sprintf("type: %s", dev.Type()),
 		fmt.Sprintf("name: %s (%s)", dev.Name(), dev.Priv().Name),
 		fmt.Sprintf("addr: %s", dev.Addr()))
+
 	return psErr.OK
 }
 
 func (p *deviceRepo) Up() psErr.E {
+	defer p.mtx.Unlock()
+	p.mtx.Lock()
+
 	for _, dev := range p.devices {
 		if dev.IsUp() {
 			psLog.W("Device is already up",
@@ -102,6 +119,7 @@ func (p *deviceRepo) Up() psErr.E {
 			fmt.Sprintf("type: %s", dev.Type()),
 			fmt.Sprintf("name: %s (%s)", dev.Name(), dev.Priv().Name))
 	}
+
 	return psErr.OK
 }
 
@@ -114,31 +132,45 @@ type IIfaceRepo interface {
 
 type ifaceRepo struct {
 	ifaces []*mw.Iface
+	mtx    sync.Mutex
 }
 
 func (p *ifaceRepo) Init() {
+	defer p.mtx.Unlock()
+	p.mtx.Lock()
 	p.ifaces = make([]*mw.Iface, 0)
 }
 
 func (p *ifaceRepo) Get(unicast mw.IP) *mw.Iface {
+	defer p.mtx.Unlock()
+	p.mtx.Lock()
+
 	for _, v := range p.ifaces {
 		if v.Unicast.Equal(unicast) {
 			return v
 		}
 	}
+
 	return nil
 }
 
 func (p *ifaceRepo) Lookup(dev mw.IDevice, family mw.AddrFamily) *mw.Iface {
+	defer p.mtx.Unlock()
+	p.mtx.Lock()
+
 	for _, v := range p.ifaces {
 		if v.Dev.Equal(dev) && v.Family == family {
 			return v
 		}
 	}
+
 	return nil
 }
 
 func (p *ifaceRepo) Register(iface *mw.Iface, dev mw.IDevice) psErr.E {
+	defer p.mtx.Unlock()
+	p.mtx.Lock()
+
 	for _, i := range p.ifaces {
 		if i.Dev.Equal(dev) && i.Family == iface.Family {
 			psLog.W(fmt.Sprintf("Interface is already registered: %s", i.Family))
@@ -165,14 +197,21 @@ type IRouteRepo interface {
 
 type routeRepo struct {
 	routes []*Route
+	mtx    sync.Mutex
 }
 
 func (p *routeRepo) Init() {
+	defer p.mtx.Unlock()
+	p.mtx.Lock()
 	p.routes = make([]*Route, 0)
 }
 
 func (p *routeRepo) Get(ip mw.IP) *Route {
+	defer p.mtx.Unlock()
+	p.mtx.Lock()
+
 	var ret *Route
+
 	for _, route := range p.routes {
 		if ip.Mask(route.Netmask).Equal(route.Network) {
 			// Longest prefix match
@@ -182,10 +221,14 @@ func (p *routeRepo) Get(ip mw.IP) *Route {
 			}
 		}
 	}
+
 	return ret
 }
 
 func (p *routeRepo) Register(network mw.IP, nextHop mw.IP, iface *mw.Iface) {
+	defer p.mtx.Unlock()
+	p.mtx.Lock()
+
 	route := &Route{
 		Network: network,
 		Netmask: iface.Netmask,
@@ -193,6 +236,7 @@ func (p *routeRepo) Register(network mw.IP, nextHop mw.IP, iface *mw.Iface) {
 		Iface:   iface,
 	}
 	p.routes = append(p.routes, route)
+
 	psLog.D("route was registered",
 		fmt.Sprintf("network:  %s", route.Network),
 		fmt.Sprintf("netmask:  %s", route.Netmask),
@@ -202,6 +246,9 @@ func (p *routeRepo) Register(network mw.IP, nextHop mw.IP, iface *mw.Iface) {
 }
 
 func (p *routeRepo) RegisterDefaultGateway(iface *mw.Iface, nextHop mw.IP) {
+	defer p.mtx.Unlock()
+	p.mtx.Lock()
+
 	route := &Route{
 		Network: mw.V4Any,
 		Netmask: mw.V4Any,
@@ -209,6 +256,7 @@ func (p *routeRepo) RegisterDefaultGateway(iface *mw.Iface, nextHop mw.IP) {
 		Iface:   iface,
 	}
 	p.routes = append(p.routes, route)
+
 	psLog.D("default gateway was registered",
 		fmt.Sprintf("network:  %s", route.Network),
 		fmt.Sprintf("netmask:  %s", route.Netmask),
@@ -239,7 +287,7 @@ func watcher(wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	monCh <- &worker.Message{
-		ID:      watcherId + 999,
+		ID:      watcherId,
 		Current: worker.Running,
 	}
 
@@ -247,6 +295,10 @@ func watcher(wg *sync.WaitGroup) {
 		select {
 		case msg := <-sigCh:
 			if msg.Desired == worker.Stopped {
+				monCh <- &worker.Message{
+					ID:      watcherId,
+					Current: worker.Stopped,
+				}
 				return
 			}
 		default:

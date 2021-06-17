@@ -5,7 +5,9 @@ import (
 	psLog "github.com/42milez/ProtocolStack/src/log"
 	"github.com/42milez/ProtocolStack/src/mw"
 	"github.com/42milez/ProtocolStack/src/net/eth"
+	"github.com/42milez/ProtocolStack/src/worker"
 	"github.com/golang/mock/gomock"
+	"sync"
 	"testing"
 )
 
@@ -18,7 +20,7 @@ func TestDeviceRepo_NextNumber(t *testing.T) {
 }
 
 func TestDeviceRepo_Poll_1(t *testing.T) {
-	ctrl, teardown := setup(t)
+	ctrl, teardown := setupRepositoryTest(t)
 	defer teardown()
 
 	m := mw.NewMockIDevice(ctrl)
@@ -39,7 +41,7 @@ func TestDeviceRepo_Poll_1(t *testing.T) {
 
 // return OK when device is down
 func TestDeviceRepo_Poll_2(t *testing.T) {
-	ctrl, teardown := setup(t)
+	ctrl, teardown := setupRepositoryTest(t)
 	defer teardown()
 
 	m := mw.NewMockIDevice(ctrl)
@@ -59,7 +61,7 @@ func TestDeviceRepo_Poll_2(t *testing.T) {
 
 // DeviceRepo.Poll() returns OK when IDevice.Poll() returns Interrupted
 func TestDeviceRepo_Poll_3(t *testing.T) {
-	ctrl, teardown := setup(t)
+	ctrl, teardown := setupRepositoryTest(t)
 	defer teardown()
 
 	m := mw.NewMockIDevice(ctrl)
@@ -80,7 +82,7 @@ func TestDeviceRepo_Poll_3(t *testing.T) {
 
 // DeviceRepo.Poll() returns Error when IDevice.Poll() returns Error
 func TestDeviceRepo_Poll_4(t *testing.T) {
-	ctrl, teardown := setup(t)
+	ctrl, teardown := setupRepositoryTest(t)
 	defer teardown()
 
 	m := mw.NewMockIDevice(ctrl)
@@ -100,7 +102,7 @@ func TestDeviceRepo_Poll_4(t *testing.T) {
 }
 
 func TestDeviceRepo_Register_1(t *testing.T) {
-	_, teardown := setup(t)
+	_, teardown := setupRepositoryTest(t)
 	defer teardown()
 
 	dev := &eth.TapDevice{}
@@ -113,7 +115,7 @@ func TestDeviceRepo_Register_1(t *testing.T) {
 
 // Fail when it's trying to register same device.
 func TestDeviceRepo_Register_2(t *testing.T) {
-	_, teardown := setup(t)
+	_, teardown := setupRepositoryTest(t)
 	defer teardown()
 
 	dev1 := &eth.TapDevice{Device: mw.Device{Name_: "net0"}}
@@ -127,7 +129,7 @@ func TestDeviceRepo_Register_2(t *testing.T) {
 }
 
 func TestUp_1(t *testing.T) {
-	ctrl, teardown := setup(t)
+	ctrl, teardown := setupRepositoryTest(t)
 	defer teardown()
 
 	m := mw.NewMockIDevice(ctrl)
@@ -149,7 +151,7 @@ func TestUp_1(t *testing.T) {
 
 // Fail when device is already opened.
 func TestUp_2(t *testing.T) {
-	ctrl, teardown := setup(t)
+	ctrl, teardown := setupRepositoryTest(t)
 	defer teardown()
 
 	m := mw.NewMockIDevice(ctrl)
@@ -169,7 +171,7 @@ func TestUp_2(t *testing.T) {
 
 // Fail when it could not get device up.
 func TestUp_3(t *testing.T) {
-	ctrl, teardown := setup(t)
+	ctrl, teardown := setupRepositoryTest(t)
 	defer teardown()
 
 	m := mw.NewMockIDevice(ctrl)
@@ -189,7 +191,7 @@ func TestUp_3(t *testing.T) {
 }
 
 func TestIfaceRepo_Get_1(t *testing.T) {
-	_, teardown := setup(t)
+	_, teardown := setupRepositoryTest(t)
 	defer teardown()
 
 	iface := &mw.Iface{
@@ -215,7 +217,7 @@ func TestIfaceRepo_Get_1(t *testing.T) {
 }
 
 func TestIfaceRepo_Get_2(t *testing.T) {
-	_, teardown := setup(t)
+	_, teardown := setupRepositoryTest(t)
 	defer teardown()
 
 	if IfaceRepo.Get(mw.ParseIP(mw.LoopbackIpAddr)) != nil {
@@ -224,7 +226,7 @@ func TestIfaceRepo_Get_2(t *testing.T) {
 }
 
 func TestIfaceRepo_Lookup_1(t *testing.T) {
-	_, teardown := setup(t)
+	_, teardown := setupRepositoryTest(t)
 	defer teardown()
 
 	iface := &mw.Iface{
@@ -250,7 +252,7 @@ func TestIfaceRepo_Lookup_1(t *testing.T) {
 }
 
 func TestIfaceRepo_Lookup_2(t *testing.T) {
-	_, teardown := setup(t)
+	_, teardown := setupRepositoryTest(t)
 	defer teardown()
 
 	dev := &eth.TapDevice{
@@ -269,7 +271,7 @@ func TestIfaceRepo_Lookup_2(t *testing.T) {
 }
 
 func TestIfaceRepo_Register_1(t *testing.T) {
-	_, teardown := setup(t)
+	_, teardown := setupRepositoryTest(t)
 	defer teardown()
 
 	iface := &mw.Iface{
@@ -297,7 +299,7 @@ func TestIfaceRepo_Register_1(t *testing.T) {
 
 // Fail when it's trying to register same interface.
 func TestIfaceRepo_Register_2(t *testing.T) {
-	_, teardown := setup(t)
+	_, teardown := setupRepositoryTest(t)
 	defer teardown()
 
 	iface := &mw.Iface{
@@ -326,7 +328,7 @@ func TestIfaceRepo_Register_2(t *testing.T) {
 }
 
 func TestRouteRepo_Get_1(t *testing.T) {
-	_, teardown := setup(t)
+	_, teardown := setupRepositoryTest(t)
 	defer teardown()
 
 	iface := &mw.Iface{
@@ -359,7 +361,7 @@ func TestRouteRepo_Get_1(t *testing.T) {
 }
 
 func TestRouteRepo_Get_2(t *testing.T) {
-	_, teardown := setup(t)
+	_, teardown := setupRepositoryTest(t)
 	defer teardown()
 
 	iface := &mw.Iface{
@@ -386,13 +388,41 @@ func TestRouteRepo_Get_2(t *testing.T) {
 	}
 }
 
-func setup(t *testing.T) (ctrl *gomock.Controller, teardown func()) {
+func TestStart(t *testing.T) {
+	_, teardown := setupRepositoryTest(t)
+	defer teardown()
+
+	var wg sync.WaitGroup
+	_ = Start(&wg)
+	monMsg := <-monCh
+
+	if monMsg.Current != worker.Running {
+		t.Errorf("Start() failed")
+	}
+}
+
+func TestStop(t *testing.T) {
+	_, teardown := setupRepositoryTest(t)
+	defer teardown()
+
+	var wg sync.WaitGroup
+	_ = Start(&wg)
+	<-monCh
+	Stop()
+	monMsg := <-monCh
+
+	if monMsg.Current != worker.Stopped {
+		t.Errorf("Stop() failed")
+	}
+}
+
+func setupRepositoryTest(t *testing.T) (ctrl *gomock.Controller, teardown func()) {
 	ctrl = gomock.NewController(t)
 	psLog.DisableOutput()
 	reset := func() {
 		psLog.EnableOutput()
-		DeviceRepo = &deviceRepo{}
-		IfaceRepo = &ifaceRepo{}
+		DeviceRepo.Init()
+		IfaceRepo.Init()
 	}
 	teardown = func() {
 		ctrl.Finish()

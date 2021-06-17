@@ -52,7 +52,7 @@ func Receive(payload []byte, dev mw.IDevice) psErr.E {
 
 	if packetLen < HdrLenMin {
 		psLog.E(fmt.Sprintf("ip packet length is too short: %d bytes", packetLen))
-		return psErr.InvalidPacket
+		return psErr.InvalidPacketLength
 	}
 
 	buf := bytes.NewBuffer(payload)
@@ -69,12 +69,12 @@ func Receive(payload []byte, dev mw.IDevice) psErr.E {
 	hdrLen := int(hdr.VHL&0x0f) * 4
 	if packetLen < hdrLen {
 		psLog.E(fmt.Sprintf("ip packet length is too short: ihl = %d, actual = %d", hdrLen, packetLen))
-		return psErr.InvalidPacket
+		return psErr.InvalidPacketLength
 	}
 
 	if totalLen := int(hdr.TotalLen); packetLen < totalLen {
 		psLog.E(fmt.Sprintf("ip packet length is too short: Total Length = %d, Actual Length = %d", totalLen, packetLen))
-		return psErr.InvalidPacket
+		return psErr.InvalidPacketLength
 	}
 
 	if hdr.TTL == 0 {

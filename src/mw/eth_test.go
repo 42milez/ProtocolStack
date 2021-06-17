@@ -69,14 +69,14 @@ func TestDumpFrame(t *testing.T) {
 		}
 		psLog.D("", dump(&hdr, payload)...)
 	})
-	got = Trim(got)
+	got = trim(got)
 	if !want.MatchString(got) {
 		t.Errorf("dump() = %v; want %v", got, want)
 	}
 }
 
 func TestReadFrame_1(t *testing.T) {
-	ctrl, teardown := SetupReadFrameTest(t)
+	ctrl, teardown := setupEthTest(t)
 	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)
@@ -105,7 +105,7 @@ func TestReadFrame_1(t *testing.T) {
 
 // Fail when Read() returns error.
 func TestReadFrame_2(t *testing.T) {
-	ctrl, teardown := SetupReadFrameTest(t)
+	ctrl, teardown := setupEthTest(t)
 	defer teardown()
 
 	dev := &Device{Addr_: EthAddr{11, 12, 13, 14, 15, 16}}
@@ -121,7 +121,7 @@ func TestReadFrame_2(t *testing.T) {
 
 // Fail when header length is invalid.
 func TestReadFrame_3(t *testing.T) {
-	ctrl, teardown := SetupReadFrameTest(t)
+	ctrl, teardown := setupEthTest(t)
 	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)
@@ -138,7 +138,7 @@ func TestReadFrame_3(t *testing.T) {
 
 // Success when no data exits.
 func TestReadFrame_4(t *testing.T) {
-	ctrl, teardown := SetupReadFrameTest(t)
+	ctrl, teardown := setupEthTest(t)
 	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)
@@ -155,7 +155,7 @@ func TestReadFrame_4(t *testing.T) {
 
 // Fail when Read() system call returns error.
 func TestReadFrame_5(t *testing.T) {
-	ctrl, teardown := SetupReadFrameTest(t)
+	ctrl, teardown := setupEthTest(t)
 	defer teardown()
 
 	m := psSyscall.NewMockISyscall(ctrl)
@@ -170,7 +170,30 @@ func TestReadFrame_5(t *testing.T) {
 	}
 }
 
-func SetupReadFrameTest(t *testing.T) (ctrl *gomock.Controller, teardown func()) {
+func TestWriteFrame(t *testing.T) {
+	ctrl, teardown := setupEthTest(t)
+	defer teardown()
+
+	m := psSyscall.NewMockISyscall(ctrl)
+	m.EXPECT().Write(any, any).Return(0, nil)
+	psSyscall.Syscall = m
+
+	fd := 3
+	dst := EthAddr{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}
+	src := EthAddr{0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f}
+	payload := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+
+	want := psErr.OK
+	got := WriteFrame(fd, dst, src, IPv4, payload)
+
+	if got != want {
+		t.Errorf("WriteFrame() = %s; want %s", got, want)
+	}
+}
+
+var any = gomock.Any()
+
+func setupEthTest(t *testing.T) (ctrl *gomock.Controller, teardown func()) {
 	psLog.DisableOutput()
 	ctrl = gomock.NewController(t)
 	teardown = func() {
@@ -180,7 +203,7 @@ func SetupReadFrameTest(t *testing.T) (ctrl *gomock.Controller, teardown func())
 	return
 }
 
-func Trim(s string) string {
+func trim(s string) string {
 	ret := strings.Replace(s, "", "", -1)
 	ret = strings.Replace(ret, "\n", "", -1)
 	ret = strings.Replace(ret, " ", "", -1)
