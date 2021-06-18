@@ -262,6 +262,10 @@ func V4(a, b, c, d byte) IP {
 	return p
 }
 
+func V4FromByte(b [V4AddrLen]byte) IP {
+	return IP{b[0], b[1], b[2], b[3]}
+}
+
 func allFF(b []byte) bool {
 	for _, c := range b {
 		if c != 0xff {

@@ -334,7 +334,7 @@ func sender(wg *sync.WaitGroup) {
 				return
 			}
 		case msg := <-mw.IpTxCh:
-			switch Send(msg.ProtoNum, msg.Packet, msg.Src, msg.Dst) {
+			switch Send(msg.ProtoNum, msg.Packet, mw.V4FromByte(msg.Src), mw.V4FromByte(msg.Dst)) {
 			case psErr.OK:
 			case psErr.RouteNotFound:
 			case psErr.NeedRetry:

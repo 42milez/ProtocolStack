@@ -65,8 +65,8 @@ type ArpTxMessage struct {
 type IpMessage struct {
 	ProtoNum ProtocolNumber
 	Packet   []byte
-	Dst      IP
-	Src      IP
+	Dst      [V4AddrLen]byte
+	Src      [V4AddrLen]byte
 }
 
 type IcmpQueueEntry struct {

@@ -159,8 +159,8 @@ func Send(typ uint8, code uint8, content uint32, payload []byte, src mw.IP, dst 
 	mw.IpTxCh <- &mw.IpMessage{
 		ProtoNum: mw.PnICMP,
 		Packet:   packet,
-		Dst:      dst,
-		Src:      src,
+		Dst:      dst.ToV4(),
+		Src:      src.ToV4(),
 	}
 
 	return psErr.OK
