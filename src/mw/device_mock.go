@@ -91,7 +91,7 @@ func (mr *MockIDeviceMockRecorder) Equal(dev interface{}) *gomock.Call {
 // Flag mocks base method.
 func (m *MockIDevice) Flag() DevFlag {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Flag")
+	ret := m.ctrl.Call(m, "flag")
 	ret0, _ := ret[0].(DevFlag)
 	return ret0
 }
@@ -99,7 +99,7 @@ func (m *MockIDevice) Flag() DevFlag {
 // Flag indicates an expected call of Flag.
 func (mr *MockIDeviceMockRecorder) Flag() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Flag", reflect.TypeOf((*MockIDevice)(nil).Flag))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "flag", reflect.TypeOf((*MockIDevice)(nil).Flag))
 }
 
 // IsUp mocks base method.

@@ -30,7 +30,7 @@ var PcbRepo *pcbRepo
 
 type Backlog struct {
 	entries []*PCB
-	size int
+	size    int
 }
 
 func (p *Backlog) Push(pcb *PCB) psErr.E {
@@ -57,32 +57,40 @@ type PCB struct {
 		NXT uint32 // next sequence number to be sent
 		WND uint16 // window size
 		UP  uint16 // urgent pointer to be sent
-		WL1 uint32 // segment sequence number at last window update
-		WL2 uint32 // segment acknowledgment number at last window update
+		WL1 uint32 // segment sequence number at Last window update
+		WL2 uint32 // segment acknowledgment number at Last window update
 	}
-	ISS uint32
 	RCV struct {
 		NXT uint32 // next sequence number to receive
 		WND uint16 // window size
 		UP  uint16 // urgent pointer to receive
 	}
-	IRS       uint32           // initial receive sequence number
-	RcvBuf    [windowSize]byte // receive buffer
-	ResendBuf list.List        // resend buffer
-	Backlog   Backlog
-	Parent    *PCB // parent pcb
+	ISS         uint32
+	IRS         uint32 // initial receive sequence number
+	backlog     Backlog
+	parent      *PCB             // parent pcb
+	rcvBuf      [windowSize]byte // receive buffer
+	resendQueue resendQueue      // resend buffer
 }
 
-func (p *PCB) RefreshResendQueue() {
-	for entry := p.ResendBuf.Front(); entry != nil; entry.Next() {
-		if entry.Value.(*ResendBufEntry).Seq >= p.SND.UNA {
+func (p *PCB) refreshResendQueue() {
+	for entry := p.resendQueue.entries.Front(); entry != nil; entry.Next() {
+		if entry.Value.(*resendQueueEntry).Seq >= p.SND.UNA {
 			break
 		}
-		p.ResendBuf.Remove(entry)
+		p.resendQueue.entries.Remove(entry)
 	}
 }
 
-type ResendBufEntry struct {
+func (p *PCB) setTimeWaitTimer() {}
+
+type resendQueue struct {
+	entries list.List
+}
+
+func (p *resendQueue) Push() {}
+
+type resendQueueEntry struct {
 	First time.Time
 	Last  time.Time
 	RTO   uint32
