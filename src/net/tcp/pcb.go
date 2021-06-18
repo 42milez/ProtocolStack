@@ -27,7 +27,13 @@ const tcpConnMax = 32
 
 var PcbRepo *pcbRepo
 
-type BacklogEntry struct{}
+type Backlog struct {
+	entries []*PCB
+}
+
+func (p *Backlog) Push(pcb *PCB) {
+	p.entries = append(p.entries, pcb)
+}
 
 type EndPoint struct {
 	Addr mw.V4Addr // ipv4 address
@@ -57,7 +63,7 @@ type PCB struct {
 	IRS       uint32           // initial receive sequence number
 	RcvBuf    [windowSize]byte // receive buffer
 	ResendBuf list.List        // resend buffer
-	Backlog   []*BacklogEntry
+	Backlog   Backlog
 	Parent    *PCB // parent pcb
 }
 

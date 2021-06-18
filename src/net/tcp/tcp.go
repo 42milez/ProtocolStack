@@ -481,13 +481,13 @@ func incomingSegment(hdr *Hdr, data []byte, local *EndPoint, foreign *EndPoint) 
 		fallthrough
 	case timeWaitState:
 		if len(data) == 0 {
-			// case 1
 			if pcb.RCV.WND == 0 {
+				// case 1
 				if hdr.Seq == pcb.RCV.NXT {
 					isAcceptable = true
 				}
-			// case 2
 			} else {
+				// case 2
 				a1 := pcb.RCV.NXT <= hdr.Seq
 				a2 := hdr.Seq < (pcb.RCV.NXT+uint32(pcb.RCV.WND))
 				if a1 && a2 {
@@ -495,7 +495,11 @@ func incomingSegment(hdr *Hdr, data []byte, local *EndPoint, foreign *EndPoint) 
 				}
 			}
 		} else {
-			if pcb.RCV.WND != 0 {
+			if pcb.RCV.WND == 0 {
+				// case 3: do nothing (not acceptable)
+				// If the RCV.WND is zero, no segments will be acceptable, but special allowance should be made to accept
+				// valid ACKs, URGs and RSTs.
+			} else {
 				// case 4
 				a1 := pcb.RCV.NXT <= hdr.Seq
 				a2 := hdr.Seq < (pcb.RCV.NXT+uint32(pcb.RCV.WND))
@@ -505,9 +509,6 @@ func incomingSegment(hdr *Hdr, data []byte, local *EndPoint, foreign *EndPoint) 
 					isAcceptable = true
 				}
 			}
-			// case 3: do nothing (not acceptable)
-			// If the RCV.WND is zero, no segments will be acceptable, but special allowance should be made to accept
-			// valid ACKs, URGs and RSTs.
 		}
 
 		// If an incoming segment is not acceptable, an acknowledgment should be sent in reply (unless the RST bit is
@@ -612,7 +613,112 @@ func incomingSegment(hdr *Hdr, data []byte, local *EndPoint, foreign *EndPoint) 
 
 	//  ▶ 5th check the ACK field
 	// ------------------------------
-	// ...
+	// if the ACK bit is off drop the segment and return
+	if !hdr.Flag.IsSet(ackFlag) {
+		return psErr.OK
+	}
+
+	switch pcb.State {
+	case synReceivedState:
+		// If SND.UNA =< SEG.ACK =< SND.NXT then enter ESTABLISHED state and continue processing.
+		if pcb.SND.UNA <= hdr.Ack && hdr.Ack <= pcb.SND.NXT {
+			pcb.State = establishedState
+			if pcb.Parent != nil {
+				pcb.Parent.Backlog.Push(pcb)
+			}
+		// If the segment acknowledgment is not acceptable, form a reset segment, <SEQ=SEG.ACK><CTL=RST> and send it.
+		} else {
+			info := SegmentInfo{
+				Seq: hdr.Ack,
+				Ack: 0,
+				Wnd: 0,
+				Flag: rstFlag,
+			}
+			if err := sendcore(info, nil, local, foreign); err != psErr.OK {
+				return psErr.Error
+			}
+			return psErr.OK
+		}
+		fallthrough
+	case establishedState:
+		fallthrough
+	case finWait1State:
+		fallthrough
+	case finWait2State:
+		fallthrough
+	case closeWaitState:
+		fallthrough
+	case closingState:
+		if pcb.SND.UNA < hdr.Ack && hdr.Ack <= pcb.SND.NXT {
+			// If SND.UNA < SEG.ACK =< SND.NXT then, set SND.UNA <- SEG.ACK. Any segments on the retransmission queue
+			// which are thereby entirely acknowledged are removed. Users should receive positive acknowledgments for
+			// buffers which have been SENT and fully acknowledged (i.e., SEND buffer should be returned with "ok"
+			// response).
+			// If SND.UNA < SEG.ACK =< SND.NXT, the send window should be updated.
+			pcb.SND.UNA = hdr.Ack
+
+			// TODO: clean up resend queue
+			// ...
+
+			// If (SND.WL1 < SEG.SEQ or (SND.WL1 = SEG.SEQ and SND.WL2 =< SEG.ACK)), set SND.WND <- SEG.WND,
+			// set SND.WL1 <- SEG.SEQ, and set SND.WL2 <- SEG.ACK.
+			if pcb.SND.WL1 < hdr.Seq || (pcb.SND.WL1 == hdr.Seq && pcb.SND.WL2 <= hdr.Ack) {
+				pcb.SND.WND = hdr.Wnd
+				pcb.SND.WL1 = hdr.Seq
+				pcb.SND.WL2 = hdr.Ack
+			}
+		} else if hdr.Ack < pcb.SND.UNA {
+			// If the ACK is a duplicate (SEG.ACK < SND.UNA), it can be ignored.
+		} else if hdr.Ack > pcb.SND.NXT {
+			// If the ACK acks something not yet sent (SEG.ACK > SND.NXT) then send an ACK, drop the segment, and
+			// return.
+			if err := Send(pcb, ackFlag, nil); err != psErr.OK {
+				return psErr.Error
+			}
+			return psErr.OK
+		}
+
+		// Note that SND.WND is an offset from SND.UNA, that SND.WL1 records the sequence number of the last segment
+		// used to update SND.WND, and that SND.WL2 records the acknowledgment number of the last segment used to update
+		// SND.WND. The check here prevents using old segments to update the window.
+
+		switch pcb.State {
+		case finWait1State:
+			// In addition to the processing for the ESTABLISHED state, if our FIN is now acknowledged then enter
+			// FIN-WAIT-2 and continue processing in that state.
+			if hdr.Ack == pcb.SND.NXT {
+				pcb.State = finWait2State
+			}
+		case finWait2State:
+			// In addition to the processing for the ESTABLISHED state, if the retransmission queue is empty, the user's
+			// CLOSE can be acknowledged ("ok") but do not delete the TCB.
+		case closeWaitState:
+			// Do the same processing as for the ESTABLISHED state.
+		case closingState:
+			// In addition to the processing for the ESTABLISHED state, if the ACK acknowledges our FIN then enter the
+			// TIME-WAIT state, otherwise ignore the segment.
+			if hdr.Ack == pcb.SND.NXT {
+				pcb.State = timeWaitState
+				// TODO: set time wait timer
+				// ...
+			}
+		}
+	case lastAckState:
+		// The only thing that can arrive in this state is an acknowledgment of our FIN. If our FIN is now acknowledged,
+		// delete the TCB, enter the CLOSED state, and return.
+		if hdr.Ack == pcb.SND.NXT {
+			pcb.State = closedState
+			releasePCB(pcb)
+		}
+		return psErr.OK
+	case timeWaitState:
+		// The only thing that can arrive in this state is a retransmission of the remote FIN. Acknowledge it, and
+		// restart the 2 MSL timeout.
+		if hdr.Flag.IsSet(finFlag) {
+			// TODO: set time wait timer
+			// ...
+		}
+	}
 
 	//  ▶ 6th check the URG bit
 	// ------------------------------
