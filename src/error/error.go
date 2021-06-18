@@ -3,6 +3,7 @@ package error
 const (
 	AlreadyBound                  E = "ALREADY_BOUND"
 	ArpIncomplete                 E = "ARP_INCOMPLETE"
+	BacklogFull                   E = "BACKLOG_FULL"
 	CantAllocatePcb               E = "CANT_ALLOCATE_PCB"
 	CantCloseIOResource           E = "CANT_CLOSE_IO_RESOURCE"
 	CantCreateEndpoint            E = "CANT_CREATE_ENDPOINT"

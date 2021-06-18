@@ -124,7 +124,7 @@ func Listen(id int, backlogSize int) psErr.E {
 	}
 
 	pcb.State = listenState
-	pcb.Backlog = make([]*BacklogEntry, backlogSize)
+	pcb.Backlog.size = backlogSize
 
 	return psErr.OK
 }
@@ -489,7 +489,7 @@ func incomingSegment(hdr *Hdr, data []byte, local *EndPoint, foreign *EndPoint) 
 			} else {
 				// case 2
 				a1 := pcb.RCV.NXT <= hdr.Seq
-				a2 := hdr.Seq < (pcb.RCV.NXT+uint32(pcb.RCV.WND))
+				a2 := hdr.Seq < (pcb.RCV.NXT + uint32(pcb.RCV.WND))
 				if a1 && a2 {
 					isAcceptable = true
 				}
@@ -502,7 +502,7 @@ func incomingSegment(hdr *Hdr, data []byte, local *EndPoint, foreign *EndPoint) 
 			} else {
 				// case 4
 				a1 := pcb.RCV.NXT <= hdr.Seq
-				a2 := hdr.Seq < (pcb.RCV.NXT+uint32(pcb.RCV.WND))
+				a2 := hdr.Seq < (pcb.RCV.NXT + uint32(pcb.RCV.WND))
 				b1 := pcb.RCV.NXT <= hdr.Seq+uint32(len(data))-1
 				b2 := hdr.Seq+uint32(len(data))-1 < pcb.RCV.NXT+uint32(pcb.RCV.WND)
 				if a1 && a2 || b1 && b2 {
@@ -624,14 +624,17 @@ func incomingSegment(hdr *Hdr, data []byte, local *EndPoint, foreign *EndPoint) 
 		if pcb.SND.UNA <= hdr.Ack && hdr.Ack <= pcb.SND.NXT {
 			pcb.State = establishedState
 			if pcb.Parent != nil {
-				pcb.Parent.Backlog.Push(pcb)
+				if err := pcb.Parent.Backlog.Push(pcb); err != psErr.OK {
+					psLog.E("backlog full")
+					return err
+				}
 			}
-		// If the segment acknowledgment is not acceptable, form a reset segment, <SEQ=SEG.ACK><CTL=RST> and send it.
+			// If the segment acknowledgment is not acceptable, form a reset segment, <SEQ=SEG.ACK><CTL=RST> and send it.
 		} else {
 			info := SegmentInfo{
-				Seq: hdr.Ack,
-				Ack: 0,
-				Wnd: 0,
+				Seq:  hdr.Ack,
+				Ack:  0,
+				Wnd:  0,
 				Flag: rstFlag,
 			}
 			if err := sendcore(info, nil, local, foreign); err != psErr.OK {

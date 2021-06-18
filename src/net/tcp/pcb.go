@@ -2,6 +2,7 @@ package tcp
 
 import (
 	"container/list"
+	psErr "github.com/42milez/ProtocolStack/src/error"
 	"github.com/42milez/ProtocolStack/src/mw"
 	"reflect"
 	"sync"
@@ -22,17 +23,22 @@ const (
 	closeWaitState
 	lastAckState
 )
-const windowSize = 65535
 const tcpConnMax = 32
+const windowSize = 65535
 
 var PcbRepo *pcbRepo
 
 type Backlog struct {
 	entries []*PCB
+	size int
 }
 
-func (p *Backlog) Push(pcb *PCB) {
+func (p *Backlog) Push(pcb *PCB) psErr.E {
+	if len(p.entries) > p.size {
+		return psErr.BacklogFull
+	}
 	p.entries = append(p.entries, pcb)
+	return psErr.OK
 }
 
 type EndPoint struct {
