@@ -15,12 +15,12 @@ const (
 	synSentState
 	synReceivedState
 	establishedState
-	//finWait1State
-	//finWait2State
-	//closingState
-	//timeWaitState
-	//closeWaitState
-	//lastAckState
+	finWait1State
+	finWait2State
+	closingState
+	timeWaitState
+	closeWaitState
+	lastAckState
 )
 const windowSize = 65535
 const tcpConnMax = 32

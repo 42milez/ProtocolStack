@@ -176,9 +176,9 @@ func Receive(msg *mw.TcpRxMessage) psErr.E {
 
 func Send(pcb *PCB, flag Flag, data []byte) psErr.E {
 	info := SegmentInfo{
-		Seq: pcb.SND.NXT,
-		Ack: pcb.RCV.NXT,
-		Wnd: pcb.RCV.WND,
+		Seq:  pcb.SND.NXT,
+		Ack:  pcb.RCV.NXT,
+		Wnd:  pcb.RCV.WND,
 		Flag: flag,
 	}
 	if flag.IsSet(synFlag) {
@@ -195,7 +195,6 @@ func Send(pcb *PCB, flag Flag, data []byte) psErr.E {
 func sendcore(info SegmentInfo, data []byte, local *EndPoint, foreign *EndPoint) psErr.E {
 	return psErr.OK
 }
-
 
 func Start(wg *sync.WaitGroup) psErr.E {
 	wg.Add(2)
@@ -274,9 +273,9 @@ func incomingSegment(hdr *Hdr, data []byte, local *EndPoint, foreign *EndPoint) 
 		// If the ACK bit is on, <SEQ=SEG.ACK><CTL=RST>
 		if hdr.Flag.IsSet(ackFlag) {
 			info := SegmentInfo{
-				Seq: hdr.Ack,
-				Ack: 0,
-				Wnd: 0,
+				Seq:  hdr.Ack,
+				Ack:  0,
+				Wnd:  0,
 				Flag: rstFlag,
 			}
 			if err := sendcore(info, nil, local, foreign); err != psErr.OK {
@@ -285,10 +284,10 @@ func incomingSegment(hdr *Hdr, data []byte, local *EndPoint, foreign *EndPoint) 
 		} else {
 			// If the ACK bit is off, sequence number zero is used, <SEQ=0><ACK=SEG.SEQ+SEG.LEN><CTL=RST,ACK>
 			info := SegmentInfo{
-				Seq: 0,
-				Ack: hdr.Seq + uint32(len(data)),
-				Wnd: 0,
-				Flag: ackFlag|rstFlag,
+				Seq:  0,
+				Ack:  hdr.Seq + uint32(len(data)),
+				Wnd:  0,
+				Flag: ackFlag | rstFlag,
 			}
 			if err := sendcore(info, nil, local, foreign); err != psErr.OK {
 				return psErr.Error
@@ -319,9 +318,9 @@ func incomingSegment(hdr *Hdr, data []byte, local *EndPoint, foreign *EndPoint) 
 			// segment should be formed for any arriving ACK-bearing segment. The RST should be formatted as follows:
 			// <SEQ=SEG.ACK><CTL=RST> Return.
 			info := SegmentInfo{
-				Seq: hdr.Ack,
-				Ack: 0,
-				Wnd: 0,
+				Seq:  hdr.Ack,
+				Ack:  0,
+				Wnd:  0,
 				Flag: rstFlag,
 			}
 			if err := sendcore(info, nil, local, foreign); err != psErr.OK {
@@ -385,9 +384,9 @@ func incomingSegment(hdr *Hdr, data []byte, local *EndPoint, foreign *EndPoint) 
 			//                        Return.
 			if hdr.Ack <= pcb.ISS || hdr.Ack > pcb.SND.NXT {
 				info := SegmentInfo{
-					Seq: hdr.Ack,
-					Ack: 0,
-					Wnd: 0,
+					Seq:  hdr.Ack,
+					Ack:  0,
+					Wnd:  0,
 					Flag: rstFlag,
 				}
 				return sendcore(info, data, local, foreign)
@@ -462,7 +461,69 @@ func incomingSegment(hdr *Hdr, data []byte, local *EndPoint, foreign *EndPoint) 
 
 	//  ▶ 1st check sequence number
 	// ------------------------------
-	// ...
+	switch pcb.State {
+	case synReceivedState:
+		fallthrough
+	case establishedState:
+		fallthrough
+	case finWait1State:
+		fallthrough
+	case finWait2State:
+		fallthrough
+	case closeWaitState:
+		fallthrough
+	case closingState:
+		fallthrough
+	case lastAckState:
+		fallthrough
+	case timeWaitState:
+		if len(data) == 0 {
+			// case 1
+			if pcb.RCV.WND == 0 {
+				if hdr.Seq == pcb.RCV.NXT {
+					isAcceptable = true
+				}
+			// case 2
+			} else {
+				a1 := pcb.RCV.NXT <= hdr.Seq
+				a2 := hdr.Seq < (pcb.RCV.NXT+uint32(pcb.RCV.WND))
+				if a1 && a2 {
+					isAcceptable = true
+				}
+			}
+		} else {
+			if pcb.RCV.WND != 0 {
+				// case 4
+				a1 := pcb.RCV.NXT <= hdr.Seq
+				a2 := hdr.Seq < (pcb.RCV.NXT+uint32(pcb.RCV.WND))
+				b1 := pcb.RCV.NXT <= hdr.Seq+uint32(len(data))-1
+				b2 := hdr.Seq+uint32(len(data))-1 < pcb.RCV.NXT+uint32(pcb.RCV.WND)
+				if a1 && a2 || b1 && b2 {
+					isAcceptable = true
+				}
+			}
+			// case 3: do nothing (not acceptable)
+			// If the RCV.WND is zero, no segments will be acceptable, but special allowance should be made to accept
+			// valid ACKs, URGs and RSTs.
+		}
+
+		// If an incoming segment is not acceptable, an acknowledgment should be sent in reply (unless the RST bit is
+		// set, if so drop the segment and return): <SEQ=SND.NXT><ACK=RCV.NXT><CTL=ACK>
+		// After sending the acknowledgment, drop the unacceptable segment and return.
+		if !isAcceptable {
+			if hdr.Flag.IsSet(rstFlag) {
+				if err := Send(pcb, ackFlag, nil); err != psErr.OK {
+					return psErr.Error
+				}
+			}
+			return psErr.OK
+		}
+
+		// In the following it is assumed that the segment is the idealized segment that begins at RCV.NXT and does not
+		// exceed the window. One could tailor actual segments to fit this assumption by trimming off any portions that
+		// lie outside the window (including SYN and FIN), and only processing further if the segment then begins at
+		// RCV.NXT. Segments with higher beginning sequence numbers may be held for later processing.
+	}
 
 	//  ▶ 2nd check the RST bit
 	// ------------------------------
