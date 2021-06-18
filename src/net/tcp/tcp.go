@@ -594,6 +594,11 @@ func incomingSegment(hdr *Hdr, data []byte, local *EndPoint, foreign *EndPoint) 
 	case lastAckState:
 		fallthrough
 	case timeWaitState:
+		// If the SYN is in the window it is an error, send a reset, any outstanding RECEIVEs and SEND should receive
+		// "reset" responses, all segment queues should be flushed, the user should also receive an unsolicited general
+		// "connection reset" signal, enter the CLOSED state, delete the TCB, and return.
+		// If the SYN is not in the window this step would not be reached and an ack would have been sent in the first
+		// step (sequence number check).
 		if hdr.Flag.IsSet(synFlag) {
 			if err := Send(pcb, rstFlag, nil); err != psErr.OK {
 				return psErr.Error
