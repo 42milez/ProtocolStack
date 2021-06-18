@@ -83,11 +83,11 @@ type IcmpTxMessage struct {
 }
 
 type TcpRxMessage struct {
-	ProtoNum uint8
-	Segment  []byte
-	Dst      [V4AddrLen]byte
-	Src      [V4AddrLen]byte
-	Iface    *Iface
+	ProtoNum   uint8
+	RawSegment []byte
+	Dst        [V4AddrLen]byte
+	Src        [V4AddrLen]byte
+	Iface      *Iface
 }
 
 type TcpTxMessage struct{}
