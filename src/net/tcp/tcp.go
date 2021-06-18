@@ -166,7 +166,7 @@ func Receive(msg *mw.TcpRxMessage) psErr.E {
 	local := &EndPoint{Addr: msg.Dst, Port: hdr.Dst}
 	foreign := &EndPoint{Addr: msg.Src, Port: hdr.Src}
 
-	if err := incomingSegment(hdr, msg.RawSegment[offset:], local, foreign); err != psErr.OK {
+	if err := receiveCore(hdr, msg.RawSegment[offset:], local, foreign); err != psErr.OK {
 		psLog.E(fmt.Sprintf("can't process incoming segment: %s", err))
 		return psErr.Error
 	}
@@ -189,10 +189,10 @@ func Send(pcb *PCB, flag Flag, data []byte) psErr.E {
 		pcb.resendQueue.Push()
 	}
 
-	return sendcore(info, data, &pcb.Local, &pcb.Foreign)
+	return sendCore(info, data, &pcb.Local, &pcb.Foreign)
 }
 
-func sendcore(info SegmentInfo, data []byte, local *EndPoint, foreign *EndPoint) psErr.E {
+func sendCore(info SegmentInfo, data []byte, local *EndPoint, foreign *EndPoint) psErr.E {
 	return psErr.OK
 }
 
@@ -250,7 +250,7 @@ func dump(hdr *Hdr, data []byte) (ret []string) {
 // SEGMENT ARRIVES
 // https://datatracker.ietf.org/doc/html/rfc793#page-65
 
-func incomingSegment(hdr *Hdr, data []byte, local *EndPoint, foreign *EndPoint) psErr.E {
+func receiveCore(hdr *Hdr, data []byte, local *EndPoint, foreign *EndPoint) psErr.E {
 	pcb := PcbRepo.LookUp(local, foreign)
 
 	if pcb == nil {
@@ -278,7 +278,7 @@ func incomingSegment(hdr *Hdr, data []byte, local *EndPoint, foreign *EndPoint) 
 				Wnd:  0,
 				Flag: rstFlag,
 			}
-			if err := sendcore(info, nil, local, foreign); err != psErr.OK {
+			if err := sendCore(info, nil, local, foreign); err != psErr.OK {
 				return psErr.Error
 			}
 		} else {
@@ -289,7 +289,7 @@ func incomingSegment(hdr *Hdr, data []byte, local *EndPoint, foreign *EndPoint) 
 				Wnd:  0,
 				Flag: ackFlag | rstFlag,
 			}
-			if err := sendcore(info, nil, local, foreign); err != psErr.OK {
+			if err := sendCore(info, nil, local, foreign); err != psErr.OK {
 				return psErr.Error
 			}
 		}
@@ -323,7 +323,7 @@ func incomingSegment(hdr *Hdr, data []byte, local *EndPoint, foreign *EndPoint) 
 				Wnd:  0,
 				Flag: rstFlag,
 			}
-			if err := sendcore(info, nil, local, foreign); err != psErr.OK {
+			if err := sendCore(info, nil, local, foreign); err != psErr.OK {
 				return psErr.Error
 			}
 			return psErr.OK
@@ -389,7 +389,7 @@ func incomingSegment(hdr *Hdr, data []byte, local *EndPoint, foreign *EndPoint) 
 					Wnd:  0,
 					Flag: rstFlag,
 				}
-				return sendcore(info, data, local, foreign)
+				return sendCore(info, data, local, foreign)
 			}
 			// If SND.UNA =< SEG.ACK =< SND.NXT then the ACK is acceptable.
 			if pcb.SND.UNA <= hdr.Ack && hdr.Ack <= pcb.SND.NXT {
@@ -637,7 +637,7 @@ func incomingSegment(hdr *Hdr, data []byte, local *EndPoint, foreign *EndPoint) 
 				Wnd:  0,
 				Flag: rstFlag,
 			}
-			if err := sendcore(info, nil, local, foreign); err != psErr.OK {
+			if err := sendCore(info, nil, local, foreign); err != psErr.OK {
 				return psErr.Error
 			}
 			return psErr.OK
@@ -822,10 +822,6 @@ func incomingSegment(hdr *Hdr, data []byte, local *EndPoint, foreign *EndPoint) 
 
 	return psErr.OK
 }
-
-//func outgoingSegment(segment *RawSegment) psErr.E {
-//	return psErr.OK
-//}
 
 func receiver(wg *sync.WaitGroup) {
 	defer wg.Done()
