@@ -55,12 +55,12 @@ func receiver(wg *sync.WaitGroup) {
 			}
 		case msg := <-mw.EthRxCh:
 			switch msg.Type {
-			case mw.ARP:
+			case mw.EtARP:
 				mw.ArpRxCh <- &mw.ArpRxMessage{
 					Packet: msg.Content,
 					Dev:    msg.Dev,
 				}
-			case mw.IPv4:
+			case mw.EtIPV4:
 				mw.IpRxCh <- msg
 			default:
 				psLog.W(fmt.Sprintf("unknown ether type: 0x%04x", uint16(msg.Type)))

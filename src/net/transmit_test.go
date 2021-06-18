@@ -25,7 +25,7 @@ func TestTransmit(t *testing.T) {
 	dstEthAddr := test.EthAddrBuilder.Default()
 
 	want := psErr.OK
-	got := Transmit(dstEthAddr, payload, mw.IPv4, iface)
+	got := Transmit(dstEthAddr, payload, mw.EtIPV4, iface)
 
 	if got != want {
 		t.Errorf("Transmit() = %s; want %s", got, want)

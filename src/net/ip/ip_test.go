@@ -40,7 +40,7 @@ func TestReceive_1(t *testing.T) {
 	}
 
 	// TCP
-	packet[9] = uint8(TCP)
+	packet[9] = uint8(mw.PnTCP)
 	packet[10] = 0x00
 	packet[11] = 0x00
 	csum := mw.Checksum(packet, 0)
@@ -53,7 +53,7 @@ func TestReceive_1(t *testing.T) {
 	}
 
 	// UDP
-	packet[9] = uint8(UDP)
+	packet[9] = uint8(mw.PnUDP)
 	packet[10] = 0x00
 	packet[11] = 0x00
 	csum = mw.Checksum(packet, 0)
@@ -174,7 +174,7 @@ func TestSend(t *testing.T) {
 	dst := mw.IP{192, 168, 0, 2}
 
 	want := psErr.OK
-	got := Send(ICMP, payload, src, dst)
+	got := Send(mw.PnICMP, payload, src, dst)
 
 	if got != want {
 		t.Errorf("Send() = %s; want %s", got, want)
@@ -231,7 +231,7 @@ func createIpPacket() []byte {
 	hdr.TotalLen = uint16(HdrLenMin + len(payload))
 	hdr.ID = 0
 	hdr.TTL = 0xff
-	hdr.Protocol = ICMP
+	hdr.Protocol = mw.PnICMP
 	hdr.Src = mw.V4Addr{192, 168, 0, 1}
 	hdr.Dst = mw.V4Addr{192, 168, 1, 1}
 

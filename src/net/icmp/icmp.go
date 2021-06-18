@@ -8,7 +8,6 @@ import (
 	psLog "github.com/42milez/ProtocolStack/src/log"
 	"github.com/42milez/ProtocolStack/src/monitor"
 	"github.com/42milez/ProtocolStack/src/mw"
-	"github.com/42milez/ProtocolStack/src/net/ip"
 	"github.com/42milez/ProtocolStack/src/repo"
 	"github.com/42milez/ProtocolStack/src/worker"
 	"sync"
@@ -158,7 +157,7 @@ func Send(typ uint8, code uint8, content uint32, payload []byte, src mw.IP, dst 
 	psLog.D("outgoing icmp packet", dump(&hdr, payload)...)
 
 	mw.IpTxCh <- &mw.IpMessage{
-		ProtoNum: ip.ICMP,
+		ProtoNum: mw.PnICMP,
 		Packet:   packet,
 		Dst:      dst,
 		Src:      src,

@@ -17,11 +17,6 @@ import (
 
 const HdrLenMax = 60 // bytes
 const HdrLenMin = 20 // bytes
-const (
-	ICMP mw.ProtocolNumber = 1
-	TCP  mw.ProtocolNumber = 6
-	UDP  mw.ProtocolNumber = 17
-)
 const xChBufSize = 5
 const ipv4 = 4
 
@@ -103,23 +98,23 @@ func Receive(payload []byte, dev mw.IDevice) psErr.E {
 	psLog.D("incoming ip packet", dump(payload)...)
 
 	switch hdr.Protocol {
-	case ICMP:
+	case mw.PnICMP:
 		mw.IcmpRxCh <- &mw.IcmpRxMessage{
 			Payload: payload[hdrLen:],
 			Dst:     hdr.Dst,
 			Src:     hdr.Src,
 			Dev:     dev,
 		}
-	case TCP:
+	case mw.PnTCP:
 		mw.TcpRxCh <- &mw.TcpRxMessage{
-			ProtoNum:   uint8(TCP),
+			ProtoNum:   uint8(mw.PnTCP),
 			RawSegment: payload[hdrLen:],
 			Dst:        hdr.Dst,
 			Src:        hdr.Src,
 			Iface:      iface,
 		}
 		return psErr.Error
-	case UDP:
+	case mw.PnUDP:
 		psLog.E("currently NOT support UDP")
 		return psErr.Error
 	default:
@@ -162,7 +157,7 @@ func Send(protoNum mw.ProtocolNumber, payload []byte, src mw.IP, dst mw.IP) psEr
 	}
 
 	// send ip packet
-	if err = net.Transmit(ethAddr, packet, mw.IPv4, iface); err != psErr.OK {
+	if err = net.Transmit(ethAddr, packet, mw.EtIPV4, iface); err != psErr.OK {
 		return psErr.Error
 	}
 
@@ -344,7 +339,7 @@ func sender(wg *sync.WaitGroup) {
 			case psErr.RouteNotFound:
 			case psErr.NeedRetry:
 				switch msg.ProtoNum {
-				case ICMP:
+				case mw.PnICMP:
 					mw.IcmpDeadLetterQueue <- &mw.IcmpQueueEntry{
 						Payload: msg.Packet,
 					}

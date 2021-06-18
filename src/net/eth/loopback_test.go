@@ -55,7 +55,7 @@ func TestLoopbackDevice_Transmit(t *testing.T) {
 
 	loopbackDev := LoopbackDevice{}
 
-	got := loopbackDev.Transmit(mw.EthAddr{}, make([]byte, 0), mw.ARP)
+	got := loopbackDev.Transmit(mw.EthAddr{}, make([]byte, 0), mw.EtARP)
 	if got != psErr.OK {
 		t.Errorf("LoopbackDevice.Transmit() = %v; want %v", got, psErr.OK)
 	}

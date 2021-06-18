@@ -193,6 +193,49 @@ func Send(pcb *PCB, flag Flag, data []byte) psErr.E {
 }
 
 func sendCore(info SegmentInfo, data []byte, local *EndPoint, foreign *EndPoint) psErr.E {
+	hdr := Hdr{
+		Src:    local.Port,
+		Dst:    foreign.Port,
+		Seq:    info.Seq,
+		Ack:    info.Ack,
+		Offset: uint8(HdrLenMin>>2) << 4, // Data Offset occupies high 4bits
+		Flag:   info.Flag,
+		Wnd:    info.Wnd,
+	}
+
+	segBuf := new(bytes.Buffer)
+	if err := binary.Write(segBuf, binary.BigEndian, &hdr); err != nil {
+		return psErr.Error
+	}
+	if err := binary.Write(segBuf, binary.BigEndian, &data); err != nil {
+		return psErr.Error
+	}
+	segment := segBuf.Bytes()
+
+	pseudo := PseudoHdr{
+		Src:   local.Addr,
+		Dst:   foreign.Addr,
+		Proto: uint8(mw.PnTCP),
+		Len:   uint16(len(segment)),
+	}
+	pseudoBuf := new(bytes.Buffer)
+	if err := binary.Write(pseudoBuf, binary.BigEndian, &pseudo); err != nil {
+		return psErr.Error
+	}
+
+	csum := mw.Checksum(segment, uint32(^mw.Checksum(pseudoBuf.Bytes(), 0)))
+	segment[16] = uint8((csum & 0xff00) >> 8)
+	segment[17] = uint8(csum & 0x00ff)
+
+	psLog.D("outgoing tcp segment", dump(&hdr, data)...)
+
+	mw.IpTxCh <- &mw.IpMessage{
+		ProtoNum: mw.PnTCP,
+		Packet:   segment,
+		Src:      local.Addr,
+		Dst:      foreign.Addr,
+	}
+
 	return psErr.OK
 }
 
@@ -629,7 +672,8 @@ func receiveCore(hdr *Hdr, data []byte, local *EndPoint, foreign *EndPoint) psEr
 					return err
 				}
 			}
-			// If the segment acknowledgment is not acceptable, form a reset segment, <SEQ=SEG.ACK><CTL=RST> and send it.
+			// If the segment acknowledgment is not acceptable, form a reset segment, <SEQ=SEG.ACK><CTL=RST> and send
+			// it.
 		} else {
 			info := SegmentInfo{
 				Seq:  hdr.Ack,

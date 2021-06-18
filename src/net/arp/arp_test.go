@@ -209,7 +209,7 @@ func (v PacketBuilder) Default() *Packet {
 	return &Packet{
 		Hdr: Hdr{
 			HT:     Ethernet,
-			PT:     mw.IPv4,
+			PT:     mw.EtIPV4,
 			HAL:    mw.EthAddrLen,
 			PAL:    mw.V4AddrLen,
 			Opcode: Request,
