@@ -573,11 +573,37 @@ func incomingSegment(hdr *Hdr, data []byte, local *EndPoint, foreign *EndPoint) 
 
 	//  ▶ 3rd check security and precedence
 	// ------------------------------
-	// ...
+	// TODO:
+	// ....
 
 	//  ▶ 4th check the SYN bit
 	// ------------------------------
-	// ...
+	switch pcb.State {
+	case synReceivedState:
+		fallthrough
+	case establishedState:
+		fallthrough
+	case finWait1State:
+		fallthrough
+	case finWait2State:
+		fallthrough
+	case closeWaitState:
+		fallthrough
+	case closingState:
+		fallthrough
+	case lastAckState:
+		fallthrough
+	case timeWaitState:
+		if hdr.Flag.IsSet(synFlag) {
+			if err := Send(pcb, rstFlag, nil); err != psErr.OK {
+				return psErr.Error
+			}
+			psLog.E("connection reset")
+			pcb.State = closedState
+			releasePCB(pcb)
+			return psErr.OK
+		}
+	}
 
 	//  ▶ 5th check the ACK field
 	// ------------------------------
