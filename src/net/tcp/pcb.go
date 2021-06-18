@@ -61,7 +61,7 @@ type PCB struct {
 	Parent    *PCB // parent pcb
 }
 
-func (p *PCB) RefreshSndBuf() {
+func (p *PCB) RefreshResendQueue() {
 	for entry := p.ResendBuf.Front(); entry != nil; entry.Next() {
 		if entry.Value.(*ResendBufEntry).Seq >= p.SND.UNA {
 			break
