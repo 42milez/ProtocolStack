@@ -722,15 +722,100 @@ func incomingSegment(hdr *Hdr, data []byte, local *EndPoint, foreign *EndPoint) 
 
 	//  ▶ 6th check the URG bit
 	// ------------------------------
+	// TODO:
 	// ...
 
 	//  ▶ 7th process the segment text
 	// ------------------------------
-	// ...
+	switch pcb.State {
+	case establishedState:
+		fallthrough
+	case finWait1State:
+		fallthrough
+	case finWait2State:
+		// Once in the ESTABLISHED state, it is possible to deliver segment text to user RECEIVE buffers. Text from
+		// segments can be moved into buffers until either the buffer is full or the segment is empty. If the segment
+		// empties and carries an PUSH flag, then the user is informed, when the buffer is returned, that a PUSH has
+		// been received. When the TCP takes responsibility for delivering the data to the user it must also acknowledge
+		// the receipt of the data. Once the TCP takes responsibility for the data it advances RCV.NXT over the data
+		// accepted, and adjusts RCV.WND as appropriate to the current buffer availability. The total of RCV.NXT and
+		// RCV.WND should not be reduced. Please note the window management suggestions in section 3.7. Send an
+		// acknowledgment of the form: <SEQ=SND.NXT><ACK=RCV.NXT><CTL=ACK> This acknowledgment should be piggybacked on
+		// a segment being transmitted if possible without incurring undue delay.
+		if len(data) != 0 {
+			copy(pcb.RcvBuf[:pcb.RCV.WND], data)
+			pcb.RCV.NXT = hdr.Seq + uint32(len(data))
+			pcb.RCV.WND -= uint16(len(data))
+			if err := Send(pcb, ackFlag, nil); err != psErr.OK {
+				return psErr.Error
+			}
+		}
+	case closeWaitState:
+		fallthrough
+	case closingState:
+		fallthrough
+	case lastAckState:
+		fallthrough
+	case timeWaitState:
+		// This should not occur, since a FIN has been received from the remote side. Ignore the segment text.
+	}
 
 	//  ▶ 8th check the FIN bit
 	// ------------------------------
-	// ...
+	if hdr.Flag.IsSet(finFlag) {
+		switch pcb.State {
+		case closedState:
+			fallthrough
+		case listenState:
+			fallthrough
+		case synSentState:
+			// Do not process the FIN if the state is CLOSED, LISTEN or SYN-SENT since the SEG.SEQ cannot be validated;
+			// drop the segment and return.
+			return psErr.OK
+		}
+
+		// If the FIN bit is set, signal the user "connection closing" and return any pending RECEIVEs with same
+		// message, advance RCV.NXT over the FIN, and send an acknowledgment for the FIN. Note that FIN implies PUSH for
+		// any segment text not yet delivered to the user.
+		psLog.I("connection closing")
+
+		pcb.RCV.NXT = hdr.Seq + 1
+		if err := Send(pcb, ackFlag, nil); err != psErr.OK {
+			return psErr.Error
+		}
+
+		switch pcb.State {
+		case synReceivedState:
+			fallthrough
+		case establishedState:
+			pcb.State = closeWaitState
+		case finWait1State:
+			// If our FIN has been ACKed (perhaps in this segment), then enter TIME-WAIT, start the time-wait timer,
+			// turn off the other timers; otherwise enter the CLOSING state.
+			if hdr.Ack == pcb.SND.NXT {
+				pcb.State = timeWaitState
+				// TODO: set time wait timer
+				// ...
+			} else {
+				pcb.State = closingState
+			}
+		case finWait2State:
+			// Enter the TIME-WAIT state. Start the time-wait timer, turn off the other timers.
+			pcb.State = timeWaitState
+			// TODO: set time wait timer
+			// ...
+		case closeWaitState:
+			// Remain in the CLOSE-WAIT state.
+		case closingState:
+			// Remain in the CLOSING state.
+		case lastAckState:
+			// Remain in the LAST-ACK state.
+		case timeWaitState:
+			// Remain in the TIME-WAIT state. Restart the 2 MSL time-wait timeout.
+			// TODO: set time wait timer
+			// ...
+		}
+	}
 
 	return psErr.OK
 }
