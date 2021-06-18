@@ -461,6 +461,9 @@ func incomingSegment(hdr *Hdr, data []byte, local *EndPoint, foreign *EndPoint) 
 
 	//  ▶ 1st check sequence number
 	// ------------------------------
+	// Segments are processed in sequence. Initial tests on arrival are used to discard old duplicates, but further
+	// processing is done in SEG.SEQ order. If a segment's contents straddle the boundary between old and new, only the
+	// new parts should be processed.
 	switch pcb.State {
 	case synReceivedState:
 		fallthrough
@@ -527,7 +530,46 @@ func incomingSegment(hdr *Hdr, data []byte, local *EndPoint, foreign *EndPoint) 
 
 	//  ▶ 2nd check the RST bit
 	// ------------------------------
-	// ...
+	switch pcb.State {
+	case synReceivedState:
+		// If this connection was initiated with a passive OPEN (i.e., came from the LISTEN state), then return this
+		// connection to LISTEN state and return. The user need not be informed. If this connection was initiated with
+		// an active OPEN (i.e., came from SYN-SENT state) then the connection was refused, signal the user "connection
+		// refused". In either case, all segments on the retransmission queue should be removed. And in the active OPEN
+		// case, enter the CLOSED state and delete the TCB, and return.
+		if hdr.Flag.IsSet(rstFlag) {
+			pcb.State = closedState
+			releasePCB(pcb)
+			return psErr.OK
+		}
+	case establishedState:
+		fallthrough
+	case finWait1State:
+		fallthrough
+	case finWait2State:
+		fallthrough
+	case closeWaitState:
+		// If the RST bit is set then, any outstanding RECEIVEs and SEND should receive "reset" responses. All segment
+		// queues should be flushed. Users should also receive an unsolicited general "connection reset" signal. Enter
+		// the CLOSED state, delete the TCB, and return.
+		if hdr.Flag.IsSet(rstFlag) {
+			psLog.E("connection reset")
+			pcb.State = closedState
+			releasePCB(pcb)
+			return psErr.OK
+		}
+	case closingState:
+		fallthrough
+	case lastAckState:
+		fallthrough
+	case timeWaitState:
+		// If the RST bit is set then, enter the CLOSED state, delete the TCB, and return.
+		if hdr.Flag.IsSet(rstFlag) {
+			pcb.State = closedState
+			releasePCB(pcb)
+			return psErr.OK
+		}
+	}
 
 	//  ▶ 3rd check security and precedence
 	// ------------------------------
