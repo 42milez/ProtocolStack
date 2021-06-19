@@ -866,7 +866,7 @@ func dump(hdr *Hdr, data []byte) (ret []string) {
 	ret = append(ret, fmt.Sprintf("offset:   %d", (hdr.Offset&0xf0)>>4))
 	ret = append(ret, fmt.Sprintf("flag:     0b%09b", flag))
 	ret = append(ret, fmt.Sprintf("window:   %d", hdr.Wnd))
-	ret = append(ret, fmt.Sprintf("checksum: %d", hdr.Checksum))
+	ret = append(ret, fmt.Sprintf("checksum: 0x%04x", hdr.Checksum))
 	ret = append(ret, fmt.Sprintf("urg:      %d", hdr.Urg))
 
 	s := "data:     "
