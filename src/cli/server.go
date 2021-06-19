@@ -22,7 +22,7 @@ var serverCmd = &cobra.Command{
 			psLog.F("initialization failed")
 		}
 
-		soc, err := tcp.Open()
+		id, err := tcp.Open()
 		if err != psErr.OK {
 			psLog.E(fmt.Sprintf("can't open socket: %s", err))
 			os.Exit(1)
@@ -32,17 +32,17 @@ var serverCmd = &cobra.Command{
 			Addr: mw.ParseIP(host).ToV4(),
 			Port: port,
 		}
-		if err := tcp.Bind(soc, local); err != psErr.OK {
+		if err := tcp.Bind(id, local); err != psErr.OK {
 			psLog.E(fmt.Sprintf("can't bind: %s", err))
 			os.Exit(1)
 		}
 
-		if err := tcp.Listen(soc, 1); err != psErr.OK {
+		if err := tcp.Listen(id, 1); err != psErr.OK {
 			psLog.E(fmt.Sprintf("can't listen: %s", err))
 			os.Exit(1)
 		}
 
-		_, foreign, err := tcp.Accept(soc)
+		_, foreign, err := tcp.Accept(id)
 		if err != psErr.OK {
 			psLog.E(fmt.Sprintf("can't accept: %s", err))
 			os.Exit(1)
