@@ -171,12 +171,12 @@ func Receive(msg *mw.TcpRxMessage) psErr.E {
 	}
 
 	hdr := &Hdr{}
-	if err := binary.Read(bytes.NewBuffer(msg.RawSegment), binary.BigEndian, &hdr); err != nil {
+	if err := binary.Read(bytes.NewBuffer(msg.RawSegment), binary.BigEndian, hdr); err != nil {
 		return psErr.Error
 	}
 
 	offset := ((hdr.Flag & 0xf0) >> 4) << 2
-	psLog.D("", dump(hdr, msg.RawSegment[offset:])...)
+	psLog.D("incoming tcp segment", dump(hdr, msg.RawSegment[offset:])...)
 
 	local := &EndPoint{Addr: msg.Dst, Port: hdr.Dst}
 	foreign := &EndPoint{Addr: msg.Src, Port: hdr.Src}
@@ -864,7 +864,7 @@ func dump(hdr *Hdr, data []byte) (ret []string) {
 	ret = append(ret, fmt.Sprintf("seq:      %d", hdr.Seq))
 	ret = append(ret, fmt.Sprintf("ack:      %d", hdr.Ack))
 	ret = append(ret, fmt.Sprintf("offset:   %d", (hdr.Offset&0xf0)>>4))
-	ret = append(ret, fmt.Sprintf("flag:       0b%09b", flag))
+	ret = append(ret, fmt.Sprintf("flag:     0b%09b", flag))
 	ret = append(ret, fmt.Sprintf("window:   %d", hdr.Wnd))
 	ret = append(ret, fmt.Sprintf("checksum: %d", hdr.Checksum))
 	ret = append(ret, fmt.Sprintf("urg:      %d", hdr.Urg))
