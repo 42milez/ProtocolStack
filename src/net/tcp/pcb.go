@@ -56,6 +56,7 @@ type EndPoint struct {
 }
 
 type PCB struct {
+	ID      int
 	State   int      // tcp state
 	Local   EndPoint // local address/port
 	Foreign EndPoint // foreign address/port
@@ -113,10 +114,15 @@ type pcbRepo struct {
 	pcbs [tcpConnMax]*PCB
 }
 
-func (p *pcbRepo) Get(idx int) *PCB {
+func (p *pcbRepo) Get(id int) *PCB {
 	defer p.mtx.Unlock()
 	p.mtx.Lock()
-	return p.pcbs[idx]
+	for _, v := range p.pcbs {
+		if v.ID == id {
+			return v
+		}
+	}
+	return nil
 }
 
 func (p *pcbRepo) Have(local *EndPoint) bool {
@@ -163,22 +169,24 @@ func (p *pcbRepo) PickNewPcb() (*PCB, int) {
 	return nil, -1
 }
 
-func (p *pcbRepo) UnusedPcb() (*PCB, int) {
+func (p *pcbRepo) UnusedPcb() *PCB {
 	defer p.mtx.Unlock()
 	p.mtx.Lock()
-	for i := 0; i < tcpConnMax; i++ {
-		if p.pcbs[i].State == freeState {
-			return p.pcbs[i], i
+	for _, v := range p.pcbs {
+		if v.State == freeState {
+			return v
 		}
 	}
-	return nil, -1
+	return nil
 }
 
 func (p *pcbRepo) init() {
 	defer p.mtx.Unlock()
 	p.mtx.Lock()
 	for i := range p.pcbs {
-		p.pcbs[i] = &PCB{}
+		p.pcbs[i] = &PCB{
+			ID: i,
+		}
 	}
 }
 

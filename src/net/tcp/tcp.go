@@ -72,12 +72,12 @@ type SegmentInfo struct {
 }
 
 func Open() (int, psErr.E) {
-	pcb, idx := PcbRepo.UnusedPcb()
+	pcb := PcbRepo.UnusedPcb()
 	if pcb == nil {
 		psLog.E("all pcb is in used")
-		return idx, psErr.CantAllocatePcb
+		return -1, psErr.CantAllocatePcb
 	}
-	return idx, psErr.OK
+	return pcb.ID, psErr.OK
 }
 
 func Listen(id int, backlogSize int) psErr.E {
@@ -278,7 +278,7 @@ func receiveCore(hdr *Hdr, data []byte, local *EndPoint, foreign *EndPoint) psEr
 			// TODO: check precedence
 			// ...
 
-			newPcb, _ := PcbRepo.UnusedPcb()
+			newPcb := PcbRepo.UnusedPcb()
 			if newPcb == nil {
 				return psErr.CantAllocatePcb
 			}
