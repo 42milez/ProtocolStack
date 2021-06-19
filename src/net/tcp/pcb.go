@@ -160,7 +160,7 @@ func (p *pcbRepo) LookUp(local *EndPoint, foreign *EndPoint) *PCB {
 	return ret
 }
 
-func (p *pcbRepo) PickNewPcb() (*PCB, int) {
+func (p *pcbRepo) PickNewConnection() (*PCB, int) {
 	for i, pcb := range p.pcbs {
 		if newPcb := pcb.backlog.Pop(); newPcb != nil {
 			return newPcb, i

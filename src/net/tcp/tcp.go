@@ -129,7 +129,7 @@ func Accept(id int) (int, EndPoint, psErr.E) {
 	var newPcb *PCB
 	var pcbId int
 	for {
-		if newPcb, pcbId = PcbRepo.PickNewPcb(); newPcb != nil {
+		if newPcb, pcbId = PcbRepo.PickNewConnection(); newPcb != nil {
 			break
 		}
 		time.Sleep(100*time.Millisecond)
