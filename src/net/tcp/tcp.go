@@ -70,24 +70,6 @@ type SegmentInfo struct {
 	Flag Flag
 }
 
-func Accept(id int, foreign *EndPoint) psErr.E {
-	pcb := PcbRepo.Get(id)
-	if pcb == nil {
-		psLog.E("pcb not found")
-		return psErr.PcbNotFound
-	}
-
-	if pcb.State != listenState {
-		psLog.E("pcb is NOT in LISTEN state")
-		return psErr.InvalidPcbState
-	}
-
-	// TODO: return id of pcb which accepted incoming connection
-	// ...
-
-	return psErr.OK
-}
-
 func Open() (int, psErr.E) {
 	pcb, idx := PcbRepo.UnusedPcb()
 	if pcb == nil {
@@ -95,6 +77,19 @@ func Open() (int, psErr.E) {
 		return idx, psErr.CantAllocatePcb
 	}
 	return idx, psErr.OK
+}
+
+func Listen(id int, backlogSize int) psErr.E {
+	pcb := PcbRepo.Get(id)
+	if pcb == nil {
+		psLog.E("pcb not found")
+		return psErr.PcbNotFound
+	}
+
+	pcb.State = listenState
+	pcb.backlog.size = backlogSize
+
+	return psErr.OK
 }
 
 func Bind(id int, local EndPoint) psErr.E {
@@ -116,16 +111,25 @@ func Bind(id int, local EndPoint) psErr.E {
 	return psErr.OK
 }
 
-func Listen(id int, backlogSize int) psErr.E {
+func Accept(id int, foreign *EndPoint) psErr.E {
 	pcb := PcbRepo.Get(id)
 	if pcb == nil {
 		psLog.E("pcb not found")
 		return psErr.PcbNotFound
 	}
 
-	pcb.State = listenState
-	pcb.backlog.size = backlogSize
+	if pcb.State != listenState {
+		psLog.E("pcb is NOT in LISTEN state")
+		return psErr.InvalidPcbState
+	}
 
+	// TODO: return id of pcb which accepted incoming connection
+	// ...
+
+	return psErr.OK
+}
+
+func Connect(id int, foreign EndPoint) psErr.E {
 	return psErr.OK
 }
 
@@ -172,122 +176,6 @@ func Receive(msg *mw.TcpRxMessage) psErr.E {
 	}
 
 	return psErr.OK
-}
-
-func Send(pcb *PCB, flag Flag, data []byte) psErr.E {
-	info := SegmentInfo{
-		Seq:  pcb.SND.NXT,
-		Ack:  pcb.RCV.NXT,
-		Wnd:  pcb.RCV.WND,
-		Flag: flag,
-	}
-	if flag.IsSet(synFlag) {
-		info.Seq = pcb.ISS
-	}
-	if flag.IsSet(synFlag|finFlag) || len(data) != 0 {
-		// TODO: add to retransmit queue
-		pcb.resendQueue.Push()
-	}
-
-	return sendCore(info, data, &pcb.Local, &pcb.Foreign)
-}
-
-func sendCore(info SegmentInfo, data []byte, local *EndPoint, foreign *EndPoint) psErr.E {
-	hdr := Hdr{
-		Src:    local.Port,
-		Dst:    foreign.Port,
-		Seq:    info.Seq,
-		Ack:    info.Ack,
-		Offset: uint8(HdrLenMin>>2) << 4, // Data Offset occupies high 4bits
-		Flag:   info.Flag,
-		Wnd:    info.Wnd,
-	}
-
-	segBuf := new(bytes.Buffer)
-	if err := binary.Write(segBuf, binary.BigEndian, &hdr); err != nil {
-		return psErr.Error
-	}
-	if err := binary.Write(segBuf, binary.BigEndian, &data); err != nil {
-		return psErr.Error
-	}
-	segment := segBuf.Bytes()
-
-	pseudo := PseudoHdr{
-		Src:   local.Addr,
-		Dst:   foreign.Addr,
-		Proto: uint8(mw.PnTCP),
-		Len:   uint16(len(segment)),
-	}
-	pseudoBuf := new(bytes.Buffer)
-	if err := binary.Write(pseudoBuf, binary.BigEndian, &pseudo); err != nil {
-		return psErr.Error
-	}
-
-	csum := mw.Checksum(segment, uint32(^mw.Checksum(pseudoBuf.Bytes(), 0)))
-	segment[16] = uint8((csum & 0xff00) >> 8)
-	segment[17] = uint8(csum & 0x00ff)
-
-	psLog.D("outgoing tcp segment", dump(&hdr, data)...)
-
-	mw.IpTxCh <- &mw.IpMessage{
-		ProtoNum: mw.PnTCP,
-		Packet:   segment,
-		Src:      local.Addr,
-		Dst:      foreign.Addr,
-	}
-
-	return psErr.OK
-}
-
-func Start(wg *sync.WaitGroup) psErr.E {
-	wg.Add(2)
-	go receiver(wg)
-	go sender(wg)
-	psLog.D("tcp service started")
-	return psErr.OK
-}
-
-func Stop() {
-	msg := &worker.Message{
-		Desired: worker.Stopped,
-	}
-	rcvSigCh <- msg
-	sndSigCh <- msg
-}
-
-func dump(hdr *Hdr, data []byte) (ret []string) {
-	var flag uint16
-	flag |= uint16(hdr.Offset&0x01) << 8
-	flag |= uint16(hdr.Flag & 0b10000000)
-	flag |= uint16(hdr.Flag & 0b01000000)
-	flag |= uint16(hdr.Flag & 0b00100000)
-	flag |= uint16(hdr.Flag & 0b00010000)
-	flag |= uint16(hdr.Flag & 0b00001000)
-	flag |= uint16(hdr.Flag & 0b00000100)
-	flag |= uint16(hdr.Flag & 0b00000010)
-	flag |= uint16(hdr.Flag & 0b00000001)
-
-	ret = make([]string, 10)
-	ret = append(ret, fmt.Sprintf("src port: %d", hdr.Src))
-	ret = append(ret, fmt.Sprintf("dst port: %d", hdr.Dst))
-	ret = append(ret, fmt.Sprintf("Seq:      %d", hdr.Seq))
-	ret = append(ret, fmt.Sprintf("ack:      %d", hdr.Ack))
-	ret = append(ret, fmt.Sprintf("offset:   %d", (hdr.Offset&0xf0)>>4))
-	ret = append(ret, fmt.Sprintf("Flag:       0b%09b", flag))
-	ret = append(ret, fmt.Sprintf("window:   %d", hdr.Wnd))
-	ret = append(ret, fmt.Sprintf("checksum: %d", hdr.Checksum))
-	ret = append(ret, fmt.Sprintf("urg:      %d", hdr.Urg))
-
-	s := "Data:     "
-	for i, v := range data {
-		s += fmt.Sprintf("%02x ", v)
-		if (i+1)%20 == 0 {
-			s += "\n                                  "
-		}
-	}
-	ret = append(ret, s)
-
-	return
 }
 
 // SEGMENT ARRIVES
@@ -865,6 +753,122 @@ func receiveCore(hdr *Hdr, data []byte, local *EndPoint, foreign *EndPoint) psEr
 	}
 
 	return psErr.OK
+}
+
+func Send(pcb *PCB, flag Flag, data []byte) psErr.E {
+	info := SegmentInfo{
+		Seq:  pcb.SND.NXT,
+		Ack:  pcb.RCV.NXT,
+		Wnd:  pcb.RCV.WND,
+		Flag: flag,
+	}
+	if flag.IsSet(synFlag) {
+		info.Seq = pcb.ISS
+	}
+	if flag.IsSet(synFlag|finFlag) || len(data) != 0 {
+		// TODO: add to retransmit queue
+		pcb.resendQueue.Push()
+	}
+
+	return sendCore(info, data, &pcb.Local, &pcb.Foreign)
+}
+
+func sendCore(info SegmentInfo, data []byte, local *EndPoint, foreign *EndPoint) psErr.E {
+	hdr := Hdr{
+		Src:    local.Port,
+		Dst:    foreign.Port,
+		Seq:    info.Seq,
+		Ack:    info.Ack,
+		Offset: uint8(HdrLenMin>>2) << 4, // Data Offset occupies high 4bits
+		Flag:   info.Flag,
+		Wnd:    info.Wnd,
+	}
+
+	segBuf := new(bytes.Buffer)
+	if err := binary.Write(segBuf, binary.BigEndian, &hdr); err != nil {
+		return psErr.Error
+	}
+	if err := binary.Write(segBuf, binary.BigEndian, &data); err != nil {
+		return psErr.Error
+	}
+	segment := segBuf.Bytes()
+
+	pseudo := PseudoHdr{
+		Src:   local.Addr,
+		Dst:   foreign.Addr,
+		Proto: uint8(mw.PnTCP),
+		Len:   uint16(len(segment)),
+	}
+	pseudoBuf := new(bytes.Buffer)
+	if err := binary.Write(pseudoBuf, binary.BigEndian, &pseudo); err != nil {
+		return psErr.Error
+	}
+
+	csum := mw.Checksum(segment, uint32(^mw.Checksum(pseudoBuf.Bytes(), 0)))
+	segment[16] = uint8((csum & 0xff00) >> 8)
+	segment[17] = uint8(csum & 0x00ff)
+
+	psLog.D("outgoing tcp segment", dump(&hdr, data)...)
+
+	mw.IpTxCh <- &mw.IpMessage{
+		ProtoNum: mw.PnTCP,
+		Packet:   segment,
+		Src:      local.Addr,
+		Dst:      foreign.Addr,
+	}
+
+	return psErr.OK
+}
+
+func Start(wg *sync.WaitGroup) psErr.E {
+	wg.Add(2)
+	go receiver(wg)
+	go sender(wg)
+	psLog.D("tcp service started")
+	return psErr.OK
+}
+
+func Stop() {
+	msg := &worker.Message{
+		Desired: worker.Stopped,
+	}
+	rcvSigCh <- msg
+	sndSigCh <- msg
+}
+
+func dump(hdr *Hdr, data []byte) (ret []string) {
+	var flag uint16
+	flag |= uint16(hdr.Offset&0x01) << 8
+	flag |= uint16(hdr.Flag & 0b10000000)
+	flag |= uint16(hdr.Flag & 0b01000000)
+	flag |= uint16(hdr.Flag & 0b00100000)
+	flag |= uint16(hdr.Flag & 0b00010000)
+	flag |= uint16(hdr.Flag & 0b00001000)
+	flag |= uint16(hdr.Flag & 0b00000100)
+	flag |= uint16(hdr.Flag & 0b00000010)
+	flag |= uint16(hdr.Flag & 0b00000001)
+
+	ret = make([]string, 10)
+	ret = append(ret, fmt.Sprintf("src port: %d", hdr.Src))
+	ret = append(ret, fmt.Sprintf("dst port: %d", hdr.Dst))
+	ret = append(ret, fmt.Sprintf("Seq:      %d", hdr.Seq))
+	ret = append(ret, fmt.Sprintf("ack:      %d", hdr.Ack))
+	ret = append(ret, fmt.Sprintf("offset:   %d", (hdr.Offset&0xf0)>>4))
+	ret = append(ret, fmt.Sprintf("Flag:       0b%09b", flag))
+	ret = append(ret, fmt.Sprintf("window:   %d", hdr.Wnd))
+	ret = append(ret, fmt.Sprintf("checksum: %d", hdr.Checksum))
+	ret = append(ret, fmt.Sprintf("urg:      %d", hdr.Urg))
+
+	s := "Data:     "
+	for i, v := range data {
+		s += fmt.Sprintf("%02x ", v)
+		if (i+1)%20 == 0 {
+			s += "\n                                  "
+		}
+	}
+	ret = append(ret, s)
+
+	return
 }
 
 func receiver(wg *sync.WaitGroup) {
