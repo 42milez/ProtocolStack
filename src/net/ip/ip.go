@@ -78,7 +78,7 @@ func Receive(payload []byte, dev mw.IDevice) psErr.E {
 	}
 
 	if mw.Checksum(payload, 0) != 0 {
-		psLog.E("checksum mismatch")
+		psLog.E("checksum mismatch (ip)")
 		return psErr.ChecksumMismatch
 	}
 

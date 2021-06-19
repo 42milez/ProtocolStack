@@ -98,7 +98,7 @@ func Receive(payload []byte, dst [mw.V4AddrLen]byte, src [mw.V4AddrLen]byte, dev
 	}
 
 	if mw.Checksum(payload, 0) != 0 {
-		psLog.E("checksum mismatch")
+		psLog.E("checksum mismatch (icmp)")
 		return psErr.ChecksumMismatch
 	}
 

@@ -160,7 +160,7 @@ func Receive(msg *mw.TcpRxMessage) psErr.E {
 		return psErr.Error
 	}
 	if mw.Checksum(msg.RawSegment, uint32(^mw.Checksum(pseudoHdrBuf.Bytes(), 0))) != 0 {
-		psLog.E("checksum mismatch")
+		psLog.E("checksum mismatch (tcp)")
 		return psErr.ChecksumMismatch
 	}
 
