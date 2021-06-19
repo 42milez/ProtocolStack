@@ -31,22 +31,31 @@ var PcbRepo *pcbRepo
 type Backlog struct {
 	entries list.List
 	size    int
+	mtx     sync.Mutex
 }
 
 func (p *Backlog) Pop() *PCB {
+	defer p.mtx.Unlock()
+	p.mtx.Lock()
+
 	entry := p.entries.Front()
 	if entry == nil {
 		return nil
 	}
 	p.entries.Remove(entry)
+
 	return entry.Value.(*PCB)
 }
 
 func (p *Backlog) Push(pcb *PCB) psErr.E {
+	defer p.mtx.Unlock()
+	p.mtx.Lock()
+
 	if p.entries.Len() > p.size {
 		return psErr.BacklogFull
 	}
 	p.entries.PushBack(pcb)
+
 	return psErr.OK
 }
 
