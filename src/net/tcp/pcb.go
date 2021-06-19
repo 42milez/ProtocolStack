@@ -29,15 +29,24 @@ const windowSize = 65535
 var PcbRepo *pcbRepo
 
 type Backlog struct {
-	entries []*PCB
+	entries list.List
 	size    int
 }
 
+func (p *Backlog) Pop() *PCB {
+	entry := p.entries.Front()
+	if entry == nil {
+		return nil
+	}
+	p.entries.Remove(entry)
+	return entry.Value.(*PCB)
+}
+
 func (p *Backlog) Push(pcb *PCB) psErr.E {
-	if len(p.entries) > p.size {
+	if p.entries.Len() > p.size {
 		return psErr.BacklogFull
 	}
-	p.entries = append(p.entries, pcb)
+	p.entries.PushBack(pcb)
 	return psErr.OK
 }
 
@@ -143,6 +152,15 @@ func (p *pcbRepo) LookUp(local *EndPoint, foreign *EndPoint) *PCB {
 		}
 	}
 	return ret
+}
+
+func (p *pcbRepo) PickNewPcb() (*PCB, int) {
+	for i, pcb := range p.pcbs {
+		if newPcb := pcb.backlog.Pop(); newPcb != nil {
+			return newPcb, i
+		}
+	}
+	return nil, -1
 }
 
 func (p *pcbRepo) UnusedPcb() (*PCB, int) {

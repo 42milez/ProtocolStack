@@ -10,6 +10,7 @@ import (
 	"github.com/42milez/ProtocolStack/src/mw"
 	"github.com/42milez/ProtocolStack/src/worker"
 	"sync"
+	"time"
 )
 
 const (
@@ -111,23 +112,33 @@ func Bind(id int, local EndPoint) psErr.E {
 	return psErr.OK
 }
 
-func Accept(id int, foreign *EndPoint) psErr.E {
+func Accept(id int) (int, EndPoint, psErr.E) {
+	var foreign EndPoint
+
 	pcb := PcbRepo.Get(id)
 	if pcb == nil {
 		psLog.E("pcb not found")
-		return psErr.PcbNotFound
+		return -1, foreign, psErr.PcbNotFound
 	}
 
 	if pcb.State != listenState {
 		psLog.E("pcb is NOT in LISTEN state")
-		return psErr.InvalidPcbState
+		return -1, foreign, psErr.InvalidPcbState
 	}
 
-	// TODO: return id of pcb which accepted incoming connection
-	// ...
+	var newPcb *PCB
+	var pcbId int
+	for {
+		if newPcb, pcbId = PcbRepo.PickNewPcb(); newPcb != nil {
+			break
+		}
+		time.Sleep(100*time.Millisecond)
+	}
+	foreign = newPcb.Foreign
 
-	return psErr.OK
+	return pcbId, foreign, psErr.OK
 }
+
 
 func Connect(id int, foreign EndPoint) psErr.E {
 	return psErr.OK
