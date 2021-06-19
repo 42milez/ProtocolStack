@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"errors"
 	"fmt"
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	psLog "github.com/42milez/ProtocolStack/src/log"
@@ -9,28 +8,15 @@ import (
 	"github.com/42milez/ProtocolStack/src/net/tcp"
 	"github.com/spf13/cobra"
 	"os"
-	"strconv"
 	"syscall"
 )
 
-var host string
-var port uint16
+const host = "192.0.2.2"
+const port = 1234
 
 var serverCmd = &cobra.Command{
 	Use:   "server",
 	Short: "a simple echo server",
-	Args: func(cmd *cobra.Command, args []string) error {
-		if len(args) < 2 {
-			return errors.New("requires host and port")
-		}
-		host = args[0]
-		p, err := strconv.ParseInt(args[1], 10, 0)
-		if err != nil {
-			return err
-		}
-		port = uint16(p)
-		return nil
-	},
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := setup(); err != psErr.OK {
 			psLog.F("initialization failed")
