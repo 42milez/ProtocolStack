@@ -284,7 +284,10 @@ func Stop() {
 }
 
 func watcher(wg *sync.WaitGroup) {
-	defer wg.Done()
+	defer func() {
+		psLog.D("repo watcher stopped")
+		wg.Done()
+	}()
 
 	monCh <- &worker.Message{
 		ID:      watcherId,

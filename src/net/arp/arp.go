@@ -335,7 +335,10 @@ func dump(packet *Packet) (ret []string) {
 }
 
 func receiver(wg *sync.WaitGroup) {
-	defer wg.Done()
+	defer func() {
+		psLog.D("arp receiver stopped")
+		wg.Done()
+	}()
 
 	rcvMonCh <- &worker.Message{
 		ID:      receiverID,
@@ -357,7 +360,10 @@ func receiver(wg *sync.WaitGroup) {
 }
 
 func sender(wg *sync.WaitGroup) {
-	defer wg.Done()
+	defer func() {
+		psLog.D("arp sender stopped")
+		wg.Done()
+	}()
 
 	sndMonCh <- &worker.Message{
 		ID:      senderID,
@@ -373,7 +379,10 @@ func sender(wg *sync.WaitGroup) {
 }
 
 func timer(wg *sync.WaitGroup) {
-	defer wg.Done()
+	defer func() {
+		psLog.D("arp timer stopped")
+		wg.Done()
+	}()
 
 	tmrMonCh <- &worker.Message{
 		ID:      timerID,
