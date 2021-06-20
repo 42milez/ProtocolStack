@@ -61,7 +61,7 @@ func Receive(payload []byte, dev mw.IDevice) psErr.E {
 		return psErr.InvalidProtocolVersion
 	}
 
-	hdrLen := int(hdr.VHL&0x0f) * 4
+	hdrLen := int(hdr.VHL&0x0f) << 2
 	if packetLen < hdrLen {
 		psLog.E(fmt.Sprintf("ip packet length is too short: ihl = %d, actual = %d", hdrLen, packetLen))
 		return psErr.InvalidPacketLength
@@ -77,7 +77,7 @@ func Receive(payload []byte, dev mw.IDevice) psErr.E {
 		return psErr.TtlExpired
 	}
 
-	if mw.Checksum(payload, 0) != 0 {
+	if mw.Checksum(payload[:hdrLen], 0) != 0 {
 		psLog.E("checksum mismatch (ip)")
 		return psErr.ChecksumMismatch
 	}

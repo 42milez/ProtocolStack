@@ -208,7 +208,7 @@ func Checksum(b []byte, init uint32) uint16 {
 	}
 
 	// fold sum to 16bits
-	if (sum >> 16) != 0 {
+	for (sum >> 16) != 0 {
 		sum = (sum & 0x0000ffff) + (sum >> 16)
 	}
 
