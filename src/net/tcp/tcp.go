@@ -175,13 +175,13 @@ func Receive(msg *mw.TcpRxMessage) psErr.E {
 		return psErr.Error
 	}
 
-	offset := ((hdr.Flag & 0xf0) >> 4) << 2
-	psLog.D("incoming tcp segment", dump(hdr, msg.RawSegment[offset:])...)
+	hdrLen := int((hdr.Offset & 0xf0) >> 4) << 2
+	psLog.D("incoming tcp segment", dump(msg.RawSegment, hdrLen)...)
 
 	local := &EndPoint{Addr: msg.Dst, Port: hdr.Dst}
 	foreign := &EndPoint{Addr: msg.Src, Port: hdr.Src}
 
-	if err := receiveCore(hdr, msg.RawSegment[offset:], local, foreign); err != psErr.OK {
+	if err := receiveCore(hdr, msg.RawSegment[hdrLen:], local, foreign); err != psErr.OK {
 		psLog.E(fmt.Sprintf("can't process incoming segment: %s", err))
 		return psErr.Error
 	}
@@ -819,7 +819,7 @@ func sendCore(info SegmentInfo, data []byte, local *EndPoint, foreign *EndPoint)
 	segment[16] = uint8((csum & 0xff00) >> 8)
 	segment[17] = uint8(csum & 0x00ff)
 
-	psLog.D("outgoing tcp segment", dump(&hdr, data)...)
+	psLog.D("outgoing tcp segment", dump(segment, HdrLenMin)...)
 
 	mw.IpTxCh <- &mw.IpMessage{
 		ProtoNum: mw.PnTCP,
@@ -847,29 +847,38 @@ func Stop() {
 	sndSigCh <- msg
 }
 
-func dump(hdr *Hdr, data []byte) (ret []string) {
+func dump(segment []byte, hdrLen int) (ret []string) {
 	var flag uint16
-	flag |= uint16(hdr.Offset&0x01) << 8
-	flag |= uint16(hdr.Flag & 0b10000000)
-	flag |= uint16(hdr.Flag & 0b01000000)
-	flag |= uint16(hdr.Flag & 0b00100000)
-	flag |= uint16(hdr.Flag & 0b00010000)
-	flag |= uint16(hdr.Flag & 0b00001000)
-	flag |= uint16(hdr.Flag & 0b00000100)
-	flag |= uint16(hdr.Flag & 0b00000010)
-	flag |= uint16(hdr.Flag & 0b00000001)
+	flag |= uint16(segment[12]&0x01) << 8
+	flag |= uint16(segment[13]&(0x01 << 7))
+	flag |= uint16(segment[13]&(0x01 << 6))
+	flag |= uint16(segment[13]&(0x01 << 5))
+	flag |= uint16(segment[13]&(0x01 << 4))
+	flag |= uint16(segment[13]&(0x01 << 3))
+	flag |= uint16(segment[13]&(0x01 << 2))
+	flag |= uint16(segment[13]&(0x01 << 1))
+	flag |= uint16(segment[13]&0x01)
 
-	ret = append(ret, fmt.Sprintf("src port: %d", hdr.Src))
-	ret = append(ret, fmt.Sprintf("dst port: %d", hdr.Dst))
-	ret = append(ret, fmt.Sprintf("seq:      %d", hdr.Seq))
-	ret = append(ret, fmt.Sprintf("ack:      %d", hdr.Ack))
-	ret = append(ret, fmt.Sprintf("offset:   %d", (hdr.Offset&0xf0)>>4))
+	ret = append(ret, fmt.Sprintf("src port: %d", uint16(segment[0])<<8|uint16(segment[1])))
+	ret = append(ret, fmt.Sprintf("dst port: %d", uint16(segment[2])<<8|uint16(segment[3])))
+	ret = append(ret, fmt.Sprintf("seq:      %d",
+		uint32(segment[4])<<24|
+		uint32(segment[5])<<16|
+		uint32(segment[6])<<8|
+		uint32(segment[7])))
+	ret = append(ret, fmt.Sprintf("ack:      %d",
+		uint32(segment[8])<<24|
+		uint32(segment[9])<<16|
+		uint32(segment[10])<<8|
+		uint32(segment[11])))
+	ret = append(ret, fmt.Sprintf("offset:   %d", (segment[12]&0xf0)>>4))
 	ret = append(ret, fmt.Sprintf("flag:     0b%09b", flag))
-	ret = append(ret, fmt.Sprintf("window:   %d", hdr.Wnd))
-	ret = append(ret, fmt.Sprintf("checksum: 0x%04x", hdr.Checksum))
-	ret = append(ret, fmt.Sprintf("urg:      %d", hdr.Urg))
+	ret = append(ret, fmt.Sprintf("window:   %d", uint16(segment[14])<<8|uint16(segment[15])))
+	ret = append(ret, fmt.Sprintf("checksum: 0x%04x", uint16(segment[16])<<8|uint16(segment[17])))
+	ret = append(ret, fmt.Sprintf("urg:      %d", uint16(segment[18])<<8|uint16(segment[19])))
 
 	s := "data:     "
+	data := segment[:hdrLen]
 	for i, v := range data {
 		s += fmt.Sprintf("%02x ", v)
 		if (i+1)%20 == 0 && i+1 != len(data) {
