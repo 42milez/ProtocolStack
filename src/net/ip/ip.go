@@ -113,7 +113,6 @@ func Receive(payload []byte, dev mw.IDevice) psErr.E {
 			Src:        hdr.Src,
 			Iface:      iface,
 		}
-		return psErr.Error
 	case mw.PnUDP:
 		psLog.E("currently NOT support UDP")
 		return psErr.Error
