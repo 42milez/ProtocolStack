@@ -871,7 +871,7 @@ func dump(segment []byte, hdrLen int) (ret []string) {
 			uint32(segment[10])<<8|
 			uint32(segment[11])))
 	ret = append(ret, fmt.Sprintf("offset:   %d", (segment[12]&0xf0)>>4))
-	ret = append(ret, fmt.Sprintf("Flag:     0b%09b", flag))
+	ret = append(ret, fmt.Sprintf("flag:     0b%09b", flag))
 	ret = append(ret, fmt.Sprintf("window:   %d", uint16(segment[14])<<8|uint16(segment[15])))
 	ret = append(ret, fmt.Sprintf("checksum: 0x%04x", uint16(segment[16])<<8|uint16(segment[17])))
 	ret = append(ret, fmt.Sprintf("urg:      %d", uint16(segment[18])<<8|uint16(segment[19])))
