@@ -199,7 +199,7 @@ func Checksum(b []byte, init uint32) uint16 {
 
 	// sum up all fields of IP header by each 16bits
 	for i := 0; i < len(b); i += 2 {
-		sum += uint32(uint16(b[i])<<8 | uint16(b[i+1]))
+		sum += uint32(b[i])<<8 | uint32(b[i+1])
 	}
 
 	// add last 8bits if exists

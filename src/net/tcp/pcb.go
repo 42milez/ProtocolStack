@@ -76,8 +76,8 @@ type PCB struct {
 		NXT uint32 // next sequence number to be sent
 		WND uint16 // window size
 		UP  uint16 // urgent pointer to be sent
-		WL1 uint32 // segment sequence number at last window update
-		WL2 uint32 // segment acknowledgment number at last window update
+		WL1 uint32 // segment sequence number at Last window update
+		WL2 uint32 // segment acknowledgment number at Last window update
 	}
 	RCV struct {
 		NXT uint32 // next sequence number to receive
@@ -94,7 +94,7 @@ type PCB struct {
 
 func (p *PCB) refreshResendQueue() {
 	for entry := p.resendQueue.entries.Front(); entry != nil; entry.Next() {
-		if entry.Value.(*resendQueueEntry).seq >= p.SND.UNA {
+		if entry.Value.(*resendQueueEntry).Seq >= p.SND.UNA {
 			break
 		}
 		p.resendQueue.entries.Remove(entry)
@@ -110,12 +110,12 @@ type resendQueue struct {
 func (p *resendQueue) Push() {}
 
 type resendQueueEntry struct {
-	first time.Time
-	last  time.Time
-	rto   uint32
-	seq   uint32
-	flag  uint8
-	data  []byte
+	First time.Time
+	Last  time.Time
+	RTO   uint32
+	Seq   uint32
+	Flag  uint8
+	Data  []byte
 }
 
 type pcbRepo struct {

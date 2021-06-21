@@ -132,13 +132,12 @@ func Accept(id int) (int, EndPoint, psErr.E) {
 		if newPcb, pcbId = PcbRepo.PickNewConnection(); newPcb != nil {
 			break
 		}
-		time.Sleep(100*time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 	}
 	foreign = newPcb.Foreign
 
 	return pcbId, foreign, psErr.OK
 }
-
 
 func Connect(id int, foreign EndPoint) psErr.E {
 	return psErr.OK
@@ -175,7 +174,7 @@ func Receive(msg *mw.TcpRxMessage) psErr.E {
 		return psErr.Error
 	}
 
-	hdrLen := int((hdr.Offset & 0xf0) >> 4) << 2
+	hdrLen := int((hdr.Offset&0xf0)>>4) << 2
 	psLog.D("incoming tcp segment", dump(msg.RawSegment, hdrLen)...)
 
 	local := &EndPoint{Addr: msg.Dst, Port: hdr.Dst}
@@ -203,7 +202,7 @@ func receiveCore(hdr *Hdr, data []byte, local *EndPoint, foreign *EndPoint) psEr
 	//  CLOSED state
 	// ==================================================
 
-	// If the state is CLOSED (i.e., TCB does not exist) then all data in the incoming segment is discarded. An incoming
+	// If the state is CLOSED (i.e., TCB does not exist) then all Data in the incoming segment is discarded. An incoming
 	// segment containing a RST is discarded. An incoming segment not containing a RST causes a RST to be sent in
 	// response. The acknowledgment and sequence field values are selected to make the reset sequence acceptable to the
 	// TCP that sent the offending segment.
@@ -300,7 +299,7 @@ func receiveCore(hdr *Hdr, data []byte, local *EndPoint, foreign *EndPoint) psEr
 			}
 
 			// SND.NXT is set to ISS+1 and SND.UNA to ISS. The connection state should be changed to SYN-RECEIVED.
-			// Note that any other incoming control or data (combined with SYN) will be processed in the SYN-RECEIVED
+			// Note that any other incoming control or Data (combined with SYN) will be processed in the SYN-RECEIVED
 			// state, but processing of SYN and ACK should not be repeated. If the listen was not fully specified (i.e.,
 			// the foreign socket was not fully specified), then the unspecified fields should be filled in now.
 			newPcb.SND.NXT = newPcb.ISS + 1
@@ -368,7 +367,7 @@ func receiveCore(hdr *Hdr, data []byte, local *EndPoint, foreign *EndPoint) psEr
 				pcb.refreshResendQueue()
 			}
 			// If SND.UNA > ISS (our SYN has been ACKed), change the connection state to ESTABLISHED, form an ACK
-			// segment <SEQ=SND.NXT><ACK=RCV.NXT><CTL=ACK> and send it. data or controls which were queued for
+			// segment <SEQ=SND.NXT><ACK=RCV.NXT><CTL=ACK> and send it. Data or controls which were queued for
 			// transmission may be included. If there are other controls or text in the segment then continue processing
 			// at the sixth step below where the URG bit is checked, otherwise return.
 			if pcb.SND.UNA > pcb.ISS {
@@ -540,7 +539,7 @@ func receiveCore(hdr *Hdr, data []byte, local *EndPoint, foreign *EndPoint) psEr
 		// If the SYN is in the window it is an error, send a reset, any outstanding RECEIVEs and SEND should receive
 		// "reset" responses, all segment queues should be flushed, the user should also receive an unsolicited general
 		// "connection reset" signal, enter the CLOSED state, delete the TCB, and return.
-		// If the SYN is not in the window this step would not be reached and an ack would have been sent in the first
+		// If the SYN is not in the window this step would not be reached and an ack would have been sent in the First
 		// step (sequence number check).
 		if hdr.Flag.IsSet(synFlag) {
 			if err := Send(pcb, rstFlag, nil); err != psErr.OK {
@@ -624,8 +623,8 @@ func receiveCore(hdr *Hdr, data []byte, local *EndPoint, foreign *EndPoint) psEr
 			return psErr.OK
 		}
 
-		// Note that SND.WND is an offset from SND.UNA, that SND.WL1 records the sequence number of the last segment
-		// used to update SND.WND, and that SND.WL2 records the acknowledgment number of the last segment used to update
+		// Note that SND.WND is an offset from SND.UNA, that SND.WL1 records the sequence number of the Last segment
+		// used to update SND.WND, and that SND.WL2 records the acknowledgment number of the Last segment used to update
 		// SND.WND. The check here prevents using old segments to update the window.
 
 		switch pcb.State {
@@ -681,9 +680,9 @@ func receiveCore(hdr *Hdr, data []byte, local *EndPoint, foreign *EndPoint) psEr
 	case finWait2State:
 		// Once in the ESTABLISHED state, it is possible to deliver segment text to user RECEIVE buffers. Text from
 		// segments can be moved into buffers until either the buffer is full or the segment is empty. If the segment
-		// empties and carries an PUSH flag, then the user is informed, when the buffer is returned, that a PUSH has
-		// been received. When the TCP takes responsibility for delivering the data to the user it must also acknowledge
-		// the receipt of the data. Once the TCP takes responsibility for the data it advances RCV.NXT over the data
+		// empties and carries an PUSH Flag, then the user is informed, when the buffer is returned, that a PUSH has
+		// been received. When the TCP takes responsibility for delivering the Data to the user it must also acknowledge
+		// the receipt of the Data. Once the TCP takes responsibility for the Data it advances RCV.NXT over the Data
 		// accepted, and adjusts RCV.WND as appropriate to the current buffer availability. The total of RCV.NXT and
 		// RCV.WND should not be reduced. Please note the window management suggestions in section 3.7. Send an
 		// acknowledgment of the form: <SEQ=SND.NXT><ACK=RCV.NXT><CTL=ACK> This acknowledgment should be piggybacked on
@@ -790,7 +789,7 @@ func sendCore(info SegmentInfo, data []byte, local *EndPoint, foreign *EndPoint)
 		Dst:    foreign.Port,
 		Seq:    info.Seq,
 		Ack:    info.Ack,
-		Offset: uint8(HdrLenMin>>2) << 4, // data Offset occupies high 4bits
+		Offset: uint8(HdrLenMin>>2) << 4, // Data Offset occupies high 4bits
 		Flag:   info.Flag,
 		Wnd:    info.Wnd,
 	}
@@ -850,34 +849,34 @@ func Stop() {
 func dump(segment []byte, hdrLen int) (ret []string) {
 	var flag uint16
 	flag |= uint16(segment[12]&0x01) << 8
-	flag |= uint16(segment[13]&(0x01 << 7))
-	flag |= uint16(segment[13]&(0x01 << 6))
-	flag |= uint16(segment[13]&(0x01 << 5))
-	flag |= uint16(segment[13]&(0x01 << 4))
-	flag |= uint16(segment[13]&(0x01 << 3))
-	flag |= uint16(segment[13]&(0x01 << 2))
-	flag |= uint16(segment[13]&(0x01 << 1))
-	flag |= uint16(segment[13]&0x01)
+	flag |= uint16(segment[13] & (0x01 << 7))
+	flag |= uint16(segment[13] & (0x01 << 6))
+	flag |= uint16(segment[13] & (0x01 << 5))
+	flag |= uint16(segment[13] & (0x01 << 4))
+	flag |= uint16(segment[13] & (0x01 << 3))
+	flag |= uint16(segment[13] & (0x01 << 2))
+	flag |= uint16(segment[13] & (0x01 << 1))
+	flag |= uint16(segment[13] & 0x01)
 
 	ret = append(ret, fmt.Sprintf("src port: %d", uint16(segment[0])<<8|uint16(segment[1])))
 	ret = append(ret, fmt.Sprintf("dst port: %d", uint16(segment[2])<<8|uint16(segment[3])))
-	ret = append(ret, fmt.Sprintf("seq:      %d",
+	ret = append(ret, fmt.Sprintf("Seq:      %d",
 		uint32(segment[4])<<24|
-		uint32(segment[5])<<16|
-		uint32(segment[6])<<8|
-		uint32(segment[7])))
+			uint32(segment[5])<<16|
+			uint32(segment[6])<<8|
+			uint32(segment[7])))
 	ret = append(ret, fmt.Sprintf("ack:      %d",
 		uint32(segment[8])<<24|
-		uint32(segment[9])<<16|
-		uint32(segment[10])<<8|
-		uint32(segment[11])))
+			uint32(segment[9])<<16|
+			uint32(segment[10])<<8|
+			uint32(segment[11])))
 	ret = append(ret, fmt.Sprintf("offset:   %d", (segment[12]&0xf0)>>4))
-	ret = append(ret, fmt.Sprintf("flag:     0b%09b", flag))
+	ret = append(ret, fmt.Sprintf("Flag:     0b%09b", flag))
 	ret = append(ret, fmt.Sprintf("window:   %d", uint16(segment[14])<<8|uint16(segment[15])))
 	ret = append(ret, fmt.Sprintf("checksum: 0x%04x", uint16(segment[16])<<8|uint16(segment[17])))
 	ret = append(ret, fmt.Sprintf("urg:      %d", uint16(segment[18])<<8|uint16(segment[19])))
 
-	s := "data:     "
+	s := "Data:     "
 	data := segment[:hdrLen]
 	for i, v := range data {
 		s += fmt.Sprintf("%02x ", v)
