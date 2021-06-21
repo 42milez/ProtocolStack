@@ -876,7 +876,7 @@ func dump(segment []byte, hdrLen int) (ret []string) {
 	ret = append(ret, fmt.Sprintf("checksum: 0x%04x", uint16(segment[16])<<8|uint16(segment[17])))
 	ret = append(ret, fmt.Sprintf("urg:      %d", uint16(segment[18])<<8|uint16(segment[19])))
 
-	s := "Data:     "
+	s := "data:     "
 	data := segment[:hdrLen]
 	for i, v := range data {
 		s += fmt.Sprintf("%02x ", v)
