@@ -12,7 +12,7 @@ import (
 )
 
 const host = "192.0.2.2"
-const port = 7
+const port = 12345
 
 var serverCmd = &cobra.Command{
 	Use:   "server",

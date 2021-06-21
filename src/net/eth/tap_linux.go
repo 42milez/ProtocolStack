@@ -14,6 +14,7 @@ import (
 )
 
 var HwAddr = mw.EthAddr{0x00, 0x00, 0x5e, 0x00, 0x53, 0x01}
+
 const epollTimeout = 1000
 const maxEpollEvents = 32
 const virtualNetworkDevice = "/dev/net/tun"
