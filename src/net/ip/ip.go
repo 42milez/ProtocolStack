@@ -222,12 +222,70 @@ func dump(packet []byte) (ret []string) {
 		return fmt.Sprintf("%d.%d.%d.%d", addr[0], addr[1], addr[2], addr[3])
 	}
 
+	precedenceToString := func(n uint8) string {
+		m := map[uint8]string{
+			0: "Routine",
+			1: "Priority",
+			10: "Immediate",
+			11: "Flash",
+			100: "Flash Override",
+			101: "CRITIC/ECP",
+			110: "Internetwork Control",
+			111: "Network Control",
+		}
+		return m[n]
+	}
+
+	delayToString := func(n uint8) string {
+		m := map[uint8]string{
+			0: "Normal",
+			1: "Low",
+		}
+		return m[n]
+	}
+
+	throughputToString := func(n uint8) string {
+		m := map[uint8]string{
+			0: "Normal",
+			1: "High",
+		}
+		return m[n]
+	}
+
+	reliabilityToString := func(n uint8) string {
+		m := map[uint8]string{
+			0: "Normal",
+			1: "High",
+		}
+		return m[n]
+	}
+
+	dfToString := func(n uint8) string {
+		m := map[uint8]string{
+			0: "May Fragment",
+			1: "Don't Fragment",
+		}
+		return m[n]
+	}
+
+	mfToString := func(n uint8) string {
+		m := map[uint8]string{
+			0: "Last Fragment",
+			1: "More Fragments",
+		}
+		return m[n]
+	}
+
 	ret = append(ret, fmt.Sprintf("version:             %d", hdr.VHL>>4))
 	ret = append(ret, fmt.Sprintf("ihl:                 %d", ihl))
-	ret = append(ret, fmt.Sprintf("type of service:     0b%08b", hdr.TOS))
+	ret = append(ret, fmt.Sprintf("precedence:          %s (0x%01x)", precedenceToString(hdr.TOS&0xe0), hdr.TOS&0xe0))
+	ret = append(ret, fmt.Sprintf("delay:               %s (0x%01x)", delayToString(hdr.TOS&0x10), hdr.TOS&0x10))
+	ret = append(ret, fmt.Sprintf("throughput:          %s (0x%01x)", throughputToString(hdr.TOS&0x08), hdr.TOS&0x08))
+	ret = append(ret, fmt.Sprintf("relibility:          %s (0x%01x)", reliabilityToString(hdr.TOS&0x04), hdr.TOS&0x04))
 	ret = append(ret, fmt.Sprintf("total length:        %d bytes (data: %d bytes)", hdr.TotalLen, dataLen))
 	ret = append(ret, fmt.Sprintf("id:                  %d", hdr.ID))
-	ret = append(ret, fmt.Sprintf("flags:               0b%03b", (hdr.Offset&0xe0)>>13))
+	ret = append(ret, fmt.Sprintf("flag (df):           %s (0x%01x)", dfToString(uint8((hdr.Offset&0x4000)>>14)), (hdr.Offset&0x4000)>>14))
+	ret = append(ret, fmt.Sprintf("flag (mf):           %s (0x%01x)", mfToString(uint8((hdr.Offset&0x2000)>>13)), (hdr.Offset&0x2000)>>13))
 	ret = append(ret, fmt.Sprintf("fragment offset:     %d", hdr.Offset&0x1f))
 	ret = append(ret, fmt.Sprintf("ttl:                 %d", hdr.TTL))
 	ret = append(ret, fmt.Sprintf("protocol:            %s (%d)", hdr.Protocol, uint8(hdr.Protocol)))
