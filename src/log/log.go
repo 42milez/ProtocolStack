@@ -12,7 +12,7 @@ import (
 
 const red = "1;31"
 const yellow = "1;33"
-const dtFormat = "2006/02/01 15:04:05"
+const dtFormat = "15:04:05.000"
 
 var mtx sync.Mutex
 var stdout io.Writer = os.Stdout
@@ -23,20 +23,20 @@ var debug = true
 func doPrint(w io.Writer, prefix string, s string, args ...string) {
 	dt := time.Now().Format(dtFormat)
 	if s != "" {
-		_, _ = fmt.Fprintf(w, "%s %s %s\n", prefix, dt, s)
+		_, _ = fmt.Fprintf(w, "%s %s %s\n", dt, prefix, s)
 	}
 	for _, v := range args {
-		_, _ = fmt.Fprintf(w, "                        %s\n", v)
+		_, _ = fmt.Fprintf(w, "                 %s\n", v)
 	}
 }
 
 func doColorPrint(w io.Writer, color string, prefix string, s string, args ...string) {
 	dt := time.Now().Format(dtFormat)
 	if s != "" {
-		_, _ = fmt.Fprintf(w, "\u001B[%sm%s %s %s\u001B[0m\n", color, prefix, dt, s)
+		_, _ = fmt.Fprintf(w, "\u001B[%sm%s %s %s\u001B[0m\n", color, dt, prefix, s)
 	}
 	for _, v := range args {
-		_, _ = fmt.Fprintf(w, "\u001B[%sm                        %s\u001B[0m\n", color, v)
+		_, _ = fmt.Fprintf(w, "\u001B[%sm                 %s\u001B[0m\n", color, v)
 	}
 }
 
