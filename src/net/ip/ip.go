@@ -17,11 +17,6 @@ import (
 
 const HdrLenMax = 60 // bytes
 const HdrLenMin = 20 // bytes
-const (
-	ICMP mw.ProtocolNumber = 1
-	TCP  mw.ProtocolNumber = 6
-	UDP  mw.ProtocolNumber = 17
-)
 const xChBufSize = 5
 const ipv4 = 4
 
@@ -66,7 +61,7 @@ func Receive(payload []byte, dev mw.IDevice) psErr.E {
 		return psErr.InvalidProtocolVersion
 	}
 
-	hdrLen := int(hdr.VHL&0x0f) * 4
+	hdrLen := int(hdr.VHL&0x0f) << 2
 	if packetLen < hdrLen {
 		psLog.E(fmt.Sprintf("ip packet length is too short: ihl = %d, actual = %d", hdrLen, packetLen))
 		return psErr.InvalidPacketLength
@@ -82,8 +77,8 @@ func Receive(payload []byte, dev mw.IDevice) psErr.E {
 		return psErr.TtlExpired
 	}
 
-	if mw.Checksum(payload, 0) != 0 {
-		psLog.E("checksum mismatch")
+	if mw.Checksum(payload[:hdrLen], 0) != 0 {
+		psLog.E("checksum mismatch (ip)")
 		return psErr.ChecksumMismatch
 	}
 
@@ -103,23 +98,22 @@ func Receive(payload []byte, dev mw.IDevice) psErr.E {
 	psLog.D("incoming ip packet", dump(payload)...)
 
 	switch hdr.Protocol {
-	case ICMP:
+	case mw.PnICMP:
 		mw.IcmpRxCh <- &mw.IcmpRxMessage{
 			Payload: payload[hdrLen:],
 			Dst:     hdr.Dst,
 			Src:     hdr.Src,
 			Dev:     dev,
 		}
-	case TCP:
+	case mw.PnTCP:
 		mw.TcpRxCh <- &mw.TcpRxMessage{
-			ProtoNum:   uint8(TCP),
+			ProtoNum:   uint8(mw.PnTCP),
 			RawSegment: payload[hdrLen:],
 			Dst:        hdr.Dst,
 			Src:        hdr.Src,
 			Iface:      iface,
 		}
-		return psErr.Error
-	case UDP:
+	case mw.PnUDP:
 		psLog.E("currently NOT support UDP")
 		return psErr.Error
 	default:
@@ -162,7 +156,7 @@ func Send(protoNum mw.ProtocolNumber, payload []byte, src mw.IP, dst mw.IP) psEr
 	}
 
 	// send ip packet
-	if err = net.Transmit(ethAddr, packet, mw.IPv4, iface); err != psErr.OK {
+	if err = net.Transmit(ethAddr, packet, mw.EtIPV4, iface); err != psErr.OK {
 		return psErr.Error
 	}
 
@@ -204,7 +198,8 @@ func createPacket(protoNum mw.ProtocolNumber, src mw.IP, dst mw.IP, payload []by
 	}
 	packet := buf.Bytes()
 
-	csum := mw.Checksum(packet, 0)
+	hdrLen := (hdr.VHL&0x0f) <<2
+	csum := mw.Checksum(packet[:hdrLen], 0)
 	packet[10] = uint8((csum & 0xff00) >> 8)
 	packet[11] = uint8(csum & 0x00ff)
 
@@ -216,7 +211,6 @@ func dump(packet []byte) (ret []string) {
 	totalLen := uint16(packet[2])<<8 | uint16(packet[3])
 	payloadLen := totalLen - uint16(4*ihl)
 
-	ret = make([]string, 13)
 	ret = append(ret, fmt.Sprintf("version:             %d", packet[0]>>4))
 	ret = append(ret, fmt.Sprintf("ihl:                 %d", ihl))
 	ret = append(ret, fmt.Sprintf("type of service:     0b%08b", packet[1]))
@@ -295,7 +289,10 @@ func lookupRoute(dst mw.IP, src mw.IP) (*mw.Iface, mw.IP, psErr.E) {
 }
 
 func receiver(wg *sync.WaitGroup) {
-	defer wg.Done()
+	defer func() {
+		psLog.D("ip receiver stopped")
+		wg.Done()
+	}()
 
 	rcvMonCh <- &worker.Message{
 		ID:      receiverID,
@@ -321,7 +318,10 @@ func receiver(wg *sync.WaitGroup) {
 }
 
 func sender(wg *sync.WaitGroup) {
-	defer wg.Done()
+	defer func() {
+		psLog.D("ip sender stopped")
+		wg.Done()
+	}()
 
 	sndMonCh <- &worker.Message{
 		ID:      senderID,
@@ -339,12 +339,12 @@ func sender(wg *sync.WaitGroup) {
 				return
 			}
 		case msg := <-mw.IpTxCh:
-			switch Send(msg.ProtoNum, msg.Packet, msg.Src, msg.Dst) {
+			switch Send(msg.ProtoNum, msg.Packet, mw.V4FromByte(msg.Src), mw.V4FromByte(msg.Dst)) {
 			case psErr.OK:
 			case psErr.RouteNotFound:
 			case psErr.NeedRetry:
 				switch msg.ProtoNum {
-				case ICMP:
+				case mw.PnICMP:
 					mw.IcmpDeadLetterQueue <- &mw.IcmpQueueEntry{
 						Payload: msg.Packet,
 					}

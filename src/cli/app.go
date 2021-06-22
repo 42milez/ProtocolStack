@@ -55,7 +55,7 @@ func setup() psErr.E {
 	tapDev := eth.GenTapDevice(
 		"net"+strconv.Itoa(repo.DeviceRepo.NextNumber()),
 		"tap0",
-		mw.EthAddr{11, 22, 33, 44, 55, 66})
+		eth.HwAddr)
 	if err := repo.DeviceRepo.Register(tapDev); err != psErr.OK {
 		return psErr.Error
 	}

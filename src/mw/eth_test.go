@@ -184,7 +184,7 @@ func TestWriteFrame(t *testing.T) {
 	payload := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 
 	want := psErr.OK
-	got := WriteFrame(fd, dst, src, IPv4, payload)
+	got := WriteFrame(fd, dst, src, EtIPV4, payload)
 
 	if got != want {
 		t.Errorf("WriteFrame() = %s; want %s", got, want)

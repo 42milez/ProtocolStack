@@ -40,23 +40,23 @@ func TestReceive_1(t *testing.T) {
 	}
 
 	// TCP
-	packet[9] = uint8(TCP)
+	packet[9] = uint8(mw.PnTCP)
 	packet[10] = 0x00
 	packet[11] = 0x00
-	csum := mw.Checksum(packet, 0)
+	csum := mw.Checksum(packet[:HdrLenMin], 0)
 	packet[10] = uint8((csum & 0xff00) >> 8)
 	packet[11] = uint8(csum & 0x00ff)
-	want = psErr.Error
+	want = psErr.OK
 	got = Receive(packet, dev)
 	if got != want {
 		t.Errorf("Receive() = %s; want %s", got, want)
 	}
 
 	// UDP
-	packet[9] = uint8(UDP)
+	packet[9] = uint8(mw.PnUDP)
 	packet[10] = 0x00
 	packet[11] = 0x00
-	csum = mw.Checksum(packet, 0)
+	csum = mw.Checksum(packet[:HdrLenMin], 0)
 	packet[10] = uint8((csum & 0xff00) >> 8)
 	packet[11] = uint8(csum & 0x00ff)
 	want = psErr.Error
@@ -140,7 +140,7 @@ func TestReceive_2(t *testing.T) {
 	packet[9] = 0x00
 	packet[10] = 0x00
 	packet[11] = 0x00
-	csum := mw.Checksum(packet, 0)
+	csum := mw.Checksum(packet[:HdrLenMin], 0)
 	packet[10] = uint8((csum & 0xff00) >> 8)
 	packet[11] = uint8(csum & 0x00ff)
 	want = psErr.UnsupportedProtocol
@@ -174,7 +174,7 @@ func TestSend(t *testing.T) {
 	dst := mw.IP{192, 168, 0, 2}
 
 	want := psErr.OK
-	got := Send(ICMP, payload, src, dst)
+	got := Send(mw.PnICMP, payload, src, dst)
 
 	if got != want {
 		t.Errorf("Send() = %s; want %s", got, want)
@@ -231,7 +231,7 @@ func createIpPacket() []byte {
 	hdr.TotalLen = uint16(HdrLenMin + len(payload))
 	hdr.ID = 0
 	hdr.TTL = 0xff
-	hdr.Protocol = ICMP
+	hdr.Protocol = mw.PnICMP
 	hdr.Src = mw.V4Addr{192, 168, 0, 1}
 	hdr.Dst = mw.V4Addr{192, 168, 1, 1}
 
@@ -244,7 +244,7 @@ func createIpPacket() []byte {
 	}
 	packet := buf.Bytes()
 
-	csum := mw.Checksum(packet, 0)
+	csum := mw.Checksum(packet[:HdrLenMin], 0)
 	packet[10] = uint8((csum & 0xff00) >> 8)
 	packet[11] = uint8(csum & 0x00ff)
 

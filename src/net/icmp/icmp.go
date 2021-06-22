@@ -8,7 +8,6 @@ import (
 	psLog "github.com/42milez/ProtocolStack/src/log"
 	"github.com/42milez/ProtocolStack/src/monitor"
 	"github.com/42milez/ProtocolStack/src/mw"
-	"github.com/42milez/ProtocolStack/src/net/ip"
 	"github.com/42milez/ProtocolStack/src/repo"
 	"github.com/42milez/ProtocolStack/src/worker"
 	"sync"
@@ -99,7 +98,7 @@ func Receive(payload []byte, dst [mw.V4AddrLen]byte, src [mw.V4AddrLen]byte, dev
 	}
 
 	if mw.Checksum(payload, 0) != 0 {
-		psLog.E("checksum mismatch")
+		psLog.E("checksum mismatch (icmp)")
 		return psErr.ChecksumMismatch
 	}
 
@@ -158,10 +157,10 @@ func Send(typ uint8, code uint8, content uint32, payload []byte, src mw.IP, dst 
 	psLog.D("outgoing icmp packet", dump(&hdr, payload)...)
 
 	mw.IpTxCh <- &mw.IpMessage{
-		ProtoNum: ip.ICMP,
+		ProtoNum: mw.PnICMP,
 		Packet:   packet,
-		Dst:      dst,
-		Src:      src,
+		Dst:      dst.ToV4(),
+		Src:      src.ToV4(),
 	}
 
 	return psErr.OK
@@ -226,7 +225,10 @@ func dump(hdr *Hdr, payload []byte) (ret []string) {
 }
 
 func receiver(wg *sync.WaitGroup) {
-	defer wg.Done()
+	defer func() {
+		psLog.D("icmp receiver stopped")
+		wg.Done()
+	}()
 
 	rcvMonCh <- &worker.Message{
 		ID:      receiverID,
@@ -248,7 +250,10 @@ func receiver(wg *sync.WaitGroup) {
 }
 
 func sender(wg *sync.WaitGroup) {
-	defer wg.Done()
+	defer func() {
+		psLog.D("icmp sender stopped")
+		wg.Done()
+	}()
 
 	sndMonCh <- &worker.Message{
 		ID:      senderID,

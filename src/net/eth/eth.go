@@ -36,7 +36,10 @@ func Stop() {
 }
 
 func receiver(wg *sync.WaitGroup) {
-	defer wg.Done()
+	defer func() {
+		psLog.D("eht receiver stopped")
+		wg.Done()
+	}()
 
 	rcvMonCh <- &worker.Message{
 		ID:      receiverID,
@@ -55,12 +58,12 @@ func receiver(wg *sync.WaitGroup) {
 			}
 		case msg := <-mw.EthRxCh:
 			switch msg.Type {
-			case mw.ARP:
+			case mw.EtARP:
 				mw.ArpRxCh <- &mw.ArpRxMessage{
 					Packet: msg.Content,
 					Dev:    msg.Dev,
 				}
-			case mw.IPv4:
+			case mw.EtIPV4:
 				mw.IpRxCh <- msg
 			default:
 				psLog.W(fmt.Sprintf("unknown ether type: 0x%04x", uint16(msg.Type)))
@@ -73,7 +76,10 @@ func receiver(wg *sync.WaitGroup) {
 }
 
 func sender(wg *sync.WaitGroup) {
-	defer wg.Done()
+	defer func() {
+		psLog.D("eht sender stopped")
+		wg.Done()
+	}()
 
 	sndMonCh <- &worker.Message{
 		ID:      senderID,

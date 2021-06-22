@@ -5,9 +5,16 @@ import (
 	"time"
 )
 
-const ARP EthType = 0x0806
-const IPv4 EthType = 0x0800
-const IPv6 EthType = 0x86dd
+const (
+	EtARP  EthType = 0x0806
+	EtIPV4 EthType = 0x0800
+	EtIPV6 EthType = 0x86dd
+)
+const (
+	PnICMP ProtocolNumber = 1
+	PnTCP  ProtocolNumber = 6
+	PnUDP  ProtocolNumber = 17
+)
 const maxUint8 = ^uint8(0)
 const maxUint16 = ^uint16(0)
 const xChBufSize = 10
@@ -58,8 +65,8 @@ type ArpTxMessage struct {
 type IpMessage struct {
 	ProtoNum ProtocolNumber
 	Packet   []byte
-	Dst      IP
-	Src      IP
+	Dst      [V4AddrLen]byte
+	Src      [V4AddrLen]byte
 }
 
 type IcmpQueueEntry struct {

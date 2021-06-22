@@ -183,7 +183,7 @@ func Receive(packet []byte, dev mw.IDevice) psErr.E {
 		return psErr.InvalidPacket
 	}
 
-	if arpPacket.PT != mw.IPv4 || arpPacket.PAL != mw.V4AddrLen {
+	if arpPacket.PT != mw.EtIPV4 || arpPacket.PAL != mw.V4AddrLen {
 		psLog.E("invalid arp header field (Protocol)")
 		return psErr.InvalidPacket
 	}
@@ -220,7 +220,7 @@ func SendReply(tha mw.EthAddr, tpa mw.V4Addr, iface *mw.Iface) psErr.E {
 	packet := Packet{
 		Hdr: Hdr{
 			HT:     Ethernet,
-			PT:     mw.IPv4,
+			PT:     mw.EtIPV4,
 			HAL:    mw.EthAddrLen,
 			PAL:    mw.V4AddrLen,
 			Opcode: Reply,
@@ -239,7 +239,7 @@ func SendReply(tha mw.EthAddr, tpa mw.V4Addr, iface *mw.Iface) psErr.E {
 		return psErr.WriteToBufError
 	}
 
-	if err := iface.Dev.Transmit(tha, buf.Bytes(), mw.ARP); err != psErr.OK {
+	if err := iface.Dev.Transmit(tha, buf.Bytes(), mw.EtARP); err != psErr.OK {
 		return psErr.Error
 	}
 
@@ -250,7 +250,7 @@ func SendRequest(iface *mw.Iface, ip mw.IP) psErr.E {
 	packet := Packet{
 		Hdr: Hdr{
 			HT:     Ethernet,
-			PT:     mw.IPv4,
+			PT:     mw.EtIPV4,
 			HAL:    mw.EthAddrLen,
 			PAL:    mw.V4AddrLen,
 			Opcode: Request,
@@ -269,7 +269,7 @@ func SendRequest(iface *mw.Iface, ip mw.IP) psErr.E {
 
 	psLog.D("outgoing arp packet", dump(&packet)...)
 
-	if err := net.Transmit(mw.EthBroadcast, payload, mw.ARP, iface); err != psErr.OK {
+	if err := net.Transmit(mw.EthBroadcast, payload, mw.EtARP, iface); err != psErr.OK {
 		return psErr.Error
 	}
 
@@ -335,7 +335,10 @@ func dump(packet *Packet) (ret []string) {
 }
 
 func receiver(wg *sync.WaitGroup) {
-	defer wg.Done()
+	defer func() {
+		psLog.D("arp receiver stopped")
+		wg.Done()
+	}()
 
 	rcvMonCh <- &worker.Message{
 		ID:      receiverID,
@@ -357,7 +360,10 @@ func receiver(wg *sync.WaitGroup) {
 }
 
 func sender(wg *sync.WaitGroup) {
-	defer wg.Done()
+	defer func() {
+		psLog.D("arp sender stopped")
+		wg.Done()
+	}()
 
 	sndMonCh <- &worker.Message{
 		ID:      senderID,
@@ -373,7 +379,10 @@ func sender(wg *sync.WaitGroup) {
 }
 
 func timer(wg *sync.WaitGroup) {
-	defer wg.Done()
+	defer func() {
+		psLog.D("arp timer stopped")
+		wg.Done()
+	}()
 
 	tmrMonCh <- &worker.Message{
 		ID:      timerID,

@@ -29,15 +29,33 @@ const windowSize = 65535
 var PcbRepo *pcbRepo
 
 type Backlog struct {
-	entries []*PCB
+	entries list.List
 	size    int
+	mtx     sync.Mutex
+}
+
+func (p *Backlog) Pop() *PCB {
+	defer p.mtx.Unlock()
+	p.mtx.Lock()
+
+	entry := p.entries.Front()
+	if entry == nil {
+		return nil
+	}
+	p.entries.Remove(entry)
+
+	return entry.Value.(*PCB)
 }
 
 func (p *Backlog) Push(pcb *PCB) psErr.E {
-	if len(p.entries) > p.size {
+	defer p.mtx.Unlock()
+	p.mtx.Lock()
+
+	if p.entries.Len() > p.size {
 		return psErr.BacklogFull
 	}
-	p.entries = append(p.entries, pcb)
+	p.entries.PushBack(pcb)
+
 	return psErr.OK
 }
 
@@ -47,6 +65,7 @@ type EndPoint struct {
 }
 
 type PCB struct {
+	ID      int
 	State   int      // tcp state
 	Local   EndPoint // local address/port
 	Foreign EndPoint // foreign address/port
@@ -104,10 +123,15 @@ type pcbRepo struct {
 	pcbs [tcpConnMax]*PCB
 }
 
-func (p *pcbRepo) Get(idx int) *PCB {
+func (p *pcbRepo) Get(id int) *PCB {
 	defer p.mtx.Unlock()
 	p.mtx.Lock()
-	return p.pcbs[idx]
+	for _, v := range p.pcbs {
+		if v.ID == id {
+			return v
+		}
+	}
+	return nil
 }
 
 func (p *pcbRepo) Have(local *EndPoint) bool {
@@ -145,22 +169,33 @@ func (p *pcbRepo) LookUp(local *EndPoint, foreign *EndPoint) *PCB {
 	return ret
 }
 
-func (p *pcbRepo) UnusedPcb() (*PCB, int) {
-	defer p.mtx.Unlock()
-	p.mtx.Lock()
-	for i := 0; i < tcpConnMax; i++ {
-		if p.pcbs[i].State == freeState {
-			return p.pcbs[i], i
+func (p *pcbRepo) PickNewConnection() (*PCB, int) {
+	for i, pcb := range p.pcbs {
+		if newPcb := pcb.backlog.Pop(); newPcb != nil {
+			return newPcb, i
 		}
 	}
 	return nil, -1
+}
+
+func (p *pcbRepo) UnusedPcb() *PCB {
+	defer p.mtx.Unlock()
+	p.mtx.Lock()
+	for _, v := range p.pcbs {
+		if v.State == freeState {
+			return v
+		}
+	}
+	return nil
 }
 
 func (p *pcbRepo) init() {
 	defer p.mtx.Unlock()
 	p.mtx.Lock()
 	for i := range p.pcbs {
-		p.pcbs[i] = &PCB{}
+		p.pcbs[i] = &PCB{
+			ID: i,
+		}
 	}
 }
 

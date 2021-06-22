@@ -199,7 +199,7 @@ func Checksum(b []byte, init uint32) uint16 {
 
 	// sum up all fields of IP header by each 16bits
 	for i := 0; i < len(b); i += 2 {
-		sum += uint32(uint16(b[i])<<8 | uint16(b[i+1]))
+		sum += uint32(b[i])<<8 | uint32(b[i+1])
 	}
 
 	// add last 8bits if exists
@@ -208,7 +208,7 @@ func Checksum(b []byte, init uint32) uint16 {
 	}
 
 	// fold sum to 16bits
-	if (sum >> 16) != 0 {
+	for (sum >> 16) != 0 {
 		sum = (sum & 0x0000ffff) + (sum >> 16)
 	}
 
@@ -260,6 +260,10 @@ func V4(a, b, c, d byte) IP {
 	p[2] = c
 	p[3] = d
 	return p
+}
+
+func V4FromByte(b [V4AddrLen]byte) IP {
+	return IP{b[0], b[1], b[2], b[3]}
 }
 
 func allFF(b []byte) bool {

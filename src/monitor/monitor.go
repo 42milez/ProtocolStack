@@ -106,7 +106,10 @@ func Stop() {
 }
 
 func watcher(wg *sync.WaitGroup) {
-	defer wg.Done()
+	defer func() {
+		psLog.D("monitor watcher stopped")
+		wg.Done()
+	}()
 
 	for {
 		select {

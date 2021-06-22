@@ -13,6 +13,8 @@ import (
 	"unsafe"
 )
 
+var HwAddr = mw.EthAddr{0x00, 0x00, 0x5e, 0x00, 0x53, 0x01}
+
 const epollTimeout = 1000
 const maxEpollEvents = 32
 const virtualNetworkDevice = "/dev/net/tun"
@@ -65,26 +67,29 @@ func (p *TapDevice) Open() psErr.E {
 		return psErr.CantModifyIOResourceParameter
 	}
 
+	//  determine hardware address if the default is equal to any
 	// --------------------------------------------------
 
-	var soc int
-	soc, err = psSyscall.Syscall.Socket(syscall.AF_INET, syscall.SOCK_DGRAM, 0)
-	if err != nil {
-		_ = psSyscall.Syscall.Close(fd)
-		return psErr.CantCreateEndpoint
-	}
+	if p.Addr_ == mw.EthAny {
+		var soc int
+		soc, err = psSyscall.Syscall.Socket(syscall.AF_INET, syscall.SOCK_DGRAM, 0)
+		if err != nil {
+			_ = psSyscall.Syscall.Close(fd)
+			return psErr.CantCreateEndpoint
+		}
 
-	ifrSockAddr := IfreqSockAddr{}
-	ifrSockAddr.Addr.Family = syscall.AF_INET
-	copy(ifrSockAddr.Name[:], p.Priv().Name)
+		ifrSockAddr := IfreqSockAddr{}
+		ifrSockAddr.Addr.Family = syscall.AF_INET
+		copy(ifrSockAddr.Name[:], p.Priv().Name)
 
-	if errno := psSyscall.Syscall.Ioctl(soc, syscall.SIOCGIFHWADDR, unsafe.Pointer(&ifrSockAddr)); errno != 0 {
-		_ = psSyscall.Syscall.Close(soc)
-		return psErr.CantModifyIOResourceParameter
-	}
-	copy(p.Addr_[:], ifrSockAddr.Addr.Data[:])
-	if err = psSyscall.Syscall.Close(soc); err != nil {
-		return psErr.CantCloseIOResource
+		if errno := psSyscall.Syscall.Ioctl(soc, syscall.SIOCGIFHWADDR, unsafe.Pointer(&ifrSockAddr)); errno != 0 {
+			_ = psSyscall.Syscall.Close(soc)
+			return psErr.CantModifyIOResourceParameter
+		}
+		copy(p.Addr_[:], ifrSockAddr.Addr.Data[:])
+		if err = psSyscall.Syscall.Close(soc); err != nil {
+			return psErr.CantCloseIOResource
+		}
 	}
 
 	// --------------------------------------------------
