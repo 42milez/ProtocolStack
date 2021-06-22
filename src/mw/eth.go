@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	psBinary "github.com/42milez/ProtocolStack/src/binary"
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	psLog "github.com/42milez/ProtocolStack/src/log"
 	psSyscall "github.com/42milez/ProtocolStack/src/syscall"
@@ -65,7 +66,7 @@ func ReadFrame(fd int, addr EthAddr) (*EthMessage, psErr.E) {
 		return nil, psErr.ReadFromBufError
 	}
 
-	psLog.D(fmt.Sprintf("incoming ethernet frame (%d bytes)", flen), dump(&hdr, payload)...)
+	psLog.D(fmt.Sprintf("incoming ethernet frame (%d bytes)", flen), dump(rxBuf[:flen])...)
 
 	return &EthMessage{
 		Type:    hdr.Type,
@@ -92,7 +93,7 @@ func WriteFrame(fd int, dst EthAddr, src EthAddr, typ EthType, payload []byte) p
 	}
 	frame := buf.Bytes()
 
-	psLog.D(fmt.Sprintf("outgoing ethernet frame (%d bytes)", EthHdrLen+len(payload)), dump(&hdr, payload)...)
+	psLog.D(fmt.Sprintf("outgoing ethernet frame (%d bytes)", EthHdrLen+len(payload)), dump(frame)...)
 
 	if _, err := psSyscall.Syscall.Write(fd, frame); err != nil {
 		return psErr.SyscallError
@@ -101,18 +102,32 @@ func WriteFrame(fd int, dst EthAddr, src EthAddr, typ EthType, payload []byte) p
 	return psErr.OK
 }
 
-func dump(hdr *EthHdr, payload []byte) (ret []string) {
+func dump(frame []byte) (ret []string) {
+	hdr := EthHdr{}
+	buf := bytes.NewBuffer(frame)
+	if err := binary.Read(buf, psBinary.Endian, &hdr); err != nil {
+		return nil
+	}
+	payload := buf.Bytes()[EthHdrLen:]
+
 	ret = append(ret, fmt.Sprintf("type:    %s (0x%04x)", hdr.Type, uint16(hdr.Type)))
 	ret = append(ret, fmt.Sprintf("dst:     %s", hdr.Dst))
 	ret = append(ret, fmt.Sprintf("src:     %s", hdr.Src))
+
 	s := "payload: "
-	for i, v := range payload {
-		s += fmt.Sprintf("%02x ", v)
-		if (i+1)%20 == 0 && i+1 != len(payload) {
-			s += "\n                          "
+	if len(payload) != 0 {
+		for i, v := range payload {
+			s += fmt.Sprintf("%02x ", v)
+			if (i+1)%20 == 0 && i+1 != len(payload) {
+				s += "\n                          "
+			}
 		}
+	} else {
+		s += "-"
 	}
+
 	ret = append(ret, s)
+
 	return
 }
 
