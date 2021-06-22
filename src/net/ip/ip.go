@@ -198,7 +198,7 @@ func createPacket(protoNum mw.ProtocolNumber, src mw.IP, dst mw.IP, payload []by
 	}
 	packet := buf.Bytes()
 
-	hdrLen := (hdr.VHL&0x0f) <<2
+	hdrLen := (hdr.VHL & 0x0f) << 2
 	csum := mw.Checksum(packet[:hdrLen], 0)
 	packet[10] = uint8((csum & 0xff00) >> 8)
 	packet[11] = uint8(csum & 0x00ff)
