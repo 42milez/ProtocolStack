@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	psBinary "github.com/42milez/ProtocolStack/src/binary"
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	psLog "github.com/42milez/ProtocolStack/src/log"
 	"github.com/42milez/ProtocolStack/src/monitor"
@@ -188,7 +189,7 @@ func Receive(packet []byte, dev mw.IDevice) psErr.E {
 		return psErr.InvalidPacket
 	}
 
-	psLog.D("incoming arp packet", dump(&arpPacket)...)
+	psLog.D("incoming arp packet", dump(packet)...)
 
 	iface := repo.IfaceRepo.Lookup(dev, mw.V4AddrFamily)
 	if iface == nil {
@@ -232,14 +233,15 @@ func SendReply(tha mw.EthAddr, tpa mw.V4Addr, iface *mw.Iface) psErr.E {
 	copy(packet.SHA[:], addr[:])
 	copy(packet.SPA[:], iface.Unicast[:])
 
-	psLog.D("outgoing arp packet", dump(&packet)...)
-
 	buf := new(bytes.Buffer)
 	if err := binary.Write(buf, binary.BigEndian, &packet); err != nil {
 		return psErr.WriteToBufError
 	}
+	rawPacket := buf.Bytes()
 
-	if err := iface.Dev.Transmit(tha, buf.Bytes(), mw.EtARP); err != psErr.OK {
+	psLog.D("outgoing arp packet", dump(rawPacket)...)
+
+	if err := iface.Dev.Transmit(tha, rawPacket, mw.EtARP); err != psErr.OK {
 		return psErr.Error
 	}
 
@@ -265,11 +267,11 @@ func SendRequest(iface *mw.Iface, ip mw.IP) psErr.E {
 	if err := binary.Write(buf, binary.BigEndian, &packet); err != nil {
 		return psErr.WriteToBufError
 	}
-	payload := buf.Bytes()
+	rawPacket := buf.Bytes()
 
-	psLog.D("outgoing arp packet", dump(&packet)...)
+	psLog.D("outgoing arp packet", dump(rawPacket)...)
 
-	if err := net.Transmit(mw.EthBroadcast, payload, mw.EtARP, iface); err != psErr.OK {
+	if err := net.Transmit(mw.EthBroadcast, rawPacket, mw.EtARP, iface); err != psErr.OK {
 		return psErr.Error
 	}
 
@@ -321,16 +323,23 @@ func Stop() {
 	tmrSigCh <- msg
 }
 
-func dump(packet *Packet) (ret []string) {
-	ret = append(ret, fmt.Sprintf("hardware type:           %s", packet.HT))
-	ret = append(ret, fmt.Sprintf("protocol Type:           %s", packet.PT))
-	ret = append(ret, fmt.Sprintf("hardware address length: %d", packet.HAL))
-	ret = append(ret, fmt.Sprintf("protocol address length: %d", packet.PAL))
-	ret = append(ret, fmt.Sprintf("opcode:                  %s (%d)", packet.Opcode, uint16(packet.Opcode)))
-	ret = append(ret, fmt.Sprintf("sender hardware address: %s", packet.SHA))
-	ret = append(ret, fmt.Sprintf("sender protocol address: %v", packet.SPA))
-	ret = append(ret, fmt.Sprintf("target hardware address: %s", packet.THA))
-	ret = append(ret, fmt.Sprintf("target protocol address: %v", packet.TPA))
+func dump(packet []byte) (ret []string) {
+	pkt := Packet{}
+	buf := bytes.NewBuffer(packet)
+	if err := binary.Read(buf, psBinary.Endian, &pkt); err != nil {
+		return nil
+	}
+
+	ret = append(ret, fmt.Sprintf("hardware type:           %s", pkt.HT))
+	ret = append(ret, fmt.Sprintf("protocol Type:           %s", pkt.PT))
+	ret = append(ret, fmt.Sprintf("hardware address length: %d", pkt.HAL))
+	ret = append(ret, fmt.Sprintf("protocol address length: %d", pkt.PAL))
+	ret = append(ret, fmt.Sprintf("opcode:                  %s (%d)", pkt.Opcode, uint16(pkt.Opcode)))
+	ret = append(ret, fmt.Sprintf("sender hardware address: %s", pkt.SHA))
+	ret = append(ret, fmt.Sprintf("sender protocol address: %v", pkt.SPA))
+	ret = append(ret, fmt.Sprintf("target hardware address: %s", pkt.THA))
+	ret = append(ret, fmt.Sprintf("target protocol address: %v", pkt.TPA))
+
 	return
 }
 
