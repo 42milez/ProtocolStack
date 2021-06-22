@@ -85,24 +85,24 @@ type Hdr struct {
 	Content  uint32
 }
 
-func Receive(payload []byte, dst [mw.V4AddrLen]byte, src [mw.V4AddrLen]byte, dev mw.IDevice) psErr.E {
-	if len(payload) < HdrLen {
-		psLog.E(fmt.Sprintf("icmp header length is too short: %d bytes", len(payload)))
+func Receive(packet []byte, dst [mw.V4AddrLen]byte, src [mw.V4AddrLen]byte, dev mw.IDevice) psErr.E {
+	if len(packet) < HdrLen {
+		psLog.E(fmt.Sprintf("icmp header length is too short: %d bytes", len(packet)))
 		return psErr.InvalidPacket
 	}
 
-	buf := bytes.NewBuffer(payload)
+	buf := bytes.NewBuffer(packet)
 	hdr, err := ReadHeader(buf)
 	if err != nil {
 		return psErr.ReadFromBufError
 	}
 
-	if mw.Checksum(payload, 0) != 0 {
+	if mw.Checksum(packet, 0) != 0 {
 		psLog.E("checksum mismatch (icmp)")
 		return psErr.ChecksumMismatch
 	}
 
-	psLog.D("incoming icmp packet", dump(hdr, payload[HdrLen:])...)
+	psLog.D("incoming icmp packet", dump(hdr, packet[HdrLen:])...)
 
 	switch hdr.Type {
 	case Echo:
@@ -116,7 +116,7 @@ func Receive(payload []byte, dst [mw.V4AddrLen]byte, src [mw.V4AddrLen]byte, dev
 			Type:    EchoReply,
 			Code:    hdr.Code,
 			Content: hdr.Content,
-			Payload: payload[HdrLen:],
+			Payload: packet[HdrLen:],
 			Src:     d,
 			Dst:     s,
 		}
