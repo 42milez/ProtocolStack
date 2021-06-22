@@ -84,7 +84,7 @@ type IcmpTxMessage struct {
 	Type    uint8
 	Code    uint8
 	Content uint32
-	Payload []byte
+	Data    []byte
 	Src     IP
 	Dst     IP
 }

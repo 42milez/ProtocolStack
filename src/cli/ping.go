@@ -99,7 +99,7 @@ func send(id uint16, seq uint16, payload []byte) {
 		Type:    icmp.Echo,
 		Code:    0,
 		Content: uint32(id)<<16 | uint32(seq),
-		Payload: payload,
+		Data:    payload,
 		Src:     mw.IP{192, 0, 2, 2},
 		Dst:     mw.ParseIP(dst),
 	}

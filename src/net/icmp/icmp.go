@@ -116,7 +116,7 @@ func Receive(packet []byte, dst [mw.V4AddrLen]byte, src [mw.V4AddrLen]byte, dev 
 			Type:    EchoReply,
 			Code:    hdr.Code,
 			Content: hdr.Content,
-			Payload: packet[HdrLen:],
+			Data:    packet[HdrLen:],
 			Src:     d,
 			Dst:     s,
 		}
@@ -194,7 +194,7 @@ func Stop() {
 	sndSigCh <- msg
 }
 
-func dump(hdr *Hdr, payload []byte) (ret []string) {
+func dump(hdr *Hdr, data []byte) (ret []string) {
 	ret = append(ret, fmt.Sprintf("type:     %s (%d)", types[hdr.Type], hdr.Type))
 	ret = append(ret, fmt.Sprintf("code:     %d", hdr.Code))
 	ret = append(ret, fmt.Sprintf("checksum: 0x%04x", hdr.Checksum))
@@ -212,8 +212,8 @@ func dump(hdr *Hdr, payload []byte) (ret []string) {
 			uint8(hdr.Content&0x000f)))
 	}
 
-	s := "payload:  "
-	for i, v := range payload {
+	s := "data:     "
+	for i, v := range data {
 		s += fmt.Sprintf("%02x ", v)
 		if (i+1)%20 == 0 {
 			s += "\n                           "
@@ -267,7 +267,7 @@ func sender(wg *sync.WaitGroup) {
 				return
 			}
 		case msg := <-mw.IcmpTxCh:
-			if err := Send(msg.Type, msg.Code, msg.Content, msg.Payload, msg.Src, msg.Dst); err != psErr.OK {
+			if err := Send(msg.Type, msg.Code, msg.Content, msg.Data, msg.Src, msg.Dst); err != psErr.OK {
 				return
 			}
 		}
