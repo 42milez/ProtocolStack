@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	psBinary "github.com/42milez/ProtocolStack/src/binary"
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	psLog "github.com/42milez/ProtocolStack/src/log"
 	"github.com/42milez/ProtocolStack/src/monitor"
@@ -207,25 +208,35 @@ func createPacket(protoNum mw.ProtocolNumber, src mw.IP, dst mw.IP, payload []by
 }
 
 func dump(packet []byte) (ret []string) {
-	ihl := packet[0] & 0x0f
-	totalLen := uint16(packet[2])<<8 | uint16(packet[3])
-	payloadLen := totalLen - uint16(4*ihl)
+	hdr := mw.IpHdr{}
+	buf := bytes.NewBuffer(packet)
+	if err := binary.Read(buf, psBinary.Endian, &hdr); err != nil {
+		return nil
+	}
 
-	ret = append(ret, fmt.Sprintf("version:             %d", packet[0]>>4))
+	v4AddrToString := func(addr [mw.V4AddrLen]byte) string {
+		return fmt.Sprintf("%d.%d.%d.%d", addr[0], addr[1], addr[2], addr[3])
+	}
+
+	ihl := hdr.VHL & 0x0f
+	hdrLen := 4*ihl
+	payloadLen := hdr.TotalLen - uint16(hdrLen)
+
+	ret = append(ret, fmt.Sprintf("version:             %d", hdr.VHL>>4))
 	ret = append(ret, fmt.Sprintf("ihl:                 %d", ihl))
-	ret = append(ret, fmt.Sprintf("type of service:     0b%08b", packet[1]))
-	ret = append(ret, fmt.Sprintf("total length:        %d bytes (payload: %d bytes)", totalLen, payloadLen))
-	ret = append(ret, fmt.Sprintf("id:                  %d", uint16(packet[4])<<8|uint16(packet[5])))
-	ret = append(ret, fmt.Sprintf("flags:               0b%03b", (packet[6]&0xe0)>>5))
-	ret = append(ret, fmt.Sprintf("fragment offset:     %d", uint16(packet[6]&0x1f)<<8|uint16(packet[7])))
-	ret = append(ret, fmt.Sprintf("ttl:                 %d", packet[8]))
-	ret = append(ret, fmt.Sprintf("protocol:            %s (%d)", mw.ProtocolNumber(packet[9]), packet[9]))
-	ret = append(ret, fmt.Sprintf("checksum:            0x%04x", uint16(packet[10])<<8|uint16(packet[11])))
-	ret = append(ret, fmt.Sprintf("source address:      %d.%d.%d.%d", packet[12], packet[13], packet[14], packet[15]))
-	ret = append(ret, fmt.Sprintf("destination address: %d.%d.%d.%d", packet[16], packet[17], packet[18], packet[19]))
+	ret = append(ret, fmt.Sprintf("type of service:     0b%08b", hdr.TOS))
+	ret = append(ret, fmt.Sprintf("total length:        %d bytes (payload: %d bytes)", hdr.TotalLen, payloadLen))
+	ret = append(ret, fmt.Sprintf("id:                  %d", hdr.ID))
+	ret = append(ret, fmt.Sprintf("flags:               0b%03b", (hdr.Offset&0xe0)>>13))
+	ret = append(ret, fmt.Sprintf("fragment offset:     %d", hdr.Offset&0x1f))
+	ret = append(ret, fmt.Sprintf("ttl:                 %d", hdr.TTL))
+	ret = append(ret, fmt.Sprintf("protocol:            %s (%d)", hdr.Protocol, uint8(hdr.Protocol)))
+	ret = append(ret, fmt.Sprintf("checksum:            0x%04x", hdr.Checksum))
+	ret = append(ret, fmt.Sprintf("source address:      %s", v4AddrToString(hdr.Src)))
+	ret = append(ret, fmt.Sprintf("destination address: %s", v4AddrToString(hdr.Dst)))
 
 	s := "payload:             "
-	for i, v := range packet[ihl:] {
+	for i, v := range packet[hdrLen:] {
 		s += fmt.Sprintf("%02x ", v)
 		if (i+1)%20 == 0 {
 			s += "\n                                      "
