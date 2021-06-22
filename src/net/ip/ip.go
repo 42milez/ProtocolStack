@@ -213,14 +213,14 @@ func dump(packet []byte) (ret []string) {
 	if err := binary.Read(buf, psBinary.Endian, &hdr); err != nil {
 		return nil
 	}
+	ihl := hdr.VHL & 0x0f
+	hdrLen := 4*ihl
+	dataLen := hdr.TotalLen - uint16(hdrLen)
+	data := buf.Bytes()[hdrLen:]
 
 	v4AddrToString := func(addr [mw.V4AddrLen]byte) string {
 		return fmt.Sprintf("%d.%d.%d.%d", addr[0], addr[1], addr[2], addr[3])
 	}
-
-	ihl := hdr.VHL & 0x0f
-	hdrLen := 4*ihl
-	dataLen := hdr.TotalLen - uint16(hdrLen)
 
 	ret = append(ret, fmt.Sprintf("version:             %d", hdr.VHL>>4))
 	ret = append(ret, fmt.Sprintf("ihl:                 %d", ihl))
@@ -236,9 +236,9 @@ func dump(packet []byte) (ret []string) {
 	ret = append(ret, fmt.Sprintf("destination address: %s", v4AddrToString(hdr.Dst)))
 
 	s := "data:                "
-	for i, v := range packet[hdrLen:] {
+	for i, v := range data {
 		s += fmt.Sprintf("%02x ", v)
-		if (i+1)%20 == 0 {
+		if (i+1)%20 == 0 && i+1 != len(data) {
 			s += "\n                                      "
 		}
 	}

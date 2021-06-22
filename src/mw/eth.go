@@ -125,7 +125,6 @@ func dump(frame []byte) (ret []string) {
 	} else {
 		s += "-"
 	}
-
 	ret = append(ret, s)
 
 	return
