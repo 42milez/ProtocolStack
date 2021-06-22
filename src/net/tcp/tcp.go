@@ -854,7 +854,7 @@ func dump(segment []byte) (ret []string) {
 		return nil
 	}
 	hdrLen := int((hdr.Offset&0xf0)>>4) << 2
-	data := buf.Bytes()[hdrLen:]
+	data := segment[hdrLen:]
 
 	flagToString := func(hdr *Hdr) (s string) {
 		// NS
