@@ -43,15 +43,15 @@ func (p *PacketID) Next() (id uint16) {
 	return
 }
 
-func Receive(payload []byte, dev mw.IDevice) psErr.E {
-	packetLen := len(payload)
+func Receive(packet []byte, dev mw.IDevice) psErr.E {
+	packetLen := len(packet)
 
 	if packetLen < HdrLenMin {
 		psLog.E(fmt.Sprintf("ip packet length is too short: %d bytes", packetLen))
 		return psErr.InvalidPacketLength
 	}
 
-	buf := bytes.NewBuffer(payload)
+	buf := bytes.NewBuffer(packet)
 	hdr := mw.IpHdr{}
 	if err := binary.Read(buf, binary.BigEndian, &hdr); err != nil {
 		return psErr.ReadFromBufError
@@ -78,7 +78,7 @@ func Receive(payload []byte, dev mw.IDevice) psErr.E {
 		return psErr.TtlExpired
 	}
 
-	if mw.Checksum(payload[:hdrLen], 0) != 0 {
+	if mw.Checksum(packet[:hdrLen], 0) != 0 {
 		psLog.E("checksum mismatch (ip)")
 		return psErr.ChecksumMismatch
 	}
@@ -96,20 +96,20 @@ func Receive(payload []byte, dev mw.IDevice) psErr.E {
 		}
 	}
 
-	psLog.D("incoming ip packet", dump(payload)...)
+	psLog.D("incoming ip packet", dump(packet)...)
 
 	switch hdr.Protocol {
 	case mw.PnICMP:
 		mw.IcmpRxCh <- &mw.IcmpRxMessage{
-			Payload: payload[hdrLen:],
-			Dst:     hdr.Dst,
-			Src:     hdr.Src,
-			Dev:     dev,
+			Packet: packet[hdrLen:],
+			Dst:    hdr.Dst,
+			Src:    hdr.Src,
+			Dev:    dev,
 		}
 	case mw.PnTCP:
 		mw.TcpRxCh <- &mw.TcpRxMessage{
 			ProtoNum:   uint8(mw.PnTCP),
-			RawSegment: payload[hdrLen:],
+			RawSegment: packet[hdrLen:],
 			Dst:        hdr.Dst,
 			Src:        hdr.Src,
 			Iface:      iface,
@@ -125,7 +125,7 @@ func Receive(payload []byte, dev mw.IDevice) psErr.E {
 	return psErr.OK
 }
 
-func Send(protoNum mw.ProtocolNumber, payload []byte, src mw.IP, dst mw.IP) psErr.E {
+func Send(protoNum mw.ProtocolNumber, data []byte, src mw.IP, dst mw.IP) psErr.E {
 	var iface *mw.Iface
 	var nextHop mw.IP
 	var err psErr.E
@@ -136,12 +136,12 @@ func Send(protoNum mw.ProtocolNumber, payload []byte, src mw.IP, dst mw.IP) psEr
 		return psErr.RouteNotFound
 	}
 
-	if packetLen := HdrLenMin + len(payload); int(iface.Dev.MTU()) < packetLen {
+	if packetLen := HdrLenMin + len(data); int(iface.Dev.MTU()) < packetLen {
 		psLog.E(fmt.Sprintf("ip packet length is too long: %d", packetLen))
 		return psErr.PacketTooLong
 	}
 
-	packet := createPacket(protoNum, src, dst, payload)
+	packet := createPacket(protoNum, src, dst, data)
 	if packet == nil {
 		psLog.E("can't create IP packet")
 		return psErr.Error
@@ -180,10 +180,10 @@ func Stop() {
 	sndSigCh <- msg
 }
 
-func createPacket(protoNum mw.ProtocolNumber, src mw.IP, dst mw.IP, payload []byte) []byte {
+func createPacket(protoNum mw.ProtocolNumber, src mw.IP, dst mw.IP, data []byte) []byte {
 	hdr := mw.IpHdr{}
 	hdr.VHL = uint8(ipv4<<4) | uint8(HdrLenMin/4)
-	hdr.TotalLen = uint16(HdrLenMin + len(payload))
+	hdr.TotalLen = uint16(HdrLenMin + len(data))
 	hdr.ID = id.Next()
 	hdr.TTL = 0xff
 	hdr.Protocol = protoNum
@@ -194,7 +194,7 @@ func createPacket(protoNum mw.ProtocolNumber, src mw.IP, dst mw.IP, payload []by
 	if err := binary.Write(buf, binary.BigEndian, &hdr); err != nil {
 		return nil
 	}
-	if err := binary.Write(buf, binary.BigEndian, &payload); err != nil {
+	if err := binary.Write(buf, binary.BigEndian, &data); err != nil {
 		return nil
 	}
 	packet := buf.Bytes()
@@ -220,12 +220,12 @@ func dump(packet []byte) (ret []string) {
 
 	ihl := hdr.VHL & 0x0f
 	hdrLen := 4*ihl
-	payloadLen := hdr.TotalLen - uint16(hdrLen)
+	dataLen := hdr.TotalLen - uint16(hdrLen)
 
 	ret = append(ret, fmt.Sprintf("version:             %d", hdr.VHL>>4))
 	ret = append(ret, fmt.Sprintf("ihl:                 %d", ihl))
 	ret = append(ret, fmt.Sprintf("type of service:     0b%08b", hdr.TOS))
-	ret = append(ret, fmt.Sprintf("total length:        %d bytes (payload: %d bytes)", hdr.TotalLen, payloadLen))
+	ret = append(ret, fmt.Sprintf("total length:        %d bytes (data: %d bytes)", hdr.TotalLen, dataLen))
 	ret = append(ret, fmt.Sprintf("id:                  %d", hdr.ID))
 	ret = append(ret, fmt.Sprintf("flags:               0b%03b", (hdr.Offset&0xe0)>>13))
 	ret = append(ret, fmt.Sprintf("fragment offset:     %d", hdr.Offset&0x1f))
@@ -235,7 +235,7 @@ func dump(packet []byte) (ret []string) {
 	ret = append(ret, fmt.Sprintf("source address:      %s", v4AddrToString(hdr.Src)))
 	ret = append(ret, fmt.Sprintf("destination address: %s", v4AddrToString(hdr.Dst)))
 
-	s := "payload:             "
+	s := "data:                "
 	for i, v := range packet[hdrLen:] {
 		s += fmt.Sprintf("%02x ", v)
 		if (i+1)%20 == 0 {
@@ -357,7 +357,7 @@ func sender(wg *sync.WaitGroup) {
 				switch msg.ProtoNum {
 				case mw.PnICMP:
 					mw.IcmpDeadLetterQueue <- &mw.IcmpQueueEntry{
-						Payload: msg.Packet,
+						Packet: msg.Packet,
 					}
 				default:
 					psLog.W(fmt.Sprintf("currently NOT support to process unsent message of protocol number %d", msg.ProtoNum))

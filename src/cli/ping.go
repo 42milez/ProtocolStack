@@ -107,9 +107,9 @@ func send(id uint16, seq uint16, payload []byte) {
 }
 
 func handleDeadLetter(letter *mw.IcmpQueueEntry) {
-	hdr, _ := icmp.ReadHeader(bytes.NewBuffer(letter.Payload))
+	hdr, _ := icmp.ReadHeader(bytes.NewBuffer(letter.Packet))
 	id, seq := icmp.SplitContent(hdr.Content)
-	send(id, seq, letter.Payload[icmp.HdrLen:])
+	send(id, seq, letter.Packet[icmp.HdrLen:])
 	psLog.W(fmt.Sprintf("icmp packet was sent (dead letter): id = %d, seq = %d", id, seq))
 }
 

@@ -242,7 +242,7 @@ func receiver(wg *sync.WaitGroup) {
 				return
 			}
 		case msg := <-mw.IcmpRxCh:
-			if err := Receive(msg.Payload, msg.Dst, msg.Src, msg.Dev); err != psErr.OK {
+			if err := Receive(msg.Packet, msg.Dst, msg.Src, msg.Dev); err != psErr.OK {
 				return
 			}
 		}

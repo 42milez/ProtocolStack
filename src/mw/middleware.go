@@ -70,14 +70,14 @@ type IpMessage struct {
 }
 
 type IcmpQueueEntry struct {
-	Payload []byte
+	Packet []byte
 }
 
 type IcmpRxMessage struct {
-	Payload []byte
-	Dst     [V4AddrLen]byte
-	Src     [V4AddrLen]byte
-	Dev     IDevice
+	Packet []byte
+	Dst    [V4AddrLen]byte
+	Src    [V4AddrLen]byte
+	Dev    IDevice
 }
 
 type IcmpTxMessage struct {
