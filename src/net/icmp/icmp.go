@@ -134,7 +134,7 @@ func Receive(packet []byte, dst [mw.V4AddrLen]byte, src [mw.V4AddrLen]byte, dev 
 	return psErr.OK
 }
 
-func Send(typ uint8, code uint8, content uint32, payload []byte, src mw.IP, dst mw.IP) psErr.E {
+func Send(typ uint8, code uint8, content uint32, data []byte, src mw.IP, dst mw.IP) psErr.E {
 	hdr := Hdr{
 		Type:    typ,
 		Code:    code,
@@ -145,7 +145,7 @@ func Send(typ uint8, code uint8, content uint32, payload []byte, src mw.IP, dst 
 	if err := binary.Write(buf, binary.BigEndian, &hdr); err != nil {
 		return psErr.WriteToBufError
 	}
-	if err := binary.Write(buf, binary.BigEndian, &payload); err != nil {
+	if err := binary.Write(buf, binary.BigEndian, &data); err != nil {
 		return psErr.WriteToBufError
 	}
 
@@ -154,7 +154,7 @@ func Send(typ uint8, code uint8, content uint32, payload []byte, src mw.IP, dst 
 	packet[2] = uint8((hdr.Checksum & 0xff00) >> 8)
 	packet[3] = uint8(hdr.Checksum & 0x00ff)
 
-	psLog.D("outgoing icmp packet", dump(&hdr, payload)...)
+	psLog.D("outgoing icmp packet", dump(&hdr, data)...)
 
 	mw.IpTxCh <- &mw.IpMessage{
 		ProtoNum: mw.PnICMP,
