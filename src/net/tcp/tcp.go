@@ -881,7 +881,7 @@ func dump(segment []byte, hdrLen int) (ret []string) {
 		for i, v := range data {
 			s += fmt.Sprintf("%02x ", v)
 			if (i+1)%20 == 0 && i+1 != len(data) {
-				s += "\n                                  "
+				s += "\n                           "
 			}
 		}
 	} else {

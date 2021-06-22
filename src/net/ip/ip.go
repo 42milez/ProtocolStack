@@ -228,7 +228,7 @@ func dump(packet []byte) (ret []string) {
 	for i, v := range packet[ihl:] {
 		s += fmt.Sprintf("%02x ", v)
 		if (i+1)%20 == 0 {
-			s += "\n                                             "
+			s += "\n                                      "
 		}
 	}
 	ret = append(ret, s)

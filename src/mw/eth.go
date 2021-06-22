@@ -109,7 +109,7 @@ func dump(hdr *EthHdr, payload []byte) (ret []string) {
 	for i, v := range payload {
 		s += fmt.Sprintf("%02x ", v)
 		if (i+1)%20 == 0 && i+1 != len(payload) {
-			s += "\n                                 "
+			s += "\n                          "
 		}
 	}
 	ret = append(ret, s)
