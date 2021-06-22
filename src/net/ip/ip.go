@@ -216,7 +216,7 @@ func dump(packet []byte) (ret []string) {
 	ihl := hdr.VHL & 0x0f
 	hdrLen := 4 * ihl
 	dataLen := hdr.TotalLen - uint16(hdrLen)
-	data := buf.Bytes()[hdrLen:]
+	data := packet[hdrLen:]
 
 	v4AddrToString := func(addr [mw.V4AddrLen]byte) string {
 		return fmt.Sprintf("%d.%d.%d.%d", addr[0], addr[1], addr[2], addr[3])
