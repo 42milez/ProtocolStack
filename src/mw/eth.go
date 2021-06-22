@@ -108,7 +108,7 @@ func dump(frame []byte) (ret []string) {
 	if err := binary.Read(buf, psBinary.Endian, &hdr); err != nil {
 		return nil
 	}
-	payload := buf.Bytes()[EthHdrLen:]
+	payload := frame[EthHdrLen:]
 
 	ret = append(ret, fmt.Sprintf("type:    %s (0x%04x)", hdr.Type, uint16(hdr.Type)))
 	ret = append(ret, fmt.Sprintf("dst:     %s", hdr.Dst))

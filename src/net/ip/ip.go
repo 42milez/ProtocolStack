@@ -214,7 +214,7 @@ func dump(packet []byte) (ret []string) {
 		return nil
 	}
 	ihl := hdr.VHL & 0x0f
-	hdrLen := 4*ihl
+	hdrLen := 4 * ihl
 	dataLen := hdr.TotalLen - uint16(hdrLen)
 	data := buf.Bytes()[hdrLen:]
 

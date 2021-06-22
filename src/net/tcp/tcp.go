@@ -858,7 +858,7 @@ func dump(segment []byte) (ret []string) {
 
 	flagToString := func(hdr *Hdr) (s string) {
 		// NS
-		if (hdr.Offset&0x01) == 1 {
+		if (hdr.Offset & 0x01) == 1 {
 			s += "N"
 		} else {
 			s += "-"
@@ -872,14 +872,14 @@ func dump(segment []byte) (ret []string) {
 			}
 		}
 
-		s += f(0x01 << 7, "C") // CWR
-		s += f(0x01 << 6, "E") // ECE
-		s += f(0x01 << 5, "U") // URG
-		s += f(0x01 << 4, "A") // ACK
-		s += f(0x01 << 3, "P") // PSH
-		s += f(0x01 << 2, "R") // RST
-		s += f(0x01 << 1, "S") // SYN
-		s += f(0x01, "F") // FIN
+		s += f(0x01<<7, "C") // CWR
+		s += f(0x01<<6, "E") // ECE
+		s += f(0x01<<5, "U") // URG
+		s += f(0x01<<4, "A") // ACK
+		s += f(0x01<<3, "P") // PSH
+		s += f(0x01<<2, "R") // RST
+		s += f(0x01<<1, "S") // SYN
+		s += f(0x01, "F")    // FIN
 
 		return
 	}

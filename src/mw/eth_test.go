@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	psBinary "github.com/42milez/ProtocolStack/src/binary"
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	psLog "github.com/42milez/ProtocolStack/src/log"
 	psSyscall "github.com/42milez/ProtocolStack/src/syscall"
@@ -67,7 +68,10 @@ func TestDumpFrame(t *testing.T) {
 			0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e,
 			0x1f, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28,
 		}
-		psLog.D("", dump(&hdr, payload)...)
+		buf := new(bytes.Buffer)
+		_ = binary.Write(buf, psBinary.Endian, &hdr)
+		_ = binary.Write(buf, psBinary.Endian, payload)
+		psLog.D("", dump(buf.Bytes())...)
 	})
 	got = trim(got)
 	if !want.MatchString(got) {
@@ -204,8 +208,7 @@ func setupEthTest(t *testing.T) (ctrl *gomock.Controller, teardown func()) {
 }
 
 func trim(s string) string {
-	ret := strings.Replace(s, "", "", -1)
-	ret = strings.Replace(ret, "\n", "", -1)
+	ret := strings.Replace(s, "\n", "", -1)
 	ret = strings.Replace(ret, " ", "", -1)
 	return ret
 }
