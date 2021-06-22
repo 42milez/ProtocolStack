@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	psBinary "github.com/42milez/ProtocolStack/src/binary"
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	psLog "github.com/42milez/ProtocolStack/src/log"
 	"github.com/42milez/ProtocolStack/src/monitor"
@@ -102,7 +103,7 @@ func Receive(packet []byte, dst [mw.V4AddrLen]byte, src [mw.V4AddrLen]byte, dev 
 		return psErr.ChecksumMismatch
 	}
 
-	psLog.D("incoming icmp packet", dump(hdr, packet[HdrLen:])...)
+	psLog.D("incoming icmp packet", dump(packet)...)
 
 	switch hdr.Type {
 	case Echo:
@@ -154,7 +155,7 @@ func Send(typ uint8, code uint8, content uint32, data []byte, src mw.IP, dst mw.
 	packet[2] = uint8((hdr.Checksum & 0xff00) >> 8)
 	packet[3] = uint8(hdr.Checksum & 0x00ff)
 
-	psLog.D("outgoing icmp packet", dump(&hdr, data)...)
+	psLog.D("outgoing icmp packet", dump(packet)...)
 
 	mw.IpTxCh <- &mw.IpMessage{
 		ProtoNum: mw.PnICMP,
@@ -194,7 +195,14 @@ func Stop() {
 	sndSigCh <- msg
 }
 
-func dump(hdr *Hdr, data []byte) (ret []string) {
+func dump(packet []byte) (ret []string) {
+	hdr := Hdr{}
+	buf := bytes.NewBuffer(packet)
+	if err := binary.Read(buf, psBinary.Endian, &hdr); err != nil {
+		return nil
+	}
+	data := buf.Bytes()[HdrLen:]
+
 	ret = append(ret, fmt.Sprintf("type:     %s (%d)", types[hdr.Type], hdr.Type))
 	ret = append(ret, fmt.Sprintf("code:     %d", hdr.Code))
 	ret = append(ret, fmt.Sprintf("checksum: 0x%04x", hdr.Checksum))
@@ -213,12 +221,17 @@ func dump(hdr *Hdr, data []byte) (ret []string) {
 	}
 
 	s := "data:     "
-	for i, v := range data {
-		s += fmt.Sprintf("%02x ", v)
-		if (i+1)%20 == 0 {
-			s += "\n                           "
+	if len(data) != 0 {
+		for i, v := range data {
+			s += fmt.Sprintf("%02x ", v)
+			if (i+1)%20 == 0 {
+				s += "\n                           "
+			}
 		}
+	} else {
+		s += "-"
 	}
+
 	ret = append(ret, s)
 
 	return
