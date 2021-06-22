@@ -865,8 +865,8 @@ func dump(segment []byte) (ret []string) {
 		}
 
 		f := func(mask uint8, s string) string {
-			if (uint8(hdr.Flag) & mask) == 1 {
-				return "C"
+			if (uint8(hdr.Flag) & mask) != 0 {
+				return s
 			} else {
 				return "-"
 			}
