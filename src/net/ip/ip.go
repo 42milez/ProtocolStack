@@ -224,10 +224,10 @@ func dump(packet []byte) (ret []string) {
 
 	precedenceToString := func(n uint8) string {
 		m := map[uint8]string{
-			0: "Routine",
-			1: "Priority",
-			10: "Immediate",
-			11: "Flash",
+			0:   "Routine",
+			1:   "Priority",
+			10:  "Immediate",
+			11:  "Flash",
 			100: "Flash Override",
 			101: "CRITIC/ECP",
 			110: "Internetwork Control",
