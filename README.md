@@ -85,6 +85,8 @@ Note: `make` supports the commands below:
 
 ## Examples
 - [ICMP Echo Reply](https://github.com/42milez/ProtocolStack/wiki/Example:-ICMP-Echo-Reply)
+- [ICMP Echo Request](https://github.com/42milez/ProtocolStack/wiki/ICMP-Echo-Request)
+- [3-Way Handshake](https://github.com/42milez/ProtocolStack/wiki/3-Way-Handshake)
 
 ## References
 - Articles
