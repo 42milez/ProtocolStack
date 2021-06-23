@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	psBinary "github.com/42milez/ProtocolStack/src/binary"
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	psLog "github.com/42milez/ProtocolStack/src/log"
 	"github.com/42milez/ProtocolStack/src/monitor"
@@ -175,7 +176,7 @@ func Receive(msg *mw.TcpRxMessage) psErr.E {
 	}
 
 	hdrLen := int((hdr.Offset&0xf0)>>4) << 2
-	psLog.D("incoming tcp segment", dump(msg.RawSegment, hdrLen)...)
+	psLog.D("incoming tcp segment", dump(msg.RawSegment)...)
 
 	local := &EndPoint{Addr: msg.Dst, Port: hdr.Dst}
 	foreign := &EndPoint{Addr: msg.Src, Port: hdr.Src}
@@ -818,7 +819,7 @@ func sendCore(info SegmentInfo, data []byte, local *EndPoint, foreign *EndPoint)
 	segment[16] = uint8((csum & 0xff00) >> 8)
 	segment[17] = uint8(csum & 0x00ff)
 
-	psLog.D("outgoing tcp segment", dump(segment, HdrLenMin)...)
+	psLog.D("outgoing tcp segment", dump(segment)...)
 
 	mw.IpTxCh <- &mw.IpMessage{
 		ProtoNum: mw.PnTCP,
@@ -846,42 +847,59 @@ func Stop() {
 	sndSigCh <- msg
 }
 
-func dump(segment []byte, hdrLen int) (ret []string) {
-	var flag uint16
-	flag |= uint16(segment[12]&0x01) << 8
-	flag |= uint16(segment[13] & (0x01 << 7))
-	flag |= uint16(segment[13] & (0x01 << 6))
-	flag |= uint16(segment[13] & (0x01 << 5))
-	flag |= uint16(segment[13] & (0x01 << 4))
-	flag |= uint16(segment[13] & (0x01 << 3))
-	flag |= uint16(segment[13] & (0x01 << 2))
-	flag |= uint16(segment[13] & (0x01 << 1))
-	flag |= uint16(segment[13] & 0x01)
+func dump(segment []byte) (ret []string) {
+	hdr := Hdr{}
+	buf := bytes.NewBuffer(segment)
+	if err := binary.Read(buf, psBinary.Endian, &hdr); err != nil {
+		return nil
+	}
+	hdrLen := int((hdr.Offset&0xf0)>>4) << 2
+	data := segment[hdrLen:]
 
-	ret = append(ret, fmt.Sprintf("src port: %d", uint16(segment[0])<<8|uint16(segment[1])))
-	ret = append(ret, fmt.Sprintf("dst port: %d", uint16(segment[2])<<8|uint16(segment[3])))
-	ret = append(ret, fmt.Sprintf("Seq:      %d",
-		uint32(segment[4])<<24|
-			uint32(segment[5])<<16|
-			uint32(segment[6])<<8|
-			uint32(segment[7])))
-	ret = append(ret, fmt.Sprintf("ack:      %d",
-		uint32(segment[8])<<24|
-			uint32(segment[9])<<16|
-			uint32(segment[10])<<8|
-			uint32(segment[11])))
-	ret = append(ret, fmt.Sprintf("offset:   %d", (segment[12]&0xf0)>>4))
-	ret = append(ret, fmt.Sprintf("flag:     0b%09b", flag))
-	ret = append(ret, fmt.Sprintf("window:   %d", uint16(segment[14])<<8|uint16(segment[15])))
-	ret = append(ret, fmt.Sprintf("checksum: 0x%04x", uint16(segment[16])<<8|uint16(segment[17])))
-	ret = append(ret, fmt.Sprintf("urg:      %d", uint16(segment[18])<<8|uint16(segment[19])))
+	flagToString := func(hdr *Hdr) (s string) {
+		// NS
+		if (hdr.Offset & 0x01) == 1 {
+			s += "N"
+		} else {
+			s += "-"
+		}
+
+		f := func(mask uint8, s string) string {
+			if (uint8(hdr.Flag) & mask) != 0 {
+				return s
+			} else {
+				return "-"
+			}
+		}
+
+		s += f(0x01<<7, "C") // CWR
+		s += f(0x01<<6, "E") // ECE
+		s += f(0x01<<5, "U") // URG
+		s += f(0x01<<4, "A") // ACK
+		s += f(0x01<<3, "P") // PSH
+		s += f(0x01<<2, "R") // RST
+		s += f(0x01<<1, "S") // SYN
+		s += f(0x01, "F")    // FIN
+
+		return
+	}
+
+	ret = append(ret, fmt.Sprintf("src port: %d", hdr.Src))
+	ret = append(ret, fmt.Sprintf("dst port: %d", hdr.Dst))
+	ret = append(ret, fmt.Sprintf("Seq:      %d", hdr.Seq))
+	ret = append(ret, fmt.Sprintf("ack:      %d", hdr.Ack))
+	ret = append(ret, fmt.Sprintf("offset:   %d", (hdr.Offset&0xf0)>>4))
+	ret = append(ret, fmt.Sprintf("flag:     %s (0x%03x)", flagToString(&hdr), hdr.Flag))
+	ret = append(ret, fmt.Sprintf("window:   %d", hdr.Wnd))
+	ret = append(ret, fmt.Sprintf("checksum: 0x%04x", hdr.Checksum))
+	ret = append(ret, fmt.Sprintf("urg:      %d", hdr.Urg))
 
 	s := "data:     "
-	if data := segment[hdrLen:]; len(data) != 0 {
+	if len(data) != 0 {
 		for i, v := range data {
 			s += fmt.Sprintf("%02x ", v)
 			if (i+1)%20 == 0 && i+1 != len(data) {
-				s += "\n                                  "
+				s += "\n                           "
 			}
 		}
 	} else {

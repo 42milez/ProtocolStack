@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	psBinary "github.com/42milez/ProtocolStack/src/binary"
 	psErr "github.com/42milez/ProtocolStack/src/error"
 	psLog "github.com/42milez/ProtocolStack/src/log"
 	"github.com/42milez/ProtocolStack/src/monitor"
@@ -85,24 +86,24 @@ type Hdr struct {
 	Content  uint32
 }
 
-func Receive(payload []byte, dst [mw.V4AddrLen]byte, src [mw.V4AddrLen]byte, dev mw.IDevice) psErr.E {
-	if len(payload) < HdrLen {
-		psLog.E(fmt.Sprintf("icmp header length is too short: %d bytes", len(payload)))
+func Receive(packet []byte, dst [mw.V4AddrLen]byte, src [mw.V4AddrLen]byte, dev mw.IDevice) psErr.E {
+	if len(packet) < HdrLen {
+		psLog.E(fmt.Sprintf("icmp header length is too short: %d bytes", len(packet)))
 		return psErr.InvalidPacket
 	}
 
-	buf := bytes.NewBuffer(payload)
+	buf := bytes.NewBuffer(packet)
 	hdr, err := ReadHeader(buf)
 	if err != nil {
 		return psErr.ReadFromBufError
 	}
 
-	if mw.Checksum(payload, 0) != 0 {
+	if mw.Checksum(packet, 0) != 0 {
 		psLog.E("checksum mismatch (icmp)")
 		return psErr.ChecksumMismatch
 	}
 
-	psLog.D("incoming icmp packet", dump(hdr, payload[HdrLen:])...)
+	psLog.D("incoming icmp packet", dump(packet)...)
 
 	switch hdr.Type {
 	case Echo:
@@ -116,7 +117,7 @@ func Receive(payload []byte, dst [mw.V4AddrLen]byte, src [mw.V4AddrLen]byte, dev
 			Type:    EchoReply,
 			Code:    hdr.Code,
 			Content: hdr.Content,
-			Payload: payload[HdrLen:],
+			Data:    packet[HdrLen:],
 			Src:     d,
 			Dst:     s,
 		}
@@ -134,7 +135,7 @@ func Receive(payload []byte, dst [mw.V4AddrLen]byte, src [mw.V4AddrLen]byte, dev
 	return psErr.OK
 }
 
-func Send(typ uint8, code uint8, content uint32, payload []byte, src mw.IP, dst mw.IP) psErr.E {
+func Send(typ uint8, code uint8, content uint32, data []byte, src mw.IP, dst mw.IP) psErr.E {
 	hdr := Hdr{
 		Type:    typ,
 		Code:    code,
@@ -145,7 +146,7 @@ func Send(typ uint8, code uint8, content uint32, payload []byte, src mw.IP, dst 
 	if err := binary.Write(buf, binary.BigEndian, &hdr); err != nil {
 		return psErr.WriteToBufError
 	}
-	if err := binary.Write(buf, binary.BigEndian, &payload); err != nil {
+	if err := binary.Write(buf, binary.BigEndian, &data); err != nil {
 		return psErr.WriteToBufError
 	}
 
@@ -154,7 +155,7 @@ func Send(typ uint8, code uint8, content uint32, payload []byte, src mw.IP, dst 
 	packet[2] = uint8((hdr.Checksum & 0xff00) >> 8)
 	packet[3] = uint8(hdr.Checksum & 0x00ff)
 
-	psLog.D("outgoing icmp packet", dump(&hdr, payload)...)
+	psLog.D("outgoing icmp packet", dump(packet)...)
 
 	mw.IpTxCh <- &mw.IpMessage{
 		ProtoNum: mw.PnICMP,
@@ -194,7 +195,14 @@ func Stop() {
 	sndSigCh <- msg
 }
 
-func dump(hdr *Hdr, payload []byte) (ret []string) {
+func dump(packet []byte) (ret []string) {
+	hdr := Hdr{}
+	buf := bytes.NewBuffer(packet)
+	if err := binary.Read(buf, psBinary.Endian, &hdr); err != nil {
+		return nil
+	}
+	data := buf.Bytes()[HdrLen:]
+
 	ret = append(ret, fmt.Sprintf("type:     %s (%d)", types[hdr.Type], hdr.Type))
 	ret = append(ret, fmt.Sprintf("code:     %d", hdr.Code))
 	ret = append(ret, fmt.Sprintf("checksum: 0x%04x", hdr.Checksum))
@@ -212,13 +220,18 @@ func dump(hdr *Hdr, payload []byte) (ret []string) {
 			uint8(hdr.Content&0x000f)))
 	}
 
-	s := "payload:  "
-	for i, v := range payload {
-		s += fmt.Sprintf("%02x ", v)
-		if (i+1)%20 == 0 {
-			s += "\n                                  "
+	s := "data:     "
+	if len(data) != 0 {
+		for i, v := range data {
+			s += fmt.Sprintf("%02x ", v)
+			if (i+1)%20 == 0 {
+				s += "\n                           "
+			}
 		}
+	} else {
+		s += "-"
 	}
+
 	ret = append(ret, s)
 
 	return
@@ -242,7 +255,7 @@ func receiver(wg *sync.WaitGroup) {
 				return
 			}
 		case msg := <-mw.IcmpRxCh:
-			if err := Receive(msg.Payload, msg.Dst, msg.Src, msg.Dev); err != psErr.OK {
+			if err := Receive(msg.Packet, msg.Dst, msg.Src, msg.Dev); err != psErr.OK {
 				return
 			}
 		}
@@ -267,7 +280,7 @@ func sender(wg *sync.WaitGroup) {
 				return
 			}
 		case msg := <-mw.IcmpTxCh:
-			if err := Send(msg.Type, msg.Code, msg.Content, msg.Payload, msg.Src, msg.Dst); err != psErr.OK {
+			if err := Send(msg.Type, msg.Code, msg.Content, msg.Data, msg.Src, msg.Dst); err != psErr.OK {
 				return
 			}
 		}

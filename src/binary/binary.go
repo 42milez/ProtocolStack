@@ -19,9 +19,9 @@ func byteOrder() goBinary.ByteOrder {
 	x := 0x0100
 	p := unsafe.Pointer(&x)
 	if 0x01 == *(*byte)(p) {
-		return goBinary.BigEndian
-	} else {
 		return goBinary.LittleEndian
+	} else {
+		return goBinary.BigEndian
 	}
 }
 
