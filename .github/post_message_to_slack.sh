@@ -66,4 +66,5 @@ curl -s -X POST \
      -H "Content-type: application/json; charset=utf-8" \
      -H "Authorization: Bearer ${SLACK_BOT_USER_OAUTH_TOKEN}" \
      -d "${DATA}" \
-     https://slack.com/api/chat.postMessage
+     https://slack.com/api/chat.postMessage \
+  > /dev/null
