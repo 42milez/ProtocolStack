@@ -693,7 +693,7 @@ func receiveCore(hdr *Hdr, data []byte, local *EndPoint, foreign *EndPoint) psEr
 			copy(pcb.rcvBuf[:pcb.RCV.WND], data)
 			pcb.RCV.NXT = hdr.Seq + uint32(len(data))
 			pcb.RCV.WND -= uint16(len(data))
-			psLog.D(fmt.Sprintf("%s", strings.Replace(string(data), "\n", "", -1)))
+			psLog.D("incoming segment data: ", strings.Replace(string(data), "\n", "", -1))
 			if err := Send(pcb, ackFlag, nil); err != psErr.OK {
 				return psErr.Error
 			}
