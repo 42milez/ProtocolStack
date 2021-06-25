@@ -62,7 +62,7 @@ readonly DATA=$(cat <<EOF
 EOF
 )
 
-curl -X POST \
+curl -s -X POST \
      -H "Content-type: application/json; charset=utf-8" \
      -H "Authorization: Bearer ${SLACK_BOT_USER_OAUTH_TOKEN}" \
      -d "${DATA}" \
