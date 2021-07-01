@@ -49,7 +49,7 @@ func TestCache_Create_3(t *testing.T) {
 	defer cache.Init()
 
 	want := psErr.OK
-	var got psErr.E
+	var got error
 
 	m := psTime.NewMockITime(ctrl)
 	psTime.Time = m

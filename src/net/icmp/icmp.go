@@ -86,7 +86,7 @@ type Hdr struct {
 	Content  uint32
 }
 
-func Receive(packet []byte, dst [mw.V4AddrLen]byte, src [mw.V4AddrLen]byte, dev mw.IDevice) psErr.E {
+func Receive(packet []byte, dst [mw.V4AddrLen]byte, src [mw.V4AddrLen]byte, dev mw.IDevice) error {
 	if len(packet) < HdrLen {
 		psLog.E(fmt.Sprintf("icmp header length is too short: %d bytes", len(packet)))
 		return psErr.InvalidPacket
@@ -135,7 +135,7 @@ func Receive(packet []byte, dst [mw.V4AddrLen]byte, src [mw.V4AddrLen]byte, dev 
 	return psErr.OK
 }
 
-func Send(typ uint8, code uint8, content uint32, data []byte, src mw.IP, dst mw.IP) psErr.E {
+func Send(typ uint8, code uint8, content uint32, data []byte, src mw.IP, dst mw.IP) error {
 	hdr := Hdr{
 		Type:    typ,
 		Code:    code,
@@ -179,7 +179,7 @@ func SplitContent(content uint32) (id uint16, seq uint16) {
 	return
 }
 
-func Start(wg *sync.WaitGroup) psErr.E {
+func Start(wg *sync.WaitGroup) error {
 	wg.Add(2)
 	go receiver(wg)
 	go sender(wg)

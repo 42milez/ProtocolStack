@@ -7,7 +7,6 @@ package repo
 import (
 	reflect "reflect"
 
-	error "github.com/42milez/ProtocolStack/src/error"
 	mw "github.com/42milez/ProtocolStack/src/mw"
 	gomock "github.com/golang/mock/gomock"
 )
@@ -62,10 +61,10 @@ func (mr *MockIDeviceRepoMockRecorder) NextNumber() *gomock.Call {
 }
 
 // Poll mocks base method.
-func (m *MockIDeviceRepo) Poll() error.E {
+func (m *MockIDeviceRepo) Poll() error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Poll")
-	ret0, _ := ret[0].(error.E)
+	ret0, _ := ret[0].(error)
 	return ret0
 }
 
@@ -76,10 +75,10 @@ func (mr *MockIDeviceRepoMockRecorder) Poll() *gomock.Call {
 }
 
 // Register mocks base method.
-func (m *MockIDeviceRepo) Register(dev mw.IDevice) error.E {
+func (m *MockIDeviceRepo) Register(dev mw.IDevice) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Register", dev)
-	ret0, _ := ret[0].(error.E)
+	ret0, _ := ret[0].(error)
 	return ret0
 }
 
@@ -90,10 +89,10 @@ func (mr *MockIDeviceRepoMockRecorder) Register(dev interface{}) *gomock.Call {
 }
 
 // Up mocks base method.
-func (m *MockIDeviceRepo) Up() error.E {
+func (m *MockIDeviceRepo) Up() error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Up")
-	ret0, _ := ret[0].(error.E)
+	ret0, _ := ret[0].(error)
 	return ret0
 }
 
@@ -167,10 +166,10 @@ func (mr *MockIIfaceRepoMockRecorder) Lookup(dev, family interface{}) *gomock.Ca
 }
 
 // Register mocks base method.
-func (m *MockIIfaceRepo) Register(iface *mw.Iface, dev mw.IDevice) error.E {
+func (m *MockIIfaceRepo) Register(iface *mw.Iface, dev mw.IDevice) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Register", iface, dev)
-	ret0, _ := ret[0].(error.E)
+	ret0, _ := ret[0].(error)
 	return ret0
 }
 

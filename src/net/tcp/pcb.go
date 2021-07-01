@@ -47,7 +47,7 @@ func (p *Backlog) Pop() *PCB {
 	return entry.Value.(*PCB)
 }
 
-func (p *Backlog) Push(pcb *PCB) psErr.E {
+func (p *Backlog) Push(pcb *PCB) error {
 	defer p.mtx.Unlock()
 	p.mtx.Lock()
 

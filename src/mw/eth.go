@@ -38,7 +38,7 @@ type EthHdr struct {
 	Type EthType
 }
 
-func ReadFrame(fd int, addr EthAddr) (*EthMessage, psErr.E) {
+func ReadFrame(fd int, addr EthAddr) (*EthMessage, error) {
 	flen, err := psSyscall.Syscall.Read(fd, rxBuf)
 	if err != nil {
 		return nil, psErr.Error
@@ -74,7 +74,7 @@ func ReadFrame(fd int, addr EthAddr) (*EthMessage, psErr.E) {
 	}, psErr.OK
 }
 
-func WriteFrame(fd int, dst EthAddr, src EthAddr, typ EthType, payload []byte) psErr.E {
+func WriteFrame(fd int, dst EthAddr, src EthAddr, typ EthType, payload []byte) error {
 	hdr := EthHdr{
 		Dst:  dst,
 		Src:  src,
@@ -130,7 +130,7 @@ func dump(frame []byte) (ret []string) {
 	return
 }
 
-func pad(buf *bytes.Buffer) psErr.E {
+func pad(buf *bytes.Buffer) error {
 	if flen := buf.Len(); flen < EthFrameLenMin {
 		padLen := EthFrameLenMin - flen
 		pad := make([]byte, padLen)

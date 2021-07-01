@@ -50,7 +50,7 @@ type TapDevice struct {
 	mw.Device
 }
 
-func (p *TapDevice) Open() psErr.E {
+func (p *TapDevice) Open() error {
 	var fd int
 	var err error
 
@@ -113,14 +113,14 @@ func (p *TapDevice) Open() psErr.E {
 	return psErr.OK
 }
 
-func (p *TapDevice) Close() psErr.E {
+func (p *TapDevice) Close() error {
 	if err := psSyscall.Syscall.Close(epfd); err != nil {
 		return psErr.SyscallError
 	}
 	return psErr.OK
 }
 
-func (p *TapDevice) Poll() psErr.E {
+func (p *TapDevice) Poll() error {
 	var events [maxEpollEvents]syscall.EpollEvent
 	nEvents, err := psSyscall.Syscall.EpollWait(epfd, events[:], epollTimeout)
 	if err != nil {
@@ -149,6 +149,6 @@ func (p *TapDevice) Poll() psErr.E {
 	return psErr.OK
 }
 
-func (p *TapDevice) Transmit(dst mw.EthAddr, payload []byte, typ mw.EthType) psErr.E {
+func (p *TapDevice) Transmit(dst mw.EthAddr, payload []byte, typ mw.EthType) error {
 	return mw.WriteFrame(p.Priv_.FD, dst, p.Addr_, typ, payload)
 }

@@ -2,10 +2,6 @@
 
 package mw
 
-import (
-	psErr "github.com/42milez/ProtocolStack/src/error"
-)
-
 const UpFlag DevFlag = 0x0001
 const LoopbackFlag DevFlag = 0x0010
 const BroadcastFlag DevFlag = 0x0020
@@ -30,10 +26,10 @@ func (v DevType) String() string {
 }
 
 type IDevice interface {
-	Open() psErr.E
-	Close() psErr.E
-	Poll() psErr.E
-	Transmit(dst EthAddr, payload []byte, typ EthType) psErr.E
+	Open() error
+	Close() error
+	Poll() error
+	Transmit(dst EthAddr, payload []byte, typ EthType) error
 	Up()
 	Down()
 	Equal(dev IDevice) bool

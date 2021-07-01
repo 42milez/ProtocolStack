@@ -7,7 +7,6 @@ package mw
 import (
 	reflect "reflect"
 
-	error "github.com/42milez/ProtocolStack/src/error"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -49,10 +48,10 @@ func (mr *MockIDeviceMockRecorder) Addr() *gomock.Call {
 }
 
 // Close mocks base method.
-func (m *MockIDevice) Close() error.E {
+func (m *MockIDevice) Close() error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Close")
-	ret0, _ := ret[0].(error.E)
+	ret0, _ := ret[0].(error)
 	return ret0
 }
 
@@ -91,7 +90,7 @@ func (mr *MockIDeviceMockRecorder) Equal(dev interface{}) *gomock.Call {
 // Flag mocks base method.
 func (m *MockIDevice) Flag() DevFlag {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "flag")
+	ret := m.ctrl.Call(m, "Flag")
 	ret0, _ := ret[0].(DevFlag)
 	return ret0
 }
@@ -99,7 +98,7 @@ func (m *MockIDevice) Flag() DevFlag {
 // Flag indicates an expected call of Flag.
 func (mr *MockIDeviceMockRecorder) Flag() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "flag", reflect.TypeOf((*MockIDevice)(nil).Flag))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Flag", reflect.TypeOf((*MockIDevice)(nil).Flag))
 }
 
 // IsUp mocks base method.
@@ -145,10 +144,10 @@ func (mr *MockIDeviceMockRecorder) Name() *gomock.Call {
 }
 
 // Open mocks base method.
-func (m *MockIDevice) Open() error.E {
+func (m *MockIDevice) Open() error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Open")
-	ret0, _ := ret[0].(error.E)
+	ret0, _ := ret[0].(error)
 	return ret0
 }
 
@@ -159,10 +158,10 @@ func (mr *MockIDeviceMockRecorder) Open() *gomock.Call {
 }
 
 // Poll mocks base method.
-func (m *MockIDevice) Poll() error.E {
+func (m *MockIDevice) Poll() error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Poll")
-	ret0, _ := ret[0].(error.E)
+	ret0, _ := ret[0].(error)
 	return ret0
 }
 
@@ -187,10 +186,10 @@ func (mr *MockIDeviceMockRecorder) Priv() *gomock.Call {
 }
 
 // Transmit mocks base method.
-func (m *MockIDevice) Transmit(dst EthAddr, payload []byte, typ EthType) error.E {
+func (m *MockIDevice) Transmit(dst EthAddr, payload []byte, typ EthType) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Transmit", dst, payload, typ)
-	ret0, _ := ret[0].(error.E)
+	ret0, _ := ret[0].(error)
 	return ret0
 }
 
