@@ -6,6 +6,33 @@ This repository is for learning network programming in Go and mainly aims to imp
 - OS: Linux
 - Go: 1.14.x or higher
 
+## Directory Structure
+```
+ProtocolStack/
+├── .github
+│   └── workflows .. Configurations for GitHub Actions
+├── src
+│   ├── binary ..... provides utilities for binary operation
+│   ├── cli ........ cli command difinitions
+│   ├── error ...... error definitions
+│   ├── log ........ provides utilities for logging
+│   ├── monitor .... provides monitoring features to watch services
+│   ├── mw ......... provides a layer to connect network layer with ethernet layer
+│   ├── net ........ protocol implementations
+│   │   ├── arp .... arp
+│   │   ├── eth .... ethernet protocol
+│   │   ├── icmp ... icmp
+│   │   ├── ip ..... ip
+│   │   └── tcp .... tcp
+│   ├── repo ....... provides repositories of various entities
+│   ├── syscall .... provides system call wrappers
+│   ├── test ....... test cases
+│   ├── time ....... provides utilities for time operation
+│   └── worker ..... provides various types used by worker
+└── vagrant
+    └── provisioners provides provisioning scripts
+```
+
 ## Instructions
 ProtocolStack needs a TAP device for its capability. For the reason, this project uses a virtual machine (Linux) to run the application.
 
