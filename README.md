@@ -7,6 +7,26 @@ This repository is for learning network programming in Go and mainly aims to imp
   <img src="docs/images/overview.svg" width="100%">
 </a>
 
+## Supported Protocols
+
+- [x] Ethernet
+- [x] ARP
+    - [x] Request
+    - [x] Reply
+- [x] IP
+    - [x] v4
+    - [ ] v6
+- [x] ICMP
+    - [x] Echo Request
+    - [x] Echo Reply
+- [x] TCP
+    - [x] Connection establishment
+    - [x] Sending data less than MTU
+    - [ ] Flow Control
+    - [ ] Sending data which exceeds MTU
+    - [ ] Retransmission
+- [ ] UDP
+
 ## Requirements
 - OS: Linux
 - Go: 1.14.x or higher
@@ -99,21 +119,6 @@ Note: `make` supports the commands below:
 - `lint` run linters (golangci-lint)
 - `resolve` resolve dependencies
 - `test` run all tests
-
-## Supported Protocols
-
-- [x] Ethernet
-- [x] ARP
-  - [x] Request
-  - [x] Reply
-- [x] IP
-  - [x] v4
-  - [ ] v6
-- [x] ICMP
-  - [x] Echo Request
-  - [x] Echo Reply
-- [ ] TCP
-- [ ] UDP
 
 ## Examples
 - [ICMP Echo Reply](https://github.com/42milez/ProtocolStack/wiki/Example:-ICMP-Echo-Reply)
