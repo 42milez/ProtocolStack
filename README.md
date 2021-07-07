@@ -20,7 +20,6 @@ This repository is for learning network programming in Go and mainly aims to imp
     - [x] Echo Request
     - [x] Echo Reply
 - [x] TCP
-    - [x] Connection establishment
     - [x] Receiving data less than MTU
     - [ ] Receiving data which exceeds MTU
     - [ ] Sending data
