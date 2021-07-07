@@ -3,7 +3,9 @@
 This repository is for learning network programming in Go and mainly aims to implement TCP/IP stack.
 
 ## Overview
-![overview](https://user-images.githubusercontent.com/9639155/124692596-d0c96200-df18-11eb-9a87-557c180401fa.png)
+<a href="https://olivermak.es/">
+  <img src="docs/images/overview.svg" width="100%">
+</a>
 
 ## Requirements
 - OS: Linux
