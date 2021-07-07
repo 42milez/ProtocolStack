@@ -1,5 +1,5 @@
 ## ProtocolStack
-[![CI](https://github.com/42milez/ProtocolStack/actions/workflows/ci.yml/badge.svg)](https://github.com/42milez/ProtocolStack/actions/workflows/ci.yml) [![codecov](https://codecov.io/gh/42milez/ProtocolStack/branch/main/graph/badge.svg?token=ALHDIWP6KH)](https://codecov.io/gh/42milez/ProtocolStack) ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/42milez/ProtocolStack) [![License: MIT](https://img.shields.io/badge/License-MIT-informational.svg)](https://github.com/42milez/ProtocolStack/blob/main/LICENSE)  
+[![CI](https://github.com/42milez/ProtocolStack/actions/workflows/ci.yml/badge.svg)](https://github.com/42milez/ProtocolStack/actions/workflows/ci.yml) [![codecov](https://codecov.io/gh/42milez/ProtocolStack/branch/main/graph/badge.svg?token=ALHDIWP6KH)](https://codecov.io/gh/42milez/ProtocolStack) [![Go Report Card](https://goreportcard.com/badge/github.com/42milez/ProtocolStack)](https://goreportcard.com/report/github.com/42milez/ProtocolStack) ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/42milez/ProtocolStack) [![License: MIT](https://img.shields.io/badge/License-MIT-informational.svg)](https://github.com/42milez/ProtocolStack/blob/main/LICENSE)  
 This repository is for learning network programming in Go and mainly aims to implement TCP/IP stack.
 
 ## Overview
