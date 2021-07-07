@@ -2,9 +2,39 @@
 [![CI](https://github.com/42milez/ProtocolStack/actions/workflows/ci.yml/badge.svg)](https://github.com/42milez/ProtocolStack/actions/workflows/ci.yml) [![codecov](https://codecov.io/gh/42milez/ProtocolStack/branch/main/graph/badge.svg?token=ALHDIWP6KH)](https://codecov.io/gh/42milez/ProtocolStack) ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/42milez/ProtocolStack) [![License: MIT](https://img.shields.io/badge/License-MIT-informational.svg)](https://github.com/42milez/ProtocolStack/blob/main/LICENSE)  
 This repository is for learning network programming in Go and mainly aims to implement TCP/IP stack.
 
+## Overview
+![overview](https://user-images.githubusercontent.com/9639155/124692596-d0c96200-df18-11eb-9a87-557c180401fa.png)
+
 ## Requirements
 - OS: Linux
 - Go: 1.14.x or higher
+
+## Directory Structure
+```
+ProtocolStack/
+├── .github
+│   └── workflows .. Configurations for GitHub Actions
+├── src
+│   ├── binary ..... provides utilities for binary operation
+│   ├── cli ........ cli command difinitions
+│   ├── error ...... error definitions
+│   ├── log ........ provides utilities for logging
+│   ├── monitor .... provides monitoring features to watch services
+│   ├── mw ......... provides a layer to connect network layer with ethernet layer
+│   ├── net ........ protocol implementations
+│   │   ├── arp .... arp
+│   │   ├── eth .... ethernet protocol
+│   │   ├── icmp ... icmp
+│   │   ├── ip ..... ip
+│   │   └── tcp .... tcp
+│   ├── repo ....... provides repositories of various entities
+│   ├── syscall .... provides system call wrappers
+│   ├── test ....... test cases
+│   ├── time ....... provides utilities for time operation
+│   └── worker ..... provides various types used by worker
+└── vagrant
+    └── provisioners provides provisioning scripts
+```
 
 ## Instructions
 ProtocolStack needs a TAP device for its capability. For the reason, this project uses a virtual machine (Linux) to run the application.
