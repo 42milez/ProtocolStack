@@ -64,14 +64,7 @@ jobs:
       - name: Post message to Slack
         run: ./.github/post_message_to_slack.sh
         env:
-          GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_HEAD_COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
-          GITHUB_REPOSITORY: ${{ github.repo }}
-          GITHUB_REPOSITORY_REF: ${{ github.ref }}
-          GITHUB_RUN_ID: ${{ github.run_id }}
-          GITHUB_RUN_NUMBER: ${{ github.run_number }}
-          GITHUB_SHA: ${{ github.sha }}
-          GITHUB_WORKFLOW: ${{ github.workflow }}
           NEEDS_PREVIOUS_JOB_RESULT: ${{ needs.test.result }}
           SLACK_BOT_USER_OAUTH_TOKEN: ${{ secrets.SLACK_BOT_USER_OAUTH_TOKEN }}
           SLACK_CHANNEL: ${{ secrets.SLACK_CHANNEL }}

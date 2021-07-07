@@ -167,7 +167,7 @@ type IResolver interface {
 	Resolve(iface *mw.Iface, ip mw.IP) (mw.EthAddr, Status)
 }
 
-func Receive(packet []byte, dev mw.IDevice) psErr.E {
+func Receive(packet []byte, dev mw.IDevice) error {
 	if len(packet) < PacketLen {
 		psLog.E(fmt.Sprintf("arp packet length is too short: %d bytes", len(packet)))
 		return psErr.InvalidPacket
@@ -217,7 +217,7 @@ func Receive(packet []byte, dev mw.IDevice) psErr.E {
 	return psErr.OK
 }
 
-func SendReply(tha mw.EthAddr, tpa mw.V4Addr, iface *mw.Iface) psErr.E {
+func SendReply(tha mw.EthAddr, tpa mw.V4Addr, iface *mw.Iface) error {
 	packet := Packet{
 		Hdr: Hdr{
 			HT:     Ethernet,
@@ -248,7 +248,7 @@ func SendReply(tha mw.EthAddr, tpa mw.V4Addr, iface *mw.Iface) psErr.E {
 	return psErr.OK
 }
 
-func SendRequest(iface *mw.Iface, ip mw.IP) psErr.E {
+func SendRequest(iface *mw.Iface, ip mw.IP) error {
 	packet := Packet{
 		Hdr: Hdr{
 			HT:     Ethernet,
@@ -305,7 +305,7 @@ func (resolver) Resolve(iface *mw.Iface, ip mw.IP) (mw.EthAddr, Status) {
 	return entry.HA, Complete
 }
 
-func Start(wg *sync.WaitGroup) psErr.E {
+func Start(wg *sync.WaitGroup) error {
 	wg.Add(3)
 	go receiver(wg)
 	go sender(wg)

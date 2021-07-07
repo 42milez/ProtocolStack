@@ -12,18 +12,18 @@ type LoopbackDevice struct {
 	mw.Device
 }
 
-func (p *LoopbackDevice) Open() psErr.E {
+func (p *LoopbackDevice) Open() error {
 	return psErr.OK
 }
 
-func (p *LoopbackDevice) Close() psErr.E {
+func (p *LoopbackDevice) Close() error {
 	return psErr.OK
 }
 
-func (p *LoopbackDevice) Poll() psErr.E {
+func (p *LoopbackDevice) Poll() error {
 	return psErr.OK
 }
 
-func (p *LoopbackDevice) Transmit(dst mw.EthAddr, payload []byte, typ mw.EthType) psErr.E {
+func (p *LoopbackDevice) Transmit(dst mw.EthAddr, payload []byte, typ mw.EthType) error {
 	return psErr.OK
 }

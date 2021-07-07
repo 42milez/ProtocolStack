@@ -10,6 +10,7 @@ import (
 	"github.com/42milez/ProtocolStack/src/monitor"
 	"github.com/42milez/ProtocolStack/src/mw"
 	"github.com/42milez/ProtocolStack/src/worker"
+	"strings"
 	"sync"
 	"time"
 )
@@ -72,7 +73,7 @@ type SegmentInfo struct {
 	Flag Flag
 }
 
-func Open() (int, psErr.E) {
+func Open() (int, error) {
 	pcb := PcbRepo.UnusedPcb()
 	if pcb == nil {
 		psLog.E("all pcb is in used")
@@ -81,7 +82,7 @@ func Open() (int, psErr.E) {
 	return pcb.ID, psErr.OK
 }
 
-func Listen(id int, backlogSize int) psErr.E {
+func Listen(id int, backlogSize int) error {
 	pcb := PcbRepo.Get(id)
 	if pcb == nil {
 		psLog.E("pcb not found")
@@ -94,7 +95,7 @@ func Listen(id int, backlogSize int) psErr.E {
 	return psErr.OK
 }
 
-func Bind(id int, local EndPoint) psErr.E {
+func Bind(id int, local EndPoint) error {
 	if PcbRepo.Have(&local) {
 		psLog.E(fmt.Sprintf("already bound: addr = %s, port = %d", local.Addr, local.Port))
 		return psErr.AlreadyBound
@@ -113,7 +114,7 @@ func Bind(id int, local EndPoint) psErr.E {
 	return psErr.OK
 }
 
-func Accept(id int) (int, EndPoint, psErr.E) {
+func Accept(id int) (int, EndPoint, error) {
 	var foreign EndPoint
 
 	pcb := PcbRepo.Get(id)
@@ -140,11 +141,11 @@ func Accept(id int) (int, EndPoint, psErr.E) {
 	return pcbId, foreign, psErr.OK
 }
 
-func Connect(id int, foreign EndPoint) psErr.E {
+func Connect(id int, foreign EndPoint) error {
 	return psErr.OK
 }
 
-func Receive(msg *mw.TcpRxMessage) psErr.E {
+func Receive(msg *mw.TcpRxMessage) error {
 	if len(msg.RawSegment) < HdrLenMin {
 		return psErr.InvalidPacket
 	}
@@ -192,7 +193,7 @@ func Receive(msg *mw.TcpRxMessage) psErr.E {
 // SEGMENT ARRIVES
 // https://datatracker.ietf.org/doc/html/rfc793#page-65
 
-func receiveCore(hdr *Hdr, data []byte, local *EndPoint, foreign *EndPoint) psErr.E {
+func receiveCore(hdr *Hdr, data []byte, local *EndPoint, foreign *EndPoint) error {
 	pcb := PcbRepo.LookUp(local, foreign)
 
 	if pcb == nil {
@@ -692,6 +693,7 @@ func receiveCore(hdr *Hdr, data []byte, local *EndPoint, foreign *EndPoint) psEr
 			copy(pcb.rcvBuf[:pcb.RCV.WND], data)
 			pcb.RCV.NXT = hdr.Seq + uint32(len(data))
 			pcb.RCV.WND -= uint16(len(data))
+			psLog.D("incoming segment data: ", strings.Replace(string(data), "\n", "", -1))
 			if err := Send(pcb, ackFlag, nil); err != psErr.OK {
 				return psErr.Error
 			}
@@ -766,7 +768,7 @@ func receiveCore(hdr *Hdr, data []byte, local *EndPoint, foreign *EndPoint) psEr
 	return psErr.OK
 }
 
-func Send(pcb *PCB, flag Flag, data []byte) psErr.E {
+func Send(pcb *PCB, flag Flag, data []byte) error {
 	info := SegmentInfo{
 		Seq:  pcb.SND.NXT,
 		Ack:  pcb.RCV.NXT,
@@ -784,7 +786,7 @@ func Send(pcb *PCB, flag Flag, data []byte) psErr.E {
 	return sendCore(info, data, &pcb.Local, &pcb.Foreign)
 }
 
-func sendCore(info SegmentInfo, data []byte, local *EndPoint, foreign *EndPoint) psErr.E {
+func sendCore(info SegmentInfo, data []byte, local *EndPoint, foreign *EndPoint) error {
 	hdr := Hdr{
 		Src:    local.Port,
 		Dst:    foreign.Port,
@@ -831,7 +833,7 @@ func sendCore(info SegmentInfo, data []byte, local *EndPoint, foreign *EndPoint)
 	return psErr.OK
 }
 
-func Start(wg *sync.WaitGroup) psErr.E {
+func Start(wg *sync.WaitGroup) error {
 	wg.Add(2)
 	go receiver(wg)
 	go sender(wg)

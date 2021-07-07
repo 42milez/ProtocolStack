@@ -19,7 +19,7 @@ var receiverID uint32
 var senderID uint32
 var xChBufSize = 5
 
-func Start(wg *sync.WaitGroup) psErr.E {
+func Start(wg *sync.WaitGroup) error {
 	wg.Add(2)
 	go receiver(wg)
 	go sender(wg)

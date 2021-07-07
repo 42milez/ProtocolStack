@@ -22,7 +22,7 @@ var DeviceRepo IDeviceRepo
 var IfaceRepo IIfaceRepo
 var RouteRepo IRouteRepo
 
-type Handler func(data []byte, dev mw.IDevice) psErr.E
+type Handler func(data []byte, dev mw.IDevice) error
 
 type Route struct {
 	Network mw.IP
@@ -34,9 +34,9 @@ type Route struct {
 type IDeviceRepo interface {
 	Init()
 	NextNumber() int
-	Poll() psErr.E
-	Register(dev mw.IDevice) psErr.E
-	Up() psErr.E
+	Poll() error
+	Register(dev mw.IDevice) error
+	Up() error
 }
 
 type deviceRepo struct {
@@ -56,7 +56,7 @@ func (p *deviceRepo) NextNumber() int {
 	return len(p.devices)
 }
 
-func (p *deviceRepo) Poll() psErr.E {
+func (p *deviceRepo) Poll() error {
 	defer p.mtx.Unlock()
 	p.mtx.Lock()
 
@@ -75,7 +75,7 @@ func (p *deviceRepo) Poll() psErr.E {
 	return psErr.OK
 }
 
-func (p *deviceRepo) Register(dev mw.IDevice) psErr.E {
+func (p *deviceRepo) Register(dev mw.IDevice) error {
 	defer p.mtx.Unlock()
 	p.mtx.Lock()
 
@@ -97,7 +97,7 @@ func (p *deviceRepo) Register(dev mw.IDevice) psErr.E {
 	return psErr.OK
 }
 
-func (p *deviceRepo) Up() psErr.E {
+func (p *deviceRepo) Up() error {
 	defer p.mtx.Unlock()
 	p.mtx.Lock()
 
@@ -127,7 +127,7 @@ type IIfaceRepo interface {
 	Init()
 	Get(unicast mw.IP) *mw.Iface
 	Lookup(dev mw.IDevice, family mw.AddrFamily) *mw.Iface
-	Register(iface *mw.Iface, dev mw.IDevice) psErr.E
+	Register(iface *mw.Iface, dev mw.IDevice) error
 }
 
 type ifaceRepo struct {
@@ -167,7 +167,7 @@ func (p *ifaceRepo) Lookup(dev mw.IDevice, family mw.AddrFamily) *mw.Iface {
 	return nil
 }
 
-func (p *ifaceRepo) Register(iface *mw.Iface, dev mw.IDevice) psErr.E {
+func (p *ifaceRepo) Register(iface *mw.Iface, dev mw.IDevice) error {
 	defer p.mtx.Unlock()
 	p.mtx.Lock()
 
@@ -265,7 +265,7 @@ func (p *routeRepo) RegisterDefaultGateway(iface *mw.Iface, nextHop mw.IP) {
 		fmt.Sprintf("device:   %s (%s)", iface.Dev.Name(), iface.Dev.Priv().Name))
 }
 
-func Start(wg *sync.WaitGroup) psErr.E {
+func Start(wg *sync.WaitGroup) error {
 	if err := DeviceRepo.Up(); err != psErr.OK {
 		return psErr.Error
 	}

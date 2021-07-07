@@ -43,7 +43,7 @@ func (p *PacketID) Next() (id uint16) {
 	return
 }
 
-func Receive(packet []byte, dev mw.IDevice) psErr.E {
+func Receive(packet []byte, dev mw.IDevice) error {
 	packetLen := len(packet)
 
 	if packetLen < HdrLenMin {
@@ -125,10 +125,10 @@ func Receive(packet []byte, dev mw.IDevice) psErr.E {
 	return psErr.OK
 }
 
-func Send(protoNum mw.ProtocolNumber, data []byte, src mw.IP, dst mw.IP) psErr.E {
+func Send(protoNum mw.ProtocolNumber, data []byte, src mw.IP, dst mw.IP) error {
 	var iface *mw.Iface
 	var nextHop mw.IP
-	var err psErr.E
+	var err error
 
 	// get a next hop
 	if iface, nextHop, err = lookupRoute(dst, src); err != psErr.OK {
@@ -164,7 +164,7 @@ func Send(protoNum mw.ProtocolNumber, data []byte, src mw.IP, dst mw.IP) psErr.E
 	return psErr.OK
 }
 
-func Start(wg *sync.WaitGroup) psErr.E {
+func Start(wg *sync.WaitGroup) error {
 	wg.Add(2)
 	go receiver(wg)
 	go sender(wg)
@@ -305,7 +305,7 @@ func dump(packet []byte) (ret []string) {
 	return
 }
 
-func lookupEthAddr(iface *mw.Iface, nextHop mw.IP) (mw.EthAddr, psErr.E) {
+func lookupEthAddr(iface *mw.Iface, nextHop mw.IP) (mw.EthAddr, error) {
 	var addr mw.EthAddr
 	if iface.Dev.Flag()&mw.NeedArpFlag != 0 {
 		if nextHop.Equal(iface.Broadcast) || nextHop.Equal(mw.V4Broadcast) {
@@ -320,7 +320,7 @@ func lookupEthAddr(iface *mw.Iface, nextHop mw.IP) (mw.EthAddr, psErr.E) {
 	return addr, psErr.OK
 }
 
-func lookupRoute(dst mw.IP, src mw.IP) (*mw.Iface, mw.IP, psErr.E) {
+func lookupRoute(dst mw.IP, src mw.IP) (*mw.Iface, mw.IP, error) {
 	var iface *mw.Iface
 	var nextHop mw.IP
 

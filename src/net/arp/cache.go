@@ -36,7 +36,7 @@ func (p *arpCache) Init() {
 	}
 }
 
-func (p *arpCache) Create(ha mw.EthAddr, pa mw.V4Addr, st cacheStatus) psErr.E {
+func (p *arpCache) Create(ha mw.EthAddr, pa mw.V4Addr, st cacheStatus) error {
 	var entry *arpCacheEntry
 	if entry = p.GetEntry(pa); entry != nil {
 		return psErr.Exist
@@ -54,7 +54,7 @@ func (p *arpCache) Create(ha mw.EthAddr, pa mw.V4Addr, st cacheStatus) psErr.E {
 	return psErr.OK
 }
 
-func (p *arpCache) Renew(pa mw.V4Addr, ha mw.EthAddr, st cacheStatus) psErr.E {
+func (p *arpCache) Renew(pa mw.V4Addr, ha mw.EthAddr, st cacheStatus) error {
 	entry := p.GetEntry(pa)
 	if entry == nil {
 		return psErr.NotFound

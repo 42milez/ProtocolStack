@@ -32,7 +32,7 @@ var monitorWg sync.WaitGroup
 var repoWg sync.WaitGroup
 var tcpWg sync.WaitGroup
 
-func setup() psErr.E {
+func setup() error {
 	psLog.D(
 		"-------------------------------------------------------",
 		"          I N I T I A L I Z E   D E V I C E S          ",
@@ -86,7 +86,7 @@ func setup() psErr.E {
 	return psErr.OK
 }
 
-func startServices() psErr.E {
+func startServices() error {
 	if err := arp.Start(&arpWg); err != psErr.OK {
 		return psErr.Error
 	}
