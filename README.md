@@ -112,7 +112,12 @@ Note: `make` supports the commands below:
 - [x] ICMP
   - [x] Echo Request
   - [x] Echo Reply
-- [ ] TCP
+- [x] TCP
+  - [x] Connection establishment
+  - [x] Sending data less than MTU
+  - [ ] Flow Control
+  - [ ] Sending data which exceeds MTU
+  - [ ] Retransmission
 - [ ] UDP
 
 ## Examples
