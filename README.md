@@ -20,10 +20,10 @@ This repository is for learning network programming in Go and mainly aims to imp
     - [x] Echo Request
     - [x] Echo Reply
 - [x] TCP
-    - [x] Connection establishment
-    - [x] Sending data less than MTU
+    - [x] Receiving data less than MTU
+    - [ ] Receiving data which exceeds MTU
+    - [ ] Sending data
     - [ ] Flow Control
-    - [ ] Sending data which exceeds MTU
     - [ ] Retransmission
 - [ ] UDP
 
@@ -86,7 +86,7 @@ You can perform the commands below:
 ```
 
 #### Note: Remote debugging with GoLand
-- See the [instruction](https://github.com/42milez/ProtocolStack/wiki/Remote-Debugging-with-GoLand) for more detail.
+- See [the instruction](https://github.com/42milez/ProtocolStack/wiki/Remote-Debugging-with-GoLand) for more detail.
 - Related information:
   - [What Are Run Targets & How To Run Code Anywhere](https://blog.jetbrains.com/go/2021/04/29/what-are-run-targets-and-how-to-run-code-anywhere)
   - [How to use Docker to compile and run Go code from GoLand](https://blog.jetbrains.com/go/2021/04/30/how-to-use-docker-to-compile-go-from-goland)
