@@ -3,9 +3,7 @@
 This repository is for learning network programming in Go and mainly aims to implement TCP/IP stack.
 
 ## Overview
-<a href="https://olivermak.es/">
-  <img src="docs/images/overview.svg" width="100%">
-</a>
+<img src="docs/images/overview.svg" width="100%">
 
 ## Supported Protocols
 
